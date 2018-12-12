@@ -65,14 +65,14 @@ suite('focusBlur', function() {
       mq.blur();
       assertHasFocus(mq, 'mq', 'not');
       setTimeout(function() {
-        assert.equal($(mq.el()).find('textarea').val(), '');
+        assert.equal($(mq.el()).find('textarea').val(), 'f');
 
         mq.focus();
         assertHasFocus(mq, 'mq');
 
         mq.keystroke('Shift-Left');
         setTimeout(function() {
-          assert.equal($(mq.el()).find('textarea').val(), 'd');
+          assert.equal($(mq.el()).find('textarea').val(), 'df');
           done();
         });
       }, 100);
