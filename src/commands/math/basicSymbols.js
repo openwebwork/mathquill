@@ -31,14 +31,6 @@ var Variable = P(Symbol, function(_, super_) {
       else if (text[text.length-1] == ' ') {
         text = text.slice (0, -1);
       }
-    } else {
-      if (this[L] && !(this[L] instanceof Variable)
-          && !(this[L] instanceof BinaryOperator)
-          && this[L].ctrlSeq !== '\\ ')
-        text = '*' + text;
-      if (this[R] && !(this[R] instanceof BinaryOperator)
-          && !(this[R] instanceof SupSub))
-        text += '*';
     }
     return text;
   };
