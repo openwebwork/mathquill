@@ -58,7 +58,7 @@ suite('autoOperatorNames', function() {
     }
 
     assertTranslatedCorrectly('\\sin', 'sin');
-    assertTranslatedCorrectly('\\sin\\left(xy\\right)', 'sin(x*y)');
+    assertTranslatedCorrectly('\\sin\\left(xy\\right)', 'sin(xy)');
   });
 
   test('deleting', function() {

@@ -124,7 +124,7 @@ suite('Public API', function() {
       mq.latex('\\sqrt{}');
       assert.equal(mq.text(), 'sqrt()');
       mq.latex('\\nthroot[]{}');
-      assert.equal(mq.text(), 'sqrt[]()');
+      assert.equal(mq.text(), 'root(,)');
       mq.latex('\\frac{}{}');
       assert.equal(mq.text(), '()/()');
       mq.latex('\\frac{3}{5}');
@@ -134,11 +134,11 @@ suite('Public API', function() {
       mq.latex('\\div');
       assert.equal(mq.text(), '[/]');
       mq.latex('^{}');
-      assert.equal(mq.text(), '^');
+      assert.equal(mq.text(), '^( )');
       mq.latex('3^{4}');
       assert.equal(mq.text(), '3^4');
       mq.latex('3x+\\ 4');
-      assert.equal(mq.text(), '3*x+ 4');
+      assert.equal(mq.text(), '3x+ 4');
       mq.latex('x^2');
       assert.equal(mq.text(), 'x^2');
 
@@ -924,7 +924,7 @@ suite('Public API', function() {
       });
 
       assert.ok(jQuery('.embedded-html').length);
-      assert.equal(mq.text(), "(m*m*m*m)/(m*m*embedded text*m*m)");
+      assert.equal(mq.text(), "(mmmm)/(mmembedded textmm)");
       assert.equal(mq.latex(), "\\frac{mmmm}{mmembedded latexmm}");
     });
   });
