@@ -32,13 +32,13 @@ var Variable = P(Symbol, function(_, super_) {
         text = text.slice (0, -1);
       }
     } else {
-      if (this[L] && !(this[L] instanceof Variable)
-          && !(this[L] instanceof BinaryOperator)
-          && this[L].ctrlSeq !== '\\ ')
-        text = '*' + text;
-      if (this[R] && !(this[R] instanceof BinaryOperator)
-          && !(this[R] instanceof SupSub))
-        text += '*';
+//      if (this[L] && !(this[L] instanceof Variable)
+//          && !(this[L] instanceof BinaryOperator)
+//          && this[L].ctrlSeq !== '\\ ')
+//        text = '*' + text;
+//      if (this[R] && !(this[R] instanceof BinaryOperator)
+//          && !(this[R] instanceof SupSub))
+//        text += '*';
     }
     return text;
   };
@@ -234,6 +234,7 @@ var OperatorName = P(Symbol, function(_, super_) {
 });
 for (var fn in AutoOpNames) if (AutoOpNames.hasOwnProperty(fn)) {
   LatexCmds[fn] = OperatorName;
+  LatexCmds[fn].textTemplate = [fn + '(',')'];
 }
 LatexCmds.operatorname = P(MathCommand, function(_) {
   _.createLeftOf = noop;

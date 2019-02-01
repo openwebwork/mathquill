@@ -300,6 +300,7 @@ LatexCmds.text =
 LatexCmds.textnormal =
 LatexCmds.textrm =
 LatexCmds.textup =
+CharCmds['"'] =
 LatexCmds.textmd = TextBlock;
 
 function makeTextBlock(latex, tagName, attrs) {
