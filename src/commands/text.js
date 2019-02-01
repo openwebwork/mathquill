@@ -61,7 +61,7 @@ var TextBlock = P(Node, function(_, super_) {
       return text + child.text;
     });
   };
-  _.text = function() { return '"' + this.textContents() + '"'; };
+  _.text = function() { return this.textContents(); };
   _.latex = function() {
     var contents = this.textContents();
     if (contents.length === 0) return '';

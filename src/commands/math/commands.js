@@ -250,6 +250,13 @@ var SupSub = P(MathCommand, function(_, super_) {
     }
     return latex('_', this.sub) + latex('^', this.sup);
   };
+  _.text = function() {
+    function text(prefix, block) {
+      var l = (block && block.text() !== " ") && block.text();
+      return l ? prefix + (l.length === 1 ? l : '(' + (l || ' ') + ')') : '';
+    }
+    return text('_', this.sub) + text('^', this.sup);
+  };
   _.addBlock = function(block) {
     if (this.supsub === 'sub') {
       this.sup = this.upInto = this.sub.upOutOf = block;
@@ -329,7 +336,7 @@ LatexCmds._ = P(SupSub, function(_, super_) {
     +   '<span style="display:inline-block;width:0">&#8203;</span>'
     + '</span>'
   ;
-  _.textTemplate = [ '_' ];
+  //_.textTemplate = [ '_' ];
   _.finalizeTree = function() {
     this.downInto = this.sub = this.ends[L];
     this.sub.upOutOf = insLeftOfMeUnlessAtEnd;
@@ -346,7 +353,7 @@ LatexCmds['^'] = P(SupSub, function(_, super_) {
     +   '<span class="mq-sup">&0</span>'
     + '</span>'
   ;
-  _.textTemplate = [ '^' ];
+  //_.textTemplate = [ '^(', ')' ];
   _.finalizeTree = function() {
     this.upInto = this.sup = this.ends[R];
     this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
@@ -451,7 +458,15 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
     +   '<span style="display:inline-block;width:0">&#8203;</span>'
     + '</span>'
   ;
-  _.textTemplate = ['(', ')/(', ')'];
+  //_.textTemplate = ['(', ')/(', ')'];
+  _.text = function() {
+    function text(dir, block) {
+      var blankDefault = dir === L ? 0 : 1;
+      var l = (block.ends[dir] && block.ends[dir].text() !== " ") && block.ends[dir].text();
+      return l ? (l.length === 1 ? l : '(' + l + ')') : blankDefault;
+    }
+    return text(L, this) + '/' + text(R, this);
+  };
   _.finalizeTree = function() {
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
@@ -529,6 +544,7 @@ var Hat = LatexCmds.hat = P(MathCommand, function(_, super_) {
 });
 
 var NthRoot =
+LatexCmds.root =
 LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
   _.htmlTemplate =
       '<sup class="mq-nthroot mq-non-leaf">&0</sup>'
@@ -537,9 +553,13 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
     +   '<span class="mq-sqrt-stem mq-non-leaf">&1</span>'
     + '</span>'
   ;
-  _.textTemplate = ['sqrt[', '](', ')'];
+  // _.textTemplate = ['sqrt[', '](', ')'];
   _.latex = function() {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
+  };
+  _.text = function () {
+    var index = this.ends[L].text() === "" ? 2 : this.ends[L].text();
+    return '('+this.ends[R].text()+')^(1/'+ index +')';
   };
 });
 
