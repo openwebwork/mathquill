@@ -290,8 +290,8 @@ LatexCmds.image = LatexCmds.imagin = LatexCmds.imaginary = LatexCmds.Imaginary =
 
 LatexCmds.part = LatexCmds.partial = bind(VanillaSymbol,'\\partial ','&part;');
 
-LatexCmds.infty = LatexCmds.infin = LatexCmds.infinity =
-  bind(VanillaSymbol,'\\infty ','&infin;');
+LatexCmds.inf = LatexCmds.infty = LatexCmds.infin = LatexCmds.infinity =
+  bind(VanillaSymbol,'\\infty ','&infin;', 'inf');
 
 LatexCmds.pounds = bind(VanillaSymbol,'\\pounds ','&pound;');
 
@@ -316,7 +316,8 @@ LatexCmds.oslash = LatexCmds.Oslash =
 LatexCmds.nothing = LatexCmds.varnothing =
   bind(BinaryOperator,'\\varnothing ','&empty;');
 
-LatexCmds.cup = LatexCmds.union = bind(BinaryOperator,'\\cup ','&cup;');
+LatexCmds.U = LatexCmds.cup = LatexCmds.union = 
+  bind(BinaryOperator,'\\cup ','&cup;', 'U');
 
 LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection =
   bind(BinaryOperator,'\\cap ','&cap;');

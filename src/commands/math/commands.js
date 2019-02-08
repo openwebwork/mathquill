@@ -465,7 +465,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
       var l = (block.ends[dir] && block.ends[dir].text() !== " ") && block.ends[dir].text();
       return l ? (l.length === 1 ? l : '(' + l + ')') : blankDefault;
     }
-    return text(L, this) + '/' + text(R, this);
+    return text(L, this) + '/' + text(R, this) + ' ';
   };
   _.finalizeTree = function() {
     this.upInto = this.ends[R].upOutOf = this.ends[L];
