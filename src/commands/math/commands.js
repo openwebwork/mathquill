@@ -253,7 +253,7 @@ var SupSub = P(MathCommand, function(_, super_) {
   _.text = function() {
     function text(prefix, block) {
       var l = block && block.text();
-      return block ? prefix + (l.length === 1 ? l : '(' + (l || ' ') + ')') : '';
+      return block ? prefix + ('(' + (l || ' ') + ')') : '';
     }
     return text('_', this.sub) + text('^', this.sup);
   }
