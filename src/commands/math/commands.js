@@ -559,7 +559,7 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
   };
   _.text = function () {
     var index = this.ends[L].text() === "" ? 2 : this.ends[L].text();
-    return '('+this.ends[R].text()+')^(1/'+ index +')';
+    return '('+this.ends[R].text()+')^(1/'+ index +' )';
   };
 });
 
