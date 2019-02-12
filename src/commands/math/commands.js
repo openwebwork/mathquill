@@ -256,7 +256,7 @@ var SupSub = P(MathCommand, function(_, super_) {
       return block ? prefix + ('(' + (l || ' ') + ')') : '';
     }
     return text('_', this.sub) + text('^', this.sup);
-  }
+  };
   _.addBlock = function(block) {
     if (this.supsub === 'sub') {
       this.sup = this.upInto = this.sub.upOutOf = block;
@@ -536,6 +536,7 @@ var Hat = LatexCmds.hat = P(MathCommand, function(_, super_) {
 });
 
 var NthRoot =
+LatexCmds.root =
 LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
   _.htmlTemplate =
       '<span class="mq-nthroot mq-non-leaf">&0</span>'

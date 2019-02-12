@@ -369,8 +369,8 @@ var Symbol = P(MathCommand, function(_, super_) {
   _.isEmpty = function(){ return true; };
 });
 var VanillaSymbol = P(Symbol, function(_, super_) {
-  _.init = function(ch, html) {
-    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>');
+  _.init = function(ch, html, text) {
+    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>', text);
   };
 });
 var BinaryOperator = P(Symbol, function(_, super_) {
