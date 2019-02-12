@@ -27,6 +27,7 @@ var TextBlock = P(Node, function(_, super_) {
     var textBlock = this;
     super_.createLeftOf.call(this, cursor);
 
+    textBlock.postOrder('reflow');
     if (textBlock[R].siblingCreated) textBlock[R].siblingCreated(cursor.options, L);
     if (textBlock[L].siblingCreated) textBlock[L].siblingCreated(cursor.options, R);
     textBlock.bubble('reflow');
@@ -97,8 +98,10 @@ var TextBlock = P(Node, function(_, super_) {
     cursor.show().deleteSelection();
 
     if (ch !== '$') {
+      this.postOrder('reflow');
       if (!cursor[L]) TextPiece(ch).createLeftOf(cursor);
       else cursor[L].appendText(ch);
+      this.bubble('reflow');
     }
     else if (this.isEmpty()) {
       cursor.insRightOf(this);
