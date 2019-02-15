@@ -458,7 +458,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
     +   '<span style="display:inline-block;width:0">&#8203;</span>'
     + '</span>'
   ;
-  //_.textTemplate = ['(', ')/(', ')'];
+  _.textTemplate = ['((', ')/(', '))'];
   _.text = function() {
     function text(dir, block) {
       var blankDefault = dir === L ? 0 : 1;
@@ -547,13 +547,13 @@ var NthRoot =
 LatexCmds.root =
 LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
   _.htmlTemplate =
-      '<sup class="mq-nthroot mq-non-leaf">&0</sup>'
+      '<span class="mq-nthroot mq-non-leaf">&0</span>'
     + '<span class="mq-scaled">'
     +   '<span class="mq-sqrt-prefix mq-scaled">&radic;</span>'
     +   '<span class="mq-sqrt-stem mq-non-leaf">&1</span>'
     + '</span>'
   ;
-  // _.textTemplate = ['sqrt[', '](', ')'];
+  _.textTemplate = ['sqrt[', '](', ')'];
   _.latex = function() {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
   };
@@ -621,7 +621,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     return '\\left'+this.sides[L].ctrlSeq+this.ends[L].latex()+'\\right'+this.sides[R].ctrlSeq;
   };
   _.text = function() {
-    return this.sides[L].ctrlSeq+this.ends[L].text()+this.sides[R].ctrlSeq;
+    return this.sides[L].ch+this.ends[L].text()+this.sides[R].ch;
   };
   _.matchBrack = function(opts, expectedSide, node) {
     // return node iff it's a matching 1-sided bracket of expected side (if any)
@@ -734,7 +734,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     };
     // FIXME HACK: after initial creation/insertion, finalizeTree would only be
     // called if the paren is selected and replaced, e.g. by LiveFraction
-    this.finalizeTree = this.intentionalBlur = function() {
+    this.finalizeTree = function() {
       this.delimjQs.eq(this.side === L ? 1 : 0).removeClass('mq-ghost');
       this.side = 0;
     };

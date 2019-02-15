@@ -1,10 +1,8 @@
 Controller.open(function(_) {
   _.focusBlurEvents = function() {
     var ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
-    var blurTimeout;
     ctrlr.textarea.focus(function() {
       ctrlr.blurred = false;
-      clearTimeout(blurTimeout);
       ctrlr.container.addClass('mq-focused');
       if (!cursor.parent)
         cursor.insAtRightEnd(root);
@@ -16,23 +14,10 @@ Controller.open(function(_) {
         cursor.show();
     }).blur(function() {
       ctrlr.blurred = true;
-      blurTimeout = setTimeout(function() { // wait for blur on window; if
-        root.postOrder('intentionalBlur'); // none, intentional blur: #264
-        cursor.clearSelection().endSelection();
-        blur();
-      });
-      $(window).bind('blur', windowBlur);
-    });
-    function windowBlur() { // blur event also fired on window, just switching
-      clearTimeout(blurTimeout); // tabs/windows, not intentional blur
+      ctrlr.container.removeClass('mq-focused');
+      cursor.hide().parent.blur();
       if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
-      blur();
-    }
-    function blur() { // not directly in the textarea blur handler so as to be
-      cursor.hide().parent.blur(); // synchronous with/in the same frame as
-      ctrlr.container.removeClass('mq-focused'); // clearing/blurring selection
-      $(window).unbind('blur', windowBlur);
-    }
+    });
     ctrlr.blurred = true;
     cursor.hide().parent.blur();
   };

@@ -31,14 +31,6 @@ var Variable = P(Symbol, function(_, super_) {
       else if (text[text.length-1] == ' ') {
         text = text.slice (0, -1);
       }
-    } else {
-//      if (this[L] && !(this[L] instanceof Variable)
-//          && !(this[L] instanceof BinaryOperator)
-//          && this[L].ctrlSeq !== '\\ ')
-//        text = '*' + text;
-//      if (this[R] && !(this[R] instanceof BinaryOperator)
-//          && !(this[R] instanceof SupSub))
-//        text += '*';
     }
     return text;
   };
@@ -496,9 +488,9 @@ var Inequality = P(BinaryOperator, function(_, super_) {
   };
 });
 
-var less = { ctrlSeq: '\\le ', html: '&le;', text: '≤',
+var less = { ctrlSeq: '\\le ', html: '&le;', text: '<=',
              ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
-var greater = { ctrlSeq: '\\ge ', html: '&ge;', text: '≥',
+var greater = { ctrlSeq: '\\ge ', html: '&ge;', text: '>=',
                 ctrlSeqStrict: '>', htmlStrict: '&gt;', textStrict: '>' };
 
 LatexCmds['<'] = LatexCmds.lt = bind(Inequality, less, true);
