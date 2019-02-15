@@ -226,6 +226,7 @@ var OperatorName = P(Symbol, function(_, super_) {
 });
 for (var fn in AutoOpNames) if (AutoOpNames.hasOwnProperty(fn)) {
   LatexCmds[fn] = OperatorName;
+  LatexCmds[fn].textTemplate = [fn + '(',')'];
 }
 LatexCmds.operatorname = P(MathCommand, function(_) {
   _.createLeftOf = noop;
@@ -249,7 +250,7 @@ LatexCmds.f = P(Letter, function(_, super_) {
 LatexCmds[' '] = LatexCmds.space = bind(VanillaSymbol, '\\ ', '&nbsp;');
 
 LatexCmds["'"] = LatexCmds.prime = bind(VanillaSymbol, "'", '&prime;');
-LatexCmds['″'] = LatexCmds.dprime = bind(VanillaSymbol, '″', '&Prime;');
+// LatexCmds['″'] = LatexCmds.dprime = bind(VanillaSymbol, '″', '&Prime;');
 
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
 if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
