@@ -226,7 +226,6 @@ var OperatorName = P(Symbol, function(_, super_) {
 });
 for (var fn in AutoOpNames) if (AutoOpNames.hasOwnProperty(fn)) {
   LatexCmds[fn] = OperatorName;
-  LatexCmds[fn].textTemplate = [fn + '(',')'];
 }
 LatexCmds.operatorname = P(MathCommand, function(_) {
   _.createLeftOf = noop;

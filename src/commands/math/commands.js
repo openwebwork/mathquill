@@ -336,7 +336,7 @@ LatexCmds._ = P(SupSub, function(_, super_) {
     +   '<span style="display:inline-block;width:0">&#8203;</span>'
     + '</span>'
   ;
-  //_.textTemplate = [ '_' ];
+  _.textTemplate = [ '_' ];
   _.finalizeTree = function() {
     this.downInto = this.sub = this.ends[L];
     this.sub.upOutOf = insLeftOfMeUnlessAtEnd;
@@ -353,7 +353,7 @@ LatexCmds['^'] = P(SupSub, function(_, super_) {
     +   '<span class="mq-sup">&0</span>'
     + '</span>'
   ;
-  //_.textTemplate = [ '^(', ')' ];
+  _.textTemplate = [ '^(', ')' ];
   _.finalizeTree = function() {
     this.upInto = this.sup = this.ends[R];
     this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
@@ -465,7 +465,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
       var l = (block.ends[dir] && block.ends[dir].text() !== " ") && block.ends[dir].text();
       return l ? (l.length === 1 ? l : '(' + l + ')') : blankDefault;
     }
-    return text(L, this) + '/' + text(R, this) + ' ';
+    return '(' + text(L, this) + '/' + text(R, this) + ')';
   };
   _.finalizeTree = function() {
     this.upInto = this.ends[R].upOutOf = this.ends[L];
@@ -553,13 +553,18 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
     +   '<span class="mq-sqrt-stem mq-non-leaf">&1</span>'
     + '</span>'
   ;
-  _.textTemplate = ['sqrt[', '](', ')'];
+  _.textTemplate = ['root(', ',', ')'];
   _.latex = function() {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
   };
   _.text = function () {
     var index = this.ends[L].text() === "" ? 2 : this.ends[L].text();
-    return '('+this.ends[R].text()+')^(1/'+ index +' )';
+    // Navigate up the tree to find the cursor which has the options.
+    var cursor =
+      (function getCursor(node) { return !('cursor' in node) ? getCursor(node.parent) : node.cursor; })(this);
+    if (cursor.options.rootsAreExponents)
+      return '('+this.ends[R].text()+')^(1/'+ index +' )';
+    return 'root('+index+','+this.ends[R].text()+')';
   };
 });
 
@@ -772,7 +777,7 @@ bindCharBracketPair('[');
 bindCharBracketPair('{', '\\{');
 LatexCmds.langle = bind(Bracket, L, '&lang;', '&rang;', '\\langle ', '\\rangle ');
 LatexCmds.rangle = bind(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ');
-LatexCmds.abs = bind(Bracket, L, '|', '|', '|', '|');
+CharCmds['|'] = bind(Bracket, L, '|', '|', '|', '|');
 LatexCmds.lVert = bind(Bracket, L, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
 LatexCmds.rVert = bind(Bracket, R, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
 

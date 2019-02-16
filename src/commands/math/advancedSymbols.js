@@ -316,7 +316,7 @@ LatexCmds.oslash = LatexCmds.Oslash =
 LatexCmds.nothing = LatexCmds.varnothing =
   bind(BinaryOperator,'\\varnothing ','&empty;');
 
-LatexCmds.U = LatexCmds.cup = LatexCmds.union = 
+LatexCmds.U = LatexCmds.cup = LatexCmds.union =
   bind(BinaryOperator,'\\cup ','&cup;', 'U');
 
 LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection =
