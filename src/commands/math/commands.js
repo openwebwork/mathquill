@@ -558,7 +558,7 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
   };
   _.text = function () {
-    if this.ends[L].text() === "" return 'sqrt('+this.ends[L].text()+')';
+    if (this.ends[L].text() === "") return 'sqrt('+this.ends[L].text()+')';
     var index = this.ends[L].text();
     // Navigate up the tree to find the cursor which has the options.
     var cursor =
@@ -778,6 +778,7 @@ bindCharBracketPair('[');
 bindCharBracketPair('{', '\\{');
 LatexCmds.langle = bind(Bracket, L, '&lang;', '&rang;', '\\langle ', '\\rangle ');
 LatexCmds.rangle = bind(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ');
+LatexCmds.abs = 
 CharCmds['|'] = bind(Bracket, L, '|', '|', '|', '|');
 LatexCmds.lVert = bind(Bracket, L, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
 LatexCmds.rVert = bind(Bracket, R, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
