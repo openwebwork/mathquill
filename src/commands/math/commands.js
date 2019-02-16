@@ -459,6 +459,14 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
     + '</span>'
   ;
   _.textTemplate = ['((', ')/(', '))'];
+  _.text = function() {
+    function text(dir, block) {
+      var blankDefault = dir === L ? 0 : 1;
+      var l = (block.ends[dir] && block.ends[dir].text() !== " ") && block.ends[dir].text();
+      return l ? (l.length === 1 ? l : '(' + l + ')') : blankDefault;
+    }
+    return '(' + text(L, this) + '/' + text(R, this) + ')';
+  };
   _.finalizeTree = function() {
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
@@ -548,6 +556,15 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
   _.textTemplate = ['root(', ',', ')'];
   _.latex = function() {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
+  };
+  _.text = function () {
+    var index = this.ends[L].text() === "" ? 2 : this.ends[L].text();
+    // Hack to get to the options here.  There has to be a better way.
+    var root = this;
+    while (!('cursor' in root)) root = root.parent;
+    if (root.cursor.options.rootsAreExponents)
+      return '('+this.ends[R].text()+')^(1/'+ index +' )';
+    return 'root('+index+','+this.ends[R].text()+')';
   };
 });
 
