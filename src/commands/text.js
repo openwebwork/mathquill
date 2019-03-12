@@ -62,11 +62,7 @@ var TextBlock = P(Node, function(_, super_) {
       return text + child.text;
     });
   };
-  _.text = function() {
-    var contents = this.textContents();
-    if (contents.length === 0) return '';
-    return contents.replace(/\\/g, '');
-  };
+  _.text = function() { return this.textContents(); };
   _.latex = function() {
     var contents = this.textContents();
     if (contents.length === 0) return '';
@@ -180,6 +176,7 @@ var TextBlock = P(Node, function(_, super_) {
       else if (cursor[R] === this) cursor[R] = this[R];
     }
     else fuseChildren(this);
+    cursor.parent.controller.handle('textBlockExit');
   };
 
   function fuseChildren(self) {
@@ -198,7 +195,12 @@ var TextBlock = P(Node, function(_, super_) {
     return textPc.adopt(self, 0, 0);
   }
 
-  _.focus = MathBlock.prototype.focus;
+  _.focus = function() {
+    MathBlock.prototype.focus.call(this);
+    (function getCtrlr(node) {
+      return ('controller' in node) ? node.controller : getCtrlr(node.parent);
+    })(this).handle('textBlockEnter');
+  };
 });
 
 /**
