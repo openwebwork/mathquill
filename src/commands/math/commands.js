@@ -253,7 +253,7 @@ var SupSub = P(MathCommand, function(_, super_) {
   _.text = function() {
     function text(prefix, block) {
       var l = (block && block.text() !== " ") && block.text();
-      return l ? prefix + (l.length === 1 ? l : '(' + (l || ' ') + ')') : '';
+      return l ? prefix + '(' + (l || ' ') + ')' : '';
     }
     return text('_', this.sub) + text('^', this.sup);
   };
@@ -778,7 +778,7 @@ bindCharBracketPair('[');
 bindCharBracketPair('{', '\\{');
 LatexCmds.langle = bind(Bracket, L, '&lang;', '&rang;', '\\langle ', '\\rangle ');
 LatexCmds.rangle = bind(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ');
-LatexCmds.abs = 
+LatexCmds.abs =
 CharCmds['|'] = bind(Bracket, L, '|', '|', '|', '|');
 LatexCmds.lVert = bind(Bracket, L, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
 LatexCmds.rVert = bind(Bracket, R, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');

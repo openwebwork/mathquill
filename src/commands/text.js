@@ -176,7 +176,9 @@ var TextBlock = P(Node, function(_, super_) {
       else if (cursor[R] === this) cursor[R] = this[R];
     }
     else fuseChildren(this);
-    cursor.parent.controller.handle('textBlockExit');
+    (function getCtrlr(node) {
+      return ('controller' in node) ? node.controller : getCtrlr(node.parent);
+    })(cursor.parent).handle('textBlockExit');
   };
 
   function fuseChildren(self) {
