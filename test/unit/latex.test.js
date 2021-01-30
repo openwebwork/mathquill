@@ -23,6 +23,17 @@ suite('latex', function() {
     assertParsesLatex('PNZQRCH');
   });
 
+  test('can parse mathbb symbols', function() {
+    assertParsesLatex('\\P\\N\\Z\\Q\\R\\C\\H',
+        '\\mathbb{P}\\mathbb{N}\\mathbb{Z}\\mathbb{Q}\\mathbb{R}\\mathbb{C}\\mathbb{H}');
+    assertParsesLatex('\\mathbb{P}\\mathbb{N}\\mathbb{Z}\\mathbb{Q}\\mathbb{R}\\mathbb{C}\\mathbb{H}');
+  });
+
+  test('can parse mathbb error case', function() {
+    assert.throws(function() { assertParsesLatex('\\mathbb + 2'); });
+    assert.throws(function() { assertParsesLatex('\\mathbb{A}'); });
+  });
+
   test('simple exponent', function() {
     assertParsesLatex('x^n');
   });
@@ -132,7 +143,7 @@ suite('latex', function() {
       latexMathParser.parse('\\left\\lVerte123\\right\\rVerte');
     })
   });
-  
+
   test('parens with whitespace', function() {
     assertParsesLatex('\\left ( 123 \\right ) ', '\\left(123\\right)');
   });
@@ -326,6 +337,34 @@ suite('latex', function() {
       base.latex('10');
       exp.latex('8');
       assert.equal(outer.latex(), '1.2345\\cdot10^8');
+    });
+
+    test('make inner field static and then editable', function() {
+      outer.latex('y=\\MathQuillMathField[m]{\\textcolor{blue}{m}}x+\\MathQuillMathField[b]{b}');
+      assert.equal(outer.innerFields.length, 2);
+      // assert.equal(outer.innerFields.m.__controller.container, false);
+
+      outer.innerFields.m.makeStatic();
+      assert.equal(outer.innerFields.m.__controller.editable, false);
+      assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), false);
+      assert.equal(outer.innerFields.b.__controller.editable, true);
+
+      //ensure no errors in making static field static
+      outer.innerFields.m.makeStatic();
+      assert.equal(outer.innerFields.m.__controller.editable, false);
+      assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), false);
+      assert.equal(outer.innerFields.b.__controller.editable, true);
+
+      outer.innerFields.m.makeEditable();
+      assert.equal(outer.innerFields.m.__controller.editable, true);
+      assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), true);
+      assert.equal(outer.innerFields.b.__controller.editable, true);
+
+      //ensure no errors with making editable field editable
+      outer.innerFields.m.makeEditable();
+      assert.equal(outer.innerFields.m.__controller.editable, true);
+      assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), true);
+      assert.equal(outer.innerFields.b.__controller.editable, true);
     });
 
     test('separate API object', function() {

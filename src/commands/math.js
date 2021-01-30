@@ -458,6 +458,25 @@ var MathBlock = P(MathElement, function(_, super_) {
     }
   };
 
+  _.writeLatex = function(cursor, latex) {
+
+    var all = Parser.all;
+    var eof = Parser.eof;
+
+    var block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
+
+    if (block && !block.isEmpty() && block.prepareInsertionAt(cursor)) {
+      block.children().adopt(cursor.parent, cursor[L], cursor[R]);
+      var jQ = block.jQize();
+      jQ.insertBefore(cursor.jQ);
+      cursor[L] = block.ends[R];
+      block.finalizeInsert(cursor.options, cursor);
+      if (block.ends[R][R].siblingCreated) block.ends[R][R].siblingCreated(cursor.options, L);
+      if (block.ends[L][L].siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
+      cursor.parent.bubble('reflow');
+    }
+  };
+
   _.focus = function() {
     this.jQ.addClass('mq-hasCursor');
     this.jQ.removeClass('mq-empty');
@@ -489,13 +508,13 @@ API.StaticMath = function(APIClasses) {
     _.init = function() {
       super_.init.apply(this, arguments);
       this.__controller.root.postOrder(
-        'registerInnerField', this.innerFields = [], APIClasses.MathField);
+        'registerInnerField', this.innerFields = [], APIClasses.InnerMathField);
     };
     _.latex = function() {
       var returned = super_.latex.apply(this, arguments);
       if (arguments.length > 0) {
         this.__controller.root.postOrder(
-          'registerInnerField', this.innerFields = [], APIClasses.MathField);
+          'registerInnerField', this.innerFields = [], APIClasses.InnerMathField);
       }
       return returned;
     };
@@ -512,6 +531,23 @@ API.MathField = function(APIClasses) {
       super_.__mathquillify.call(this, 'mq-editable-field mq-math-mode');
       delete this.__controller.root.reflow;
       return this;
+    };
+  });
+};
+
+API.InnerMathField = function(APIClasses) {
+  return P(APIClasses.MathField, function(_, super_) {
+    _.makeStatic = function() {
+      this.__controller.editable = false;
+      this.__controller.root.blur();
+      this.__controller.unbindEditablesEvents();
+      this.__controller.container.removeClass('mq-editable-field');
+    };
+    _.makeEditable = function() {
+      this.__controller.editable = true;
+      this.__controller.editablesTextareaEvents();
+      this.__controller.cursor.insAtRightEnd(this.__controller.root);
+      this.__controller.container.addClass('mq-editable-field');
     };
   });
 };
