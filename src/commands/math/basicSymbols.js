@@ -26,9 +26,12 @@ var Variable = P(Symbol, function(_, super_) {
     var text = this.ctrlSeq;
     if (this.isPartOfOperator) {
       if (text[0] == '\\') {
-        text = text.slice(1, text.length);
+        if (text.startsWith('\\operatorname{')) 
+          text = text.slice(14, text.length);
+        else
+          text = text.slice(1, text.length);
       }
-      else if (text[text.length-1] == ' ') {
+      else if (text[text.length-1] == ' ' || text[text.length-1] == '}') {
         text = text.slice (0, -1);
       }
     }
