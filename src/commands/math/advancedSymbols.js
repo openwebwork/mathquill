@@ -1,347 +1,342 @@
-/************************************
- * Symbols for Advanced Mathematics
- ***********************************/
+// Symbols for Advanced Mathematics
 
-LatexCmds.notin =
-LatexCmds.cong =
-LatexCmds.equiv =
-LatexCmds.oplus =
-LatexCmds.otimes = P(BinaryOperator, function(_, super_) {
-  _.init = function(latex) {
-    super_.init.call(this, '\\'+latex+' ', '&'+latex+';');
-  };
-});
+LatexCmds.notin = LatexCmds.cong = LatexCmds.equiv = LatexCmds.oplus = LatexCmds.otimes = class extends BinaryOperator {
+	constructor(latex) {
+		super(`\\${latex} `, `&${latex};`);
+	}
+};
 
-LatexCmds['≠'] = LatexCmds.ne = LatexCmds.neq = bind(BinaryOperator,'\\ne ','&ne;');
+LatexCmds['\u2260'] = LatexCmds.ne = LatexCmds.neq = bindMixin(BinaryOperator, '\\ne ', '&ne;');
 
-LatexCmds['∗'] = LatexCmds.ast = LatexCmds.star = LatexCmds.loast = LatexCmds.lowast =
-  bind(BinaryOperator,'\\ast ','&lowast;');
+LatexCmds['\u2217'] = LatexCmds.ast = LatexCmds.star = LatexCmds.loast = LatexCmds.lowast =
+	bindMixin(BinaryOperator, '\\ast ', '&lowast;');
 
 LatexCmds.therefor = LatexCmds.therefore =
-  bind(BinaryOperator,'\\therefore ','&there4;');
+	bindMixin(BinaryOperator, '\\therefore ', '&there4;');
 
 LatexCmds.cuz = // l33t
-LatexCmds.because = bind(BinaryOperator,'\\because ','&#8757;');
+	LatexCmds.because = bindMixin(BinaryOperator, '\\because ', '&#8757;');
 
-LatexCmds.prop = LatexCmds.propto = bind(BinaryOperator,'\\propto ','&prop;');
+LatexCmds.prop = LatexCmds.propto = bindMixin(BinaryOperator, '\\propto ', '&prop;');
 
-LatexCmds['≈'] = LatexCmds.asymp = LatexCmds.approx = bind(BinaryOperator,'\\approx ','&asymp;');
+LatexCmds['\u2248'] = LatexCmds.asymp = LatexCmds.approx = bindMixin(BinaryOperator, '\\approx ', '&asymp;');
 
-LatexCmds.isin = LatexCmds['in'] = bind(BinaryOperator,'\\in ','&isin;');
+LatexCmds.isin = LatexCmds['in'] = bindMixin(BinaryOperator, '\\in ', '&isin;');
 
-LatexCmds.ni = LatexCmds.contains = bind(BinaryOperator,'\\ni ','&ni;');
+LatexCmds.ni = LatexCmds.contains = bindMixin(BinaryOperator, '\\ni ', '&ni;');
 
 LatexCmds.notni = LatexCmds.niton = LatexCmds.notcontains = LatexCmds.doesnotcontain =
-  bind(BinaryOperator,'\\not\\ni ','&#8716;');
+	bindMixin(BinaryOperator, '\\not\\ni ', '&#8716;');
 
-LatexCmds.sub = LatexCmds.subset = bind(BinaryOperator,'\\subset ','&sub;');
+LatexCmds.sub = LatexCmds.subset = bindMixin(BinaryOperator, '\\subset ', '&sub;');
 
 LatexCmds.sup = LatexCmds.supset = LatexCmds.superset =
-  bind(BinaryOperator,'\\supset ','&sup;');
+	bindMixin(BinaryOperator, '\\supset ', '&sup;');
 
 LatexCmds.nsub = LatexCmds.notsub =
-LatexCmds.nsubset = LatexCmds.notsubset =
-  bind(BinaryOperator,'\\not\\subset ','&#8836;');
+	LatexCmds.nsubset = LatexCmds.notsubset =
+	bindMixin(BinaryOperator, '\\not\\subset ', '&#8836;');
 
 LatexCmds.nsup = LatexCmds.notsup =
-LatexCmds.nsupset = LatexCmds.notsupset =
-LatexCmds.nsuperset = LatexCmds.notsuperset =
-  bind(BinaryOperator,'\\not\\supset ','&#8837;');
+	LatexCmds.nsupset = LatexCmds.notsupset =
+	LatexCmds.nsuperset = LatexCmds.notsuperset =
+	bindMixin(BinaryOperator, '\\not\\supset ', '&#8837;');
 
 LatexCmds.sube = LatexCmds.subeq = LatexCmds.subsete = LatexCmds.subseteq =
-  bind(BinaryOperator,'\\subseteq ','&sube;');
+	bindMixin(BinaryOperator, '\\subseteq ', '&sube;');
 
 LatexCmds.supe = LatexCmds.supeq =
-LatexCmds.supsete = LatexCmds.supseteq =
-LatexCmds.supersete = LatexCmds.superseteq =
-  bind(BinaryOperator,'\\supseteq ','&supe;');
+	LatexCmds.supsete = LatexCmds.supseteq =
+	LatexCmds.supersete = LatexCmds.superseteq =
+	bindMixin(BinaryOperator, '\\supseteq ', '&supe;');
 
 LatexCmds.nsube = LatexCmds.nsubeq =
-LatexCmds.notsube = LatexCmds.notsubeq =
-LatexCmds.nsubsete = LatexCmds.nsubseteq =
-LatexCmds.notsubsete = LatexCmds.notsubseteq =
-  bind(BinaryOperator,'\\not\\subseteq ','&#8840;');
+	LatexCmds.notsube = LatexCmds.notsubeq =
+	LatexCmds.nsubsete = LatexCmds.nsubseteq =
+	LatexCmds.notsubsete = LatexCmds.notsubseteq =
+	bindMixin(BinaryOperator, '\\not\\subseteq ', '&#8840;');
 
 LatexCmds.nsupe = LatexCmds.nsupeq =
-LatexCmds.notsupe = LatexCmds.notsupeq =
-LatexCmds.nsupsete = LatexCmds.nsupseteq =
-LatexCmds.notsupsete = LatexCmds.notsupseteq =
-LatexCmds.nsupersete = LatexCmds.nsuperseteq =
-LatexCmds.notsupersete = LatexCmds.notsuperseteq =
-  bind(BinaryOperator,'\\not\\supseteq ','&#8841;');
+	LatexCmds.notsupe = LatexCmds.notsupeq =
+	LatexCmds.nsupsete = LatexCmds.nsupseteq =
+	LatexCmds.notsupsete = LatexCmds.notsupseteq =
+	LatexCmds.nsupersete = LatexCmds.nsuperseteq =
+	LatexCmds.notsupersete = LatexCmds.notsuperseteq =
+	bindMixin(BinaryOperator, '\\not\\supseteq ', '&#8841;');
 
-//the canonical sets of numbers
-LatexCmds.mathbb = P(MathCommand, function(_) {
-  _.createLeftOf = noop;
-  _.numBlocks = function() { return 1; };
-  _.parser = function() {
-    var string = Parser.string;
-    var regex = Parser.regex;
-    var optWhitespace = Parser.optWhitespace;
-    return optWhitespace.then(string('{'))
-          .then(optWhitespace)
-          .then(regex(/^[NPZQRCH]/))
-          .skip(optWhitespace)
-          .skip(string('}'))
-          .map(function(c) {
-              // instantiate the class for the matching char
-              return LatexCmds[c]();
-    });
-  };
-});
+// The canonical sets of numbers
+LatexCmds.mathbb = class extends MathCommand {
+	constructor(...args) {
+		super(...args);
+		this.createLeftOf = noop;
+	}
+
+	numBlocks() { return 1; }
+
+	parser() {
+		const string = Parser.string;
+		const regex = Parser.regex;
+		const optWhitespace = Parser.optWhitespace;
+		return optWhitespace.then(string('{'))
+			.then(optWhitespace)
+			.then(regex(/^[NPZQRCH]/))
+			.skip(optWhitespace)
+			.skip(string('}'))
+			// Instantiate the class for the matching char
+			.map((c) => new LatexCmds[c]);
+	}
+};
 
 LatexCmds.N = LatexCmds.naturals = LatexCmds.Naturals =
-  bind(VanillaSymbol,'\\mathbb{N}','&#8469;');
+	bindMixin(VanillaSymbol, '\\mathbb{N}', '&#8469;');
 
 LatexCmds.P =
-LatexCmds.primes = LatexCmds.Primes =
-LatexCmds.projective = LatexCmds.Projective =
-LatexCmds.probability = LatexCmds.Probability =
-  bind(VanillaSymbol,'\\mathbb{P}','&#8473;');
+	LatexCmds.primes = LatexCmds.Primes =
+	LatexCmds.projective = LatexCmds.Projective =
+	LatexCmds.probability = LatexCmds.Probability =
+	bindMixin(VanillaSymbol, '\\mathbb{P}', '&#8473;');
 
 LatexCmds.Z = LatexCmds.integers = LatexCmds.Integers =
-  bind(VanillaSymbol,'\\mathbb{Z}','&#8484;');
+	bindMixin(VanillaSymbol, '\\mathbb{Z}', '&#8484;');
 
 LatexCmds.Q = LatexCmds.rationals = LatexCmds.Rationals =
-  bind(VanillaSymbol,'\\mathbb{Q}','&#8474;');
+	bindMixin(VanillaSymbol, '\\mathbb{Q}', '&#8474;');
 
 LatexCmds.R = LatexCmds.reals = LatexCmds.Reals =
-  bind(VanillaSymbol,'\\mathbb{R}','&#8477;');
+	bindMixin(VanillaSymbol, '\\mathbb{R}', '&#8477;');
 
 LatexCmds.C =
-LatexCmds.complex = LatexCmds.Complex =
-LatexCmds.complexes = LatexCmds.Complexes =
-LatexCmds.complexplane = LatexCmds.Complexplane = LatexCmds.ComplexPlane =
-  bind(VanillaSymbol,'\\mathbb{C}','&#8450;');
+	LatexCmds.complex = LatexCmds.Complex =
+	LatexCmds.complexes = LatexCmds.Complexes =
+	LatexCmds.complexplane = LatexCmds.Complexplane = LatexCmds.ComplexPlane =
+	bindMixin(VanillaSymbol, '\\mathbb{C}', '&#8450;');
 
 LatexCmds.H = LatexCmds.Hamiltonian = LatexCmds.quaternions = LatexCmds.Quaternions =
-  bind(VanillaSymbol,'\\mathbb{H}','&#8461;');
+	bindMixin(VanillaSymbol, '\\mathbb{H}', '&#8461;');
 
 //spacing
-LatexCmds.quad = LatexCmds.emsp = bind(VanillaSymbol,'\\quad ','    ');
-LatexCmds.qquad = bind(VanillaSymbol,'\\qquad ','        ');
-/* spacing special characters, gonna have to implement this in LatexCommandInput::onText somehow
-case ',':
-  return VanillaSymbol('\\, ',' ');
-case ':':
-  return VanillaSymbol('\\: ','  ');
-case ';':
-  return VanillaSymbol('\\; ','   ');
-case '!':
-  return Symbol('\\! ','<span style="margin-right:-.2em"></span>');
-*/
+LatexCmds.quad = LatexCmds.emsp = bindMixin(VanillaSymbol, '\\quad ', '    ');
+LatexCmds.qquad = bindMixin(VanillaSymbol, '\\qquad ', '        ');
+// spacing special characters, gonna have to implement this in LatexCommandInput::onText somehow
+//case ',':
+//  return VanillaSymbol('\\, ',' ');
+//case ':':
+//  return VanillaSymbol('\\: ','  ');
+//case ';':
+//  return VanillaSymbol('\\; ','   ');
+//case '!':
+//  return Symbol('\\! ', '<span style="margin-right:-.2em"></span>');
 
 //binary operators
-LatexCmds.diamond = bind(VanillaSymbol, '\\diamond ', '&#9671;');
-LatexCmds.bigtriangleup = bind(VanillaSymbol, '\\bigtriangleup ', '&#9651;');
-LatexCmds.ominus = bind(VanillaSymbol, '\\ominus ', '&#8854;');
-LatexCmds.uplus = bind(VanillaSymbol, '\\uplus ', '&#8846;');
-LatexCmds.bigtriangledown = bind(VanillaSymbol, '\\bigtriangledown ', '&#9661;');
-LatexCmds.sqcap = bind(VanillaSymbol, '\\sqcap ', '&#8851;');
-LatexCmds.triangleleft = bind(VanillaSymbol, '\\triangleleft ', '&#8882;');
-LatexCmds.sqcup = bind(VanillaSymbol, '\\sqcup ', '&#8852;');
-LatexCmds.triangleright = bind(VanillaSymbol, '\\triangleright ', '&#8883;');
+LatexCmds.diamond = bindMixin(VanillaSymbol, '\\diamond ', '&#9671;');
+LatexCmds.bigtriangleup = bindMixin(VanillaSymbol, '\\bigtriangleup ', '&#9651;');
+LatexCmds.ominus = bindMixin(VanillaSymbol, '\\ominus ', '&#8854;');
+LatexCmds.uplus = bindMixin(VanillaSymbol, '\\uplus ', '&#8846;');
+LatexCmds.bigtriangledown = bindMixin(VanillaSymbol, '\\bigtriangledown ', '&#9661;');
+LatexCmds.sqcap = bindMixin(VanillaSymbol, '\\sqcap ', '&#8851;');
+LatexCmds.triangleleft = bindMixin(VanillaSymbol, '\\triangleleft ', '&#8882;');
+LatexCmds.sqcup = bindMixin(VanillaSymbol, '\\sqcup ', '&#8852;');
+LatexCmds.triangleright = bindMixin(VanillaSymbol, '\\triangleright ', '&#8883;');
 //circledot is not a not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
-LatexCmds.odot = LatexCmds.circledot = bind(VanillaSymbol, '\\odot ', '&#8857;');
-LatexCmds.bigcirc = bind(VanillaSymbol, '\\bigcirc ', '&#9711;');
-LatexCmds.dagger = bind(VanillaSymbol, '\\dagger ', '&#0134;');
-LatexCmds.ddagger = bind(VanillaSymbol, '\\ddagger ', '&#135;');
-LatexCmds.wr = bind(VanillaSymbol, '\\wr ', '&#8768;');
-LatexCmds.amalg = bind(VanillaSymbol, '\\amalg ', '&#8720;');
+LatexCmds.odot = LatexCmds.circledot = bindMixin(VanillaSymbol, '\\odot ', '&#8857;');
+LatexCmds.bigcirc = bindMixin(VanillaSymbol, '\\bigcirc ', '&#9711;');
+LatexCmds.dagger = bindMixin(VanillaSymbol, '\\dagger ', '&#0134;');
+LatexCmds.ddagger = bindMixin(VanillaSymbol, '\\ddagger ', '&#135;');
+LatexCmds.wr = bindMixin(VanillaSymbol, '\\wr ', '&#8768;');
+LatexCmds.amalg = bindMixin(VanillaSymbol, '\\amalg ', '&#8720;');
 
 //relationship symbols
-LatexCmds.models = bind(VanillaSymbol, '\\models ', '&#8872;');
-LatexCmds.prec = bind(VanillaSymbol, '\\prec ', '&#8826;');
-LatexCmds.succ = bind(VanillaSymbol, '\\succ ', '&#8827;');
-LatexCmds.preceq = bind(VanillaSymbol, '\\preceq ', '&#8828;');
-LatexCmds.succeq = bind(VanillaSymbol, '\\succeq ', '&#8829;');
-LatexCmds.simeq = bind(VanillaSymbol, '\\simeq ', '&#8771;');
-LatexCmds.mid = bind(VanillaSymbol, '\\mid ', '&#8739;');
-LatexCmds.ll = bind(VanillaSymbol, '\\ll ', '&#8810;');
-LatexCmds.gg = bind(VanillaSymbol, '\\gg ', '&#8811;');
-LatexCmds.parallel = bind(VanillaSymbol, '\\parallel ', '&#8741;');
-LatexCmds.nparallel = bind(VanillaSymbol, '\\nparallel ', '&#8742;');
-LatexCmds.bowtie = bind(VanillaSymbol, '\\bowtie ', '&#8904;');
-LatexCmds.sqsubset = bind(VanillaSymbol, '\\sqsubset ', '&#8847;');
-LatexCmds.sqsupset = bind(VanillaSymbol, '\\sqsupset ', '&#8848;');
-LatexCmds.smile = bind(VanillaSymbol, '\\smile ', '&#8995;');
-LatexCmds.sqsubseteq = bind(VanillaSymbol, '\\sqsubseteq ', '&#8849;');
-LatexCmds.sqsupseteq = bind(VanillaSymbol, '\\sqsupseteq ', '&#8850;');
-LatexCmds.doteq = bind(VanillaSymbol, '\\doteq ', '&#8784;');
-LatexCmds.frown = bind(VanillaSymbol, '\\frown ', '&#8994;');
-LatexCmds.vdash = bind(VanillaSymbol, '\\vdash ', '&#8870;');
-LatexCmds.dashv = bind(VanillaSymbol, '\\dashv ', '&#8867;');
-LatexCmds.nless = bind(VanillaSymbol, '\\nless ', '&#8814;');
-LatexCmds.ngtr = bind(VanillaSymbol, '\\ngtr ', '&#8815;');
+LatexCmds.models = bindMixin(VanillaSymbol, '\\models ', '&#8872;');
+LatexCmds.prec = bindMixin(VanillaSymbol, '\\prec ', '&#8826;');
+LatexCmds.succ = bindMixin(VanillaSymbol, '\\succ ', '&#8827;');
+LatexCmds.preceq = bindMixin(VanillaSymbol, '\\preceq ', '&#8828;');
+LatexCmds.succeq = bindMixin(VanillaSymbol, '\\succeq ', '&#8829;');
+LatexCmds.simeq = bindMixin(VanillaSymbol, '\\simeq ', '&#8771;');
+LatexCmds.mid = bindMixin(VanillaSymbol, '\\mid ', '&#8739;');
+LatexCmds.ll = bindMixin(VanillaSymbol, '\\ll ', '&#8810;');
+LatexCmds.gg = bindMixin(VanillaSymbol, '\\gg ', '&#8811;');
+LatexCmds.parallel = bindMixin(VanillaSymbol, '\\parallel ', '&#8741;');
+LatexCmds.nparallel = bindMixin(VanillaSymbol, '\\nparallel ', '&#8742;');
+LatexCmds.bowtie = bindMixin(VanillaSymbol, '\\bowtie ', '&#8904;');
+LatexCmds.sqsubset = bindMixin(VanillaSymbol, '\\sqsubset ', '&#8847;');
+LatexCmds.sqsupset = bindMixin(VanillaSymbol, '\\sqsupset ', '&#8848;');
+LatexCmds.smile = bindMixin(VanillaSymbol, '\\smile ', '&#8995;');
+LatexCmds.sqsubseteq = bindMixin(VanillaSymbol, '\\sqsubseteq ', '&#8849;');
+LatexCmds.sqsupseteq = bindMixin(VanillaSymbol, '\\sqsupseteq ', '&#8850;');
+LatexCmds.doteq = bindMixin(VanillaSymbol, '\\doteq ', '&#8784;');
+LatexCmds.frown = bindMixin(VanillaSymbol, '\\frown ', '&#8994;');
+LatexCmds.vdash = bindMixin(VanillaSymbol, '\\vdash ', '&#8870;');
+LatexCmds.dashv = bindMixin(VanillaSymbol, '\\dashv ', '&#8867;');
+LatexCmds.nless = bindMixin(VanillaSymbol, '\\nless ', '&#8814;');
+LatexCmds.ngtr = bindMixin(VanillaSymbol, '\\ngtr ', '&#8815;');
 
 //arrows
-LatexCmds.longleftarrow = bind(VanillaSymbol, '\\longleftarrow ', '&#8592;');
-LatexCmds.longrightarrow = bind(VanillaSymbol, '\\longrightarrow ', '&#8594;');
-LatexCmds.Longleftarrow = bind(VanillaSymbol, '\\Longleftarrow ', '&#8656;');
-LatexCmds.Longrightarrow = bind(VanillaSymbol, '\\Longrightarrow ', '&#8658;');
-LatexCmds.longleftrightarrow = bind(VanillaSymbol, '\\longleftrightarrow ', '&#8596;');
-LatexCmds.updownarrow = bind(VanillaSymbol, '\\updownarrow ', '&#8597;');
-LatexCmds.Longleftrightarrow = bind(VanillaSymbol, '\\Longleftrightarrow ', '&#8660;');
-LatexCmds.Updownarrow = bind(VanillaSymbol, '\\Updownarrow ', '&#8661;');
-LatexCmds.mapsto = bind(VanillaSymbol, '\\mapsto ', '&#8614;');
-LatexCmds.nearrow = bind(VanillaSymbol, '\\nearrow ', '&#8599;');
-LatexCmds.hookleftarrow = bind(VanillaSymbol, '\\hookleftarrow ', '&#8617;');
-LatexCmds.hookrightarrow = bind(VanillaSymbol, '\\hookrightarrow ', '&#8618;');
-LatexCmds.searrow = bind(VanillaSymbol, '\\searrow ', '&#8600;');
-LatexCmds.leftharpoonup = bind(VanillaSymbol, '\\leftharpoonup ', '&#8636;');
-LatexCmds.rightharpoonup = bind(VanillaSymbol, '\\rightharpoonup ', '&#8640;');
-LatexCmds.swarrow = bind(VanillaSymbol, '\\swarrow ', '&#8601;');
-LatexCmds.leftharpoondown = bind(VanillaSymbol, '\\leftharpoondown ', '&#8637;');
-LatexCmds.rightharpoondown = bind(VanillaSymbol, '\\rightharpoondown ', '&#8641;');
-LatexCmds.nwarrow = bind(VanillaSymbol, '\\nwarrow ', '&#8598;');
+LatexCmds.longleftarrow = bindMixin(VanillaSymbol, '\\longleftarrow ', '&#8592;');
+LatexCmds.longrightarrow = bindMixin(VanillaSymbol, '\\longrightarrow ', '&#8594;');
+LatexCmds.Longleftarrow = bindMixin(VanillaSymbol, '\\Longleftarrow ', '&#8656;');
+LatexCmds.Longrightarrow = bindMixin(VanillaSymbol, '\\Longrightarrow ', '&#8658;');
+LatexCmds.longleftrightarrow = bindMixin(VanillaSymbol, '\\longleftrightarrow ', '&#8596;');
+LatexCmds.updownarrow = bindMixin(VanillaSymbol, '\\updownarrow ', '&#8597;');
+LatexCmds.Longleftrightarrow = bindMixin(VanillaSymbol, '\\Longleftrightarrow ', '&#8660;');
+LatexCmds.Updownarrow = bindMixin(VanillaSymbol, '\\Updownarrow ', '&#8661;');
+LatexCmds.mapsto = bindMixin(VanillaSymbol, '\\mapsto ', '&#8614;');
+LatexCmds.nearrow = bindMixin(VanillaSymbol, '\\nearrow ', '&#8599;');
+LatexCmds.hookleftarrow = bindMixin(VanillaSymbol, '\\hookleftarrow ', '&#8617;');
+LatexCmds.hookrightarrow = bindMixin(VanillaSymbol, '\\hookrightarrow ', '&#8618;');
+LatexCmds.searrow = bindMixin(VanillaSymbol, '\\searrow ', '&#8600;');
+LatexCmds.leftharpoonup = bindMixin(VanillaSymbol, '\\leftharpoonup ', '&#8636;');
+LatexCmds.rightharpoonup = bindMixin(VanillaSymbol, '\\rightharpoonup ', '&#8640;');
+LatexCmds.swarrow = bindMixin(VanillaSymbol, '\\swarrow ', '&#8601;');
+LatexCmds.leftharpoondown = bindMixin(VanillaSymbol, '\\leftharpoondown ', '&#8637;');
+LatexCmds.rightharpoondown = bindMixin(VanillaSymbol, '\\rightharpoondown ', '&#8641;');
+LatexCmds.nwarrow = bindMixin(VanillaSymbol, '\\nwarrow ', '&#8598;');
 
 //Misc
-LatexCmds.ldots = bind(VanillaSymbol, '\\ldots ', '&#8230;');
-LatexCmds.cdots = bind(VanillaSymbol, '\\cdots ', '&#8943;');
-LatexCmds.vdots = bind(VanillaSymbol, '\\vdots ', '&#8942;');
-LatexCmds.ddots = bind(VanillaSymbol, '\\ddots ', '&#8945;');
-LatexCmds.surd = bind(VanillaSymbol, '\\surd ', '&#8730;');
-LatexCmds.triangle = bind(VanillaSymbol, '\\triangle ', '&#9651;');
-LatexCmds.ell = bind(VanillaSymbol, '\\ell ', '&#8467;');
-LatexCmds.top = bind(VanillaSymbol, '\\top ', '&#8868;');
-LatexCmds.flat = bind(VanillaSymbol, '\\flat ', '&#9837;');
-LatexCmds.natural = bind(VanillaSymbol, '\\natural ', '&#9838;');
-LatexCmds.sharp = bind(VanillaSymbol, '\\sharp ', '&#9839;');
-LatexCmds.wp = bind(VanillaSymbol, '\\wp ', '&#8472;');
-LatexCmds.bot = bind(VanillaSymbol, '\\bot ', '&#8869;');
-LatexCmds.clubsuit = bind(VanillaSymbol, '\\clubsuit ', '&#9827;');
-LatexCmds.diamondsuit = bind(VanillaSymbol, '\\diamondsuit ', '&#9826;');
-LatexCmds.heartsuit = bind(VanillaSymbol, '\\heartsuit ', '&#9825;');
-LatexCmds.spadesuit = bind(VanillaSymbol, '\\spadesuit ', '&#9824;');
+LatexCmds.ldots = bindMixin(VanillaSymbol, '\\ldots ', '&#8230;');
+LatexCmds.cdots = bindMixin(VanillaSymbol, '\\cdots ', '&#8943;');
+LatexCmds.vdots = bindMixin(VanillaSymbol, '\\vdots ', '&#8942;');
+LatexCmds.ddots = bindMixin(VanillaSymbol, '\\ddots ', '&#8945;');
+LatexCmds.surd = bindMixin(VanillaSymbol, '\\surd ', '&#8730;');
+LatexCmds.triangle = bindMixin(VanillaSymbol, '\\triangle ', '&#9651;');
+LatexCmds.ell = bindMixin(VanillaSymbol, '\\ell ', '&#8467;');
+LatexCmds.top = bindMixin(VanillaSymbol, '\\top ', '&#8868;');
+LatexCmds.flat = bindMixin(VanillaSymbol, '\\flat ', '&#9837;');
+LatexCmds.natural = bindMixin(VanillaSymbol, '\\natural ', '&#9838;');
+LatexCmds.sharp = bindMixin(VanillaSymbol, '\\sharp ', '&#9839;');
+LatexCmds.wp = bindMixin(VanillaSymbol, '\\wp ', '&#8472;');
+LatexCmds.bot = bindMixin(VanillaSymbol, '\\bot ', '&#8869;');
+LatexCmds.clubsuit = bindMixin(VanillaSymbol, '\\clubsuit ', '&#9827;');
+LatexCmds.diamondsuit = bindMixin(VanillaSymbol, '\\diamondsuit ', '&#9826;');
+LatexCmds.heartsuit = bindMixin(VanillaSymbol, '\\heartsuit ', '&#9825;');
+LatexCmds.spadesuit = bindMixin(VanillaSymbol, '\\spadesuit ', '&#9824;');
 //not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
-LatexCmds.parallelogram = bind(VanillaSymbol, '\\parallelogram ', '&#9649;');
-LatexCmds.square = bind(VanillaSymbol, '\\square ', '&#11036;');
+LatexCmds.parallelogram = bindMixin(VanillaSymbol, '\\parallelogram ', '&#9649;');
+LatexCmds.square = bindMixin(VanillaSymbol, '\\square ', '&#11036;');
 
 //variable-sized
-LatexCmds.oint = bind(VanillaSymbol, '\\oint ', '&#8750;');
-LatexCmds.bigcap = bind(VanillaSymbol, '\\bigcap ', '&#8745;');
-LatexCmds.bigcup = bind(VanillaSymbol, '\\bigcup ', '&#8746;');
-LatexCmds.bigsqcup = bind(VanillaSymbol, '\\bigsqcup ', '&#8852;');
-LatexCmds.bigvee = bind(VanillaSymbol, '\\bigvee ', '&#8744;');
-LatexCmds.bigwedge = bind(VanillaSymbol, '\\bigwedge ', '&#8743;');
-LatexCmds.bigodot = bind(VanillaSymbol, '\\bigodot ', '&#8857;');
-LatexCmds.bigotimes = bind(VanillaSymbol, '\\bigotimes ', '&#8855;');
-LatexCmds.bigoplus = bind(VanillaSymbol, '\\bigoplus ', '&#8853;');
-LatexCmds.biguplus = bind(VanillaSymbol, '\\biguplus ', '&#8846;');
+LatexCmds.oint = bindMixin(VanillaSymbol, '\\oint ', '&#8750;');
+LatexCmds.bigcap = bindMixin(VanillaSymbol, '\\bigcap ', '&#8745;');
+LatexCmds.bigcup = bindMixin(VanillaSymbol, '\\bigcup ', '&#8746;');
+LatexCmds.bigsqcup = bindMixin(VanillaSymbol, '\\bigsqcup ', '&#8852;');
+LatexCmds.bigvee = bindMixin(VanillaSymbol, '\\bigvee ', '&#8744;');
+LatexCmds.bigwedge = bindMixin(VanillaSymbol, '\\bigwedge ', '&#8743;');
+LatexCmds.bigodot = bindMixin(VanillaSymbol, '\\bigodot ', '&#8857;');
+LatexCmds.bigotimes = bindMixin(VanillaSymbol, '\\bigotimes ', '&#8855;');
+LatexCmds.bigoplus = bindMixin(VanillaSymbol, '\\bigoplus ', '&#8853;');
+LatexCmds.biguplus = bindMixin(VanillaSymbol, '\\biguplus ', '&#8846;');
 
 //delimiters
-LatexCmds.lfloor = bind(VanillaSymbol, '\\lfloor ', '&#8970;');
-LatexCmds.rfloor = bind(VanillaSymbol, '\\rfloor ', '&#8971;');
-LatexCmds.lceil = bind(VanillaSymbol, '\\lceil ', '&#8968;');
-LatexCmds.rceil = bind(VanillaSymbol, '\\rceil ', '&#8969;');
-LatexCmds.opencurlybrace = LatexCmds.lbrace = bind(VanillaSymbol, '\\lbrace ', '{');
-LatexCmds.closecurlybrace = LatexCmds.rbrace = bind(VanillaSymbol, '\\rbrace ', '}');
-LatexCmds.lbrack = bind(VanillaSymbol, '[');
-LatexCmds.rbrack = bind(VanillaSymbol, ']');
+LatexCmds.lfloor = bindMixin(VanillaSymbol, '\\lfloor ', '&#8970;');
+LatexCmds.rfloor = bindMixin(VanillaSymbol, '\\rfloor ', '&#8971;');
+LatexCmds.lceil = bindMixin(VanillaSymbol, '\\lceil ', '&#8968;');
+LatexCmds.rceil = bindMixin(VanillaSymbol, '\\rceil ', '&#8969;');
+LatexCmds.opencurlybrace = LatexCmds.lbrace = bindMixin(VanillaSymbol, '\\lbrace ', '{');
+LatexCmds.closecurlybrace = LatexCmds.rbrace = bindMixin(VanillaSymbol, '\\rbrace ', '}');
+LatexCmds.lbrack = bindMixin(VanillaSymbol, '[');
+LatexCmds.rbrack = bindMixin(VanillaSymbol, ']');
 
 //various symbols
-LatexCmds.slash = bind(VanillaSymbol, '/');
-LatexCmds.vert = bind(VanillaSymbol,'|');
-LatexCmds.perp = LatexCmds.perpendicular = bind(VanillaSymbol,'\\perp ','&perp;');
-LatexCmds.nabla = LatexCmds.del = bind(VanillaSymbol,'\\nabla ','&nabla;');
-LatexCmds.hbar = bind(VanillaSymbol,'\\hbar ','&#8463;');
+LatexCmds.slash = bindMixin(VanillaSymbol, '/');
+LatexCmds.vert = bindMixin(VanillaSymbol, '|');
+LatexCmds.perp = LatexCmds.perpendicular = bindMixin(VanillaSymbol, '\\perp ', '&perp;');
+LatexCmds.nabla = LatexCmds.del = bindMixin(VanillaSymbol, '\\nabla ', '&nabla;');
+LatexCmds.hbar = bindMixin(VanillaSymbol, '\\hbar ', '&#8463;');
 
 LatexCmds.AA = LatexCmds.Angstrom = LatexCmds.angstrom =
-  bind(VanillaSymbol,'\\text\\AA ','&#8491;');
+	bindMixin(VanillaSymbol, '\\text\\AA ', '&#8491;');
 
 LatexCmds.ring = LatexCmds.circ = LatexCmds.circle =
-  bind(VanillaSymbol,'\\circ ','&#8728;');
+	bindMixin(VanillaSymbol, '\\circ ', '&#8728;');
 
-LatexCmds.bull = LatexCmds.bullet = bind(VanillaSymbol,'\\bullet ','&bull;');
+LatexCmds.bull = LatexCmds.bullet = bindMixin(VanillaSymbol, '\\bullet ', '&bull;');
 
 LatexCmds.setminus = LatexCmds.smallsetminus =
-  bind(VanillaSymbol,'\\setminus ','&#8726;');
+	bindMixin(VanillaSymbol, '\\setminus ', '&#8726;');
 
-LatexCmds.not = //bind(Symbol,'\\not ','<span class="not">/</span>');
-LatexCmds['¬'] = LatexCmds.neg = bind(VanillaSymbol,'\\neg ','&not;');
+LatexCmds.not = LatexCmds['\u00ac'] = LatexCmds.neg = bindMixin(VanillaSymbol, '\\neg ', '&not;');
 
-LatexCmds['…'] = LatexCmds.dots = LatexCmds.ellip = LatexCmds.hellip =
-LatexCmds.ellipsis = LatexCmds.hellipsis =
-  bind(VanillaSymbol,'\\dots ','&hellip;');
+LatexCmds['\u2026'] = LatexCmds.dots = LatexCmds.ellip = LatexCmds.hellip =
+	LatexCmds.ellipsis = LatexCmds.hellipsis =
+	bindMixin(VanillaSymbol, '\\dots ', '&hellip;');
 
 LatexCmds.converges =
-LatexCmds.darr = LatexCmds.dnarr = LatexCmds.dnarrow = LatexCmds.downarrow =
-  bind(VanillaSymbol,'\\downarrow ','&darr;');
+	LatexCmds.darr = LatexCmds.dnarr = LatexCmds.dnarrow = LatexCmds.downarrow =
+	bindMixin(VanillaSymbol, '\\downarrow ', '&darr;');
 
 LatexCmds.dArr = LatexCmds.dnArr = LatexCmds.dnArrow = LatexCmds.Downarrow =
-  bind(VanillaSymbol,'\\Downarrow ','&dArr;');
+	bindMixin(VanillaSymbol, '\\Downarrow ', '&dArr;');
 
 LatexCmds.diverges = LatexCmds.uarr = LatexCmds.uparrow =
-  bind(VanillaSymbol,'\\uparrow ','&uarr;');
+	bindMixin(VanillaSymbol, '\\uparrow ', '&uarr;');
 
-LatexCmds.uArr = LatexCmds.Uparrow = bind(VanillaSymbol,'\\Uparrow ','&uArr;');
+LatexCmds.uArr = LatexCmds.Uparrow = bindMixin(VanillaSymbol, '\\Uparrow ', '&uArr;');
 
-LatexCmds.to = bind(BinaryOperator,'\\to ','&rarr;');
+LatexCmds.to = bindMixin(BinaryOperator, '\\to ', '&rarr;');
 
-LatexCmds.rarr = LatexCmds.rightarrow = bind(VanillaSymbol,'\\rightarrow ','&rarr;');
+LatexCmds.rarr = LatexCmds.rightarrow = bindMixin(VanillaSymbol, '\\rightarrow ', '&rarr;');
 
-LatexCmds.implies = bind(BinaryOperator,'\\Rightarrow ','&rArr;');
+LatexCmds.implies = bindMixin(BinaryOperator, '\\Rightarrow ', '&rArr;');
 
-LatexCmds.rArr = LatexCmds.Rightarrow = bind(VanillaSymbol,'\\Rightarrow ','&rArr;');
+LatexCmds.rArr = LatexCmds.Rightarrow = bindMixin(VanillaSymbol, '\\Rightarrow ', '&rArr;');
 
-LatexCmds.gets = bind(BinaryOperator,'\\gets ','&larr;');
+LatexCmds.gets = bindMixin(BinaryOperator, '\\gets ', '&larr;');
 
-LatexCmds.larr = LatexCmds.leftarrow = bind(VanillaSymbol,'\\leftarrow ','&larr;');
+LatexCmds.larr = LatexCmds.leftarrow = bindMixin(VanillaSymbol, '\\leftarrow ', '&larr;');
 
-LatexCmds.impliedby = bind(BinaryOperator,'\\Leftarrow ','&lArr;');
+LatexCmds.impliedby = bindMixin(BinaryOperator, '\\Leftarrow ', '&lArr;');
 
-LatexCmds.lArr = LatexCmds.Leftarrow = bind(VanillaSymbol,'\\Leftarrow ','&lArr;');
+LatexCmds.lArr = LatexCmds.Leftarrow = bindMixin(VanillaSymbol, '\\Leftarrow ', '&lArr;');
 
 LatexCmds.harr = LatexCmds.lrarr = LatexCmds.leftrightarrow =
-  bind(VanillaSymbol,'\\leftrightarrow ','&harr;');
+	bindMixin(VanillaSymbol, '\\leftrightarrow ', '&harr;');
 
-LatexCmds.iff = bind(BinaryOperator,'\\Leftrightarrow ','&hArr;');
+LatexCmds.iff = bindMixin(BinaryOperator, '\\Leftrightarrow ', '&hArr;');
 
 LatexCmds.hArr = LatexCmds.lrArr = LatexCmds.Leftrightarrow =
-  bind(VanillaSymbol,'\\Leftrightarrow ','&hArr;');
+	bindMixin(VanillaSymbol, '\\Leftrightarrow ', '&hArr;');
 
-LatexCmds.Re = LatexCmds.Real = LatexCmds.real = bind(VanillaSymbol,'\\Re ','&real;');
+LatexCmds.Re = LatexCmds.Real = LatexCmds.real = bindMixin(VanillaSymbol, '\\Re ', '&real;');
 
 LatexCmds.Im = LatexCmds.imag =
-LatexCmds.image = LatexCmds.imagin = LatexCmds.imaginary = LatexCmds.Imaginary =
-  bind(VanillaSymbol,'\\Im ','&image;');
+	LatexCmds.image = LatexCmds.imagin = LatexCmds.imaginary = LatexCmds.Imaginary =
+	bindMixin(VanillaSymbol, '\\Im ', '&image;');
 
-LatexCmds.part = LatexCmds.partial = bind(VanillaSymbol,'\\partial ','&part;');
+LatexCmds.part = LatexCmds.partial = bindMixin(VanillaSymbol, '\\partial ', '&part;');
 
 LatexCmds.inf = LatexCmds.infty = LatexCmds.infin = LatexCmds.infinity =
-  bind(VanillaSymbol,'\\infty ','&infin;', 'inf');
+	bindMixin(VanillaSymbol, '\\infty ', '&infin;', 'inf');
 
-LatexCmds.pounds = bind(VanillaSymbol,'\\pounds ','&pound;');
+LatexCmds.pounds = bindMixin(VanillaSymbol, '\\pounds ', '&pound;');
 
 LatexCmds.alef = LatexCmds.alefsym = LatexCmds.aleph = LatexCmds.alephsym =
-  bind(VanillaSymbol,'\\aleph ','&alefsym;');
+	bindMixin(VanillaSymbol, '\\aleph ', '&alefsym;');
 
 LatexCmds.xist = //LOL
-LatexCmds.xists = LatexCmds.exist = LatexCmds.exists =
-  bind(VanillaSymbol,'\\exists ','&exist;');
+	LatexCmds.xists = LatexCmds.exist = LatexCmds.exists =
+	bindMixin(VanillaSymbol, '\\exists ', '&exist;');
 
 LatexCmds.nexists = LatexCmds.nexist =
-      bind(VanillaSymbol, '\\nexists ', '&#8708;');
+	bindMixin(VanillaSymbol, '\\nexists ', '&#8708;');
 
 LatexCmds.and = LatexCmds.land = LatexCmds.wedge =
-  bind(BinaryOperator,'\\wedge ','&and;');
+	bindMixin(BinaryOperator, '\\wedge ', '&and;');
 
-LatexCmds.or = LatexCmds.lor = LatexCmds.vee = bind(BinaryOperator,'\\vee ','&or;');
+LatexCmds.or = LatexCmds.lor = LatexCmds.vee = bindMixin(BinaryOperator, '\\vee ', '&or;');
 
 LatexCmds.o = LatexCmds.O =
-LatexCmds.empty = LatexCmds.emptyset =
-LatexCmds.oslash = LatexCmds.Oslash =
-LatexCmds.nothing = LatexCmds.varnothing =
-  bind(BinaryOperator,'\\varnothing ','&empty;');
+	LatexCmds.empty = LatexCmds.emptyset =
+	LatexCmds.oslash = LatexCmds.Oslash =
+	LatexCmds.nothing = LatexCmds.varnothing =
+	bindMixin(BinaryOperator, '\\varnothing ', '&empty;');
 
 LatexCmds.U = LatexCmds.cup = LatexCmds.union =
-  bind(BinaryOperator,'\\cup ','&cup;', 'U');
+	bindMixin(BinaryOperator, '\\cup ', '&cup;', 'U');
 
 LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection =
-  bind(BinaryOperator,'\\cap ','&cap;');
+	bindMixin(BinaryOperator, '\\cap ', '&cap;');
 
 // FIXME: the correct LaTeX would be ^\circ but we can't parse that
-LatexCmds.deg = LatexCmds.degree = bind(VanillaSymbol,'\\degree ','&deg;');
+LatexCmds.deg = LatexCmds.degree = bindMixin(VanillaSymbol, '\\degree ', '&deg;');
 
-LatexCmds.ang = LatexCmds.angle = bind(VanillaSymbol,'\\angle ','&ang;');
-LatexCmds.measuredangle = bind(VanillaSymbol,'\\measuredangle ','&#8737;');
+LatexCmds.ang = LatexCmds.angle = bindMixin(VanillaSymbol, '\\angle ', '&ang;');
+LatexCmds.measuredangle = bindMixin(VanillaSymbol, '\\measuredangle ', '&#8737;');

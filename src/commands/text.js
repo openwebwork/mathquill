@@ -1,409 +1,416 @@
-/*************************************************
- * Abstract classes of text blocks
- ************************************************/
+// Abstract classes of text blocks
 
-/**
- * Blocks of plain text, with one or two TextPiece's as children.
- * Represents flat strings of typically serif-font Roman characters, as
- * opposed to hierchical, nested, tree-structured math.
- * Wraps a single HTMLSpanElement.
- */
-var TextBlock = P(Node, function(_, super_) {
-  _.ctrlSeq = '\\text';
+// Blocks of plain text, with one or two TextPiece's as children.
+// Represents flat strings of typically serif-font Roman characters, as
+// opposed to hierchical, nested, tree-structured math.
+// Wraps a single HTMLSpanElement.
+class TextBlock extends deleteSelectTowardsMixin(Node) {
+	constructor() {
+		super();
+		this.ctrlSeq = '\\text';
+	}
 
-  _.replaces = function(replacedText) {
-    if (replacedText instanceof Fragment)
-      this.replacedText = replacedText.remove().jQ.text();
-    else if (typeof replacedText === 'string')
-      this.replacedText = replacedText;
-  };
+	replaces(replacedText) {
+		if (replacedText instanceof Fragment)
+			this.replacedText = replacedText.remove().jQ.text();
+		else if (typeof replacedText === 'string')
+			this.replacedText = replacedText;
+	}
 
-  _.jQadd = function(jQ) {
-    super_.jQadd.call(this, jQ);
-    if (this.ends[L]) this.ends[L].jQadd(this.jQ[0].firstChild);
-  };
+	jQadd(jQ) {
+		super.jQadd(jQ);
+		if (this.ends[L]) this.ends[L].jQadd(this.jQ[0].firstChild);
+	};
 
-  _.createLeftOf = function(cursor) {
-    var textBlock = this;
-    super_.createLeftOf.call(this, cursor);
+	createLeftOf(cursor) {
+		super.createLeftOf(cursor);
 
-    cursor.insAtRightEnd(textBlock);
+		cursor.insAtRightEnd(this);
 
-    if (textBlock.replacedText)
-      for (var i = 0; i < textBlock.replacedText.length; i += 1)
-        textBlock.write(cursor, textBlock.replacedText.charAt(i));
+		if (this.replacedText) {
+			for (const char of this.replacedText)
+				this.write(cursor, char);
+		}
 
-    if (textBlock[R].siblingCreated) textBlock[R].siblingCreated(cursor.options, L);
-    if (textBlock[L].siblingCreated) textBlock[L].siblingCreated(cursor.options, R);
-    textBlock.bubble('reflow');
-  };
+		if (this[R].siblingCreated) this[R].siblingCreated(cursor.options, L);
+		if (this[L].siblingCreated) this[L].siblingCreated(cursor.options, R);
+		this.bubble('reflow');
+	}
 
-  _.parser = function() {
-    var textBlock = this;
+	parser() {
+		// TODO: correctly parse text mode
+		const string = Parser.string;
+		const regex = Parser.regex;
+		const optWhitespace = Parser.optWhitespace;
+		return optWhitespace
+			.then(string('{')).then(regex(/^(\\}|[^}])*/)).skip(string('}'))
+			.map((text) => {
+				if (text.length === 0) return new Fragment();
 
-    // TODO: correctly parse text mode
-    var string = Parser.string;
-    var regex = Parser.regex;
-    var optWhitespace = Parser.optWhitespace;
-    return optWhitespace
-      .then(string('{')).then(regex(/^(\\}|[^}])*/)).skip(string('}'))
-      .map(function(text) {
-        if (text.length === 0) return Fragment();
+				new TextPiece(text.replace(/\\{/g, '{').replace(/\\}/g, '}')).adopt(this, 0, 0);
+				return this;
+			})
+		;
+	}
 
-        TextPiece(text.replace(/\\{/g, '{').replace(/\\}/g, '}')).adopt(textBlock, 0, 0);
-        return textBlock;
-      })
-    ;
-  };
+	textContents() {
+		return this.foldChildren('', (text, child) => text + child.text);
+	}
 
-  _.textContents = function() {
-    return this.foldChildren('', function(text, child) {
-      return text + child.text;
-    });
-  };
-  _.text = function() { return this.textContents(); };
-  _.latex = function() {
-    var contents = this.textContents();
-    if (contents.length === 0) return '';
-    return '\\text{' + contents.replace(/[{}]/g, '\\$&') + '}';
-  };
-  _.html = function() {
-    return (
-        '<span class="mq-text-mode" mathquill-command-id='+this.id+'>'
-      +   this.textContents()
-      + '</span>'
-    );
-  };
+	text() { return this.textContents(); }
 
-  // editability methods: called by the cursor for editing, cursor movements,
-  // and selection of the MathQuill tree, these all take in a direction and
-  // the cursor
-  _.moveTowards = function(dir, cursor) { cursor.insAtDirEnd(-dir, this); };
-  _.moveOutOf = function(dir, cursor) { cursor.insDirOf(dir, this); };
-  _.unselectInto = _.moveTowards;
+	latex() {
+		const contents = this.textContents();
+		if (contents.length === 0) return '';
+		return '\\text{' + contents.replace(/[{}]/g, '\\$&') + '}';
+	}
 
-  // TODO: make these methods part of a shared mixin or something.
-  _.selectTowards = MathCommand.prototype.selectTowards;
-  _.deleteTowards = MathCommand.prototype.deleteTowards;
+	html() {
+		return (
+			'<span class="mq-text-mode" mathquill-command-id=' + this.id + '>'
+			+ this.textContents()
+			+ '</span>'
+		);
+	}
 
-  _.selectOutOf = function(dir, cursor) {
-    cursor.insDirOf(dir, this);
-  };
-  _.deleteOutOf = function(dir, cursor) {
-    // backspace and delete at ends of block don't unwrap
-    if (this.isEmpty()) cursor.insRightOf(this);
-  };
-  _.write = function(cursor, ch) {
-    cursor.show().deleteSelection();
+	// editability methods: called by the cursor for editing, cursor movements,
+	// and selection of the MathQuill tree, these all take in a direction and
+	// the cursor
+	moveTowards(dir, cursor) { cursor.insAtDirEnd(-dir, this); }
+	moveOutOf(dir, cursor) { cursor.insDirOf(dir, this); }
+	unselectInto(dir, cursor) { cursor.insAtDirEnd(-dir, this); }
 
-    if (ch !== '$') {
-      this.postOrder('reflow');
-      if (!cursor[L]) TextPiece(ch).createLeftOf(cursor);
-      else cursor[L].appendText(ch);
-      this.bubble('reflow');
-    }
-    else if (this.isEmpty()) {
-      cursor.insRightOf(this);
-      VanillaSymbol('\\$','$').createLeftOf(cursor);
-    }
-    else if (!cursor[R]) cursor.insRightOf(this);
-    else if (!cursor[L]) cursor.insLeftOf(this);
-    else { // split apart
-      var leftBlock = TextBlock();
-      var leftPc = this.ends[L];
-      leftPc.disown().jQ.detach();
-      leftPc.adopt(leftBlock, 0, 0);
+	selectOutOf(dir, cursor) {
+		cursor.insDirOf(dir, this);
+	}
 
-      cursor.insLeftOf(this);
-      super_.createLeftOf.call(leftBlock, cursor); // micro-optimization, not for correctness
-    }
-    this.bubble('reflow');
-  };
-  _.writeLatex = function(cursor, latex) {
-    if (!cursor[L]) TextPiece(latex).createLeftOf(cursor);
-    else cursor[L].appendText(latex);
-    this.bubble('reflow');
-  };
+	deleteOutOf(dir, cursor) {
+		// backspace and delete at ends of block don't unwrap
+		if (this.isEmpty()) cursor.insRightOf(this);
+	}
 
-  _.seek = function(pageX, cursor) {
-    cursor.hide();
-    var textPc = fuseChildren(this);
+	write(cursor, ch) {
+		cursor.show().deleteSelection();
 
-    // insert cursor at approx position in DOMTextNode
-    var avgChWidth = this.jQ.width()/this.text.length;
-    var approxPosition = Math.round((pageX - this.jQ.offset().left)/avgChWidth);
-    if (approxPosition <= 0) cursor.insAtLeftEnd(this);
-    else if (approxPosition >= textPc.text.length) cursor.insAtRightEnd(this);
-    else cursor.insLeftOf(textPc.splitRight(approxPosition));
+		if (ch !== '$') {
+			this.postOrder('reflow');
+			if (!cursor[L]) new TextPiece(ch).createLeftOf(cursor);
+			else cursor[L].appendText(ch);
+			this.bubble('reflow');
+		}
+		else if (this.isEmpty()) {
+			cursor.insRightOf(this);
+			new VanillaSymbol('\\$','$').createLeftOf(cursor);
+		}
+		else if (!cursor[R]) cursor.insRightOf(this);
+		else if (!cursor[L]) cursor.insLeftOf(this);
+		else { // split apart
+			const leftBlock = new TextBlock();
+			const leftPc = this.ends[L];
+			leftPc.disown().jQ.detach();
+			leftPc.adopt(leftBlock, 0, 0);
 
-    // move towards mousedown (pageX)
-    var displ = pageX - cursor.show().offset().left; // displacement
-    var dir = displ && displ < 0 ? L : R;
-    var prevDispl = dir;
-    // displ * prevDispl > 0 iff displacement direction === previous direction
-    while (cursor[dir] && displ * prevDispl > 0) {
-      cursor[dir].moveTowards(dir, cursor);
-      prevDispl = displ;
-      displ = pageX - cursor.offset().left;
-    }
-    if (dir*displ < -dir*prevDispl) cursor[-dir].moveTowards(-dir, cursor);
+			cursor.insLeftOf(this);
+			super.createLeftOf.call(leftBlock, cursor); // micro-optimization, not for correctness
+		}
+		this.bubble('reflow');
+	}
 
-    if (!cursor.anticursor) {
-      // about to start mouse-selecting, the anticursor is gonna get put here
-      this.anticursorPosition = cursor[L] && cursor[L].text.length;
-      // ^ get it? 'cos if there's no cursor[L], it's 0... I'm a terrible person.
-    }
-    else if (cursor.anticursor.parent === this) {
-      // mouse-selecting within this TextBlock, re-insert the anticursor
-      var cursorPosition = cursor[L] && cursor[L].text.length;;
-      if (this.anticursorPosition === cursorPosition) {
-        cursor.anticursor = Point.copy(cursor);
-      }
-      else {
-        if (this.anticursorPosition < cursorPosition) {
-          var newTextPc = cursor[L].splitRight(this.anticursorPosition);
-          cursor[L] = newTextPc;
-        }
-        else {
-          var newTextPc = cursor[R].splitRight(this.anticursorPosition - cursorPosition);
-        }
-        cursor.anticursor = Point(this, newTextPc[L], newTextPc);
-      }
-    }
-  };
+	writeLatex(cursor, latex) {
+		if (!cursor[L]) new TextPiece(latex).createLeftOf(cursor);
+		else cursor[L].appendText(latex);
+		this.bubble('reflow');
+	}
 
-  _.blur = function(cursor) {
-    MathBlock.prototype.blur.call(this);
-    if (!cursor) return;
-    if (this.textContents() === '') {
-      this.remove();
-      if (cursor[L] === this) cursor[L] = this[L];
-      else if (cursor[R] === this) cursor[R] = this[R];
-    }
-    else fuseChildren(this);
-    (function getCtrlr(node) {
-      return ('controller' in node) ? node.controller : getCtrlr(node.parent);
-    })(cursor.parent).handle('textBlockExit');
-  };
+	seek(pageX, cursor) {
+		cursor.hide();
+		const textPc = this.fuseChildren();
 
-  function fuseChildren(self) {
-    self.jQ[0].normalize();
+		// insert cursor at approx position in DOMTextNode
+		const avgChWidth = this.jQ.width()/this.text.length;
+		const approxPosition = Math.round((pageX - this.jQ.offset().left) / avgChWidth);
+		if (approxPosition <= 0) cursor.insAtLeftEnd(this);
+		else if (approxPosition >= textPc.text.length) cursor.insAtRightEnd(this);
+		else cursor.insLeftOf(textPc.splitRight(approxPosition));
 
-    var textPcDom = self.jQ[0].firstChild;
-    if (!textPcDom) return;
-    pray('only node in TextBlock span is Text node', textPcDom.nodeType === 3);
-    // nodeType === 3 has meant a Text node since ancient times:
-    //   http://reference.sitepoint.com/javascript/Node/nodeType
+		// move towards mousedown (pageX)
+		let displ = pageX - cursor.show().offset().left; // displacement
+		const dir = displ && displ < 0 ? L : R;
+		let prevDispl = dir;
+		// displ * prevDispl > 0 iff displacement direction === previous direction
+		while (cursor[dir] && displ * prevDispl > 0) {
+			cursor[dir].moveTowards(dir, cursor);
+			prevDispl = displ;
+			displ = pageX - cursor.offset().left;
+		}
+		if (dir * displ < -dir * prevDispl) cursor[-dir].moveTowards(-dir, cursor);
 
-    var textPc = TextPiece(textPcDom.data);
-    textPc.jQadd(textPcDom);
+		if (!cursor.anticursor) {
+			// about to start mouse-selecting, the anticursor is gonna get put here
+			this.anticursorPosition = cursor[L] && cursor[L].text.length;
+			// ^ get it? 'cos if there's no cursor[L], it's 0... I'm a terrible person.
+		}
+		else if (cursor.anticursor.parent === this) {
+			// mouse-selecting within this TextBlock, re-insert the anticursor
+			const cursorPosition = cursor[L] && cursor[L].text.length;;
+			if (this.anticursorPosition === cursorPosition) {
+				cursor.anticursor = Point.copy(cursor);
+			}
+			else {
+				let newTextPc;
+				if (this.anticursorPosition < cursorPosition) {
+					newTextPc = cursor[L].splitRight(this.anticursorPosition);
+					cursor[L] = newTextPc;
+				}
+				else {
+					newTextPc = cursor[R].splitRight(this.anticursorPosition - cursorPosition);
+				}
+				cursor.anticursor = new Point(this, newTextPc[L], newTextPc);
+			}
+		}
+	}
 
-    self.children().disown();
-    return textPc.adopt(self, 0, 0);
-  }
+	blur(cursor) {
+		MathBlock.prototype.blur.call(this);
+		if (!cursor) return;
+		if (this.textContents() === '') {
+			this.remove();
+			if (cursor[L] === this) cursor[L] = this[L];
+			else if (cursor[R] === this) cursor[R] = this[R];
+		}
+		else this.fuseChildren();
+		(function getCtrlr(node) {
+			return ('controller' in node) ? node.controller : getCtrlr(node.parent);
+		})(cursor.parent).handle('textBlockExit');
+	}
 
-  _.focus = function() {
-    MathBlock.prototype.focus.call(this);
-    (function getCtrlr(node) {
-      return ('controller' in node) ? node.controller : getCtrlr(node.parent);
-    })(this).handle('textBlockEnter');
-  };
-});
+	fuseChildren() {
+		this.jQ[0].normalize();
 
-/**
- * Piece of plain text, with a TextBlock as a parent and no children.
- * Wraps a single DOMTextNode.
- * For convenience, has a .text property that's just a JavaScript string
- * mirroring the text contents of the DOMTextNode.
- * Text contents must always be nonempty.
- */
-var TextPiece = P(Node, function(_, super_) {
-  _.init = function(text) {
-    super_.init.call(this);
-    this.text = text;
-  };
-  _.jQadd = function(dom) { this.dom = dom; this.jQ = $(dom); };
-  _.jQize = function() {
-    return this.jQadd(document.createTextNode(this.text));
-  };
-  _.appendText = function(text) {
-    this.text += text;
-    this.dom.appendData(text);
-  };
-  _.prependText = function(text) {
-    this.text = text + this.text;
-    this.dom.insertData(0, text);
-  };
-  _.insTextAtDirEnd = function(text, dir) {
-    prayDirection(dir);
-    if (dir === R) this.appendText(text);
-    else this.prependText(text);
-  };
-  _.splitRight = function(i) {
-    var newPc = TextPiece(this.text.slice(i)).adopt(this.parent, this, this[R]);
-    newPc.jQadd(this.dom.splitText(i));
-    this.text = this.text.slice(0, i);
-    return newPc;
-  };
+		const textPcDom = this.jQ[0].firstChild;
+		if (!textPcDom) return;
+		pray('only node in TextBlock span is Text node', textPcDom.nodeType === 3);
+		// nodeType === 3 has meant a Text node since ancient times:
+		//   http://reference.sitepoint.com/javascript/Node/nodeType
 
-  function endChar(dir, text) {
-    return text.charAt(dir === L ? 0 : -1 + text.length);
-  }
+		const textPc = new TextPiece(textPcDom.data);
+		textPc.jQadd(textPcDom);
 
-  _.moveTowards = function(dir, cursor) {
-    prayDirection(dir);
+		this.children().disown();
+		return textPc.adopt(this, 0, 0);
+	}
 
-    var ch = endChar(-dir, this.text)
-
-    var from = this[-dir];
-    if (from) from.insTextAtDirEnd(ch, dir);
-    else TextPiece(ch).createDir(-dir, cursor);
-
-    return this.deleteTowards(dir, cursor);
-  };
-
-  _.latex = function() { return this.text; };
-
-  _.deleteTowards = function(dir, cursor) {
-    if (this.text.length > 1) {
-      if (dir === R) {
-        this.dom.deleteData(0, 1);
-        this.text = this.text.slice(1);
-      }
-      else {
-        // note that the order of these 2 lines is annoyingly important
-        // (the second line mutates this.text.length)
-        this.dom.deleteData(-1 + this.text.length, 1);
-        this.text = this.text.slice(0, -1);
-      }
-    }
-    else {
-      this.remove();
-      this.jQ.remove();
-      cursor[dir] = this[dir];
-    }
-  };
-
-  _.selectTowards = function(dir, cursor) {
-    prayDirection(dir);
-    var anticursor = cursor.anticursor;
-
-    var ch = endChar(-dir, this.text)
-
-    if (anticursor[dir] === this) {
-      var newPc = TextPiece(ch).createDir(dir, cursor);
-      anticursor[dir] = newPc;
-      cursor.insDirOf(dir, newPc);
-    }
-    else {
-      var from = this[-dir];
-      if (from) from.insTextAtDirEnd(ch, dir);
-      else {
-        var newPc = TextPiece(ch).createDir(-dir, cursor);
-        newPc.jQ.insDirOf(-dir, cursor.selection.jQ);
-      }
-
-      if (this.text.length === 1 && anticursor[-dir] === this) {
-        anticursor[-dir] = this[-dir]; // `this` will be removed in deleteTowards
-      }
-    }
-
-    return this.deleteTowards(dir, cursor);
-  };
-});
-
-LatexCmds.text =
-LatexCmds.textnormal =
-LatexCmds.textrm =
-LatexCmds.textup =
-CharCmds['"'] =
-LatexCmds.textmd = TextBlock;
-
-function makeTextBlock(latex, tagName, attrs) {
-  return P(TextBlock, {
-    ctrlSeq: latex,
-    htmlTemplate: '<'+tagName+' '+attrs+'>&0</'+tagName+'>'
-  });
+	focus() {
+		MathBlock.prototype.focus.call(this);
+		(function getCtrlr(node) {
+			return ('controller' in node) ? node.controller : getCtrlr(node.parent);
+		})(this).handle('textBlockEnter');
+	}
 }
 
+// Piece of plain text, with a TextBlock as a parent and no children.
+// Wraps a single DOMTextNode.
+// For convenience, has a .text property that's just a JavaScript string
+// mirroring the text contents of the DOMTextNode.
+// Text contents must always be nonempty.
+class TextPiece extends Node {
+	constructor(text) {
+		super();
+		this.text = text;
+	}
+
+	jQadd(dom) { this.dom = dom; this.jQ = $(dom); }
+
+	jQize() {
+		return this.jQadd(document.createTextNode(this.text));
+	}
+
+	appendText(text) {
+		this.text += text;
+		this.dom.appendData(text);
+	}
+
+	prependText(text) {
+		this.text = text + this.text;
+		this.dom.insertData(0, text);
+	}
+
+	insTextAtDirEnd(text, dir) {
+		prayDirection(dir);
+		if (dir === R) this.appendText(text);
+		else this.prependText(text);
+	}
+
+	splitRight(i) {
+		const newPc = new TextPiece(this.text.slice(i)).adopt(this.parent, this, this[R]);
+		newPc.jQadd(this.dom.splitText(i));
+		this.text = this.text.slice(0, i);
+		return newPc;
+	}
+
+	endChar(dir, text) {
+		return text.charAt(dir === L ? 0 : -1 + text.length);
+	}
+
+	moveTowards(dir, cursor) {
+		prayDirection(dir);
+
+		const ch = this.endChar(-dir, this.text)
+
+		const from = this[-dir];
+		if (from) from.insTextAtDirEnd(ch, dir);
+		else new TextPiece(ch).createDir(-dir, cursor);
+
+		return this.deleteTowards(dir, cursor);
+	}
+
+	latex() { return this.text; }
+
+	deleteTowards(dir, cursor) {
+		if (this.text.length > 1) {
+			if (dir === R) {
+				this.dom.deleteData(0, 1);
+				this.text = this.text.slice(1);
+			}
+			else {
+				// note that the order of these 2 lines is annoyingly important
+				// (the second line mutates this.text.length)
+				this.dom.deleteData(-1 + this.text.length, 1);
+				this.text = this.text.slice(0, -1);
+			}
+		}
+		else {
+			this.remove();
+			this.jQ.remove();
+			cursor[dir] = this[dir];
+		}
+	}
+
+	selectTowards(dir, cursor) {
+		prayDirection(dir);
+		const anticursor = cursor.anticursor;
+
+		const ch = this.endChar(-dir, this.text)
+
+		if (anticursor[dir] === this) {
+			const newPc = new TextPiece(ch).createDir(dir, cursor);
+			anticursor[dir] = newPc;
+			cursor.insDirOf(dir, newPc);
+		}
+		else {
+			const from = this[-dir];
+			if (from) from.insTextAtDirEnd(ch, dir);
+			else {
+				const newPc = new TextPiece(ch).createDir(-dir, cursor);
+				newPc.jQ.insDirOf(-dir, cursor.selection.jQ);
+			}
+
+			if (this.text.length === 1 && anticursor[-dir] === this) {
+				anticursor[-dir] = this[-dir]; // `this` will be removed in deleteTowards
+			}
+		}
+
+		return this.deleteTowards(dir, cursor);
+	}
+}
+
+LatexCmds.text =
+	LatexCmds.textnormal =
+	LatexCmds.textrm =
+	LatexCmds.textup =
+	CharCmds['"'] =
+	LatexCmds.textmd = TextBlock;
+
+const makeTextBlock = (latex, tagName, attrs) => class extends TextBlock {
+	constructor() {
+		super();
+		this.ctrlSeq = latex;
+		this.htmlTemplate = `<${tagName} ${attrs}>&0</${tagName}>`;
+	}
+};
+
 LatexCmds.em = LatexCmds.italic = LatexCmds.italics =
-LatexCmds.emph = LatexCmds.textit = LatexCmds.textsl =
-  makeTextBlock('\\textit', 'i', 'class="mq-text-mode"');
+	LatexCmds.emph = LatexCmds.textit = LatexCmds.textsl =
+	makeTextBlock('\\textit', 'i', 'class="mq-text-mode"');
 LatexCmds.strong = LatexCmds.bold = LatexCmds.textbf =
-  makeTextBlock('\\textbf', 'b', 'class="mq-text-mode"');
+	makeTextBlock('\\textbf', 'b', 'class="mq-text-mode"');
 LatexCmds.sf = LatexCmds.textsf =
-  makeTextBlock('\\textsf', 'span', 'class="mq-sans-serif mq-text-mode"');
+	makeTextBlock('\\textsf', 'span', 'class="mq-sans-serif mq-text-mode"');
 LatexCmds.tt = LatexCmds.texttt =
-  makeTextBlock('\\texttt', 'span', 'class="mq-monospace mq-text-mode"');
+	makeTextBlock('\\texttt', 'span', 'class="mq-monospace mq-text-mode"');
 LatexCmds.textsc =
-  makeTextBlock('\\textsc', 'span', 'style="font-variant:small-caps" class="mq-text-mode"');
+	makeTextBlock('\\textsc', 'span', 'style="font-variant:small-caps" class="mq-text-mode"');
 LatexCmds.uppercase =
-  makeTextBlock('\\uppercase', 'span', 'style="text-transform:uppercase" class="mq-text-mode"');
+	makeTextBlock('\\uppercase', 'span', 'style="text-transform:uppercase" class="mq-text-mode"');
 LatexCmds.lowercase =
-  makeTextBlock('\\lowercase', 'span', 'style="text-transform:lowercase" class="mq-text-mode"');
+	makeTextBlock('\\lowercase', 'span', 'style="text-transform:lowercase" class="mq-text-mode"');
 
 
-var RootMathCommand = P(MathCommand, function(_, super_) {
-  _.init = function(cursor) {
-    super_.init.call(this, '$');
-    this.cursor = cursor;
-  };
-  _.htmlTemplate = '<span class="mq-math-mode">&0</span>';
-  _.createBlocks = function() {
-    super_.createBlocks.call(this);
+class RootMathCommand extends MathCommand {
+	constructor(cursor) {
+		super('$');
+		this.cursor = cursor;
+		this.htmlTemplate = '<span class="mq-math-mode">&0</span>';
+	}
 
-    this.ends[L].cursor = this.cursor;
-    this.ends[L].write = function(cursor, ch) {
-      if (ch !== '$')
-        MathBlock.prototype.write.call(this, cursor, ch);
-      else if (this.isEmpty()) {
-        cursor.insRightOf(this.parent);
-        this.parent.deleteTowards(dir, cursor);
-        VanillaSymbol('\\$','$').createLeftOf(cursor.show());
-      }
-      else if (!cursor[R])
-        cursor.insRightOf(this.parent);
-      else if (!cursor[L])
-        cursor.insLeftOf(this.parent);
-      else
-        MathBlock.prototype.write.call(this, cursor, ch);
-    };
-  };
-  _.latex = function() {
-    return '$' + this.ends[L].latex() + '$';
-  };
-});
+	createBlocks() {
+		super.createBlocks();
 
-var RootTextBlock = P(RootMathBlock, function(_, super_) {
-  _.keystroke = function(key) {
-    if (key === 'Spacebar' || key === 'Shift-Spacebar') return;
-    return super_.keystroke.apply(this, arguments);
-  };
-  _.write = function(cursor, ch) {
-    cursor.show().deleteSelection();
-    if (ch === '$')
-      RootMathCommand(cursor).createLeftOf(cursor);
-    else {
-      var html;
-      if (ch === '<') html = '&lt;';
-      else if (ch === '>') html = '&gt;';
-      VanillaSymbol(ch, html).createLeftOf(cursor);
-    }
-  };
-});
-API.TextField = function(APIClasses) {
-  return P(APIClasses.EditableField, function(_, super_) {
-    this.RootBlock = RootTextBlock;
-    _.__mathquillify = function() {
-      return super_.__mathquillify.call(this, 'mq-editable-field mq-text-mode');
-    };
-    _.latex = function(latex) {
-      if (arguments.length > 0) {
-        this.__controller.renderLatexText(latex);
-        if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
-        return this;
-      }
-      return this.__controller.exportLatex();
-    };
-  });
+		this.ends[L].cursor = this.cursor;
+		this.ends[L].write = function(cursor, ch) {
+			if (ch !== '$')
+				MathBlock.prototype.write.call(this, cursor, ch);
+			else if (this.isEmpty()) {
+				cursor.insRightOf(this.parent);
+				this.parent.deleteTowards(dir, cursor);
+				new VanillaSymbol('\\$', '$').createLeftOf(cursor.show());
+			}
+			else if (!cursor[R])
+				cursor.insRightOf(this.parent);
+			else if (!cursor[L])
+				cursor.insLeftOf(this.parent);
+			else
+				MathBlock.prototype.write.call(this, cursor, ch);
+		};
+	}
+
+	latex() {
+		return `$${this.ends[L].latex()}$`;
+	}
+}
+
+class RootTextBlock extends RootMathBlock {
+	keystroke(key, ...args) {
+		if (key === 'Spacebar' || key === 'Shift-Spacebar') return;
+		return super.keystroke(key, ...args);
+	}
+
+	write(cursor, ch) {
+		cursor.show().deleteSelection();
+		if (ch === '$')
+			new RootMathCommand(cursor).createLeftOf(cursor);
+		else {
+			let html;
+			if (ch === '<') html = '&lt;';
+			else if (ch === '>') html = '&gt;';
+			new VanillaSymbol(ch, html).createLeftOf(cursor);
+		}
+	}
+}
+
+API.TextField = (APIClasses) => class extends APIClasses.EditableField {
+	static RootBlock = RootTextBlock;
+
+	__mathquillify() {
+		return super.__mathquillify('mq-editable-field mq-text-mode');
+	}
+
+	latex(latex) {
+		if (arguments.length > 0) {
+			this.__controller.renderLatexText(latex);
+			if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
+			return this;
+		}
+		return this.__controller.exportLatex();
+	}
 };

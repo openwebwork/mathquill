@@ -1,41 +1,39 @@
-/*********************************************
- * Controller for a MathQuill instance,
- * on which services are registered with
- *
- *   Controller.open(function(_) { ... });
- *
- ********************************************/
+// Controller for a MathQuill instance,
+// on which services are registered with
 
-var Controller = P(function(_) {
-  _.init = function(root, container, options) {
-    this.id = root.id;
-    this.data = {};
+// Controller.open(function(_) { ... });
 
-    this.root = root;
-    this.container = container;
-    this.options = options;
+class Controller {
+	constructor(root, container, options) {
+		this.id = root.id;
+		this.data = {};
 
-    root.controller = this;
+		this.root = root;
+		this.container = container;
+		this.options = options;
 
-    this.cursor = root.cursor = Cursor(root, options);
-    // TODO: stop depending on root.cursor, and rm it
-  };
+		root.controller = this;
 
-  _.handle = function(name, dir) {
-    var handlers = this.options.handlers;
-    if (handlers && handlers.fns[name]) {
-      var mq = handlers.APIClasses[this.KIND_OF_MQ](this);
-      if (dir === L || dir === R) handlers.fns[name](dir, mq);
-      else handlers.fns[name](mq);
-    }
-  };
+		this.cursor = new Cursor(root, options);
+	}
 
-  var notifyees = [];
-  this.onNotify = function(f) { notifyees.push(f); };
-  _.notify = function() {
-    for (var i = 0; i < notifyees.length; i += 1) {
-      notifyees[i].apply(this.cursor, arguments);
-    }
-    return this;
-  };
-});
+	handle(name, dir) {
+		const handlers = this.options.handlers;
+		if (handlers && handlers.fns[name]) {
+			const mq = new handlers.APIClasses[this.KIND_OF_MQ](this);
+			if (dir === L || dir === R) handlers.fns[name](dir, mq);
+			else handlers.fns[name](mq);
+		}
+	}
+
+	static notifyees = [];
+
+	static onNotify(f) { Controller.notifyees.push(f); };
+
+	notify(...args) {
+		for (const notifyee of Controller.notifyees) {
+			notifyee.apply(this.cursor, args);
+		}
+		return this;
+	}
+}

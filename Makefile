@@ -32,10 +32,7 @@ SRC_DIR = ./src
 INTRO = $(SRC_DIR)/intro.js
 OUTRO = $(SRC_DIR)/outro.js
 
-PJS_SRC = ./node_modules/pjs/src/p.js
-
 BASE_SOURCES = \
-  $(PJS_SRC) \
   $(SRC_DIR)/tree.js \
   $(SRC_DIR)/cursor.js \
   $(SRC_DIR)/controller.js \
@@ -47,10 +44,9 @@ SOURCES_FULL = \
   $(BASE_SOURCES) \
   $(SRC_DIR)/commands/math.js \
   $(SRC_DIR)/commands/text.js \
-  $(SRC_DIR)/commands/math/*.js
-# FIXME text.js currently depends on math.js (#435), restore these when fixed:
+  $(SRC_DIR)/commands/*/*.js
+# FIXME text.js currently depends on math.js (#435), restore this when fixed:
 # $(SRC_DIR)/commands/*.js \
-# $(SRC_DIR)/commands/*/*.js
 
 SOURCES_BASIC = \
   $(BASE_SOURCES) \
@@ -104,7 +100,8 @@ BUILD_DIR_EXISTS = $(BUILD_DIR)/.exists--used_by_Makefile
 #
 
 .PHONY: all basic dev js uglify css font clean
-all: font css uglify
+#all: font css uglify
+all: font css js
 basic: $(UGLY_BASIC_JS) $(BASIC_CSS)
 # dev is like all, but without minification
 dev: font css js
@@ -114,8 +111,6 @@ css: $(BUILD_CSS)
 font: $(FONT_TARGET)
 clean:
 	rm -rf $(BUILD_DIR)
-
-$(PJS_SRC): $(NODE_MODULES_INSTALLED)
 
 $(BUILD_JS): $(INTRO) $(SOURCES_FULL) $(OUTRO) $(BUILD_DIR_EXISTS)
 	cat $^ | ./script/escape-non-ascii > $@

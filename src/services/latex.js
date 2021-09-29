@@ -1,165 +1,159 @@
 // Parser MathBlock
-var latexMathParser = (function() {
-  function commandToBlock(cmd) { // can also take in a Fragment
-    var block = MathBlock();
-    cmd.adopt(block, 0, 0);
-    return block;
-  }
-  function joinBlocks(blocks) {
-    var firstBlock = blocks[0] || MathBlock();
+const latexMathParser = (() => {
+	const commandToBlock = (cmd) => { // can also take in a Fragment
+		const block = new MathBlock();
+		cmd.adopt(block, 0, 0);
+		return block;
+	}
+	const joinBlocks = (blocks) => {
+		const firstBlock = blocks[0] || new MathBlock();
 
-    for (var i = 1; i < blocks.length; i += 1) {
-      blocks[i].children().adopt(firstBlock, firstBlock.ends[R], 0);
-    }
+		for (const block of blocks.slice(1)) {
+			block.children().adopt(firstBlock, firstBlock.ends[R], 0);
+		}
 
-    return firstBlock;
-  }
+		return firstBlock;
+	}
 
-  var string = Parser.string;
-  var regex = Parser.regex;
-  var letter = Parser.letter;
-  var any = Parser.any;
-  var optWhitespace = Parser.optWhitespace;
-  var succeed = Parser.succeed;
-  var fail = Parser.fail;
+	const string = Parser.string;
+	const regex = Parser.regex;
+	const letter = Parser.letter;
+	const any = Parser.any;
+	const optWhitespace = Parser.optWhitespace;
+	const succeed = Parser.succeed;
+	const fail = Parser.fail;
 
-  // Parsers yielding either MathCommands, or Fragments of MathCommands
-  //   (either way, something that can be adopted by a MathBlock)
-  var variable = letter.map(function(c) { return Letter(c); });
-  var symbol = regex(/^[^${}\\_^]/).map(function(c) { return VanillaSymbol(c); });
+	// Parsers yielding either MathCommands, or Fragments of MathCommands
+	//   (either way, something that can be adopted by a MathBlock)
+	const variable = letter.map((c) => new Letter(c));
+	const symbol = regex(/^[^${}\\_^]/).map((c) => new VanillaSymbol(c));
 
-  var controlSequence =
-    regex(/^[^\\a-eg-zA-Z]/) // hotfix #164; match MathBlock::write
-    .or(string('\\').then(
-      regex(/^[a-z]+/i)
-      .or(regex(/^\s+/).result(' '))
-      .or(any)
-    )).then(function(ctrlSeq) {
-      var cmdKlass = LatexCmds[ctrlSeq];
+	const controlSequence =
+		regex(/^[^\\a-eg-zA-Z]/) // hotfix #164; match MathBlock::write
+		.or(string('\\').then(
+			regex(/^[a-z]+/i)
+			.or(regex(/^\s+/).result(' '))
+			.or(any)
+		)).then((ctrlSeq) => {
+			const cmdKlass = LatexCmds[ctrlSeq];
 
-      if (cmdKlass) {
-        return cmdKlass(ctrlSeq).parser();
-      }
-      else {
-        return fail('unknown command: \\'+ctrlSeq);
-      }
-    })
-  ;
+			if (cmdKlass) {
+				return new cmdKlass(ctrlSeq).parser();
+			} else {
+				return fail('unknown command: \\'+ctrlSeq);
+			}
+		});
 
-  var command =
-    controlSequence
-    .or(variable)
-    .or(symbol)
-  ;
+	const command = controlSequence.or(variable).or(symbol);
 
-  // Parsers yielding MathBlocks
-  var mathGroup = string('{').then(function() { return mathSequence; }).skip(string('}'));
-  var mathBlock = optWhitespace.then(mathGroup.or(command.map(commandToBlock)));
-  var mathSequence = mathBlock.many().map(joinBlocks).skip(optWhitespace);
+	// Parsers yielding MathBlocks
+	const mathGroup = string('{').then(() => mathSequence).skip(string('}'));
+	const mathBlock = optWhitespace.then(mathGroup.or(command.map(commandToBlock)));
+	const mathSequence = mathBlock.many().map(joinBlocks).skip(optWhitespace);
 
-  var optMathBlock =
-    string('[').then(
-      mathBlock.then(function(block) {
-        return block.join('latex') !== ']' ? succeed(block) : fail();
-      })
-      .many().map(joinBlocks).skip(optWhitespace)
-    ).skip(string(']'))
-  ;
+	const optMathBlock =
+		string('[').then(
+			mathBlock.then((block) => {
+				return block.join('latex') !== ']' ? succeed(block) : fail();
+			})
+			.many().map(joinBlocks).skip(optWhitespace)
+		).skip(string(']'))
+	;
 
-  var latexMath = mathSequence;
+	const latexMath = mathSequence;
 
-  latexMath.block = mathBlock;
-  latexMath.optBlock = optMathBlock;
-  return latexMath;
+	latexMath.block = mathBlock;
+	latexMath.optBlock = optMathBlock;
+	return latexMath;
 })();
 
-Controller.open(function(_, super_) {
-  _.exportLatex = function() {
-    return this.root.latex().replace(/(\\[a-z]+) (?![a-z])/ig,'$1');
-  };
+Controller.prototype.exportLatex = function() {
+	return this.root.latex().replace(/(\\[a-z]+) (?![a-z])/ig, '$1');
+};
 
-  optionProcessors.maxDepth = function(depth) {
-    return (typeof depth === 'number') ? depth : undefined;
-  };
-  _.writeLatex = function(latex) {
-    var cursor = this.notify('edit').cursor;
-    cursor.parent.writeLatex(cursor, latex);
+optionProcessors.maxDepth = function(depth) {
+	return (typeof depth === 'number') ? depth : undefined;
+};
 
-    return this;
-  };
-  _.renderLatexMath = function(latex) {
-    var root = this.root;
-    var cursor = this.cursor;
-    var options = cursor.options;
-    var jQ = root.jQ;
+Controller.prototype.writeLatex = function(latex) {
+	const cursor = this.notify('edit').cursor;
+	cursor.parent.writeLatex(cursor, latex);
 
-    var all = Parser.all;
-    var eof = Parser.eof;
+	return this;
+};
 
-    var block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
+Controller.prototype.renderLatexMath = function(latex) {
+	const root = this.root;
+	const cursor = this.cursor;
+	const jQ = root.jQ;
 
-    root.eachChild('postOrder', 'dispose');
-    root.ends[L] = root.ends[R] = 0;
+	const all = Parser.all;
+	const eof = Parser.eof;
 
-    if (block && block.prepareInsertionAt(cursor)) {
-      block.children().adopt(root, 0, 0);
-      var html = block.join('html');
-      jQ.html(html);
-      root.jQize(jQ.children());
-      root.finalizeInsert(cursor.options);
-    }
-    else {
-      jQ.empty();
-    }
+	const block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
 
-    delete cursor.selection;
-    cursor.insAtRightEnd(root);
-  };
-  _.renderLatexText = function(latex) {
-    var root = this.root, cursor = this.cursor;
+	root.eachChild('postOrder', 'dispose');
+	root.ends[L] = root.ends[R] = 0;
 
-    root.jQ.children().slice(1).remove();
-    root.eachChild('postOrder', 'dispose');
-    root.ends[L] = root.ends[R] = 0;
-    delete cursor.selection;
-    cursor.show().insAtRightEnd(root);
+	if (block && block.prepareInsertionAt(cursor)) {
+		block.children().adopt(root, 0, 0);
+		const html = block.join('html');
+		jQ.html(html);
+		root.jQize(jQ.children());
+		root.finalizeInsert(cursor.options);
+	}
+	else {
+		jQ.empty();
+	}
 
-    var regex = Parser.regex;
-    var string = Parser.string;
-    var eof = Parser.eof;
-    var all = Parser.all;
+	delete cursor.selection;
+	cursor.insAtRightEnd(root);
+};
 
-    // Parser RootMathCommand
-    var mathMode = string('$').then(latexMathParser)
-      // because TeX is insane, math mode doesn't necessarily
-      // have to end.  So we allow for the case that math mode
-      // continues to the end of the stream.
-      .skip(string('$').or(eof))
-      .map(function(block) {
-        // HACK FIXME: this shouldn't have to have access to cursor
-        var rootMathCommand = RootMathCommand(cursor);
+Controller.prototype.renderLatexText = function(latex) {
+	const root = this.root, cursor = this.cursor;
 
-        rootMathCommand.createBlocks();
-        var rootMathBlock = rootMathCommand.ends[L];
-        block.children().adopt(rootMathBlock, 0, 0);
+	root.jQ.children().slice(1).remove();
+	root.eachChild('postOrder', 'dispose');
+	root.ends[L] = root.ends[R] = 0;
+	delete cursor.selection;
+	cursor.show().insAtRightEnd(root);
 
-        return rootMathCommand;
-      })
-    ;
+	const regex = Parser.regex;
+	const string = Parser.string;
+	const eof = Parser.eof;
+	const all = Parser.all;
 
-    var escapedDollar = string('\\$').result('$');
-    var textChar = escapedDollar.or(regex(/^[^$]/)).map(VanillaSymbol);
-    var latexText = mathMode.or(textChar).many();
-    var commands = latexText.skip(eof).or(all.result(false)).parse(latex);
+	// Parser RootMathCommand
+	const mathMode = string('$').then(latexMathParser)
+	// because TeX is insane, math mode doesn't necessarily
+	// have to end.  So we allow for the case that math mode
+	// continues to the end of the stream.
+		.skip(string('$').or(eof))
+		.map((block) => {
+			// HACK FIXME: this shouldn't have to have access to cursor
+			const rootMathCommand = new RootMathCommand(cursor);
 
-    if (commands) {
-      for (var i = 0; i < commands.length; i += 1) {
-        commands[i].adopt(root, root.ends[R], 0);
-      }
+			rootMathCommand.createBlocks();
+			const rootMathBlock = rootMathCommand.ends[L];
+			block.children().adopt(rootMathBlock, 0, 0);
 
-      root.jQize().appendTo(root.jQ);
+			return rootMathCommand;
+		})
+	;
 
-      root.finalizeInsert(cursor.options);
-    }
-  };
-});
+	const escapedDollar = string('\\$').result('$');
+	const textChar = escapedDollar.or(regex(/^[^$]/)).map(VanillaSymbol);
+	const latexText = mathMode.or(textChar).many();
+	const commands = latexText.skip(eof).or(all.result(false)).parse(latex);
+
+	if (commands) {
+		for (const command of commands) {
+			command.adopt(root, root.ends[R], 0);
+		}
+
+		root.jQize().appendTo(root.jQ);
+
+		root.finalizeInsert(cursor.options);
+	}
+};
