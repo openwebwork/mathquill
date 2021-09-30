@@ -166,7 +166,7 @@ suite('text', function() {
       controller.paste('\\pi');
 
       assertSplit(cursor.jQ, 'as\\pi', 'df');
-      assertLatex('\\text{as\\backslash pidf}');
+      assertLatex('\\text{as\\pidf}');
       prayWellFormedPoint(cursor);
     });
 

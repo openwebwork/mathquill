@@ -42,7 +42,6 @@ suite('autoOperatorNames', function() {
     }
 
     assertAutoOperatorNamesWork('sin', '\\sin');
-    assertAutoOperatorNamesWork('inf', '\\inf');
     assertAutoOperatorNamesWork('arcosh', '\\operatorname{arcosh}');
     assertAutoOperatorNamesWork('acosh', 'a\\cosh');
     assertAutoOperatorNamesWork('cosine', '\\cos ine');
