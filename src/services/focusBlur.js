@@ -1,40 +1,42 @@
-Controller.prototype.focusBlurEvents = function() {
-	const ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
-	ctrlr.textarea.focus(() => {
-		ctrlr.blurred = false;
-		ctrlr.container.addClass('mq-focused');
-		if (!cursor.parent)
-			cursor.insAtRightEnd(root);
-		if (cursor.selection) {
-			cursor.selection.jQ.removeClass('mq-blur');
-			ctrlr.selectionChanged(); //re-select textarea contents after tabbing away and back
-		}
-		else
-			cursor.show();
-	}).blur(() => {
+// Focus and Blur events
+
+const FocusBlurEvents = (base) => class extends base {
+	focusBlurEvents() {
+		const ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
+		ctrlr.textarea.focus(() => {
+			ctrlr.blurred = false;
+			ctrlr.container.addClass('mq-focused');
+			if (!cursor.parent)
+				cursor.insAtRightEnd(root);
+			if (cursor.selection) {
+				cursor.selection.jQ.removeClass('mq-blur');
+				ctrlr.selectionChanged(); //re-select textarea contents after tabbing away and back
+			}
+			else
+				cursor.show();
+		}).blur(() => {
+			ctrlr.blurred = true;
+			ctrlr.container.removeClass('mq-focused');
+			cursor.hide().parent.blur();
+			if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
+		});
 		ctrlr.blurred = true;
-		ctrlr.container.removeClass('mq-focused');
 		cursor.hide().parent.blur();
-		if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
-	});
-	ctrlr.blurred = true;
-	cursor.hide().parent.blur();
+	}
+
+	unbindFocusBlurEvents() {
+		this.textarea.off('focus blur');
+	}
 };
 
-Controller.prototype.unbindFocusBlurEvents = function() {
-	this.textarea.off('focus blur');
-};
+const BlockFocusBlur = (base) => class extends base {
+	focus() {
+		this.jQ.addClass('mq-hasCursor');
+		this.jQ.removeClass('mq-empty');
+	}
 
-// TODO: I wanted to move MathBlock::focus and blur here, it would clean
-// up lots of stuff like, TextBlock::focus is set to MathBlock::focus
-// and TextBlock::blur calls MathBlock::blur, when instead they could
-// use inheritance and super_.
-//
-// Problem is, there's lots of calls to .focus()/.blur() on nodes
-// outside Controller::focusBlurEvents(), such as .postOrder('blur') on
-// insertion, which if MathBlock::blur becomes Node::blur, would add the
-// 'blur' CSS class to all Symbol's (because .isEmpty() is true for all
-// of them).
-//
-// I'm not even sure there aren't other troublesome calls to .focus() or
-// .blur(), so this is TODO for now.
+	blur() {
+		this.jQ.removeClass('mq-hasCursor');
+		if (this.isEmpty()) this.jQ.addClass('mq-empty');
+	}
+};

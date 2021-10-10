@@ -33,20 +33,20 @@ INTRO = $(SRC_DIR)/intro.js
 OUTRO = $(SRC_DIR)/outro.js
 
 BASE_SOURCES = \
+  $(SRC_DIR)/options.js \
+  $(SRC_DIR)/services/*.util.js \
+  $(SRC_DIR)/services/*.js \
   $(SRC_DIR)/tree.js \
   $(SRC_DIR)/cursor.js \
   $(SRC_DIR)/controller.js \
   $(SRC_DIR)/publicapi.js \
-  $(SRC_DIR)/services/*.util.js \
-  $(SRC_DIR)/services/*.js
+  $(SRC_DIR)/mixins.js
 
 SOURCES_FULL = \
   $(BASE_SOURCES) \
   $(SRC_DIR)/commands/math.js \
   $(SRC_DIR)/commands/text.js \
   $(SRC_DIR)/commands/*/*.js
-# FIXME text.js currently depends on math.js (#435), restore this when fixed:
-# $(SRC_DIR)/commands/*.js \
 
 SOURCES_BASIC = \
   $(BASE_SOURCES) \
@@ -72,12 +72,12 @@ BASIC_JS = $(BUILD_DIR)/mathquill-basic.js
 BUILD_CSS = $(BUILD_DIR)/mathquill.css
 BASIC_CSS = $(BUILD_DIR)/mathquill-basic.css
 BUILD_TEST = $(BUILD_DIR)/mathquill.test.js
-UGLY_JS = $(BUILD_DIR)/mathquill.min.js
-UGLY_BASIC_JS = $(BUILD_DIR)/mathquill-basic.min.js
+MIN_JS = $(BUILD_DIR)/mathquill.min.js
+MIN_BASIC_JS = $(BUILD_DIR)/mathquill-basic.min.js
 
 # programs and flags
-UGLIFY ?= ./node_modules/.bin/uglifyjs
-UGLIFY_OPTS ?= --mangle --compress hoist_vars=true --comments /maintainers@mathquill.com/
+MINIFY ?= npx minify
+BABEL ?= npx babel
 
 LESSC ?= ./node_modules/.bin/lessc
 LESS_OPTS ?=
@@ -99,32 +99,31 @@ BUILD_DIR_EXISTS = $(BUILD_DIR)/.exists--used_by_Makefile
 # -*- Build tasks -*-
 #
 
-.PHONY: all basic dev js uglify css font clean
-#all: font css uglify
-all: font css js
-basic: $(UGLY_BASIC_JS) $(BASIC_CSS)
+.PHONY: all basic dev js minify css font clean
+all: font css minify
+basic: $(MIN_BASIC_JS) $(BASIC_CSS)
 # dev is like all, but without minification
 dev: font css js
 js: $(BUILD_JS)
-uglify: $(UGLY_JS)
+minify: $(MIN_JS)
 css: $(BUILD_CSS)
 font: $(FONT_TARGET)
 clean:
 	rm -rf $(BUILD_DIR)
 
 $(BUILD_JS): $(INTRO) $(SOURCES_FULL) $(OUTRO) $(BUILD_DIR_EXISTS)
-	cat $^ | ./script/escape-non-ascii > $@
+	cat $^ > $@
 	$(SED_IN_PLACE) s/{VERSION}/v$(VERSION)/ $@
 
-$(UGLY_JS): $(BUILD_JS) $(NODE_MODULES_INSTALLED)
-	$(UGLIFY) $(UGLIFY_OPTS) < $< > $@
+$(MIN_JS): $(BUILD_JS) $(NODE_MODULES_INSTALLED)
+	$(BABEL) $< | $(MINIFY) -o $@
 
 $(BASIC_JS): $(INTRO) $(SOURCES_BASIC) $(OUTRO) $(BUILD_DIR_EXISTS)
 	cat $^ | ./script/escape-non-ascii > $@
 	$(SED_IN_PLACE) s/{VERSION}/v$(VERSION)/ $@
 
-$(UGLY_BASIC_JS): $(BASIC_JS) $(NODE_MODULES_INSTALLED)
-	$(UGLIFY) $(UGLIFY_OPTS) < $< > $@
+$(MIN_BASIC_JS): $(BASIC_JS) $(NODE_MODULES_INSTALLED)
+	$(BABEL) $< | $(MINIFY) -o $@
 
 $(BUILD_CSS): $(CSS_SOURCES) $(NODE_MODULES_INSTALLED) $(BUILD_DIR_EXISTS)
 	$(LESSC) $(LESS_OPTS) $(CSS_MAIN) > $@

@@ -1,8 +1,6 @@
 // The publicly exposed MathQuill API.
 
-const API = {}, optionProcessors = {}, EMBEDS = {};
-
-class Options {}
+const API = {}, EMBEDS = {};
 
 // globally exported API object
 class MathQuill {
@@ -30,12 +28,11 @@ class MathQuill {
 
 		const config = (currentOptions, newOptions) => {
 			if (newOptions && newOptions.handlers) {
-				newOptions.handlers = { fns: newOptions.handlers, APIClasses: APIClasses };
+				newOptions.handlers = { fns: newOptions.handlers, APIClasses };
 			}
 			for (const name in newOptions) {
 				if (newOptions.hasOwnProperty(name)) {
-					const value = newOptions[name], processor = optionProcessors[name];
-					currentOptions[name] = (processor ? processor(value) : value);
+					currentOptions[name] = newOptions[name];
 				}
 			}
 		};
@@ -236,35 +233,3 @@ class MathQuill {
 }
 
 window.MathQuill = MathQuill;
-
-const RootBlockMixin = (_) => {
-	for (const name of ['moveOutOf', 'deleteOutOf', 'selectOutOf', 'upOutOf', 'downOutOf']) {
-		_[name] = function(dir) { this.controller.handle(name, dir); };
-	}
-
-	_.reflow = function() {
-		this.controller.handle('reflow');
-		this.controller.handle('edited');
-		this.controller.handle('edit');
-	};
-};
-
-// Editability methods called by the cursor for editing, cursor movements, and selection of the MathQuill tree.  These
-// all take in a direction and the cursor.  The MathCommand and TextBlock classes use this mixin.
-const deleteSelectTowardsMixin = (base) => class extends base {
-	moveTowards(dir, cursor, updown) {
-		const updownInto = updown && this[`${updown}Into`];
-		cursor.insAtDirEnd(-dir, updownInto || this.ends[-dir]);
-	}
-
-	deleteTowards(dir, cursor) {
-		if (this.isEmpty()) cursor[dir] = this.remove()[dir];
-		else this.moveTowards(dir, cursor, null);
-	}
-
-	selectTowards(dir, cursor) {
-		cursor[-dir] = this;
-		cursor[dir] = this[dir];
-	}
-
-}

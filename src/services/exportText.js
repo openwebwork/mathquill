@@ -1,6 +1,7 @@
-// Export math in a human-readable text format
-// As you can see, only half-baked so far.
+// Extension to the Controller that allows exporting of  math in a human-readable text format.
 
-Controller.prototype.exportText = function() {
-	return this.root.foldChildren('', (text, child) => text + child.text());
-};
+const ExportText = (base) => class extends base {
+	exportText() {
+		return this.root.foldChildren('', (text, child) => text + child.text());
+	};
+}

@@ -361,7 +361,7 @@ class BinaryOperator extends Symbol {
 // Children and parent of MathCommand's. Basically partitions all the
 // symbols and operators that descend (in the Math DOM tree) from
 // ancestor operators.
-class MathBlock extends MathElement {
+class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	join(methodName) {
 		return this.foldChildren('', (fold, child) => fold + child[methodName]());
 	}
@@ -431,14 +431,6 @@ class MathBlock extends MathElement {
 			return new VanillaSymbol(ch);
 	}
 
-	write(cursor, ch) {
-		const cmd = this.chToCmd(ch, cursor.options);
-		if (cursor.selection) cmd.replaces(cursor.replaceSelection());
-		if (!cursor.isTooDeep()) {
-			cmd.createLeftOf(cursor.show());
-		}
-	}
-
 	writeLatex(cursor, latex) {
 		const all = Parser.all;
 		const eof = Parser.eof;
@@ -458,22 +450,16 @@ class MathBlock extends MathElement {
 	}
 
 	focus() {
-		this.jQ.addClass('mq-hasCursor');
-		this.jQ.removeClass('mq-empty');
-
+		super.focus();
 		return this;
 	}
 
 	blur() {
-		this.jQ.removeClass('mq-hasCursor');
-		if (this.isEmpty())
-			this.jQ.addClass('mq-empty');
-
+		super.blur();
 		return this;
 	}
 }
 
-Options.prototype.mouseEvents = true;
 API.StaticMath = (APIClasses) => class extends APIClasses.AbstractMathQuill {
 	static RootBlock = MathBlock;
 

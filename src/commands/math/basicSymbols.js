@@ -38,27 +38,6 @@ class Variable extends Symbol {
 	};
 }
 
-Options.prototype.autoCommands = { _maxLength: 0 };
-optionProcessors.autoCommands = (cmds) => {
-	if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
-		throw `"${cmds}" not a space-delimited list of only letters`;
-	}
-	const list = cmds.split(' '), dict = {};
-	let maxLength = 0;
-	for (const cmd of list) {
-		if (cmd.length < 2) {
-			throw `autocommand "${cmd}" not minimum length of 2`;
-		}
-		if (LatexCmds[cmd] === OperatorName) {
-			throw `"${cmd}" is a built-in operator name`;
-		}
-		dict[cmd] = 1;
-		maxLength = Math.max(maxLength, cmd.length);
-	}
-	dict._maxLength = maxLength;
-	return dict;
-};
-
 class Letter extends Variable {
 	constructor(ch) {
 		super(ch);
@@ -162,7 +141,7 @@ class Letter extends Variable {
 
 	shouldOmitPadding(node) {
 		// omit padding if no node, or if node already has padding (to avoid double-padding)
-		return !node || (node instanceof BinaryOperator) || (node instanceof SummationNotation);
+		return !node || (node instanceof BinaryOperator) || (node instanceof UpperLowerLimitCommand);
 	}
 }
 
@@ -174,16 +153,11 @@ class Letter extends Variable {
 // \varlimsup are not supported
 const BuiltInOpNames = {};
 
-// The set of operator names that MathQuill auto-unitalicizes by default; overridable
-const AutoOpNames = Options.prototype.autoOperatorNames = { _maxLength: 9 };
-
-const TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };
-
 // Standard operators
 for (const op of [
 	'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim', 'ln',
 	'log', 'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
-]) { BuiltInOpNames[op] = AutoOpNames[op] = 1; }
+]) { BuiltInOpNames[op] = 1; }
 
 // Trig operators
 // why coth but not sech and csch, LaTeX?
@@ -192,36 +166,7 @@ for (const trig of [
 	'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'coth'
 ]) { BuiltInOpNames[trig] = 1; }
 
-for (const autoTrig of [
-	'sin', 'cos', 'tan', 'sec', 'cosec', 'csc', 'cotan', 'cot', 'ctg'
-]) {
-	AutoOpNames[autoTrig] =
-		AutoOpNames[`arc${autoTrig}`] = AutoOpNames[`${autoTrig}h`] =
-		AutoOpNames[`ar${autoTrig}h`] = AutoOpNames[`arc${autoTrig}h`] = 1;
-}
-
-// compat with some of the nonstandard LaTeX exported by MathQuill
-// before #247. None of these are real LaTeX commands so, seems safe
-for (const op of ['gcf', 'hcf', 'lcm', 'proj', 'span']) {
-	AutoOpNames[op] = 1;
-}
-
-optionProcessors.autoOperatorNames = (cmds) => {
-	if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
-		throw `"${cmds}" not a space-delimited list of only letters`;
-	}
-	const list = cmds.split(' '), dict = {};
-	let maxLength = 0;
-	for (const cmd of list) {
-		if (cmd.length < 2) {
-			throw `"${cmd}" not minimum length of 2`;
-		}
-		dict[cmd] = 1;
-		maxLength = Math.max(maxLength, cmd.length);
-	}
-	dict._maxLength = maxLength;
-	return dict;
-};
+const TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };
 
 class OperatorName extends Symbol {
 	constructor(fn) {
@@ -244,8 +189,8 @@ class OperatorName extends Symbol {
 	}
 }
 
-for (const fn in AutoOpNames) {
-	if (AutoOpNames.hasOwnProperty(fn)) {
+for (const fn in Options.autoOperatorNames) {
+	if (Options.autoOperatorNames.hasOwnProperty(fn) && fn !== '_maxLength') {
 		LatexCmds[fn] = OperatorName;
 	}
 }

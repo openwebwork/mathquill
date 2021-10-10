@@ -125,8 +125,6 @@ LatexCmds['class'] = class extends MathCommand {
 	}
 };
 
-Options.prototype.charsThatBreakOutOfSupSub = '';
-
 class SupSub extends MathCommand {
 	constructor(...args) {
 		super(...args);
@@ -177,20 +175,7 @@ class SupSub extends MathCommand {
 	}
 
 	finalizeTree() {
-		this.ends[L].write = function(cursor, ch) {
-			if (cursor.options.autoSubscriptNumerals && this === this.parent.sub) {
-				if (ch === '_') return;
-				const cmd = this.chToCmd(ch, cursor.options);
-				if (cmd instanceof Symbol) cursor.deleteSelection();
-				else cursor.clearSelection().insRightOf(this.parent);
-				return cmd.createLeftOf(cursor.show());
-			}
-			if (cursor[L] && !cursor[R] && !cursor.selection
-				&& cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
-				cursor.insRightOf(this.parent);
-			}
-			MathBlock.prototype.write.call(this, cursor, ch);
-		};
+		this.ends[L].isSupSubLeft = true;
 	}
 
 	moveTowards(dir, cursor, updown, ...args) {
@@ -345,26 +330,7 @@ LatexCmds.superscript = LatexCmds.supscript = LatexCmds['^'] = class extends Sup
 	}
 };
 
-class SummationNotation extends MathCommand {
-	constructor(ch, html, ...args) {
-		const htmlTemplate =
-			'<span class="mq-large-operator mq-non-leaf">'
-			+   '<span class="mq-to"><span>&1</span></span>'
-			+   '<big>' + html + '</big>'
-			+   '<span class="mq-from"><span>&0</span></span>'
-			+ '</span>';
-		const text = ch && ch.length > 1 ? ch.slice(1) : ch;
-		super(ch, htmlTemplate, [ text ]);
-	}
-
-	createLeftOf(cursor, ...args) {
-		super.createLeftOf(cursor, ...args);
-		if (cursor.options.sumStartsWithNEquals) {
-			new Letter('n').createLeftOf(cursor);
-			new Equality().createLeftOf(cursor);
-		}
-	}
-
+class UpperLowerLimitCommand extends MathCommand {
 	latex() {
 		const simplify = (latex) => latex.length === 1 ? latex : `{${latex || ' '}}`;
 		return `${this.ctrlSeq}_${simplify(this.ends[L].latex())}^${simplify(this.ends[R].latex())}`;
@@ -397,6 +363,26 @@ class SummationNotation extends MathCommand {
 		this.ends[L].upOutOf = this.ends[R];
 		this.ends[R].downOutOf = this.ends[L];
 	}
+};
+
+class SummationNotation extends UpperLowerLimitCommand {
+	constructor(ch, html, ...args) {
+		super(ch,
+			'<span class="mq-large-operator mq-non-leaf">'
+			+   '<span class="mq-to"><span>&1</span></span>'
+			+   '<big>' + html + '</big>'
+			+   '<span class="mq-from"><span>&0</span></span>'
+			+ '</span>',
+			[ch && ch.length > 1 ? ch.slice(1) : ch]);
+	}
+
+	createLeftOf(cursor, ...args) {
+		super.createLeftOf(cursor, ...args);
+		if (cursor.options.sumStartsWithNEquals) {
+			new Letter('n').createLeftOf(cursor);
+			new Equality().createLeftOf(cursor);
+		}
+	}
 }
 
 LatexCmds['\u2211'] =
@@ -410,10 +396,9 @@ LatexCmds['\u220f'] =
 LatexCmds.coprod =
 	LatexCmds.coproduct = bindMixin(SummationNotation,'\\coprod ','&#8720;');
 
-LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = class extends SummationNotation {
+LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = class extends UpperLowerLimitCommand {
 	constructor() {
-		super('\\int ', '');
-		this.htmlTemplate =
+		super('\\int ',
 			'<span class="mq-int mq-non-leaf">'
 			+   '<big>&int;</big>'
 			+   '<span class="mq-supsub mq-non-leaf">'
@@ -421,10 +406,7 @@ LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = class extends Summ
 			+     '<span class="mq-sub">&0</span>'
 			+     '<span style="display:inline-block;width:0">&#8203</span>'
 			+   '</span>'
-			+ '</span>';
-
-		// FIXME: refactor rather than overriding
-		this.createLeftOf = MathCommand.prototype.createLeftOf;
+			+ '</span>');
 	}
 };
 
@@ -461,7 +443,7 @@ LatexCmds.fraction = class extends MathCommand {
 	}
 };
 
-const LiveFraction = LatexCmds.over = CharCmds['/'] = class extends Fraction {
+const FractionChooseCreateLeftOfMixin = (base) => class extends (base) {
 	createLeftOf(cursor) {
 		if (!this.replacedFragment) {
 			let leftward = cursor[L];
@@ -469,13 +451,13 @@ const LiveFraction = LatexCmds.over = CharCmds['/'] = class extends Fraction {
 				!(
 					leftward instanceof BinaryOperator ||
 					leftward instanceof (LatexCmds.text || noop) ||
-					leftward instanceof SummationNotation ||
+					leftward instanceof UpperLowerLimitCommand ||
 					leftward.ctrlSeq === '\\ ' ||
 					/^[,;:]$/.test(leftward.ctrlSeq)
 				) //lookbehind for operator
 			) leftward = leftward[L];
 
-			if (leftward instanceof SummationNotation && leftward[R] instanceof SupSub) {
+			if (leftward instanceof UpperLowerLimitCommand && leftward[R] instanceof SupSub) {
 				leftward = leftward[R];
 				if (leftward[R] instanceof SupSub && leftward[R].ctrlSeq != leftward.ctrlSeq)
 					leftward = leftward[R];
@@ -489,6 +471,8 @@ const LiveFraction = LatexCmds.over = CharCmds['/'] = class extends Fraction {
 		super.createLeftOf(cursor);
 	}
 };
+
+const LiveFraction = LatexCmds.over = CharCmds['/'] = class extends FractionChooseCreateLeftOfMixin(Fraction) {};
 
 const SquareRoot = LatexCmds.sqrt = LatexCmds['\u221a'] = class extends MathCommand {
 	constructor(...args) {
@@ -840,13 +824,7 @@ const Binomial = LatexCmds.binom = LatexCmds.binomial = class extends DelimsMixi
 	}
 };
 
-LatexCmds.choose = class extends Binomial {
-	constructor(...args) {
-		super(...args);
-		// FIXME:  This should be a mixin.
-		this.createLeftOf = LiveFraction.prototype.createLeftOf;
-	}
-};
+LatexCmds.choose = class extends FractionChooseCreateLeftOfMixin(Binomial) {};
 
 // backcompat with before cfd3620 on #233
 LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {

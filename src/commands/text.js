@@ -4,7 +4,7 @@
 // Represents flat strings of typically serif-font Roman characters, as
 // opposed to hierchical, nested, tree-structured math.
 // Wraps a single HTMLSpanElement.
-class TextBlock extends deleteSelectTowardsMixin(Node) {
+class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 	constructor() {
 		super();
 		this.ctrlSeq = '\\text';
@@ -171,7 +171,8 @@ class TextBlock extends deleteSelectTowardsMixin(Node) {
 	}
 
 	blur(cursor) {
-		MathBlock.prototype.blur.call(this);
+		super.blur();
+
 		if (!cursor) return;
 		if (this.textContents() === '') {
 			this.remove();
@@ -179,8 +180,9 @@ class TextBlock extends deleteSelectTowardsMixin(Node) {
 			else if (cursor[R] === this) cursor[R] = this[R];
 		}
 		else this.fuseChildren();
+
 		(function getCtrlr(node) {
-			return ('controller' in node) ? node.controller : getCtrlr(node.parent);
+			return (node.controller) ? node.controller : getCtrlr(node.parent);
 		})(cursor.parent).handle('textBlockExit');
 	}
 
@@ -201,9 +203,10 @@ class TextBlock extends deleteSelectTowardsMixin(Node) {
 	}
 
 	focus() {
-		MathBlock.prototype.focus.call(this);
+		super.focus();
+
 		(function getCtrlr(node) {
-			return ('controller' in node) ? node.controller : getCtrlr(node.parent);
+			return (node.controller) ? node.controller : getCtrlr(node.parent);
 		})(this).handle('textBlockEnter');
 	}
 }
@@ -346,7 +349,7 @@ LatexCmds.lowercase =
 	makeTextBlock('\\lowercase', 'span', 'style="text-transform:lowercase" class="mq-text-mode"');
 
 
-class RootMathCommand extends MathCommand {
+class RootMathCommand extends writeMethodMixin(MathCommand) {
 	constructor(cursor) {
 		super('$');
 		this.cursor = cursor;
@@ -359,7 +362,7 @@ class RootMathCommand extends MathCommand {
 		this.ends[L].cursor = this.cursor;
 		this.ends[L].write = function(cursor, ch) {
 			if (ch !== '$')
-				MathBlock.prototype.write.call(this, cursor, ch);
+				this.write(cursor, ch);
 			else if (this.isEmpty()) {
 				cursor.insRightOf(this.parent);
 				this.parent.deleteTowards(dir, cursor);
@@ -370,7 +373,7 @@ class RootMathCommand extends MathCommand {
 			else if (!cursor[L])
 				cursor.insLeftOf(this.parent);
 			else
-				MathBlock.prototype.write.call(this, cursor, ch);
+				this.write(cursor, ch);
 		};
 	}
 
