@@ -118,15 +118,14 @@ an editable math textbox:
 
 	const mathquillifyButton = document.getElementById('mathquillify-button');
 	const mathquillifyLatex = document.getElementById('mathquillify-latex');
-	let mathField = null;
 	mathquillifyButton.addEventListener('click', () => {
+		const mathField = MQ(mathquillifyLatex);
 		if (mathField) {
 			mathField.revert();
-			mathField = null;
 			mathquillifyButton.textContent = 'MathQuill-ify';
 		} else {
 			mathquillifyButton.textContent = 'De-MathQuill-ify';
-			mathField = MQ.MathField(mathquillifyLatex);
+			MQ.MathField(mathquillifyLatex);
 		};
 	});
 

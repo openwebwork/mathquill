@@ -1,6 +1,14 @@
 // Options for the API objects
 
 class Options {
+	static config(currentOptions, newOptions) {
+		for (const name in newOptions) {
+			if (newOptions.hasOwnProperty(name)) {
+				currentOptions[name] = newOptions[name];
+			}
+		}
+	}
+
 	// Default settings
 
 	// Wether mouse events are active for StaticMath blocks 

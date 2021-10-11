@@ -39,6 +39,7 @@ BASE_SOURCES = \
   $(SRC_DIR)/tree.js \
   $(SRC_DIR)/cursor.js \
   $(SRC_DIR)/controller.js \
+  $(SRC_DIR)/abstractFields.js \
   $(SRC_DIR)/publicapi.js \
   $(SRC_DIR)/mixins.js
 

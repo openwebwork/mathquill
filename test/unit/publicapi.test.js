@@ -1,29 +1,26 @@
 suite('Public API', function() {
 	suite('global functions', function() {
-		test('null', function() {
-			assert.equal(MQ(), null);
-			assert.equal(MQ(0), null);
-			assert.equal(MQ('<span/>'), null);
-			assert.equal(MQ($('<span/>')[0]), null);
-			assert.equal(MQ.MathField(), null);
-			assert.equal(MQ.MathField(0), null);
-			assert.equal(MQ.MathField('<span/>'), null);
+		test('undefined', function() {
+			assert.equal(MQ(), undefined);
+			assert.equal(MQ(0), undefined);
+			assert.equal(MQ('<span/>'), undefined);
+			assert.equal(MQ($('<span/>')[0]), undefined);
+			assert.equal(MQ.MathField(), undefined);
+			assert.equal(MQ.MathField(0), undefined);
+			assert.equal(MQ.MathField('<span/>'), undefined);
 		});
 
 		test('MQ.MathField()', function() {
 			var el = $('<span>x^2</span>');
 			var mathField = MQ.MathField(el[0]);
 			assert.ok(mathField instanceof MQ.MathField);
-			assert.ok(mathField instanceof MQ.EditableField);
-			assert.ok(mathField instanceof MQ);
-			assert.ok(mathField instanceof MathQuill);
 		});
 
 		test('identity of API object returned by MQ()', function() {
 			var mathFieldSpan = $('<span/>')[0];
 			var mathField = MQ.MathField(mathFieldSpan);
 
-			assert.ok(MQ(mathFieldSpan) !== mathField);
+			assert.ok(MQ(mathFieldSpan) === mathField);
 
 			assert.equal(MQ(mathFieldSpan).id, mathField.id);
 			assert.equal(MQ(mathFieldSpan).id, MQ(mathFieldSpan).id);

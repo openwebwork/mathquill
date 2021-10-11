@@ -16,10 +16,9 @@ class ControllerBase {
 
 	handle(name, dir) {
 		const handlers = this.options.handlers;
-		if (handlers && handlers.fns[name]) {
-			const mq = new handlers.APIClasses[this.KIND_OF_MQ](this);
-			if (dir === L || dir === R) handlers.fns[name](dir, mq);
-			else handlers.fns[name](mq);
+		if (handlers && handlers[name]) {
+			if (dir === L || dir === R) handlers[name](dir, this.apiClass);
+			else handlers[name](this.apiClass);
 		}
 	}
 
