@@ -2,29 +2,6 @@
 
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
 
-// L = 'left'
-// R = 'right'
-//
-// The contract is that they can be used as object properties
-// and (-L) === R, and (-R) === L.
-const L = -1;
-const R = 1;
-
-const prayDirection = (dir) => {
-	pray('a direction was passed', dir === L || dir === R);
-}
-
-// Tiny extension of jQuery adding directionalized DOM manipulation methods.
-jQuery.fn.extend({
-	insDirOf: function(dir, el) {
-		return dir === L ?
-			this.insertBefore(el.first()) : this.insertAfter(el.last());
-	},
-	insAtDirEnd: function(dir, el) {
-		return dir === L ? this.prependTo(el) : this.appendTo(el);
-	}
-});
-
 class Point {
 	constructor(parent, leftward, rightward) {
 		this.parent = parent ?? 0;

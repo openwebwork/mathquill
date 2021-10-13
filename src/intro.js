@@ -10,9 +10,24 @@
 
 	const jQuery = window.jQuery,
 		mqCmdId = 'mathquill-command-id',
-		mqBlockId = 'mathquill-block-id';
+		mqBlockId = 'mathquill-block-id',
 
-	if (!jQuery) throw 'MathQuill requires jQuery 1.5.2+ to be loaded first';
+		// L = 'left', R = 'right'
+		// The contract is that they can be used as object properties and -L === R, and -R === L.
+		L = -1, R = 1;
+
+	if (!jQuery) throw 'MathQuill requires jQuery 1.9+ to be loaded first';
+
+	// Tiny extension of jQuery adding directionalized DOM manipulation methods.
+	jQuery.fn.extend({
+		insDirOf: function(dir, el) {
+			return dir === L ?
+				this.insertBefore(el.first()) : this.insertAfter(el.last());
+		},
+		insAtDirEnd: function(dir, el) {
+			return dir === L ? this.prependTo(el) : this.appendTo(el);
+		}
+	});
 
 	function noop() {}
 
@@ -65,3 +80,5 @@
 	// with the same name, and only call this function by
 	// name.
 	const pray = (message, cond) => { if (!cond) throw new Error(`prayer failed: ${message}`); }
+
+	const prayDirection = (dir) => { pray('a direction was passed', dir === L || dir === R); }
