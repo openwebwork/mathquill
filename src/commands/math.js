@@ -358,6 +358,151 @@ class BinaryOperator extends Symbol {
 	}
 }
 
+class Digit extends VanillaSymbol {
+	createLeftOf(cursor) {
+		if (cursor.options.autoSubscriptNumerals
+			&& cursor.parent !== cursor.parent.parent.sub
+			&& ((cursor[L] instanceof Variable && cursor[L].isItalic !== false)
+				|| (cursor[L] instanceof SupSub
+					&& cursor[L][L] instanceof Variable
+					&& cursor[L][L].isItalic !== false))) {
+			new LatexCmds._().createLeftOf(cursor);
+			super.createLeftOf(cursor);
+			cursor.insRightOf(cursor.parent.parent);
+		}
+		else super.createLeftOf(cursor);
+	}
+}
+
+class Variable extends Symbol {
+	constructor(ch, html) {
+		super(ch, `<var>${html || ch}</var>`);
+	}
+
+	text() {
+		let text = this.ctrlSeq;
+		if (this.isPartOfOperator) {
+			if (text[0] == '\\') {
+				if (text.startsWith('\\operatorname{')) 
+					text = text.slice(14, text.length);
+				else
+					text = text.slice(1, text.length);
+			}
+			else if (text[text.length-1] == ' ' || text[text.length-1] == '}') {
+				text = text.slice (0, -1);
+			}
+		}
+		return text;
+	};
+}
+
+class Letter extends Variable {
+	constructor(ch) {
+		super(ch);
+		this.letter = ch;
+		this.siblingDeleted = this.siblingCreated = this.finalizeTree;
+	}
+
+	createLeftOf(cursor) {
+		super.createLeftOf(cursor);
+		const autoCmds = cursor.options.autoCommands, maxLength = autoCmds._maxLength;
+		if (maxLength > 0) {
+			// want longest possible autocommand, so join together longest
+			// sequence of letters
+			let str = '', l = this, i = 0;
+			// FIXME: l.ctrlSeq === l.letter checks if first or last in an operator name
+			while (l instanceof Letter && l.ctrlSeq === l.letter && i < maxLength) {
+				str = l.letter + str, l = l[L], ++i;
+			}
+			// check for an autocommand, going thru substrings longest to shortest
+			while (str.length) {
+				if (autoCmds.hasOwnProperty(str)) {
+					for (i = 1, l = this; i < str.length; ++i, l = l[L]);
+					new Fragment(l, this).remove();
+					cursor[L] = l[L];
+					return new LatexCmds[str](str).createLeftOf(cursor);
+				}
+				str = str.slice(1);
+			}
+		}
+	}
+
+	italicize(bool) {
+		this.isItalic = bool;
+		this.isPartOfOperator = !bool;
+		this.jQ.toggleClass('mq-operator-name', !bool);
+		return this;
+	}
+
+	finalizeTree(opts, dir) {
+		// don't auto-un-italicize if the sibling to my right changed (dir === R or
+		// undefined) and it's now a Letter, it will un-italicize everyone
+		if (dir !== L && this[R] instanceof Letter) return;
+		this.autoUnItalicize(opts);
+	}
+
+	autoUnItalicize(opts) {
+		const autoOps = opts.autoOperatorNames;
+		if (autoOps._maxLength === 0) return;
+		// want longest possible operator names, so join together entire contiguous
+		// sequence of letters
+		let str = this.letter, l = this[L], r = this[R];
+		for (; l instanceof Letter; l = l[L]) str = l.letter + str;
+		for (; r instanceof Letter; r = r[R]) str += r.letter;
+
+		// removeClass and delete flags from all letters before figuring out
+		// which, if any, are part of an operator name
+		new Fragment(l[R] || this.parent.ends[L], r[L] || this.parent.ends[R]).each((el) => {
+			el.italicize(true).jQ.removeClass('mq-first mq-last mq-followed-by-supsub');
+			el.ctrlSeq = el.letter;
+		});
+
+		// check for operator names: at each position from left to right, check
+		// substrings from longest to shortest
+		outer: for (let i = 0, first = l[R] || this.parent.ends[L]; i < str.length; ++i, first = first[R]) {
+			for (let len = Math.min(autoOps._maxLength, str.length - i); len > 0; --len) {
+				const word = str.slice(i, i + len);
+				if (autoOps.hasOwnProperty(word)) {
+					let last;
+					for (let j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
+						letter.italicize(false);
+						last = letter;
+					}
+
+					const isBuiltIn = BuiltInOpNames.hasOwnProperty(word);
+					first.ctrlSeq = (isBuiltIn ? '\\' : '\\operatorname{') + first.ctrlSeq;
+					last.ctrlSeq += (isBuiltIn ? ' ' : '}');
+					if (TwoWordOpNames.hasOwnProperty(word)) last[L][L][L].jQ.addClass('mq-last');
+					if (!this.shouldOmitPadding(first[L])) first.jQ.addClass('mq-first');
+					if (!this.shouldOmitPadding(last[R])) {
+						if (last[R] instanceof SupSub) {
+							const supsub = last[R]; // XXX monkey-patching, but what's the right thing here?
+							// Have operatorname-specific code in SupSub? A CSS-like language to style the
+							// math tree, but which ignores cursor and selection (which CSS can't)?
+							supsub.siblingCreated = supsub.siblingDeleted = () => {
+								supsub.jQ.toggleClass('mq-after-operator-name', !(supsub[R] instanceof Bracket));
+							};
+							supsub.siblingCreated();
+						}
+						else {
+							last.jQ.toggleClass('mq-last', !(last[R] instanceof Bracket));
+						}
+					}
+
+					i += len - 1;
+					first = last;
+					continue outer;
+				}
+			}
+		}
+	}
+
+	shouldOmitPadding(node) {
+		// omit padding if no node, or if node already has padding (to avoid double-padding)
+		return !node || (node instanceof BinaryOperator) || (node instanceof UpperLowerLimitCommand);
+	}
+}
+
 // Children and parent of MathCommand's. Basically partitions all the
 // symbols and operators that descend (in the Math DOM tree) from
 // ancestor operators.
