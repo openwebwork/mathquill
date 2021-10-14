@@ -1,27 +1,10 @@
 // Symbols for Basic Mathematics
 
-// The set of operator names like \sin, \cos, etc that are built-into LaTeX,
-// see Section 3.17 of the Short Math Guide: http://tinyurl.com/jm9okjc
-// MathQuill auto-unitalicizes some operator names not in that set, like 'hcf'
-// and 'arsinh', which must be exported as \operatorname{hcf} and
-// \operatorname{arsinh}. Note: over/under line/arrow \lim variants like
-// \varlimsup are not supported
-const BuiltInOpNames = {};
-
-// Standard operators
-for (const op of [
-	'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim', 'ln',
-	'log', 'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
-]) { BuiltInOpNames[op] = 1; }
-
-// Trig operators
-// why coth but not sech and csch, LaTeX?
-for (const trig of [
-	'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan',
-	'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'coth'
-]) { BuiltInOpNames[trig] = 1; }
-
-const TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };
+import { noop, L, R, bindMixin, LatexCmds } from 'src/constants';
+import { Options } from 'src/options';
+import {
+	Symbol, VanillaSymbol, BinaryOperator, Equality, Inequality, MathCommand, Variable, Letter, latexMathParser
+} from 'commands/mathElements';
 
 class OperatorName extends Symbol {
 	constructor(fn) {
@@ -80,7 +63,6 @@ LatexCmds["'"] = LatexCmds.prime = bindMixin(VanillaSymbol, "'", '&prime;');
 // LatexCmds['\u2033'] = LatexCmds.dprime = bindMixin(VanillaSymbol, '\u2033', '&Prime;');
 
 LatexCmds.backslash = bindMixin(VanillaSymbol,'\\backslash ','\\');
-if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 
 LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
 
@@ -222,7 +204,7 @@ class LatexFragment extends MathCommand {
 	}
 }
 
-// for what seems to me like [stupid reasons][1], Unicode provides
+// For what seems to me like [stupid reasons][1], Unicode provides
 // subscripted and superscripted versions of all ten Arabic numerals,
 // as well as [so-called "vulgar fractions"][2].
 // Nobody really cares about most of them, but some of them actually
@@ -296,35 +278,8 @@ LatexCmds['\u00b1'] = LatexCmds.pm = LatexCmds.plusmn = LatexCmds.plusminus =
 LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus =
 	bindMixin(PlusMinus,'\\mp ','&#8723;');
 
-CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot =
-	bindMixin(BinaryOperator, '\\cdot ', '&middot;', '*');
 //semantically should be &sdot;, but &middot; looks better
-
-class Inequality extends BinaryOperator {
-	constructor(data, strict) {
-		const strictness = strict ? 'Strict' : '';
-		super(data[`ctrlSeq${strictness}`], data[`html${strictness}`], data[`text${strictness}`]);
-		this.data = data;
-		this.strict = strict;
-	}
-
-	swap(strict) {
-		this.strict = strict;
-		const strictness = strict ? 'Strict' : '';
-		this.ctrlSeq = this.data[`ctrlSeq${strictness}`];
-		this.jQ.html(this.data[`html${strictness}`]);
-		this.textTemplate = [ this.data[`text${strictness}`] ];
-	}
-
-	deleteTowards(dir, cursor, ...args) {
-		if (dir === L && !this.strict) {
-			this.swap(true);
-			this.bubble('reflow');
-			return;
-		}
-		super.deleteTowards(dir, cursor, ...args);
-	}
-}
+LatexCmds.sdot = LatexCmds.cdot = bindMixin(BinaryOperator, '\\cdot ', '&middot;', '*');
 
 const less = { ctrlSeq: '\\le ', html: '&le;', text: '<=',
 	ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
@@ -336,21 +291,6 @@ LatexCmds['>'] = LatexCmds.gt = bindMixin(Inequality, greater, true);
 LatexCmds['\u2264'] = LatexCmds.le = LatexCmds.leq = bindMixin(Inequality, less, false);
 LatexCmds['\u2265'] = LatexCmds.ge = LatexCmds.geq = bindMixin(Inequality, greater, false);
 
-class Equality extends BinaryOperator {
-	constructor() {
-		super('=', '=');
-	}
-
-	createLeftOf(cursor, ...args) {
-		if (cursor[L] instanceof Inequality && cursor[L].strict) {
-			cursor[L].swap(false);
-			cursor[L].bubble('reflow');
-			return;
-		}
-		super.createLeftOf(cursor, ...args);
-	};
-}
-
 LatexCmds['='] = Equality;
 
 LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&times;', '[x]');
@@ -358,4 +298,4 @@ LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&
 LatexCmds['\u00f7'] = LatexCmds.div = LatexCmds.divide = LatexCmds.divides =
 	bindMixin(BinaryOperator,'\\div ','&divide;', '[/]');
 
-CharCmds['~'] = LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~');
+LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~');

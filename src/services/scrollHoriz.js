@@ -1,6 +1,8 @@
 // Horizontal panning for editable fields that overflow their width
 
-const HorizontalScroll = (base) => class extends base {
+import { L, R } from 'src/constants';
+
+export const HorizontalScroll = (base) => class extends base {
 	scrollHoriz() {
 		const cursor = this.cursor, seln = cursor.selection;
 		const rootRect = this.root.jQ[0].getBoundingClientRect();

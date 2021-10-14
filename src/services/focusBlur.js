@@ -1,6 +1,6 @@
 // Focus and Blur events
 
-const FocusBlurEvents = (base) => class extends base {
+export const FocusBlurEvents = (base) => class extends base {
 	focusBlurEvents() {
 		const ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
 		ctrlr.textarea.focus(() => {
@@ -29,7 +29,7 @@ const FocusBlurEvents = (base) => class extends base {
 	}
 };
 
-const BlockFocusBlur = (base) => class extends base {
+export const BlockFocusBlur = (base) => class extends base {
 	focus() {
 		this.jQ.addClass('mq-hasCursor');
 		this.jQ.removeClass('mq-empty');

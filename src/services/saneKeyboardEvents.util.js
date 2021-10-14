@@ -19,7 +19,9 @@
 //    + event handler logic
 //    + attach event handlers and export methods
 
-const saneKeyboardEvents = (() => {
+import { jQuery, noop } from 'src/constants';
+
+export const saneKeyboardEvents = (() => {
 	// The following [key values][1] map was compiled from the
 	// [DOM3 Events appendix section on key codes][2] and
 	// [a widely cited report on cross-browser tests of key codes][3],

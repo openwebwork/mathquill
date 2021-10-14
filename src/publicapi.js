@@ -1,11 +1,24 @@
 // The publicly exposed MathQuill API.
 
-const API = {}, EMBEDS = {};
+import { mqBlockId, L, R, EMBEDS } from 'src/constants';
+import { Options } from 'src/options';
+import { Node } from 'tree/node';
+import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
+import { Controller } from 'src/controller';
+import { AbstractMathQuill, EditableField } from 'src/abstractFields';
+import { StaticMath, MathField, InnerMathField } from 'commands/math';
+import { TextField } from 'commands/text';
+
+// These files need to be imported to construct the library of commands.
+import 'commands/math/commands';
+import 'commands/math/LatexCommandInput';
+import 'commands/math/basicSymbols';
+import 'commands/math/advancedSymbols';
 
 // globally exported API object
 class MathQuill {
 	static origMathQuill = window.MathQuill;
-	static VERSION = "{VERSION}";
+	static VERSION = VERSION;
 
 	static getInterface() {
 		const APIClasses = {};
@@ -41,8 +54,8 @@ class MathQuill {
 		// Export the API functions that MathQuill-ify an HTML element into API objects
 		// of each class. If the element had already been MathQuill-ified but into a
 		// different kind (or it's not an HTML element), return null.
-		for (const [kind, defAPIClass] of Object.entries(API)) {
-			APIClasses[kind] = defAPIClass(APIClasses);
+		for (const [kind, APIClass] of Object.entries({ StaticMath, MathField, InnerMathField, TextField })) {
+			APIClasses[kind] = APIClass;
 			MQ[kind] = function(el, opts) {
 				const mq = MQ(el);
 				if (mq instanceof APIClasses[kind] || !(el instanceof HTMLElement)) return mq;

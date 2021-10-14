@@ -1,6 +1,9 @@
 // Options for the API objects
 
-class Options {
+import { BuiltInOpNames } from 'src/constants';
+import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
+
+export class Options {
 	static config(currentOptions, newOptions) {
 		for (const name in newOptions) {
 			if (newOptions.hasOwnProperty(name)) {
@@ -72,7 +75,7 @@ class Options {
 		this._autoCommands = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
-			if (LatexCmds[cmd] === OperatorName) throw `"${cmd}" is a built-in operator name`;
+			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
 			this._autoCommands[cmd] = 1;
 			this._autoCommands._maxLength = Math.max(this._autoCommands._maxLength, cmd.length);
 		}

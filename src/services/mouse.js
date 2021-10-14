@@ -1,6 +1,9 @@
 // Deals with mouse events for clicking, drag-to-select
 
-const MouseEventController = (base) => class extends base {
+import { mqCmdId, mqBlockId, noop, pray } from 'src/constants';
+import { Node } from 'tree/node';
+
+export const MouseEventController = (base) => class extends base {
 	delegateMouseEvents() {
 		const ultimateRootjQ = this.root.jQ;
 		//drag-to-select event handling

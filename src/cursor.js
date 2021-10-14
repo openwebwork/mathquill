@@ -1,14 +1,14 @@
-// Cursor and Selection "singleton" classes
-
-// The main thing that manipulates the Math DOM. Makes sure to manipulate the
-// HTML DOM to match.
-
-// Sort of singletons, since there should only be one per editable math
-// textbox, but any one HTML document can contain many such textboxes, so any one
-// JS environment could actually contain many instances. */
-
+// Cursor "singleton" class
+// The main thing that manipulates the Math DOM. Makes sure to manipulate the HTML DOM to match.
+// Sort of a singleton, since there should only be one per editable math textbox, but any one HTML document can contain many such
+// textboxes, so any one JS environment could actually contain many instances.
 // A fake cursor in the fake textbox that the math is rendered in.
-class Cursor extends Point {
+
+import { jQuery, L, R, pray, prayDirection } from 'src/constants';
+import { Point } from 'tree/point';
+import { MathBlock } from 'commands/mathBlock';
+
+export class Cursor extends Point {
 	constructor(initParent, options) {
 		super(initParent)
 		this.options = options;
@@ -278,29 +278,5 @@ class Cursor extends Point {
 		if (this.options.maxDepth !== undefined) {
 			return this.depth() + (offset || 0) > this.options.maxDepth;
 		}
-	}
-}
-
-class Selection extends Fragment {
-	constructor(...args) {
-		super(...args);
-		this.jQ = this.jQ.wrapAll('<span class="mq-selection"></span>').parent();
-		//can't do wrapAll(this.jQ = $(...)) because wrapAll will clone it
-	}
-
-	adopt(...args) {
-		this.jQ.replaceWith(this.jQ = this.jQ.children());
-		return super.adopt(...args);
-	}
-
-	clear() {
-		// using the browser's native .childNodes property so that we
-		// don't discard text nodes.
-		this.jQ.replaceWith(this.jQ[0].childNodes);
-		return this;
-	}
-
-	join(methodName) {
-		return this.fold('', (fold, child) => fold + child[methodName]());
 	}
 }

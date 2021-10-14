@@ -1,10 +1,14 @@
 // Symbols for Advanced Mathematics
 
-LatexCmds.notin = LatexCmds.cong = LatexCmds.equiv = LatexCmds.oplus = LatexCmds.otimes = class extends BinaryOperator {
-	constructor(latex) {
-		super(`\\${latex} `, `&${latex};`);
-	}
-};
+import { noop, bindMixin, LatexCmds } from 'src/constants';
+import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElements';
+
+LatexCmds.notin = LatexCmds.cong = LatexCmds.equiv = LatexCmds.oplus = LatexCmds.otimes =
+	class extends BinaryOperator {
+		constructor(latex) {
+			super(`\\${latex} `, `&${latex};`);
+		}
+	};
 
 LatexCmds['\u2260'] = LatexCmds.ne = LatexCmds.neq = bindMixin(BinaryOperator, '\\ne ', '&ne;');
 
@@ -19,7 +23,8 @@ LatexCmds.cuz = // l33t
 
 LatexCmds.prop = LatexCmds.propto = bindMixin(BinaryOperator, '\\propto ', '&prop;');
 
-LatexCmds['\u2248'] = LatexCmds.asymp = LatexCmds.approx = bindMixin(BinaryOperator, '\\approx ', '&asymp;');
+LatexCmds['\u2248'] = LatexCmds.asymp = LatexCmds.approx =
+	bindMixin(BinaryOperator, '\\approx ', '&asymp;');
 
 LatexCmds.isin = LatexCmds['in'] = bindMixin(BinaryOperator, '\\in ', '&isin;');
 

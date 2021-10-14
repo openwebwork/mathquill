@@ -1,16 +1,24 @@
 const path = require("path");
 const webpack = require('webpack');
-const fs = require('fs');
 const CopyPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const VERSION = require('./package.json').version;
 
 module.exports = (env, argv) => {
 	let config = {
 		mode: "production",
-		entry: { mathquill: './src/index.js' },
+		entry: { mathquill: './src/publicapi.js' },
 		output: {
 			path: path.resolve(__dirname, 'dist'),
 			filename: '[name].js'
+		},
+		resolve: {
+			alias: {
+				src: path.resolve(__dirname, 'src'),
+				tree: path.resolve(__dirname, 'src/tree'),
+				services: path.resolve(__dirname, 'src/services'),
+				commands: path.resolve(__dirname, 'src/commands')
+			}
 		},
 		module: {
 			rules: [
@@ -29,18 +37,15 @@ module.exports = (env, argv) => {
 				}
 			]
 		},
-		//performance: {
-		//	hints: false
-		//},
 		plugins: [
+			new webpack.DefinePlugin({
+				VERSION: JSON.stringify(VERSION)
+			})
 		//	new CopyPlugin({
 		//		patterns: [
 		//			{ from: "./css/fonts.css", to: path.resolve(__dirname, 'dist') },
 		//		]
 		//	}),
-		//	new webpack.ProvidePlugin({
-		//		process: 'process/browser'
-		//	})
 		]
 	};
 

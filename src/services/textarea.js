@@ -1,6 +1,6 @@
 // Manage the MathQuill instance's textarea (as owned by the Controller)
 
-const TextAreaController = (base) => class extends base {
+export const TextAreaController = (base) => class extends base {
 	createTextarea() {
 		const textareaSpan = this.textareaSpan = $('<span class="mq-textarea"></span>');
 		const textarea = this.options.substituteTextarea();

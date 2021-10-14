@@ -1,73 +1,11 @@
-// Parser MathBlock
-const latexMathParser = (() => {
-	const commandToBlock = (cmd) => { // can also take in a Fragment
-		const block = new MathBlock();
-		cmd.adopt(block, 0, 0);
-		return block;
-	}
-	const joinBlocks = (blocks) => {
-		const firstBlock = blocks[0] || new MathBlock();
+// Latex Controller Extension
 
-		for (const block of blocks.slice(1)) {
-			block.children().adopt(firstBlock, firstBlock.ends[R], 0);
-		}
+import { L, R } from 'src/constants';
+import { Parser } from 'services/parser.util';
+import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
+import { RootMathCommand } from 'commands/textElements';
 
-		return firstBlock;
-	}
-
-	const string = Parser.string;
-	const regex = Parser.regex;
-	const letter = Parser.letter;
-	const any = Parser.any;
-	const optWhitespace = Parser.optWhitespace;
-	const succeed = Parser.succeed;
-	const fail = Parser.fail;
-
-	// Parsers yielding either MathCommands, or Fragments of MathCommands
-	//   (either way, something that can be adopted by a MathBlock)
-	const variable = letter.map((c) => new Letter(c));
-	const symbol = regex(/^[^${}\\_^]/).map((c) => new VanillaSymbol(c));
-
-	const controlSequence =
-		regex(/^[^\\a-eg-zA-Z]/) // hotfix #164; match MathBlock::write
-		.or(string('\\').then(
-			regex(/^[a-z]+/i)
-			.or(regex(/^\s+/).result(' '))
-			.or(any)
-		)).then((ctrlSeq) => {
-			const cmdKlass = LatexCmds[ctrlSeq];
-
-			if (cmdKlass) {
-				return new cmdKlass(ctrlSeq).parser();
-			} else {
-				return fail('unknown command: \\'+ctrlSeq);
-			}
-		});
-
-	const command = controlSequence.or(variable).or(symbol);
-
-	// Parsers yielding MathBlocks
-	const mathGroup = string('{').then(() => mathSequence).skip(string('}'));
-	const mathBlock = optWhitespace.then(mathGroup.or(command.map(commandToBlock)));
-	const mathSequence = mathBlock.many().map(joinBlocks).skip(optWhitespace);
-
-	const optMathBlock =
-		string('[').then(
-			mathBlock.then((block) => {
-				return block.join('latex') !== ']' ? succeed(block) : fail();
-			})
-			.many().map(joinBlocks).skip(optWhitespace)
-		).skip(string(']'))
-	;
-
-	const latexMath = mathSequence;
-
-	latexMath.block = mathBlock;
-	latexMath.optBlock = optMathBlock;
-	return latexMath;
-})();
-
-const LatexControllerExtension = (base) => class extends base {
+export const LatexControllerExtension = (base) => class extends base {
 	exportLatex() {
 		return this.root.latex().replace(/(\\[a-z]+) (?![a-z])/ig, '$1');
 	}

@@ -1,5 +1,9 @@
 // Input box to type backslash commands
 
+import { L, R, LatexCmds, CharCmds } from 'src/constants';
+import { VanillaSymbol, MathCommand } from 'commands/mathElements';
+import { TextBlock } from 'commands/textElements';
+
 CharCmds['\\'] = class extends MathCommand {
 	constructor(...args) {
 		super(...args);

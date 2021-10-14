@@ -1,5 +1,15 @@
 // Controller for a MathQuill instance, on which services are registered.
 
+import { L, R, prayDirection } from 'src/constants';
+import { Cursor } from 'src/cursor';
+import { Fragment } from 'tree/fragment';
+import { HorizontalScroll } from 'services/scrollHoriz';
+import { LatexControllerExtension } from 'services/latex';
+import { MouseEventController } from 'services/mouse';
+import { FocusBlurEvents } from 'services/focusBlur';
+import { ExportText } from 'services/exportText';
+import { TextAreaController } from 'services/textarea';
+
 class ControllerBase {
 	constructor(root, container, options) {
 		this.id = root.id;
@@ -167,7 +177,7 @@ class ControllerBase {
 
 }
 
-class Controller extends HorizontalScroll(
+export class Controller extends HorizontalScroll(
 	LatexControllerExtension(
 		MouseEventController(
 			FocusBlurEvents(

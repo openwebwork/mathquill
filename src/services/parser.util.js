@@ -1,4 +1,6 @@
-class Parser {
+import { pray } from 'src/constants';
+
+export class Parser {
 	// The Parser object is a wrapper for a parser function.
 	// Externally, you use one to parse a string by calling
 	//   const result = SomeParser.parse('Me Me Me! Parse Me!');

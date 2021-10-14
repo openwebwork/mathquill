@@ -1,4 +1,7 @@
-class AbstractMathQuill {
+import { jQuery, L, R, noop, mqBlockId, LatexCmds } from 'src/constants';
+import { Options } from 'src/options';
+
+export class AbstractMathQuill {
 	constructor(ctrlr) {
 		this.__controller = ctrlr;
 		this.__controller.apiClass = this;
@@ -50,7 +53,7 @@ class AbstractMathQuill {
 	}
 }
 
-class EditableField extends AbstractMathQuill {
+export class EditableField extends AbstractMathQuill {
 	__mathquillify(...args) {
 		super.__mathquillify(...args);
 		this.__controller.editable = true;
@@ -136,7 +139,7 @@ class EditableField extends AbstractMathQuill {
 	dropEmbedded(pageX, pageY, options) {
 		const el = document.elementFromPoint(pageX - $(window).scrollLeft(), pageY - $(window).scrollTop());
 		this.__controller.seek($(el), pageX, pageY);
-		const cmd = new Embed().setOptions(options);
+		const cmd = new LatexCmds.embed().setOptions(options);
 		cmd.createLeftOf(this.__controller.cursor);
 	}
 
