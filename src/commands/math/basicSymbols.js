@@ -65,7 +65,7 @@ LatexCmds["'"] = LatexCmds.prime = bindMixin(VanillaSymbol, "'", '&prime;');
 // LatexCmds['\u2033'] = LatexCmds.dprime = bindMixin(VanillaSymbol, '\u2033', '&Prime;');
 
 LatexCmds.backslash = bindMixin(VanillaSymbol,'\\backslash ','\\');
-//if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
+if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 
 LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
 
@@ -240,7 +240,6 @@ LatexCmds['\u00be'] = bindMixin(LatexFragment, '\\frac34');
 
 class PlusMinus extends BinaryOperator {
 	constructor(ctrlSeq, html, text) {
-		// TODO: Check this compared to original
 		super(ctrlSeq, `<span>${html || ctrlSeq}</span>`, text, true);
 
 		this.siblingCreated = this.siblingDeleted = this.contactWeld;

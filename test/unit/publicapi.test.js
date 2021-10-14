@@ -41,28 +41,27 @@ suite('Public API', function() {
 
 	});
 
-	// Should the basic build still be supported?
-	//suite('mathquill-basic', function() {
-	//	var mq;
-	//	setup(function() {
-	//		mq = MQBasic.MathField($('<span></span>').appendTo('#mock')[0]);
-	//	});
+	suite('mathquill-basic', function() {
+		var mq;
+		setup(function() {
+			mq = MQBasic.MathField($('<span></span>').appendTo('#mock')[0]);
+		});
 
-	//	test('typing \\', function() {
-	//		mq.typedText('\\');
-	//		assert.equal(mq.latex(), '\\backslash');
-	//	});
+		test('typing \\', function() {
+			mq.typedText('\\');
+			assert.equal(mq.latex(), '\\backslash');
+		});
 
-	//	test('typing $', function() {
-	//		mq.typedText('$');
-	//		assert.equal(mq.latex(), '\\$');
-	//	});
+		test('typing $', function() {
+			mq.typedText('$');
+			assert.equal(mq.latex(), '\\$');
+		});
 
-	//	test('parsing of advanced symbols', function() {
-	//		mq.latex('\\oplus');
-	//		assert.equal(mq.latex(), ''); // TODO: better LaTeX parse error behavior
-	//	});
-	//});
+		test('parsing of advanced symbols', function() {
+			mq.latex('\\oplus');
+			assert.equal(mq.latex(), ''); // TODO: better LaTeX parse error behavior
+		});
+	});
 
 	suite('basic API methods', function() {
 		var mq;

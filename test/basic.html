@@ -3,11 +3,12 @@
 <head>
 
 <meta name="viewport" content="width=624">
+<meta charset="UTF-8">
 
 <title>MathQuill-basic Demo</title>
 
 <link rel="stylesheet" type="text/css" href="support/home.css">
-<link rel="stylesheet" type="text/css" href="../build/mathquill.css">
+<link rel="stylesheet" type="text/css" href="../dist/mathquill.css">
 
 </head>
 <body>
@@ -33,22 +34,24 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
 		integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
 		crossorigin="anonymous"></script>
-<script src="../build/mathquill-basic.js"></script>
+<script src="../dist/mathquill-basic.js"></script>
 <script>
 MQ = MathQuill.getInterface();
 
-const latex = $('#basic-latex').on('keydown keypress', function() {
-	var prev = latex.val();
-	setTimeout(function() {
-		var now = latex.val();
+const latex = $('#basic-latex').on('keydown keypress', () => {
+	const prev = latex.val();
+	setTimeout(() => {
+		const now = latex.val();
 		if (now !== prev) mq.latex(now);
 	});
 });
-var mq = MQ.MathField($('#basic')[0], {
+const mq = MQ.MathField($('#basic')[0], {
 	autoSubscriptNumerals: true,
-	handlers: { edit: function() {
-		if (!latex.is(':focus')) latex.val(mq.latex());
-	} }
+	handlers: {
+		edit: () => {
+			if (!latex.is(':focus')) latex.val(mq.latex());
+		}
+	}
 });
 latex.val(mq.latex());
 </script>

@@ -8,7 +8,7 @@
 <title>MathQuill Demo</title>
 
 <link rel="stylesheet" type="text/css" href="support/home.css">
-<link rel="stylesheet" type="text/css" href="../build/mathquill.css">
+<link rel="stylesheet" type="text/css" href="../dist/mathquill.css">
 
 <style type="text/css">
 code span {
@@ -111,7 +111,7 @@ an editable math textbox:
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
 		integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
 		crossorigin="anonymous"></script>
-<script src="../build/mathquill.js"></script>
+<script src="../dist/mathquill.js"></script>
 <script>
 (() => {
 	MQ = MathQuill.getInterface();
@@ -141,25 +141,25 @@ an editable math textbox:
 		$(this).html('Show Semantically Meaningful HTML Source').parent().next().hide();
 	});
 
-	var latexMath = $('#editable-math'),
+	const latexMath = $('#editable-math'),
 		latexSource = $('#latex-source'),
 		htmlSource = $('#html-source'),
 		codecogsimg = $('#codecogsimg'),
 		codecogslink = $('#codecogslink'),
 		htmlTransplantExample = $('#html-transplant-example');
 
-	$('#codecogs').click(function() {
-		var latex = latexSource.val();
-		codecogslink.attr('href','http://latex.codecogs.com/gif.latex?'+latex);
-		codecogsimg.attr('src','http://latex.codecogs.com/gif.latex?'+latex);
+	$('#codecogs').click(() => {
+		const latex = latexSource.val();
+		codecogslink.attr('href', `http://latex.codecogs.com/gif.latex?${latex}`);
+		codecogsimg.attr('src', `http://latex.codecogs.com/gif.latex?${latex}`);
 	});
 
-	$(function() {
-		var latexMath = MQ($('#editable-math')[0]);
+	$(() => {
+		const latexMath = MQ($('#editable-math')[0]);
 		latexMath.config({
 			handlers: {
-				edit: function() {
-					var latex = latexMath.latex();
+				edit: () => {
+					const latex = latexMath.latex();
 					latexSource.val(latex);
 					//        location.hash = '#'+latex; //extremely performance-crippling in Chrome for some reason
 					htmlSource.text(printTree(latexMath.html()));
@@ -170,10 +170,10 @@ an editable math textbox:
 		latexMath.focus();
 
 		latexSource.val(latexMath.latex());
-		latexSource.on('keydown keypress', function() {
-			var oldtext = latexSource.val();
-			setTimeout(function() {
-				var newtext = latexSource.val();
+		latexSource.on('keydown keypress', () => {
+			const oldtext = latexSource.val();
+			setTimeout(() => {
+				const newtext = latexSource.val();
 				if(newtext !== oldtext) {
 					latexMath.latex(newtext);
 					htmlSource.text(printTree(latexMath.html()));
@@ -190,20 +190,20 @@ an editable math textbox:
 	});
 
 	$(".insert-trigger").click(function () {
-		var latex = $(this).data('latex');
+		const latex = $(this).data('latex');
 		$(this).parent().find('.mathquill-math-field').each(function () {
-			var mathquill = MQ(this);
+			const mathquill = MQ(this);
 			mathquill.write(latex);
 		});
 	});
 
 	//print the HTML source as an indented tree. TODO: syntax highlight
-	function printTree(html) {
+	const printTree = (html) => {
 		html = html.match(/<[a-z]+|<\/[a-z]+>|./ig);
 		if (!html) return '';
-		var indent = '\n', tree = [];
-		for (var i = 0; i < html.length; i += 1) {
-			var token = html[i];
+		let indent = '\n', tree = [];
+		for (let i = 0; i < html.length; i += 1) {
+			let token = html[i];
 			if (token.charAt(0) === '<') {
 				if (token.charAt(1) === '/') { //dedent on close tag
 					indent = indent.slice(0,-2);

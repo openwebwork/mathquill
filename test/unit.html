@@ -38,14 +38,14 @@ Mocha.process.stdout.write = (line) => xunit += line;
 
 <!-- include the library with the tests inlined -->
 <script id="mathquill" src="../dist/mathquill.test.js"
-	onerror="alert('Couldn\'t find `dist/mathquill.test.js`. Please run `npm run devbuild` before opening this file.')">
+	onerror="alert('Couldn\'t find `dist/mathquill.test.js`. Please execute `npm run devbuild` before opening this file.')">
 </script>
 
 <!-- include MathQuill-basic -->
-<link rel="stylesheet" href="../build/mathquill.css" />
-<!--<script src="../dist/mathquill-basic.js"></script>-->
+<link rel="stylesheet" href="../dist/mathquill.css" />
+<script src="../dist/mathquill-basic.js"></script>
 <script>
-	//MQBasic = MathQuill.noConflict().getInterface();
+	MQBasic = MathQuill.noConflict().getInterface();
 	MQ = MathQuill.getInterface();
 </script>
 
@@ -85,7 +85,7 @@ Mocha.process.stdout.write = (line) => xunit += line;
 
 		runner.on('end', () => {
 			setTimeout(() => {
-				$.post(post_xunit_to, xunit).complete(function() {
+				$.post(post_xunit_to, xunit).complete(() => {
 					window.mochaResults = runner.stats;
 					window.mochaResults.reports = failedTests;
 				});

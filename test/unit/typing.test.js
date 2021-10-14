@@ -30,11 +30,11 @@ suite('typing with auto-replaces', function() {
 			assertLatex('1\\ \\frac{2}{3}');
 		});
 
-		//test('mathquill-basic', function() {
-		//	var mq_basic = MQBasic.MathField($('<span></span>').appendTo('#mock')[0]);
-		//	mq_basic.typedText('1/2');
-		//	assert.equal(mq_basic.latex(), '\\frac{1}{2}');
-		//});
+		test('mathquill-basic', function() {
+			var mq_basic = MQBasic.MathField($('<span></span>').appendTo('#mock')[0]);
+			mq_basic.typedText('1/2');
+			assert.equal(mq_basic.latex(), '\\frac{1}{2}');
+		});
 	});
 
 	suite('LatexCommandInput', function() {
