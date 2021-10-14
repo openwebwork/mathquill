@@ -1,3 +1,6 @@
+import { noop } from 'src/constants';
+import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
+
 suite('saneKeyboardEvents', function() {
 	var el;
 	var Event = function(type, props) {

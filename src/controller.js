@@ -2,6 +2,7 @@
 
 import { L, R, prayDirection } from 'src/constants';
 import { Cursor } from 'src/cursor';
+import { Node } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { HorizontalScroll } from 'services/scrollHoriz';
 import { LatexControllerExtension } from 'services/latex';

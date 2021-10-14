@@ -1,3 +1,7 @@
+import { L, R } from 'src/constants';
+import { Options } from 'src/options';
+import { Bracket, latexMathParser } from 'commands/mathElements';
+
 suite('latex', function() {
 	function assertParsesLatex(str, latex) {
 		if (arguments.length < 2) latex = str;

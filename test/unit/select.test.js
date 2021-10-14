@@ -1,3 +1,9 @@
+import { L, R, noop } from 'src/constants';
+import { Cursor } from 'src/cursor';
+import { Point } from 'tree/point';
+import { Node } from 'tree/node';
+import { Fragment } from 'tree/fragment';
+
 suite('Cursor::select()', function() {
 	var cursor = new Cursor();
 	cursor.selectionChanged = noop;

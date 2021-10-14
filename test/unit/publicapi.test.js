@@ -1,3 +1,5 @@
+import { L, R } from 'src/constants';
+
 suite('Public API', function() {
 	suite('global functions', function() {
 		test('undefined', function() {
@@ -39,27 +41,28 @@ suite('Public API', function() {
 
 	});
 
-	suite('mathquill-basic', function() {
-		var mq;
-		setup(function() {
-			mq = MQBasic.MathField($('<span></span>').appendTo('#mock')[0]);
-		});
+	// Should the basic build still be supported?
+	//suite('mathquill-basic', function() {
+	//	var mq;
+	//	setup(function() {
+	//		mq = MQBasic.MathField($('<span></span>').appendTo('#mock')[0]);
+	//	});
 
-		test('typing \\', function() {
-			mq.typedText('\\');
-			assert.equal(mq.latex(), '\\backslash');
-		});
+	//	test('typing \\', function() {
+	//		mq.typedText('\\');
+	//		assert.equal(mq.latex(), '\\backslash');
+	//	});
 
-		test('typing $', function() {
-			mq.typedText('$');
-			assert.equal(mq.latex(), '\\$');
-		});
+	//	test('typing $', function() {
+	//		mq.typedText('$');
+	//		assert.equal(mq.latex(), '\\$');
+	//	});
 
-		test('parsing of advanced symbols', function() {
-			mq.latex('\\oplus');
-			assert.equal(mq.latex(), ''); // TODO: better LaTeX parse error behavior
-		});
-	});
+	//	test('parsing of advanced symbols', function() {
+	//		mq.latex('\\oplus');
+	//		assert.equal(mq.latex(), ''); // TODO: better LaTeX parse error behavior
+	//	});
+	//});
 
 	suite('basic API methods', function() {
 		var mq;
@@ -428,6 +431,7 @@ suite('Public API', function() {
 	});
 
 	suite('maxDepth option', function() {
+		let mq;
 		setup(function() {
 			mq = MQ.MathField($('<span></span>').appendTo('#mock')[0], {
 				maxDepth: 1

@@ -1,3 +1,5 @@
+import { Parser } from 'services/parser.util';
+
 suite('parser', function() {
 	var string = Parser.string;
 	var regex = Parser.regex;

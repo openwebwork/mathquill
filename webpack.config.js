@@ -7,7 +7,7 @@ const VERSION = require('./package.json').version;
 module.exports = (env, argv) => {
 	let config = {
 		mode: "production",
-		entry: { mathquill: './src/publicapi.js' },
+		entry: { mathquill: './src/index.js' },
 		output: {
 			path: path.resolve(__dirname, 'dist'),
 			filename: '[name].js'
@@ -53,6 +53,8 @@ module.exports = (env, argv) => {
 		console.log("Using development mode.");
 		config.mode = "development";
 		config.devtool = "source-map";
+		config.entry['mathquill.test'] = './test/index.js';
+		config.resolve.alias.test = path.resolve(__dirname, 'test');
 	} else {
 		console.log("Using production mode.");
 		// This prevents the LICENSE file from being generated.  It also minimizes the code even in development mode,

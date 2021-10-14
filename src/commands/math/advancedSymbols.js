@@ -1,6 +1,7 @@
 // Symbols for Advanced Mathematics
 
 import { noop, bindMixin, LatexCmds } from 'src/constants';
+import { Parser } from 'services/parser.util';
 import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElements';
 
 LatexCmds.notin = LatexCmds.cong = LatexCmds.equiv = LatexCmds.oplus = LatexCmds.otimes =

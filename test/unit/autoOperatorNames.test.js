@@ -1,3 +1,5 @@
+import { Letter } from 'commands/mathElements';
+
 suite('autoOperatorNames', function() {
 	var mq;
 	setup(function() {

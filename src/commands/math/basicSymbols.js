@@ -1,10 +1,12 @@
 // Symbols for Basic Mathematics
 
-import { noop, L, R, bindMixin, LatexCmds } from 'src/constants';
+import { noop, L, R, bindMixin, LatexCmds, CharCmds } from 'src/constants';
 import { Options } from 'src/options';
+import { Parser } from 'services/parser.util';
 import {
 	Symbol, VanillaSymbol, BinaryOperator, Equality, Inequality, MathCommand, Variable, Letter, latexMathParser
 } from 'commands/mathElements';
+import { MathBlock } from 'commands/mathBlock';
 
 class OperatorName extends Symbol {
 	constructor(fn) {
@@ -63,6 +65,7 @@ LatexCmds["'"] = LatexCmds.prime = bindMixin(VanillaSymbol, "'", '&prime;');
 // LatexCmds['\u2033'] = LatexCmds.dprime = bindMixin(VanillaSymbol, '\u2033', '&Prime;');
 
 LatexCmds.backslash = bindMixin(VanillaSymbol,'\\backslash ','\\');
+//if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 
 LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
 
@@ -279,7 +282,7 @@ LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus =
 	bindMixin(PlusMinus,'\\mp ','&#8723;');
 
 //semantically should be &sdot;, but &middot; looks better
-LatexCmds.sdot = LatexCmds.cdot = bindMixin(BinaryOperator, '\\cdot ', '&middot;', '*');
+CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot = bindMixin(BinaryOperator, '\\cdot ', '&middot;', '*');
 
 const less = { ctrlSeq: '\\le ', html: '&le;', text: '<=',
 	ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
@@ -298,4 +301,4 @@ LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&
 LatexCmds['\u00f7'] = LatexCmds.div = LatexCmds.divide = LatexCmds.divides =
 	bindMixin(BinaryOperator,'\\div ','&divide;', '[/]');
 
-LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~');
+CharCmds['~'] = LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~');

@@ -1,3 +1,5 @@
+import { L, R } from 'src/constants';
+
 suite('up/down', function() {
 	var mq, rootBlock, controller, cursor;
 	setup(function() {

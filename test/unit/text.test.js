@@ -1,3 +1,7 @@
+import { L, R, prayWellFormed } from 'src/constants';
+import { Controller } from 'src/controller';
+import { latexMathParser } from 'commands/mathElements';
+
 suite('text', function() {
 
 	var mq, mostRecentlyReportedLatex;

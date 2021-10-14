@@ -2,6 +2,7 @@
 
 import { noop, L, R, pray, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames } from 'src/constants';
 import { Parser } from 'services/parser.util';
+import { Point } from 'tree/point';
 import { Node } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { Selection } from 'src/selection';
@@ -551,6 +552,18 @@ export class Letter extends Variable {
 		// omit padding if no node, or if node already has padding (to avoid double-padding)
 		return !node || (node instanceof BinaryOperator) || (node instanceof UpperLowerLimitCommand);
 	}
+}
+
+export function insLeftOfMeUnlessAtEnd(cursor) {
+	// cursor.insLeftOf(cmd), unless cursor at the end of block, and every
+	// ancestor cmd is at the end of every ancestor block
+	const cmd = this.parent;
+	let ancestorCmd = cursor;
+	do {
+		if (ancestorCmd[R]) return cursor.insLeftOf(cmd);
+		ancestorCmd = ancestorCmd.parent.parent;
+	} while (ancestorCmd !== cmd);
+	cursor.insRightOf(cmd);
 }
 
 export class SupSub extends MathCommand {

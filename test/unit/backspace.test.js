@@ -1,3 +1,5 @@
+import { L, R, prayWellFormed } from 'src/constants';
+
 suite('backspace', function() {
 	var mq, rootBlock, controller, cursor;
 	setup(function() {

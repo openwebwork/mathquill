@@ -1,3 +1,5 @@
+import { MathCommand } from 'commands/mathElements';
+
 suite('HTML', function() {
 	function renderHtml(numBlocks, htmlTemplate) {
 		var cmd = {

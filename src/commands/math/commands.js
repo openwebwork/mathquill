@@ -2,9 +2,13 @@
 
 import { noop, L, R, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS } from 'src/constants';
 import { Parser } from 'services/parser.util';
+import { Controller } from 'src/controller';
 import { RootBlockMixin, scale, DelimsMixin } from 'src/mixins';
 import { Fragment } from 'tree/fragment';
-import { BinaryOperator, Equality, MathCommand, Symbol, Letter, SupSub, UpperLowerLimitCommand, Bracket, latexMathParser } from 'commands/mathElements';
+import {
+	BinaryOperator, Equality, MathCommand, Symbol, Letter, insLeftOfMeUnlessAtEnd, SupSub, UpperLowerLimitCommand, Bracket,
+	latexMathParser
+} from 'commands/mathElements';
 
 class Style extends MathCommand {
 	constructor(ctrlSeq, tagName, attrs) {
@@ -101,18 +105,6 @@ LatexCmds['class'] = class extends MathCommand {
 		return true;
 	}
 };
-
-function insLeftOfMeUnlessAtEnd(cursor) {
-	// cursor.insLeftOf(cmd), unless cursor at the end of block, and every
-	// ancestor cmd is at the end of every ancestor block
-	const cmd = this.parent;
-	let ancestorCmd = cursor;
-	do {
-		if (ancestorCmd[R]) return cursor.insLeftOf(cmd);
-		ancestorCmd = ancestorCmd.parent.parent;
-	} while (ancestorCmd !== cmd);
-	cursor.insRightOf(cmd);
-}
 
 LatexCmds.subscript = LatexCmds._ = class extends SupSub {
 	constructor(...args) {

@@ -1,3 +1,7 @@
+import { L, R } from 'src/constants';
+import { Node } from 'tree/node';
+import { Fragment } from 'tree/fragment';
+
 suite('tree', function() {
 	suite('adopt', function() {
 		function assertTwoChildren(parent, one, two) {

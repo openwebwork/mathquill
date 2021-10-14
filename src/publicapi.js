@@ -16,7 +16,7 @@ import 'commands/math/basicSymbols';
 import 'commands/math/advancedSymbols';
 
 // globally exported API object
-class MathQuill {
+export default class MathQuill {
 	static origMathQuill = window.MathQuill;
 	static VERSION = VERSION;
 
@@ -74,5 +74,3 @@ class MathQuill {
 		return MathQuill;
 	}
 }
-
-window.MathQuill = MathQuill;
