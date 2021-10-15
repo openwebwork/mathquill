@@ -6,10 +6,10 @@ You will then need to update the dependencies with `npm`, like so:
 
     % npm install
 
-If this installs properly, you should simply be able to run `make`,
-and mathquill will be built in the `build/` directory.  Alternatively,
-for development, you can run `make server`, which will automatically
-re-make, and also serve the demo, the unit tests, and the visual tests.
+If this installs properly, you should simply be able to run `npm run build`,
+and mathquill will be built in the `dist/` directory.  Alternatively,
+for development, you can run `npm run serve`, which will automatically
+re-build, and also serve the demo, the unit tests, and the visual tests.
 
             demo -> http://localhost:9292/test/demo.html
       unit tests -> http://localhost:9292/test/unit.html

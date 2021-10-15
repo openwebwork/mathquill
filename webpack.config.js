@@ -92,7 +92,7 @@ module.exports = (env, argv) => {
 		builds.push(basicConfig);
 	} else {
 		console.log('Using production mode.');
-		// This minimizes the code even in development mode, which is why it is here.
+		// Minimize the production build.
 		const jsMinimizer = new TerserPlugin({
 			terserOptions: { format: { comments: /@license/i } },
 			extractComments: false
