@@ -1,0 +1,7 @@
+/dist
+/node_modules
+.eslintrc.js
+.babelrc
+package.json
+package-lock.json
+/test

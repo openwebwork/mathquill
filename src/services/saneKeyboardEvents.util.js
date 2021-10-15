@@ -121,7 +121,6 @@ export const saneKeyboardEvents = (() => {
 
 		target.on('keydown keypress input keyup focusout paste', (e) => checkTextarea(e));
 
-
 		// -*- public methods -*- //
 		const select = (text) => {
 			// check textarea at least once/one last time before munging (so

@@ -1,13 +1,15 @@
 // Manage the MathQuill instance's textarea (as owned by the Controller)
 
+import { jQuery } from 'src/constants';
+
 export const TextAreaController = (base) => class extends base {
 	createTextarea() {
-		const textareaSpan = this.textareaSpan = $('<span class="mq-textarea"></span>');
+		const textareaSpan = this.textareaSpan = jQuery('<span class="mq-textarea"></span>');
 		const textarea = this.options.substituteTextarea();
 		if (!textarea.nodeType) {
 			throw 'substituteTextarea() must return a DOM element, got ' + textarea;
 		}
-		this.textarea = $(textarea).appendTo(textareaSpan);
+		this.textarea = jQuery(textarea).appendTo(textareaSpan);
 
 		this.cursor.selectionChanged = () => this.selectionChanged();
 	}
@@ -45,7 +47,7 @@ export const TextAreaController = (base) => class extends base {
 		const detach = () => {
 			textareaSpan.detach();
 			this.blurred = true;
-		}
+		};
 
 		textarea.on('cut paste', false)
 			.on('copy', () => this.setTextareaSelection())
@@ -121,4 +123,4 @@ export const TextAreaController = (base) => class extends base {
 		// FIXME: this always inserts math or a TextBlock, even in a RootTextBlock
 		this.writeLatex(text).cursor.show();
 	}
-}
+};

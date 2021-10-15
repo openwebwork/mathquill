@@ -1,6 +1,6 @@
 // Deals with mouse events for clicking, drag-to-select
 
-import { mqCmdId, mqBlockId, noop, pray } from 'src/constants';
+import { jQuery, mqCmdId, mqBlockId, noop, pray } from 'src/constants';
 import { Node } from 'tree/node';
 
 export const MouseEventController = (base) => class extends base {
@@ -8,7 +8,7 @@ export const MouseEventController = (base) => class extends base {
 		const ultimateRootjQ = this.root.jQ;
 		//drag-to-select event handling
 		this.container.on('mousedown.mathquill', (e) => {
-			const rootjQ = $(e.target).closest('.mq-root-block');
+			const rootjQ = jQuery(e.target).closest('.mq-root-block');
 			const root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
 			const ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
 			const textareaSpan = ctrlr.textareaSpan, textarea = ctrlr.textarea;
@@ -19,10 +19,10 @@ export const MouseEventController = (base) => class extends base {
 			else cursor.options.ignoreNextMousedown = noop;
 
 			let target;
-			const mousemove = (e) => target = $(e.target);
+			const mousemove = (e) => target = jQuery(e.target);
 			const docmousemove = (e) => {
 				if (!cursor.anticursor) cursor.startSelection();
-				ctrlr.seek(target, e.pageX, e.pageY).cursor.select();
+				ctrlr.seek(target, e.pageX).cursor.select();
 				target = undefined;
 			};
 			// outside rootjQ, the MathQuill node corresponding to the target (if any)
@@ -41,7 +41,7 @@ export const MouseEventController = (base) => class extends base {
 
 				// delete the mouse handlers now that we're not dragging anymore
 				rootjQ.off('mousemove', mousemove);
-				$(e.target.ownerDocument).off('mousemove', docmousemove).off('mouseup', mouseup);
+				jQuery(e.target.ownerDocument).off('mousemove', docmousemove).off('mouseup', mouseup);
 			};
 
 			if (ctrlr.blurred) {
@@ -50,16 +50,16 @@ export const MouseEventController = (base) => class extends base {
 			}
 
 			cursor.blink = noop;
-			ctrlr.seek($(e.target), e.pageX, e.pageY).cursor.startSelection();
+			ctrlr.seek(jQuery(e.target), e.pageX).cursor.startSelection();
 
 			rootjQ.mousemove(mousemove);
-			$(e.target.ownerDocument).mousemove(docmousemove).mouseup(mouseup);
+			jQuery(e.target.ownerDocument).mousemove(docmousemove).mouseup(mouseup);
 			// listen on document not just body to not only hear about mousemove and
 			// mouseup on page outside field, but even outside page, except iframes: https://github.com/mathquill/mathquill/commit/8c50028afcffcace655d8ae2049f6e02482346c5#commitcomment-6175800
 		});
 	}
 
-	seek(target, pageX, pageY) {
+	seek(target, pageX) {
 		const cursor = this.notify('select').cursor;
 
 		let nodeId;

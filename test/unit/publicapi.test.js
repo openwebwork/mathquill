@@ -353,16 +353,16 @@ suite('Public API', function() {
 			$(mqEl).width(10);
 			var previousScrollLeft = rootEl.scrollLeft;
 
-			mq.cmd("\\alpha");
+			mq.cmd('\\alpha');
 			setTimeout(afterScroll, 150);
 
 			function afterScroll() {
 				cursor.show();
 
 				try {
-					assert.ok(rootEl.scrollLeft > previousScrollLeft, "scrolls on cmd");
+					assert.ok(rootEl.scrollLeft > previousScrollLeft, 'scrolls on cmd');
 					assert.ok(mqEl.getBoundingClientRect().right > cursor.jQ[0].getBoundingClientRect().right,
-						"cursor right end is inside the field");
+						'cursor right end is inside the field');
 				}
 				catch(error) {
 					done(error);
@@ -397,7 +397,7 @@ suite('Public API', function() {
 		});
 		test('space behaves like tab when spaceBehavesLikeTab is true', function() {
 			var opts = { 'spaceBehavesLikeTab': true };
-			mq = MQ.MathField( $('<span></span>').appendTo('#mock')[0], opts)
+			mq = MQ.MathField($('<span></span>').appendTo('#mock')[0], opts);
 			rootBlock = mq.__controller.root;
 			cursor = mq.__controller.cursor;
 
@@ -416,7 +416,7 @@ suite('Public API', function() {
 		test('space behaves like tab when globally set to true', function() {
 			MQ.config({ spaceBehavesLikeTab: true });
 
-			mq = MQ.MathField( $('<span></span>').appendTo('#mock')[0]);
+			mq = MQ.MathField($('<span></span>').appendTo('#mock')[0]);
 			rootBlock = mq.__controller.root;
 			cursor = mq.__controller.cursor;
 
@@ -456,7 +456,7 @@ suite('Public API', function() {
 		});
 
 		test('prevents nested math input via replacedFragment', function() {
-			mq.cmd('(').keystroke('Left').cmd('(')
+			mq.cmd('(').keystroke('Left').cmd('(');
 			assert.equal(mq.latex(), '\\left(\\right)');
 		});
 	});
@@ -482,7 +482,7 @@ suite('Public API', function() {
 				assertPaste('Lorem ipsum is a placeholder text commonly used to '
 					+ 'demonstrate the graphical elements of a document or '
 					+ 'visual presentation.',
-					'Loremipsumisaplaceholdertextcommonlyusedtodemonstrate'
+				'Loremipsumisaplaceholdertextcommonlyusedtodemonstrate'
 					+ 'thegraphicalelementsofadocumentorvisualpresentation.');
 			});
 			test('actual LaTeX', function() {
@@ -523,7 +523,7 @@ suite('Public API', function() {
 				assertPaste('Lorem ipsum is a placeholder text commonly used to '
 					+ 'demonstrate the graphical elements of a document or '
 					+ 'visual presentation.',
-					'\\text{Lorem ipsum is a placeholder text commonly used to '
+				'\\text{Lorem ipsum is a placeholder text commonly used to '
 					+ 'demonstrate the graphical elements of a document or '
 					+ 'visual presentation.}');
 			});
@@ -828,7 +828,7 @@ suite('Public API', function() {
 			filler.prependTo('#mock');
 
 			var mq = MQ.MathField($('<span>').appendTo('#mock')[0]);
-			mq.typedText("mmmm/mmmm");
+			mq.typedText('mmmm/mmmm');
 			mq.el().scrollIntoView();
 
 			var box = mq.el().getBoundingClientRect();
@@ -840,7 +840,7 @@ suite('Public API', function() {
 			mq.clickAt(clientX, clientY, target).write('x');
 			assert.equal(document.activeElement, $(mq.el()).find('textarea')[0]);
 
-			assert.equal(mq.latex(), "\\frac{mmmm}{mmxmm}");
+			assert.equal(mq.latex(), '\\frac{mmmm}{mmxmm}');
 		});
 		test('target is optional', function() {
 			// Insert filler so that the page is taller than the window so this test is deterministic
@@ -850,7 +850,7 @@ suite('Public API', function() {
 			filler.prependTo('#mock');
 
 			var mq = MQ.MathField($('<span>').appendTo('#mock')[0]);
-			mq.typedText("mmmm/mmmm");
+			mq.typedText('mmmm/mmmm');
 			mq.el().scrollIntoView();
 
 			var box = mq.el().getBoundingClientRect();
@@ -861,7 +861,7 @@ suite('Public API', function() {
 			mq.clickAt(clientX, clientY).write('x');
 			assert.equal(document.activeElement, $(mq.el()).find('textarea')[0]);
 
-			assert.equal(mq.latex(), "\\frac{mmmm}{mmxmm}");
+			assert.equal(mq.latex(), '\\frac{mmmm}{mmxmm}');
 		});
 	});
 
@@ -870,13 +870,13 @@ suite('Public API', function() {
 			var mq = MQ.MathField($('<span>').appendTo('#mock')[0]);
 			mq.dropEmbedded(0, 0, {
 				htmlString: '<span class="embedded-html"></span>',
-				text: function () { return "embedded text" },
-				latex: function () { return "embedded latex" }
+				text: function () { return 'embedded text'; },
+				latex: function () { return 'embedded latex'; }
 			});
 
 			assert.ok(jQuery('.embedded-html').length);
-			assert.equal(mq.text(), "embedded text");
-			assert.equal(mq.latex(), "embedded latex");
+			assert.equal(mq.text(), 'embedded text');
+			assert.equal(mq.latex(), 'embedded latex');
 		});
 		test('inserts at coordinates', function() {
 			// Insert filler so that the page is taller than the window so this test is deterministic
@@ -886,7 +886,7 @@ suite('Public API', function() {
 			filler.prependTo('#mock');
 
 			var mq = MQ.MathField($('<span>').appendTo('#mock')[0]);
-			mq.typedText("mmmm/mmmm");
+			mq.typedText('mmmm/mmmm');
 			var pos = $(mq.el()).offset();
 			var mqx = pos.left;
 			var mqy = pos.top;
@@ -895,13 +895,13 @@ suite('Public API', function() {
 
 			mq.dropEmbedded(mqx + 30, mqy + 30, {
 				htmlString: '<span class="embedded-html"></span>',
-				text: function () { return "embedded text" },
-				latex: function () { return "embedded latex" }
+				text: function () { return 'embedded text'; },
+				latex: function () { return 'embedded latex'; }
 			});
 
 			assert.ok(jQuery('.embedded-html').length);
-			assert.equal(mq.text(), "((mmmm)/(mmembedded textmm))");
-			assert.equal(mq.latex(), "\\frac{mmmm}{mmembedded latexmm}");
+			assert.equal(mq.text(), '((mmmm)/(mmembedded textmm))');
+			assert.equal(mq.latex(), '\\frac{mmmm}{mmembedded latexmm}');
 		});
 	});
 
@@ -912,8 +912,8 @@ suite('Public API', function() {
 			data = data_;
 			return {
 				htmlString: '<span class="embedded-html"></span>',
-				text: function () { return "embedded text" },
-				latex: function () { return "embedded latex" }
+				text: function () { return 'embedded text'; },
+				latex: function () { return 'embedded latex'; }
 			};
 		});
 		var mq = MQ.MathField($('<span>\\sqrt{\\embed{thing}}</span>').appendTo('#mock')[0]);
@@ -921,15 +921,15 @@ suite('Public API', function() {
 		assert.equal(data, undefined);
 
 		assert.ok(jQuery('.embedded-html').length);
-		assert.equal(mq.text(), "sqrt(embedded text)");
-		assert.equal(mq.latex(), "\\sqrt{embedded latex}");
+		assert.equal(mq.text(), 'sqrt(embedded text)');
+		assert.equal(mq.latex(), '\\sqrt{embedded latex}');
 
 		mq.latex('\\sqrt{\\embed{thing}[data]}');
 		assert.equal(calls, 2);
 		assert.equal(data, 'data');
 
 		assert.ok(jQuery('.embedded-html').length);
-		assert.equal(mq.text(), "sqrt(embedded text)");
-		assert.equal(mq.latex(), "\\sqrt{embedded latex}");
+		assert.equal(mq.text(), 'sqrt(embedded text)');
+		assert.equal(mq.latex(), '\\sqrt{embedded latex}');
 	});
 });

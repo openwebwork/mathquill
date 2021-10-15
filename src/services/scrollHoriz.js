@@ -35,6 +35,6 @@ export const HorizontalScroll = (base) => class extends base {
 				else return;
 			}
 		}
-		this.root.jQ.stop().animate({ scrollLeft: '+=' + scrollBy}, 100);
+		this.root.jQ.stop().animate({ scrollLeft: '+=' + scrollBy }, 100);
 	}
 };

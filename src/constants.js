@@ -69,10 +69,10 @@ export const iterator = (generator) => {
 		const yield_ = (obj) => fn(obj, ...args);
 		return generator(yield_);
 	};
-}
+};
 
 // sugar to make defining lots of commands easier.
-export const bindMixin = (cons, ...args) => class extends cons { constructor() { super(...args); } }
+export const bindMixin = (cons, ...args) => class extends cons { constructor() { super(...args); } };
 
 // a development-only debug method.  This definition and all
 // calls to `pray` will be stripped from the minified
@@ -82,9 +82,9 @@ export const bindMixin = (cons, ...args) => class extends cons { constructor() {
 // at compile time.  Do not define another function
 // with the same name, and only call this function by
 // name.
-export const pray = (message, cond) => { if (!cond) throw new Error(`prayer failed: ${message}`); }
+export const pray = (message, cond) => { if (!cond) throw new Error(`prayer failed: ${message}`); };
 
-export const prayDirection = (dir) => { pray('a direction was passed', dir === L || dir === R); }
+export const prayDirection = (dir) => { pray('a direction was passed', dir === L || dir === R); };
 
 export const prayWellFormed = (parent, leftward, rightward) => {
 	pray('a parent is always present', parent);
@@ -103,7 +103,7 @@ export const prayWellFormed = (parent, leftward, rightward) => {
 		// or it's there and its [L] and .parent are properly set up
 		return rightward[L] === leftward && rightward.parent === parent;
 	})());
-}
+};
 
 // Registry of LaTeX commands and commands created when typing a single character.
 // (Commands are all subclasses of tree/Node.)

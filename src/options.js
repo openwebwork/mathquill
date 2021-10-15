@@ -1,20 +1,18 @@
 // Options for the API objects
 
-import { BuiltInOpNames } from 'src/constants';
+import { jQuery, BuiltInOpNames } from 'src/constants';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 
 export class Options {
 	static config(currentOptions, newOptions) {
 		for (const name in newOptions) {
-			if (newOptions.hasOwnProperty(name)) {
-				currentOptions[name] = newOptions[name];
-			}
+			currentOptions[name] = newOptions[name];
 		}
 	}
 
 	// Default settings
 
-	// Wether mouse events are active for StaticMath blocks 
+	// Wether mouse events are active for StaticMath blocks
 	static mouseEvents = true;
 	// The set of commands that are automatically typeset without typing a preceding backslash.
 	static autoCommands = { _maxLength: 0 };
@@ -50,7 +48,8 @@ export class Options {
 	static spaceBehavesLikeTab = false;
 	// Set to 'up' or 'down' so that left and right go up or down (respectively) into commands.
 	static leftRightIntoCmdGoes = undefined;
-	// If true then you can type '[a,b)' and '(a,b]', but if you type '[x}' or '{x)', you'll get '[{x}]' or '{(x)}' instead.
+	// If true then you can type '[a,b)' and '(a,b]', but if you type '[x}' or '{x)', you'll get '[{x}]' or '{(x)}'
+	// instead.
 	static restrictMismatchedBrackets = false;
 	// If true then when you type '\sum', '\prod', or '\coprod', the lower limit starts out with 'n='.
 	static sumStartsWithNEquals = false;
@@ -85,8 +84,8 @@ export class Options {
 		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
-		// FIXME: The intermediate dict variable should not be needed, but if this._autoOperatorNames is used in the same way
-		// that this._autoCommands is used above, some unit tests fail for some illogical reason.
+		// FIXME: The intermediate dict variable should not be needed, but if this._autoOperatorNames is used in the
+		// same way that this._autoCommands is used above, some unit tests fail for some illogical reason.
 		const list = cmds.split(' '), dict = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
@@ -96,7 +95,9 @@ export class Options {
 		this._autoOperatorNames = dict;
 	}
 	get charsThatBreakOutOfSupSub() { return this._charsThatBreakOutOfSupSub ?? Options.charsThatBreakOutOfSupSub; }
-	set charsThatBreakOutOfSupSub(charsThatBreakOutOfSupSub) { this._charsThatBreakOutOfSupSub = charsThatBreakOutOfSupSub; }
+	set charsThatBreakOutOfSupSub(charsThatBreakOutOfSupSub) {
+		this._charsThatBreakOutOfSupSub = charsThatBreakOutOfSupSub;
+	}
 	get statelessClipboard() { return this._statelessClipboard ?? Options.statelessClipboard; }
 	set statelessClipboard(statelessClipboard) { this._statelessClipboard = statelessClipboard; }
 	get spaceBehavesLikeTab() { return this._spaceBehavesLikeTab ?? Options.spaceBehavesLikeTab; }
@@ -109,7 +110,9 @@ export class Options {
 		this._leftRightIntoCmdGoes = updown;
 	}
 	get restrictMismatchedBrackets() { return this._restrictMismatchedBrackes ?? Options.restrictMismatchedBrackets; }
-	set restrictMismatchedBrackets(restrictMismatchedBrackets) { this._restrictMismatchedBrackes = restrictMismatchedBrackets; }
+	set restrictMismatchedBrackets(restrictMismatchedBrackets) {
+		this._restrictMismatchedBrackes = restrictMismatchedBrackets;
+	}
 	get sumStartsWithNEquals() { return this._sumStartsWithNEquals ?? Options.sumStartsWithNEquals; }
 	set sumStartsWithNEquals(sumStartsWithNEquals) { this._sumStartsWithNEquals = sumStartsWithNEquals; }
 	get supSubsRequireOperand() { return this._supSubsRequireOperand ?? Options.supSubsRequireOperand; }
@@ -122,7 +125,7 @@ export class Options {
 	set autoSubscriptNumerals(autoSubscriptNumerals) { this._autoSubscriptNumerals = autoSubscriptNumerals; }
 
 	substituteTextarea() {
-		return $('<textarea autocapitalize=off autocomplete=off autocorrect=off ' +
+		return jQuery('<textarea autocapitalize=off autocomplete=off autocorrect=off ' +
 			'spellcheck=false x-palm-disable-ste-all=true />')[0];
 	}
 
@@ -130,5 +133,5 @@ export class Options {
 		return saneKeyboardEvents(el, handlers);
 	}
 
-	ignoreNextMousedown(e) {}
+	ignoreNextMousedown() {}
 }

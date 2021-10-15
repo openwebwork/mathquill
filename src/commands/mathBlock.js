@@ -61,7 +61,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	}
 
 	chToCmd(ch, options) {
-		let cons;
+		const cons = CharCmds[ch] || LatexCmds[ch];
 		// exclude f because it gets a dedicated command with more spacing
 		if (ch.match(/^[a-eg-zA-Z]$/))
 			return new Letter(ch);
@@ -71,7 +71,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 			return new LatexCmds['\u00f7'](ch);
 		else if (options && options.typingAsteriskWritesTimesSymbol && ch === '*')
 			return new LatexCmds['\u00d7'](ch);
-		else if (cons = CharCmds[ch] || LatexCmds[ch])
+		else if (cons)
 			return new cons(ch);
 		else
 			return new VanillaSymbol(ch);

@@ -28,7 +28,7 @@ export class Parser {
 		pray('or is passed a parser', alternative instanceof Parser);
 
 		return new Parser((stream, onSuccess, onFailure) => {
-			const failure = (newStream) => alternative._(stream, onSuccess, onFailure);
+			const failure = () => alternative._(stream, onSuccess, onFailure);
 
 			return this._(stream, onSuccess, failure);
 		});
@@ -48,7 +48,7 @@ export class Parser {
 
 	// -*- optimized iterative combinators -*- //
 	many() {
-		return new Parser((stream, onSuccess, onFailure) => {
+		return new Parser((stream, onSuccess) => {
 			const xs = [];
 
 			const success = (newStream, x) => {

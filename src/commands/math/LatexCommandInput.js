@@ -1,6 +1,6 @@
 // Input box to type backslash commands
 
-import { L, R, LatexCmds, CharCmds } from 'src/constants';
+import { jQuery, L, R, LatexCmds, CharCmds } from 'src/constants';
 import { VanillaSymbol, MathCommand } from 'commands/mathElements';
 import { TextBlock } from 'commands/textElements';
 
@@ -58,10 +58,11 @@ CharCmds['\\'] = class extends MathCommand {
 
 		if (this._replacedFragment) {
 			const el = this.jQ[0];
+			//FIXME: is monkey-patching the mousedown and mousemove handlers the right way to do this?
 			this.jQ = this._replacedFragment.jQ.addClass('mq-blur').on(
-				'mousedown mousemove', //FIXME: is monkey-patching the mousedown and mousemove handlers the right way to do this?
+				'mousedown mousemove',
 				(e) => {
-					$(e.target = el).trigger(e);
+					jQuery(e.target = el).trigger(e);
 					return false;
 				}
 			).insertBefore(this.jQ).add(this.jQ);

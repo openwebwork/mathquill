@@ -131,16 +131,16 @@ suite('saneKeyboardEvents', function() {
 		test('select populates the textarea but doesn\'t call text' +
 			' on keydown, even when the selection is not properly' +
 			' detectable', function() {
-				var shim = saneKeyboardEvents(el, { keystroke: noop });
+			var shim = saneKeyboardEvents(el, { keystroke: noop });
 
-				shim.select('foobar');
-				// monkey-patch the dom-level selection so that hasSelection()
-				// returns false, as in IE < 9.
-				el[0].selectionStart = el[0].selectionEnd = 0;
+			shim.select('foobar');
+			// monkey-patch the dom-level selection so that hasSelection()
+			// returns false, as in IE < 9.
+			el[0].selectionStart = el[0].selectionEnd = 0;
 
-				el.trigger('keydown');
-				assert.equal(el.val(), 'foobar', 'value remains after keydown');
-			});
+			el.trigger('keydown');
+			assert.equal(el.val(), 'foobar', 'value remains after keydown');
+		});
 
 		test('blurring', function() {
 			var shim = saneKeyboardEvents(el, { keystroke: noop });
@@ -205,161 +205,161 @@ suite('saneKeyboardEvents', function() {
 
 		suite('selected text after keypress or paste doesn\'t get mistaken' +
 			' for inputted text', function() {
-				test('select() immediately after paste', function() {
-					var pastedText;
-					var onPaste = function(text) { pastedText = text; };
-					var shim = saneKeyboardEvents(el, {
-						paste: function(text) { onPaste(text); }
-					});
-
-					el.trigger('paste').val('$x^2+1$');
-
-					shim.select('$\\frac{x^2+1}{2}$');
-					assert.equal(pastedText, '$x^2+1$');
-					assert.equal(el.val(), '$\\frac{x^2+1}{2}$');
-
-					onPaste = null;
-
-					shim.select('$2$');
-					assert.equal(el.val(), '$2$');
+			test('select() immediately after paste', function() {
+				var pastedText;
+				var onPaste = function(text) { pastedText = text; };
+				var shim = saneKeyboardEvents(el, {
+					paste: function(text) { onPaste(text); }
 				});
 
-				test('select() after paste/input', function() {
-					var pastedText;
-					var onPaste = function(text) { pastedText = text; };
-					var shim = saneKeyboardEvents(el, {
-						paste: function(text) { onPaste(text); }
-					});
+				el.trigger('paste').val('$x^2+1$');
 
-					el.trigger('paste').val('$x^2+1$');
+				shim.select('$\\frac{x^2+1}{2}$');
+				assert.equal(pastedText, '$x^2+1$');
+				assert.equal(el.val(), '$\\frac{x^2+1}{2}$');
 
-					el.trigger('input');
-					assert.equal(pastedText, '$x^2+1$');
-					assert.equal(el.val(), '');
+				onPaste = null;
 
-					onPaste = null;
+				shim.select('$2$');
+				assert.equal(el.val(), '$2$');
+			});
 
-					shim.select('$\\frac{x^2+1}{2}$');
-					assert.equal(el.val(), '$\\frac{x^2+1}{2}$');
-
-					shim.select('$2$');
-					assert.equal(el.val(), '$2$');
+			test('select() after paste/input', function() {
+				var pastedText;
+				var onPaste = function(text) { pastedText = text; };
+				var shim = saneKeyboardEvents(el, {
+					paste: function(text) { onPaste(text); }
 				});
 
-				test('select() immediately after keydown/keypress', function() {
-					var typedText;
-					var onText = function(text) { typedText = text; };
+				el.trigger('paste').val('$x^2+1$');
+
+				el.trigger('input');
+				assert.equal(pastedText, '$x^2+1$');
+				assert.equal(el.val(), '');
+
+				onPaste = null;
+
+				shim.select('$\\frac{x^2+1}{2}$');
+				assert.equal(el.val(), '$\\frac{x^2+1}{2}$');
+
+				shim.select('$2$');
+				assert.equal(el.val(), '$2$');
+			});
+
+			test('select() immediately after keydown/keypress', function() {
+				var typedText;
+				var onText = function(text) { typedText = text; };
+				var shim = saneKeyboardEvents(el, {
+					keystroke: noop,
+					typedText: function(text) { onText(text); }
+				});
+
+				el.trigger(Event('keydown', { which: 97 }));
+				el.trigger(Event('keypress', { which: 97 }));
+				el.val('a');
+
+				shim.select('$\\frac{a}{2}$');
+				assert.equal(typedText, 'a');
+				assert.equal(el.val(), '$\\frac{a}{2}$');
+
+				onText = null;
+
+				shim.select('$2$');
+				assert.equal(el.val(), '$2$');
+			});
+
+			test('select() after keydown/keypress/input', function() {
+				var typedText;
+				var onText = function(text) { typedText = text; };
+				var shim = saneKeyboardEvents(el, {
+					keystroke: noop,
+					typedText: function(text) { onText(text); }
+				});
+
+				el.trigger(Event('keydown', { which: 97 }));
+				el.trigger(Event('keypress', { which: 97 }));
+				el.val('a');
+
+				el.trigger('input');
+				assert.equal(typedText, 'a');
+
+				onText = null;
+
+				shim.select('$\\frac{a}{2}$');
+				assert.equal(el.val(), '$\\frac{a}{2}$');
+
+				shim.select('$2$');
+				assert.equal(el.val(), '$2$');
+			});
+
+			suite('unrecognized keys that move cursor and clear selection', function() {
+				test('without keypress', function() {
+					var shim = saneKeyboardEvents(el, { keystroke: noop });
+
+					shim.select('a');
+					assert.equal(el.val(), 'a');
+
+					if (!supportsSelectionAPI()) return;
+
+					el.trigger(Event('keydown', { which: 37, altKey: true }));
+					el[0].selectionEnd = 0;
+					el.trigger(Event('keyup', { which: 37, altKey: true }));
+					assert.ok(el[0].selectionStart !== el[0].selectionEnd);
+
+					el.blur();
+					shim.select('');
+					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
+				});
+
+				test('with keypress, many characters selected', function() {
+					var shim = saneKeyboardEvents(el, { keystroke: noop });
+
+					shim.select('many characters');
+					assert.equal(el.val(), 'many characters');
+
+					if (!supportsSelectionAPI()) return;
+
+					el.trigger(Event('keydown', { which: 37, altKey: true }));
+					el.trigger(Event('keypress', { which: 37, altKey: true }));
+					el[0].selectionEnd = 0;
+
+					el.trigger('keyup');
+					assert.ok(el[0].selectionStart !== el[0].selectionEnd);
+
+					el.blur();
+					shim.select('');
+					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
+				});
+
+				test('with keypress, only 1 character selected', function() {
+					var count = 0;
 					var shim = saneKeyboardEvents(el, {
 						keystroke: noop,
-						typedText: function(text) { onText(text); }
+						typedText: function(ch) {
+							assert.equal(ch, 'a');
+							assert.equal(el.val(), '');
+							count += 1;
+						}
 					});
 
-					el.trigger(Event('keydown', { which: 97 }));
-					el.trigger(Event('keypress', { which: 97 }));
-					el.val('a');
+					shim.select('a');
+					assert.equal(el.val(), 'a');
 
-					shim.select('$\\frac{a}{2}$');
-					assert.equal(typedText, 'a');
-					assert.equal(el.val(), '$\\frac{a}{2}$');
+					if (!supportsSelectionAPI()) return;
 
-					onText = null;
+					el.trigger(Event('keydown', { which: 37, altKey: true }));
+					el.trigger(Event('keypress', { which: 37, altKey: true }));
+					el[0].selectionEnd = 0;
 
-					shim.select('$2$');
-					assert.equal(el.val(), '$2$');
-				});
+					el.trigger('keyup');
+					assert.equal(count, 1);
 
-				test('select() after keydown/keypress/input', function() {
-					var typedText;
-					var onText = function(text) { typedText = text; };
-					var shim = saneKeyboardEvents(el, {
-						keystroke: noop,
-						typedText: function(text) { onText(text); }
-					});
-
-					el.trigger(Event('keydown', { which: 97 }));
-					el.trigger(Event('keypress', { which: 97 }));
-					el.val('a');
-
-					el.trigger('input');
-					assert.equal(typedText, 'a');
-
-					onText = null;
-
-					shim.select('$\\frac{a}{2}$');
-					assert.equal(el.val(), '$\\frac{a}{2}$');
-
-					shim.select('$2$');
-					assert.equal(el.val(), '$2$');
-				});
-
-				suite('unrecognized keys that move cursor and clear selection', function() {
-					test('without keypress', function() {
-						var shim = saneKeyboardEvents(el, { keystroke: noop });
-
-						shim.select('a');
-						assert.equal(el.val(), 'a');
-
-						if (!supportsSelectionAPI()) return;
-
-						el.trigger(Event('keydown', { which: 37, altKey: true }));
-						el[0].selectionEnd = 0;
-						el.trigger(Event('keyup', { which: 37, altKey: true }));
-						assert.ok(el[0].selectionStart !== el[0].selectionEnd);
-
-						el.blur();
-						shim.select('');
-						assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
-					});
-
-					test('with keypress, many characters selected', function() {
-						var shim = saneKeyboardEvents(el, { keystroke: noop });
-
-						shim.select('many characters');
-						assert.equal(el.val(), 'many characters');
-
-						if (!supportsSelectionAPI()) return;
-
-						el.trigger(Event('keydown', { which: 37, altKey: true }));
-						el.trigger(Event('keypress', { which: 37, altKey: true }));
-						el[0].selectionEnd = 0;
-
-						el.trigger('keyup');
-						assert.ok(el[0].selectionStart !== el[0].selectionEnd);
-
-						el.blur();
-						shim.select('');
-						assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
-					});
-
-					test('with keypress, only 1 character selected', function() {
-						var count = 0;
-						var shim = saneKeyboardEvents(el, {
-							keystroke: noop,
-							typedText: function(ch) {
-								assert.equal(ch, 'a');
-								assert.equal(el.val(), '');
-								count += 1;
-							}
-						});
-
-						shim.select('a');
-						assert.equal(el.val(), 'a');
-
-						if (!supportsSelectionAPI()) return;
-
-						el.trigger(Event('keydown', { which: 37, altKey: true }));
-						el.trigger(Event('keypress', { which: 37, altKey: true }));
-						el[0].selectionEnd = 0;
-
-						el.trigger('keyup');
-						assert.equal(count, 1);
-
-						el.blur();
-						shim.select('');
-						assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
-					});
+					el.blur();
+					shim.select('');
+					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
 				});
 			});
+		});
 	});
 
 	suite('paste', function() {

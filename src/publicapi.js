@@ -1,6 +1,6 @@
 // The publicly exposed MathQuill API.
 
-import { mqBlockId, L, R, EMBEDS } from 'src/constants';
+import { jQuery, mqBlockId, L, R, EMBEDS } from 'src/constants';
 import { Options } from 'src/options';
 import { Node } from 'tree/node';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
@@ -30,7 +30,7 @@ export default class MathQuill {
 		//   assert(MQ(mathFieldSpan).id === MQ(mathFieldSpan).id);
 		function MQ(el) {
 			if (!(el instanceof HTMLElement)) return;
-			const blockId = $(el).children('.mq-root-block').attr(mqBlockId);
+			const blockId = jQuery(el).children('.mq-root-block').attr(mqBlockId);
 			const ctrlr = blockId && Node.byId[blockId].controller;
 			return ctrlr?.apiClass;
 		};
@@ -59,7 +59,7 @@ export default class MathQuill {
 			MQ[kind] = function(el, opts) {
 				const mq = MQ(el);
 				if (mq instanceof APIClasses[kind] || !(el instanceof HTMLElement)) return mq;
-				const ctrlr = new Controller(new APIClasses[kind].RootBlock, $(el), new Options);
+				const ctrlr = new Controller(new APIClasses[kind].RootBlock, jQuery(el), new Options);
 				ctrlr.KIND_OF_MQ = kind;
 				return new APIClasses[kind](ctrlr).__mathquillify(opts);
 			};

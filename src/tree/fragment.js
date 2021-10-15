@@ -1,6 +1,6 @@
 // Fragment base classes of edit tree-related objects
 
-import { L, R, iterator, pray, prayDirection, prayWellFormed } from 'src/constants';
+import { jQuery, L, R, iterator, pray, prayDirection, prayWellFormed } from 'src/constants';
 import { Node } from 'tree/node';
 
 // An entity outside the virtual tree with one-way pointers (so it's only a
@@ -15,7 +15,7 @@ import { Node } from 'tree/node';
 // and have their 'parent' pointers set to the DocumentFragment).
 export class Fragment {
 	constructor(withDir, oppDir, dir) {
-		this.jQ = $();
+		this.jQ = jQuery();
 
 		this.each = iterator((yield_) => {
 			let el = this.ends[L];
@@ -110,7 +110,7 @@ export class Fragment {
 
 		this.disowned = true;
 
-		const rightEnd = this.ends[R]
+		const rightEnd = this.ends[R];
 		const parent = leftEnd.parent;
 
 		prayWellFormed(parent, leftEnd[L], leftEnd);

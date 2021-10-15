@@ -1,6 +1,8 @@
 // Abstract classes of math blocks and commands.
 
-import { noop, L, R, pray, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames } from 'src/constants';
+import {
+	jQuery, noop, L, R, pray, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames
+} from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { Point } from 'tree/point';
 import { Node } from 'tree/node';
@@ -136,7 +138,9 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 	placeCursor(cursor) {
 		//insert the cursor at the right end of the first empty child, searching
 		//left-to-right, or if none empty, the right end child
-		cursor.insAtRightEnd(this.foldChildren(this.ends[L], (leftward, child) => leftward.isEmpty() ? leftward : child));
+		cursor.insAtRightEnd(
+			this.foldChildren(this.ends[L], (leftward, child) => leftward.isEmpty() ? leftward : child)
+		);
 	}
 
 	selectChildren() {
@@ -149,11 +153,11 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 
 	seek(pageX, cursor) {
 		const getBounds = (node) => {
-			const bounds = {}
+			const bounds = {};
 			bounds[L] = node.jQ.offset().left;
 			bounds[R] = bounds[L] + node.jQ.outerWidth();
 			return bounds;
-		}
+		};
 
 		const cmdBounds = getBounds(this);
 
@@ -264,13 +268,13 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		for (let i = 0, token = tokens[0]; token; ++i, token = tokens[i]) {
 			// top-level self-closing tags
 			if (token.slice(-2) === '/>') {
-				tokens[i] = token.slice(0,-2) + cmdId + '/>';
+				tokens[i] = token.slice(0, -2) + cmdId + '/>';
 			}
 			// top-level open tags
 			else if (token.charAt(0) === '<') {
 				pray('not an unmatched top-level close tag', token.charAt(1) !== '/');
 
-				tokens[i] = token.slice(0,-1) + cmdId + '>';
+				tokens[i] = token.slice(0, -1) + cmdId + '>';
 
 				// skip matching top-level close tag and all tag pairs in between
 				let nesting = 1;
@@ -278,7 +282,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 					i += 1, token = tokens[i];
 					pray('no missing close tags', token);
 					// close tags
-					if (token.slice(0,2) === '</') {
+					if (token.slice(0, 2) === '</') {
 						nesting -= 1;
 					}
 					// non-self-closing open tags
@@ -434,7 +438,7 @@ export class Variable extends Symbol {
 		let text = this.ctrlSeq;
 		if (this.isPartOfOperator) {
 			if (text[0] == '\\') {
-				if (text.startsWith('\\operatorname{')) 
+				if (text.startsWith('\\operatorname{'))
 					text = text.slice(14, text.length);
 				else
 					text = text.slice(1, text.length);
@@ -467,7 +471,7 @@ export class Letter extends Variable {
 			}
 			// check for an autocommand, going thru substrings longest to shortest
 			while (str.length) {
-				if (autoCmds.hasOwnProperty(str)) {
+				if (autoCmds[str]) {
 					for (i = 1, l = this; i < str.length; ++i, l = l[L]);
 					new Fragment(l, this).remove();
 					cursor[L] = l[L];
@@ -513,17 +517,17 @@ export class Letter extends Variable {
 		outer: for (let i = 0, first = l[R] || this.parent.ends[L]; i < str.length; ++i, first = first[R]) {
 			for (let len = Math.min(autoOps._maxLength, str.length - i); len > 0; --len) {
 				const word = str.slice(i, i + len);
-				if (autoOps.hasOwnProperty(word)) {
+				if (autoOps[word]) {
 					let last;
 					for (let j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
 						letter.italicize(false);
 						last = letter;
 					}
 
-					const isBuiltIn = BuiltInOpNames.hasOwnProperty(word);
+					const isBuiltIn = BuiltInOpNames[word];
 					first.ctrlSeq = (isBuiltIn ? '\\' : '\\operatorname{') + first.ctrlSeq;
 					last.ctrlSeq += (isBuiltIn ? ' ' : '}');
-					if (TwoWordOpNames.hasOwnProperty(word)) last[L][L][L].jQ.addClass('mq-last');
+					if (TwoWordOpNames[word]) last[L][L][L].jQ.addClass('mq-last');
 					if (!this.shouldOmitPadding(first[L])) first.jQ.addClass('mq-first');
 					if (!this.shouldOmitPadding(last[R])) {
 						if (last[R] instanceof SupSub) {
@@ -654,7 +658,7 @@ export class SupSub extends MathCommand {
 
 	text() {
 		const text = (prefix, block) => {
-			const l = (block && block.text() !== " ") && block.text();
+			const l = (block && block.text() !== ' ') && block.text();
 			return l ? prefix + `(${l || ' '})` : '';
 		};
 		return text('_', this.sub) + text('^', this.sup);
@@ -664,13 +668,13 @@ export class SupSub extends MathCommand {
 		if (this.supsub === 'sub') {
 			this.sup = this.upInto = this.sub.upOutOf = block;
 			block.adopt(this, this.sub, 0).downOutOf = this.sub;
-			block.jQ = $('<span class="mq-sup"/>').append(block.jQ.children())
+			block.jQ = jQuery('<span class="mq-sup"/>').append(block.jQ.children())
 				.attr(mqBlockId, block.id).prependTo(this.jQ);
 		}
 		else {
 			this.sub = this.downInto = this.sup.downOutOf = block;
 			block.adopt(this, 0, this.sup).upOutOf = this.sup;
-			block.jQ = $('<span class="mq-sub"></span>').append(block.jQ.children())
+			block.jQ = jQuery('<span class="mq-sub"></span>').append(block.jQ.children())
 				.attr(mqBlockId, block.id).appendTo(this.jQ.removeClass('mq-sup-only'));
 			this.jQ.append('<span style="display:inline-block;width:0">&#8203;</span>');
 		}
@@ -693,7 +697,7 @@ export class SupSub extends MathCommand {
 				delete cmd[updown+'Into'];
 				cmd[oppositeSupsub][updown+'OutOf'] = insLeftOfMeUnlessAtEnd;
 				delete cmd[oppositeSupsub].deleteOutOf;
-				if (supsub === 'sub') $(cmd.jQ.addClass('mq-sup-only')[0].lastChild).remove();
+				if (supsub === 'sub') jQuery(cmd.jQ.addClass('mq-sup-only')[0].lastChild).remove();
 				this.remove();
 			};
 		}
@@ -703,21 +707,21 @@ export class SupSub extends MathCommand {
 		const $block = this.jQ ;//mq-supsub
 		const $prev = $block.prev() ;
 
-		if ( !$prev.length ) {
+		if (!$prev.length) {
 			//we cant normalize it without having prev. element (which is base)
 			return ;
 		}
 
-		const $sup = $block.children( '.mq-sup' );//mq-supsub -> mq-sup
-		if ( $sup.length ) {
-			const sup_fontsize = parseInt( $sup.css('font-size') ) ;
+		const $sup = $block.children('.mq-sup');//mq-supsub -> mq-sup
+		if ($sup.length) {
+			const sup_fontsize = parseInt($sup.css('font-size')) ;
 			const sup_bottom = $sup.offset().top + $sup.height() ;
 			//we want that superscript overlaps top of base on 0.7 of its font-size
 			//this way small superscripts like x^2 look ok, but big ones like x^(1/2/3) too
 			const needed = sup_bottom - $prev.offset().top  - 0.7 * sup_fontsize ;
-			const cur_margin = parseInt( $sup.css('margin-bottom' ) ) ;
+			const cur_margin = parseInt($sup.css('margin-bottom')) ;
 			//we lift it up with margin-bottom
-			$sup.css( 'margin-bottom', cur_margin + needed ) ;
+			$sup.css('margin-bottom', cur_margin + needed) ;
 		}
 	}
 }
@@ -928,7 +932,7 @@ export const latexMathParser = (() => {
 		const block = new MathBlock();
 		cmd.adopt(block, 0, 0);
 		return block;
-	}
+	};
 	const joinBlocks = (blocks) => {
 		const firstBlock = blocks[0] || new MathBlock();
 
@@ -937,7 +941,7 @@ export const latexMathParser = (() => {
 		}
 
 		return firstBlock;
-	}
+	};
 
 	const string = Parser.string;
 	const regex = Parser.regex;
@@ -954,19 +958,19 @@ export const latexMathParser = (() => {
 
 	const controlSequence =
 		regex(/^[^\\a-eg-zA-Z]/) // hotfix #164; match MathBlock::write
-		.or(string('\\').then(
-			regex(/^[a-z]+/i)
-			.or(regex(/^\s+/).result(' '))
-			.or(any)
-		)).then((ctrlSeq) => {
-			const cmdKlass = LatexCmds[ctrlSeq];
+			.or(string('\\').then(
+				regex(/^[a-z]+/i)
+					.or(regex(/^\s+/).result(' '))
+					.or(any)
+			)).then((ctrlSeq) => {
+				const cmdKlass = LatexCmds[ctrlSeq];
 
-			if (cmdKlass) {
-				return new cmdKlass(ctrlSeq).parser();
-			} else {
-				return fail('unknown command: \\'+ctrlSeq);
-			}
-		});
+				if (cmdKlass) {
+					return new cmdKlass(ctrlSeq).parser();
+				} else {
+					return fail('unknown command: \\'+ctrlSeq);
+				}
+			});
 
 	const command = controlSequence.or(variable).or(symbol);
 
@@ -980,7 +984,7 @@ export const latexMathParser = (() => {
 			mathBlock.then((block) => {
 				return block.join('latex') !== ']' ? succeed(block) : fail();
 			})
-			.many().map(joinBlocks).skip(optWhitespace)
+				.many().map(joinBlocks).skip(optWhitespace)
 		).skip(string(']'))
 	;
 

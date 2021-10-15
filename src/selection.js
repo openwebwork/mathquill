@@ -1,6 +1,6 @@
 // Selection "singleton" class
-// Sort of a singleton, since there should only be one per editable math textbox, but any one HTML document can contain many such
-// textboxes, so any one JS environment could actually contain many instances.
+// Sort of a singleton, since there should only be one per editable math textbox, but any one HTML document can contain
+// many such textboxes, so any one JS environment could actually contain many instances.
 
 import { Fragment } from 'tree/fragment';
 

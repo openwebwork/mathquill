@@ -1,7 +1,7 @@
 // Cursor "singleton" class
 // The main thing that manipulates the Math DOM. Makes sure to manipulate the HTML DOM to match.
-// Sort of a singleton, since there should only be one per editable math textbox, but any one HTML document can contain many such
-// textboxes, so any one JS environment could actually contain many instances.
+// Sort of a singleton, since there should only be one per editable math textbox, but any one HTML document can contain
+// many such textboxes, so any one JS environment could actually contain many instances.
 // A fake cursor in the fake textbox that the math is rendered in.
 
 import { jQuery, L, R, pray, prayDirection } from 'src/constants';
@@ -10,10 +10,10 @@ import { MathBlock } from 'commands/mathBlock';
 
 export class Cursor extends Point {
 	constructor(initParent, options) {
-		super(initParent)
+		super(initParent);
 		this.options = options;
 
-		this.jQ = $('<span class="mq-cursor">&#8203;</span>');
+		this.jQ = jQuery('<span class="mq-cursor">&#8203;</span>');
 		//closured for setInterval
 		this.blink = () => this.jQ.toggleClass('mq-blink');
 
@@ -266,10 +266,11 @@ export class Cursor extends Point {
 	}
 
 	depth() {
-		let node = this;
+		let node = this.parent;
 		let depth = 0;
-		while (node = node.parent) {
+		while (node) {
 			depth += (node instanceof MathBlock) ? 1 : 0;
+			node = node.parent;
 		}
 		return depth;
 	}

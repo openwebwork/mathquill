@@ -163,14 +163,14 @@ suite('tree', function() {
 			var empty = new Fragment();
 			var count = 0;
 
-			empty.each(function() { count += 1 });
+			empty.each(function() { count += 1; });
 
 			assert.equal(count, 0, 'each is a noop on an empty fragment');
 		});
 
 		test('half-empty fragments are disallowed', function() {
 			assert.throws(function() {
-				new Fragment(new Node(), 0)
+				new Fragment(new Node(), 0);
 			}, 'half-empty on the right');
 
 			assert.throws(function() {

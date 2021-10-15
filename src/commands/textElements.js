@@ -1,6 +1,6 @@
 // Elements for abstract classes of text blocks
 
-import { L, R, pray, prayDirection, LatexCmds, CharCmds } from 'src/constants';
+import { jQuery, L, R, pray, prayDirection, LatexCmds, CharCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { Point } from 'tree/point';
 import { Node } from 'tree/node';
@@ -109,7 +109,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 		}
 		else if (this.isEmpty()) {
 			cursor.insRightOf(this);
-			new VanillaSymbol('\\$','$').createLeftOf(cursor);
+			new VanillaSymbol('\\$', '$').createLeftOf(cursor);
 		}
 		else if (!cursor[R]) cursor.insRightOf(this);
 		else if (!cursor[L]) cursor.insLeftOf(this);
@@ -231,7 +231,7 @@ class TextPiece extends Node {
 		this.text = text;
 	}
 
-	jQadd(dom) { this.dom = dom; this.jQ = $(dom); }
+	jQadd(dom) { this.dom = dom; this.jQ = jQuery(dom); }
 
 	jQize() {
 		return this.jQadd(document.createTextNode(this.text));
@@ -267,7 +267,7 @@ class TextPiece extends Node {
 	moveTowards(dir, cursor) {
 		prayDirection(dir);
 
-		const ch = this.endChar(-dir, this.text)
+		const ch = this.endChar(-dir, this.text);
 
 		const from = this[-dir];
 		if (from) from.insTextAtDirEnd(ch, dir);
@@ -302,7 +302,7 @@ class TextPiece extends Node {
 		prayDirection(dir);
 		const anticursor = cursor.anticursor;
 
-		const ch = this.endChar(-dir, this.text)
+		const ch = this.endChar(-dir, this.text);
 
 		if (anticursor[dir] === this) {
 			const newPc = new TextPiece(ch).createDir(dir, cursor);
@@ -373,7 +373,8 @@ export class RootMathCommand extends writeMethodMixin(MathCommand) {
 				this.write(cursor, ch);
 			else if (this.isEmpty()) {
 				cursor.insRightOf(this.parent);
-				this.parent.deleteTowards(dir, cursor);
+				// FIXME: What direction should this use? Previously it was the undefined variable `dir`.
+				this.parent.deleteTowards(L, cursor);
 				new VanillaSymbol('\\$', '$').createLeftOf(cursor.show());
 			}
 			else if (!cursor[R])

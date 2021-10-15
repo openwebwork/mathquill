@@ -2,6 +2,7 @@
 
 import { RootMathBlock } from 'commands/mathBlock';
 import { VanillaSymbol } from 'commands/mathElements';
+import { RootMathCommand } from 'commands/textElements';
 
 export class RootTextBlock extends RootMathBlock {
 	keystroke(key, ...args) {

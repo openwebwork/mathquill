@@ -54,5 +54,5 @@ window.assert = (function() {
 		fail: function(message) {
 			fail({ message: message, explanation: 'generic fail' });
 		}
-	}
+	};
 })();

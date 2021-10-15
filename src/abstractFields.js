@@ -16,7 +16,7 @@ export class AbstractMathQuill {
 
 		const contents = el.addClass(classNames).contents().detach();
 		root.jQ =
-			$('<span class="mq-root-block"/>').attr(mqBlockId, root.id).appendTo(el);
+			jQuery('<span class="mq-root-block"/>').attr(mqBlockId, root.id).appendTo(el);
 		this.latex(contents.text());
 
 		this.revert = () => el.empty().off()
@@ -137,8 +137,8 @@ export class EditableField extends AbstractMathQuill {
 	}
 
 	dropEmbedded(pageX, pageY, options) {
-		const el = document.elementFromPoint(pageX - $(window).scrollLeft(), pageY - $(window).scrollTop());
-		this.__controller.seek($(el), pageX, pageY);
+		const el = document.elementFromPoint(pageX - jQuery(window).scrollLeft(), pageY - jQuery(window).scrollTop());
+		this.__controller.seek(jQuery(el), pageX, pageY);
 		const cmd = new LatexCmds.embed().setOptions(options);
 		cmd.createLeftOf(this.__controller.cursor);
 	}
@@ -148,7 +148,7 @@ export class EditableField extends AbstractMathQuill {
 
 		const ctrlr = this.__controller, root = ctrlr.root;
 		if (!jQuery.contains(root.jQ[0], target)) target = root.jQ[0];
-		ctrlr.seek($(target), clientX + window.pageXOffset, clientY + window.pageYOffset);
+		ctrlr.seek(jQuery(target), clientX + window.pageXOffset, clientY + window.pageYOffset);
 		if (ctrlr.blurred) this.focus();
 		return this;
 	}

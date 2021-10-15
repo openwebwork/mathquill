@@ -77,30 +77,28 @@ suite('backspace', function() {
 		assertLatex('1+1');
 	});
 
-
-
 	test('backspace through compound subscript', function() {
 		mq.latex('x_{2_2}');
 
 		//first backspace goes into the subscript
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{2_2}');
+		assert.equal(mq.latex(), 'x_{2_2}');
 
 		//second one goes into the subscripts' subscript
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{2_2}');
+		assert.equal(mq.latex(), 'x_{2_2}');
 
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{2_{ }}');
+		assert.equal(mq.latex(), 'x_{2_{ }}');
 
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_2');
+		assert.equal(mq.latex(), 'x_2');
 
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{ }');
+		assert.equal(mq.latex(), 'x_{ }');
 
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x');
+		assert.equal(mq.latex(), 'x');
 	});
 
 	test('backspace through simple subscript', function() {
@@ -110,15 +108,15 @@ suite('backspace', function() {
 
 		//backspace goes down
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{2+3}');
+		assert.equal(mq.latex(), 'x_{2+3}');
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{2+}');
+		assert.equal(mq.latex(), 'x_{2+}');
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_2');
+		assert.equal(mq.latex(), 'x_2');
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{ }');
+		assert.equal(mq.latex(), 'x_{ }');
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x');
+		assert.equal(mq.latex(), 'x');
 	});
 
 	test('backspace through subscript & superscript', function() {
@@ -126,35 +124,35 @@ suite('backspace', function() {
 
 		//first backspace takes us into the exponent
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_2^{32}');
+		assert.equal(mq.latex(), 'x_2^{32}');
 
 		//second backspace is within the exponent
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_2^3');
+		assert.equal(mq.latex(), 'x_2^3');
 
 		//clear out exponent
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_2^{ }');
+		assert.equal(mq.latex(), 'x_2^{ }');
 
 		//unpeel exponent
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_2');
+		assert.equal(mq.latex(), 'x_2');
 
 		//into subscript
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_2');
+		assert.equal(mq.latex(), 'x_2');
 
 		//clear out subscript
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x_{ }');
+		assert.equal(mq.latex(), 'x_{ }');
 
 		//unpeel exponent
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'x');
+		assert.equal(mq.latex(), 'x');
 
 		//clear out math field
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'');
+		assert.equal(mq.latex(), '');
 	});
 
 	test('backspace through nthroot', function() {
@@ -162,18 +160,18 @@ suite('backspace', function() {
 
 		//first backspace takes us inside the nthroot
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'\\sqrt[3]{x}');
+		assert.equal(mq.latex(), '\\sqrt[3]{x}');
 
 		//second backspace removes the x
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'\\sqrt[3]{}');
+		assert.equal(mq.latex(), '\\sqrt[3]{}');
 
 		//third one destroys the cube root, but leaves behind the 3
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'3');
+		assert.equal(mq.latex(), '3');
 
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'');
+		assert.equal(mq.latex(), '');
 	});
 
 	test('backspace through large operator', function() {
@@ -181,19 +179,19 @@ suite('backspace', function() {
 
 		//first backspace takes out the argument
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'\\sum_{n=1}^3');
+		assert.equal(mq.latex(), '\\sum_{n=1}^3');
 
 		//up into the superscript
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'\\sum_{n=1}^3');
+		assert.equal(mq.latex(), '\\sum_{n=1}^3');
 
 		//up into the superscript
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'\\sum_{n=1}^{ }');
+		assert.equal(mq.latex(), '\\sum_{n=1}^{ }');
 
 		//destroy the sum, preserve the subscript (a little surprising)
 		mq.keystroke('Backspace');
-		assert.equal(mq.latex(),'n=1');
+		assert.equal(mq.latex(), 'n=1');
 	});
 
 	test('backspace through text block', function() {

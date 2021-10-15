@@ -1,7 +1,9 @@
 const path = require('path');
 const webpack = require('webpack');
-const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const VERSION = require('./package.json').version;
 
 module.exports = (env, argv) => {
@@ -67,7 +69,8 @@ module.exports = (env, argv) => {
 				new webpack.DefinePlugin({
 					VERSION: JSON.stringify(VERSION)
 				}),
-				new MiniCssExtractPlugin()
+				new MiniCssExtractPlugin(),
+				new ESLintPlugin()
 			]
 		}
 	};
@@ -90,12 +93,15 @@ module.exports = (env, argv) => {
 	} else {
 		console.log('Using production mode.');
 		// This minimizes the code even in development mode, which is why it is here.
-		const minimizer = new TerserPlugin({
+		const jsMinimizer = new TerserPlugin({
 			terserOptions: { format: { comments: /@license/i } },
 			extractComments: false
 		});
-		fullConfig.plugins.push(minimizer);
-		basicConfig.plugins.push(minimizer);
+		const cssMinimizer = { minimizer: [new CssMinimizerPlugin()] };
+		fullConfig.plugins.push(jsMinimizer);
+		basicConfig.plugins.push(jsMinimizer);
+		fullConfig.optimization = cssMinimizer;
+		basicConfig.optimization = cssMinimizer;
 
 		if (process.env.BUILD_BASIC) builds.push(basicConfig);
 	}

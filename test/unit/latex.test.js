@@ -139,13 +139,13 @@ suite('latex', function() {
 	test('\\langler should not parse', function() {
 		assert.throws(function () {
 			latexMathParser.parse('\\left\\langler123\\right\\rangler');
-		})
+		});
 	});
 
 	test('\\lVerte should not parse', function() {
 		assert.throws(function () {
 			latexMathParser.parse('\\left\\lVerte123\\right\\rVerte');
-		})
+		});
 	});
 
 	test('parens with whitespace', function() {
@@ -222,7 +222,7 @@ suite('latex', function() {
 				assertParsesLatex(true, 'true');
 				assertParsesLatex(false, 'false');
 				assertParsesLatex({}, '[objectObject]'); // lol, the space gets ignored
-				assertParsesLatex({toString: function() { return 'thing'; }}, 'thing');
+				assertParsesLatex({ toString: function() { return 'thing'; } }, 'thing');
 			});
 		});
 
@@ -247,16 +247,16 @@ suite('latex', function() {
 				$(mqEl).width(10);
 				var previousScrollLeft = rootEl.scrollLeft;
 
-				mq.write("abc");
+				mq.write('abc');
 				setTimeout(afterScroll, 150);
 
 				function afterScroll() {
 					cursor.show();
 
 					try {
-						assert.ok(rootEl.scrollLeft > previousScrollLeft, "scrolls on write");
+						assert.ok(rootEl.scrollLeft > previousScrollLeft, 'scrolls on write');
 						assert.ok(mqEl.getBoundingClientRect().right > cursor.jQ[0].getBoundingClientRect().right,
-							"cursor right end is inside the field");
+							'cursor right end is inside the field');
 					}
 					catch(error) {
 						done(error);
@@ -297,7 +297,7 @@ suite('latex', function() {
 		setup(function() {
 			outer = MQ.StaticMath(
 				$('<span>\\frac{\\MathQuillMathField{x_0 + x_1 + x_2}}{\\MathQuillMathField{3}}</span>')
-				.appendTo('#mock')[0]
+					.appendTo('#mock')[0]
 			);
 			inner1 = outer.innerFields[0];
 			inner2 = outer.innerFields[1];

@@ -280,7 +280,6 @@ suite('typing with auto-replaces', function() {
 				assertLatex('1+2+3+4');
 			});
 
-
 			test('backspacing close-bracket then open-paren of 1+(2+3] (nothing after paren group)', function() {
 				mq.typedText('1+(2+3]');
 				assertLatex('1+\\left(2+3\\right]');
@@ -941,7 +940,7 @@ suite('typing with auto-replaces', function() {
 			var cmds = ('Pr arg deg det dim exp gcd hom ker lg lim ln log max min sup'
 				+ ' limsup liminf injlim projlim Pr').split(' ');
 			for (var i = 0; i < cmds.length; i += 1) {
-				assert.throws(function() { MQ.config({ autoCommands: cmds[i] }) },
+				assert.throws(function() { MQ.config({ autoCommands: cmds[i] }); },
 					'MQ.config({ autoCommands: "'+cmds[i]+'" })');
 			}
 		});
@@ -951,7 +950,7 @@ suite('typing with auto-replaces', function() {
 			// ^ happen to be the ones required by autoOperatorNames.test.js
 			var cmds = 'Pr arg deg det exp gcd lg lim ln log max min sup'.split(' ');
 			for (var i = 0; i < cmds.length; i += 1) {
-				assert.throws(function() { MQ.config({ autoCommands: cmds[i] }) },
+				assert.throws(function() { MQ.config({ autoCommands: cmds[i] }); },
 					'MQ.config({ autoCommands: "'+cmds[i]+'" })');
 			}
 		});

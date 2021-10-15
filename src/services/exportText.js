@@ -4,4 +4,4 @@ export const ExportText = (base) => class extends base {
 	exportText() {
 		return this.root.foldChildren('', (text, child) => text + child.text());
 	};
-}
+};

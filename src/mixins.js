@@ -31,7 +31,7 @@ export const deleteSelectTowardsMixin = (base) => class extends base {
 		cursor[dir] = this[dir];
 	}
 
-}
+};
 
 // The MathBlock and the RootMathCommand (used by the RootTextBlock) use this.
 export const writeMethodMixin = (base) => class extends base {
@@ -56,7 +56,7 @@ export const writeMethodMixin = (base) => class extends base {
 			cmd.createLeftOf(cursor.show());
 		}
 	}
-}
+};
 
 const div_style = document.createElement('div').style,
 	transformPropNames = {
@@ -80,7 +80,7 @@ for (const prop in transformPropNames) {
 // Ideas from http://github.com/louisremi/jquery.transform.js
 export const scale = transformPropName
 	? (jQ, x, y) => jQ.css(transformPropName, `scale(${x},${y})`, `scale(${x},${y})`)
-	: scale = (jQ, x, y) => jQ.css('fontSize', `${y}em`);
+	: (jQ, x, y) => jQ.css('fontSize', `${y}em`);
 
 export const DelimsMixin = (Base) => class extends Base {
 	jQadd(...args) {
