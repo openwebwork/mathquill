@@ -18,6 +18,9 @@ export const MouseEventController = (base) => class extends base {
 			if (cursor.options.ignoreNextMousedown(e)) return;
 			else cursor.options.ignoreNextMousedown = noop;
 
+			// End any previous selection.
+			cursor.endSelection();
+
 			let target;
 			const mousemove = (e) => target = jQuery(e.target);
 			const docmousemove = (e) => {
@@ -33,8 +36,7 @@ export const MouseEventController = (base) => class extends base {
 				if (!cursor.selection) {
 					if (ctrlr.editable) {
 						cursor.show();
-					}
-					else {
+					} else {
 						textareaSpan.detach();
 					}
 				}

@@ -106,12 +106,10 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			if (!cursor[L]) new TextPiece(ch).createLeftOf(cursor);
 			else cursor[L].appendText(ch);
 			this.bubble('reflow');
-		}
-		else if (this.isEmpty()) {
+		} else if (this.isEmpty()) {
 			cursor.insRightOf(this);
 			new VanillaSymbol('\\$', '$').createLeftOf(cursor);
-		}
-		else if (!cursor[R]) cursor.insRightOf(this);
+		} else if (!cursor[R]) cursor.insRightOf(this);
 		else if (!cursor[L]) cursor.insLeftOf(this);
 		else { // split apart
 			const leftBlock = new TextBlock();
@@ -136,7 +134,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 		const textPc = this.fuseChildren();
 
 		// insert cursor at approx position in DOMTextNode
-		const avgChWidth = this.jQ.width()/this.text.length;
+		const avgChWidth = this.jQ.width() / this.text.length;
 		const approxPosition = Math.round((pageX - this.jQ.offset().left) / avgChWidth);
 		if (approxPosition <= 0) cursor.insAtLeftEnd(this);
 		else if (approxPosition >= textPc.text.length) cursor.insAtRightEnd(this);
@@ -158,23 +156,24 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			// about to start mouse-selecting, the anticursor is gonna get put here
 			this.anticursorPosition = cursor[L] && cursor[L].text.length;
 			// ^ get it? 'cos if there's no cursor[L], it's 0... I'm a terrible person.
-		}
-		else if (cursor.anticursor.parent === this) {
+		} else if (cursor.anticursor.parent === this) {
 			// mouse-selecting within this TextBlock, re-insert the anticursor
 			const cursorPosition = cursor[L] && cursor[L].text.length;;
 			if (this.anticursorPosition === cursorPosition) {
-				cursor.anticursor = Point.copy(cursor);
-			}
-			else {
+				cursor.startSelection();
+			} else {
 				let newTextPc;
 				if (this.anticursorPosition < cursorPosition) {
 					newTextPc = cursor[L].splitRight(this.anticursorPosition);
 					cursor[L] = newTextPc;
-				}
-				else {
+				} else {
 					newTextPc = cursor[R].splitRight(this.anticursorPosition - cursorPosition);
 				}
 				cursor.anticursor = new Point(this, newTextPc[L], newTextPc);
+				cursor.anticursor.ancestors = {};
+				for (let ancestor = cursor.anticursor; ancestor.parent; ancestor = ancestor.parent) {
+					cursor.anticursor.ancestors[ancestor.parent.id] = ancestor;
+				}
 			}
 		}
 	}
@@ -187,8 +186,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			this.remove();
 			if (cursor[L] === this) cursor[L] = this[L];
 			else if (cursor[R] === this) cursor[R] = this[R];
-		}
-		else this.fuseChildren();
+		} else
+			this.fuseChildren();
 
 		(function getCtrlr(node) {
 			return (node.controller) ? node.controller : getCtrlr(node.parent);
@@ -202,7 +201,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 		if (!textPcDom) return;
 		pray('only node in TextBlock span is Text node', textPcDom.nodeType === 3);
 		// nodeType === 3 has meant a Text node since ancient times:
-		//   http://reference.sitepoint.com/javascript/Node/nodeType
+		// https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
 
 		const textPc = new TextPiece(textPcDom.data);
 		textPc.jQadd(textPcDom);
@@ -283,15 +282,13 @@ class TextPiece extends Node {
 			if (dir === R) {
 				this.dom.deleteData(0, 1);
 				this.text = this.text.slice(1);
-			}
-			else {
+			} else {
 				// note that the order of these 2 lines is annoyingly important
 				// (the second line mutates this.text.length)
 				this.dom.deleteData(-1 + this.text.length, 1);
 				this.text = this.text.slice(0, -1);
 			}
-		}
-		else {
+		} else {
 			this.remove();
 			this.jQ.remove();
 			cursor[dir] = this[dir];
@@ -308,8 +305,7 @@ class TextPiece extends Node {
 			const newPc = new TextPiece(ch).createDir(dir, cursor);
 			anticursor[dir] = newPc;
 			cursor.insDirOf(dir, newPc);
-		}
-		else {
+		} else {
 			const from = this[-dir];
 			if (from) from.insTextAtDirEnd(ch, dir);
 			else {
@@ -376,8 +372,7 @@ export class RootMathCommand extends writeMethodMixin(MathCommand) {
 				// FIXME: What direction should this use? Previously it was the undefined variable `dir`.
 				this.parent.deleteTowards(L, cursor);
 				new VanillaSymbol('\\$', '$').createLeftOf(cursor.show());
-			}
-			else if (!cursor[R])
+			} else if (!cursor[R])
 				cursor.insRightOf(this.parent);
 			else if (!cursor[L])
 				cursor.insLeftOf(this.parent);

@@ -31,8 +31,7 @@ export class Cursor extends Point {
 					this.jQ.insertBefore(this.selection.jQ);
 				else
 					this.jQ.insertBefore(this[R].jQ.first());
-			}
-			else
+			} else
 				this.jQ.appendTo(this.parent.jQ);
 			this.parent.focus();
 		}
@@ -95,8 +94,7 @@ export class Cursor extends Point {
 		const cached = this.upDownCache[to.id];
 		if (cached) {
 			cached[R] ? this.insLeftOf(cached[R]) : this.insAtRightEnd(cached.parent);
-		}
-		else {
+		} else {
 			to.seek(this.offset().left, this);
 		}
 	}
