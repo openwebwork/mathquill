@@ -7,9 +7,11 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const VERSION = require('./package.json').version;
 
 module.exports = (env, argv) => {
+	process.env.NODE_ENV = argv.mode;
+
 	const config = (entry, basic) => {
 		return {
-			mode: 'production',
+			mode: argv.mode,
 			entry,
 			output: {
 				path: path.resolve(__dirname, 'dist'),
@@ -67,11 +69,17 @@ module.exports = (env, argv) => {
 			},
 			plugins: [
 				new webpack.DefinePlugin({
-					VERSION: JSON.stringify(VERSION)
+					VERSION: JSON.stringify(VERSION),
+					'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
 				}),
 				new MiniCssExtractPlugin(),
 				new ESLintPlugin()
-			]
+			],
+			performance: {
+				assetFilter: (asset) => {
+					return !asset.match(/fonts\/(.*\.svg$|.*\.ttf$|.*\.eot$)/);
+				}
+			}
 		}
 	};
 
@@ -82,9 +90,7 @@ module.exports = (env, argv) => {
 
 	if (argv.mode == 'development') {
 		console.log('Using development mode.');
-		fullConfig.mode = 'development';
 		fullConfig.devtool = 'source-map';
-		basicConfig.mode = 'development';
 		basicConfig.devtool = 'source-map';
 		fullConfig.entry['mathquill.test'] = './test/index.js';
 		fullConfig.resolve.alias.test = path.resolve(__dirname, 'test');
