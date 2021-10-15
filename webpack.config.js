@@ -75,6 +75,8 @@ module.exports = (env, argv) => {
 	const fullConfig = config({ mathquill: './src/index.js' }, false);
 	const basicConfig = config({ 'mathquill-basic': './src/indexBasic.js' }, true);
 
+	const builds = [fullConfig];
+
 	if (argv.mode == 'development') {
 		console.log('Using development mode.');
 		fullConfig.mode = 'development';
@@ -83,6 +85,8 @@ module.exports = (env, argv) => {
 		basicConfig.devtool = 'source-map';
 		fullConfig.entry['mathquill.test'] = './test/index.js';
 		fullConfig.resolve.alias.test = path.resolve(__dirname, 'test');
+
+		builds.push(basicConfig);
 	} else {
 		console.log('Using production mode.');
 		// This minimizes the code even in development mode, which is why it is here.
@@ -92,7 +96,9 @@ module.exports = (env, argv) => {
 		});
 		fullConfig.plugins.push(minimizer);
 		basicConfig.plugins.push(minimizer);
+
+		if (process.env.BUILD_BASIC) builds.push(basicConfig);
 	}
 
-	return [ fullConfig, basicConfig ];
+	return builds;
 };
