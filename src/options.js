@@ -70,22 +70,20 @@ export class Options {
 		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
-		const list = cmds.split(' ');
-		this._autoCommands = { _maxLength: 0 };
+		const list = cmds.split(' '), dict = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
 			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
-			this._autoCommands[cmd] = 1;
-			this._autoCommands._maxLength = Math.max(this._autoCommands._maxLength, cmd.length);
+			dict[cmd] = 1;
+			dict._maxLength = Math.max(dict._maxLength, cmd.length);
 		}
+		this._autoCommands = dict;
 	}
 	get autoOperatorNames() { return this._autoOperatorNames ?? Options.autoOperatorNames; }
 	set autoOperatorNames(cmds) {
 		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
-		// FIXME: The intermediate dict variable should not be needed, but if this._autoOperatorNames is used in the
-		// same way that this._autoCommands is used above, some unit tests fail for some illogical reason.
 		const list = cmds.split(' '), dict = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
