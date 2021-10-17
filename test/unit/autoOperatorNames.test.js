@@ -1,47 +1,48 @@
+/* global suite, test, assert, setup, MQ */
+
+import { jQuery } from 'src/constants';
 import { Letter } from 'commands/mathElements';
 
-suite('autoOperatorNames', function() {
-	var mq;
-	setup(function() {
-		mq = MQ.MathField($('<span></span>').appendTo('#mock')[0]);
-	});
+suite('autoOperatorNames', () => {
+	let mq;
+	setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
 
-	function assertLatex(input, expected) {
-		var result = mq.latex();
+	const assertLatex = (input, expected) => {
+		const result = mq.latex();
 		assert.equal(result, expected,
-			input+', got \''+result+'\', expected \''+expected+'\''
+			`${input}, got '${result}', expected '${expected}'`
 		);
-	}
+	};
 
-	function assertText(input, expected) {
-		var result = mq.text();
+	const assertText = (input, expected) => {
+		const result = mq.text();
 		assert.equal(result, expected,
-			input+', got \''+result+'\', expected \''+expected+'\''
+			`${input}, got '${result}', expected '${expected}'`
 		);
-	}
+	};
 
-	test('simple LaTeX parsing, typing', function() {
-		function assertAutoOperatorNamesWork(str, latex) {
-			var count = 0;
-			var _autoUnItalicize = Letter.prototype.autoUnItalicize;
+	test('simple LaTeX parsing, typing', () => {
+		const assertAutoOperatorNamesWork = (str, latex) => {
+			let count = 0;
+			const _autoUnItalicize = Letter.prototype.autoUnItalicize;
 			Letter.prototype.autoUnItalicize = function() {
 				count += 1;
 				return _autoUnItalicize.apply(this, arguments);
 			};
 
 			mq.latex(str);
-			assertLatex('parsing \''+str+'\'', latex);
+			assertLatex(`parsing '${str}'`, latex);
 			assert.equal(count, 1);
 
 			mq.latex(latex);
-			assertLatex('parsing \''+latex+'\'', latex);
+			assertLatex(`parsing '${latex}'`, latex);
 			assert.equal(count, 2);
 
 			mq.latex('');
-			for (var i = 0; i < str.length; i += 1) mq.typedText(str.charAt(i));
-			assertLatex('typing \''+str+'\'', latex);
+			for (const char of str) mq.typedText(char);
+			assertLatex(`typing '${str}'`, latex);
 			assert.equal(count, 2 + str.length);
-		}
+		};
 
 		assertAutoOperatorNamesWork('sin', '\\sin');
 		assertAutoOperatorNamesWork('arcosh', '\\operatorname{arcosh}');
@@ -52,27 +53,27 @@ suite('autoOperatorNames', function() {
 		assertAutoOperatorNamesWork('scscscscscsc', 's\\csc s\\csc s\\csc');
 	});
 
-	test('text() output', function(){
-		function assertTranslatedCorrectly(latexStr, text) {
+	test('text() output', () => {
+		const assertTranslatedCorrectly = (latexStr, text) => {
 			mq.latex(latexStr);
-			assertText('outputting ' + latexStr, text);
-		}
+			assertText(`outputting ${latexStr}`, text);
+		};
 
 		assertTranslatedCorrectly('\\sin', 'sin');
 		assertTranslatedCorrectly('\\sin\\left(xy\\right)', 'sin(xy)');
 	});
 
-	test('deleting', function() {
-		var count = 0;
-		var _autoUnItalicize = Letter.prototype.autoUnItalicize;
+	test('deleting', () => {
+		let count = 0;
+		const _autoUnItalicize = Letter.prototype.autoUnItalicize;
 		Letter.prototype.autoUnItalicize = function() {
 			count += 1;
 			return _autoUnItalicize.apply(this, arguments);
 		};
 
-		var str = 'cscscscscscsc';
-		for (var i = 0; i < str.length; i += 1) mq.typedText(str.charAt(i));
-		assertLatex('typing \''+str+'\'', '\\csc s\\csc s\\csc sc');
+		const str = 'cscscscscscsc';
+		for (const char of str) mq.typedText(char);
+		assertLatex(`typing '${str}'`, '\\csc s\\csc s\\csc sc');
 		assert.equal(count, str.length);
 
 		mq.moveToLeftEnd().keystroke('Del');
@@ -92,32 +93,32 @@ suite('autoOperatorNames', function() {
 		assert.equal(count, str.length + 5);
 	});
 
-	suite('override autoOperatorNames', function() {
-		test('basic', function() {
+	suite('override autoOperatorNames', () => {
+		test('basic', () => {
 			mq.config({ autoOperatorNames: 'sin lol' });
 			mq.typedText('arcsintrololol');
 			assert.equal(mq.latex(), 'arc\\sin tro\\operatorname{lol}ol');
 		});
 
-		test('command contains non-letters', function() {
-			assert.throws(function() { MQ.config({ autoOperatorNames: 'e1' }); });
+		test('command contains non-letters', () => {
+			assert.throws(() => MQ.config({ autoOperatorNames: 'e1' }));
 		});
 
-		test('command length less than 2', function() {
-			assert.throws(function() { MQ.config({ autoOperatorNames: 'e' }); });
+		test('command length less than 2', () => {
+			assert.throws(() => MQ.config({ autoOperatorNames: 'e' }));
 		});
 
-		suite('command list not perfectly space-delimited', function() {
-			test('double space', function() {
-				assert.throws(function() { MQ.config({ autoOperatorNames: 'pi  theta' }); });
+		suite('command list not perfectly space-delimited', () => {
+			test('double space', () => {
+				assert.throws(() => MQ.config({ autoOperatorNames: 'pi  theta' }));
 			});
 
-			test('leading space', function() {
-				assert.throws(function() { MQ.config({ autoOperatorNames: ' pi' }); });
+			test('leading space', () => {
+				assert.throws(() => MQ.config({ autoOperatorNames: ' pi' }));
 			});
 
-			test('trailing space', function() {
-				assert.throws(function() { MQ.config({ autoOperatorNames: 'pi ' }); });
+			test('trailing space', () => {
+				assert.throws(() => MQ.config({ autoOperatorNames: 'pi ' }));
 			});
 		});
 	});

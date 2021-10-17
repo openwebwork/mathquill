@@ -1,10 +1,12 @@
+/* global suite, test, assert */
+
 import { L, R } from 'src/constants';
 import { Node } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 
-suite('tree', function() {
-	suite('adopt', function() {
-		function assertTwoChildren(parent, one, two) {
+suite('tree', () => {
+	suite('adopt', () => {
+		const assertTwoChildren = (parent, one, two) => {
 			assert.equal(one.parent, parent, 'one.parent is set');
 			assert.equal(two.parent, parent, 'two.parent is set');
 
@@ -15,11 +17,11 @@ suite('tree', function() {
 
 			assert.equal(parent.ends[L], one, 'parent.ends[L] is one');
 			assert.equal(parent.ends[R], two, 'parent.ends[R] is two');
-		}
+		};
 
-		test('the empty case', function() {
-			var parent = new Node();
-			var child = new Node();
+		test('the empty case', () => {
+			const parent = new Node();
+			const child = new Node();
 
 			child.adopt(parent, 0, 0);
 
@@ -31,10 +33,10 @@ suite('tree', function() {
 			assert.equal(parent.ends[R], child, 'child is parent.ends[R]');
 		});
 
-		test('with two children from the left', function() {
-			var parent = new Node();
-			var one = new Node();
-			var two = new Node();
+		test('with two children from the left', () => {
+			const parent = new Node();
+			const one = new Node();
+			const two = new Node();
 
 			one.adopt(parent, 0, 0);
 			two.adopt(parent, one, 0);
@@ -42,10 +44,10 @@ suite('tree', function() {
 			assertTwoChildren(parent, one, two);
 		});
 
-		test('with two children from the right', function() {
-			var parent = new Node();
-			var one = new Node();
-			var two = new Node();
+		test('with two children from the right', () => {
+			const parent = new Node();
+			const one = new Node();
+			const two = new Node();
 
 			two.adopt(parent, 0, 0);
 			one.adopt(parent, 0, two);
@@ -53,11 +55,11 @@ suite('tree', function() {
 			assertTwoChildren(parent, one, two);
 		});
 
-		test('adding one in the middle', function() {
-			var parent = new Node();
-			var leftward = new Node();
-			var rightward = new Node();
-			var middle = new Node();
+		test('adding one in the middle', () => {
+			const parent = new Node();
+			const leftward = new Node();
+			const rightward = new Node();
+			const middle = new Node();
 
 			leftward.adopt(parent, 0, 0);
 			rightward.adopt(parent, leftward, 0);
@@ -75,17 +77,17 @@ suite('tree', function() {
 		});
 	});
 
-	suite('disown', function() {
-		function assertSingleChild(parent, child) {
+	suite('disown', () => {
+		const assertSingleChild = (parent, child) => {
 			assert.equal(parent.ends[L], child, 'parent.ends[L] is child');
 			assert.equal(parent.ends[R], child, 'parent.ends[R] is child');
 			assert.ok(!child[L], 'child has nothing leftward');
 			assert.ok(!child[R], 'child has nothing rightward');
-		}
+		};
 
-		test('the empty case', function() {
-			var parent = new Node();
-			var child = new Node();
+		test('the empty case', () => {
+			const parent = new Node();
+			const child = new Node();
 
 			child.adopt(parent, 0, 0);
 			child.disown();
@@ -94,10 +96,10 @@ suite('tree', function() {
 			assert.ok(!parent.ends[R], 'parent has no right end child');
 		});
 
-		test('disowning the right end child', function() {
-			var parent = new Node();
-			var one = new Node();
-			var two = new Node();
+		test('disowning the right end child', () => {
+			const parent = new Node();
+			const one = new Node();
+			const two = new Node();
 
 			one.adopt(parent, 0, 0);
 			two.adopt(parent, one, 0);
@@ -109,14 +111,13 @@ suite('tree', function() {
 			assert.equal(two.parent, parent, 'two retains its parent');
 			assert.equal(two[L], one, 'two retains its [L]');
 
-			assert.throws(function() { two.disown(); },
-				'disown fails on a malformed tree');
+			assert.throws(() => two.disown(), 'disown fails on a malformed tree');
 		});
 
-		test('disowning the left end child', function() {
-			var parent = new Node();
-			var one = new Node();
-			var two = new Node();
+		test('disowning the left end child', () => {
+			const parent = new Node();
+			const one = new Node();
+			const two = new Node();
 
 			one.adopt(parent, 0, 0);
 			two.adopt(parent, one, 0);
@@ -128,15 +129,14 @@ suite('tree', function() {
 			assert.equal(one.parent, parent, 'one retains its parent');
 			assert.equal(one[R], two, 'one retains its [R]');
 
-			assert.throws(function() { one.disown(); },
-				'disown fails on a malformed tree');
+			assert.throws(() => one.disown(), 'disown fails on a malformed tree');
 		});
 
-		test('disowning the middle', function() {
-			var parent = new Node();
-			var leftward = new Node();
-			var rightward = new Node();
-			var middle = new Node();
+		test('disowning the middle', () => {
+			const parent = new Node();
+			const leftward = new Node();
+			const rightward = new Node();
+			const middle = new Node();
 
 			leftward.adopt(parent, 0, 0);
 			rightward.adopt(parent, leftward, 0);
@@ -153,54 +153,48 @@ suite('tree', function() {
 			assert.equal(middle[R], rightward, 'middle retains its [R]');
 			assert.equal(middle[L], leftward, 'middle retains its [L]');
 
-			assert.throws(function() { middle.disown(); },
-				'disown fails on a malformed tree');
+			assert.throws(() => middle.disown(), 'disown fails on a malformed tree');
 		});
 	});
 
-	suite('fragments', function() {
-		test('an empty fragment', function() {
-			var empty = new Fragment();
-			var count = 0;
+	suite('fragments', () => {
+		test('an empty fragment', () => {
+			const empty = new Fragment();
+			let count = 0;
 
-			empty.each(function() { count += 1; });
+			empty.each(() => ++count);
 
 			assert.equal(count, 0, 'each is a noop on an empty fragment');
 		});
 
-		test('half-empty fragments are disallowed', function() {
-			assert.throws(function() {
-				new Fragment(new Node(), 0);
-			}, 'half-empty on the right');
-
-			assert.throws(function() {
-				new Fragment(0, new Node());
-			}, 'half-empty on the left');
+		test('half-empty fragments are disallowed', () => {
+			assert.throws(() => new Fragment(new Node(), 0), 'half-empty on the right');
+			assert.throws(() => new Fragment(0, new Node()), 'half-empty on the left');
 		});
 
-		test('directionalized constructor call', function() {
-			var ChNode = class extends Node { constructor(ch) { super(); this.ch = ch; } };
-			var parent = new Node();
-			var a = new ChNode('a').adopt(parent, parent.ends[R], 0);
-			var b = new ChNode('b').adopt(parent, parent.ends[R], 0);
-			var c = new ChNode('c').adopt(parent, parent.ends[R], 0);
-			var d = new ChNode('d').adopt(parent, parent.ends[R], 0);
-			var e = new ChNode('e').adopt(parent, parent.ends[R], 0);
+		test('directionalized constructor call', () => {
+			const ChNode = class extends Node { constructor(ch) { super(); this.ch = ch; } };
+			const parent = new Node();
+			new ChNode('a').adopt(parent, parent.ends[R], 0);
+			const b = new ChNode('b').adopt(parent, parent.ends[R], 0);
+			new ChNode('c').adopt(parent, parent.ends[R], 0);
+			const d = new ChNode('d').adopt(parent, parent.ends[R], 0);
+			new ChNode('e').adopt(parent, parent.ends[R], 0);
 
-			function cat(str, node) { return str + node.ch; }
+			const cat = (str, node) => str + node.ch;
 			assert.equal('bcd', new Fragment(b, d).fold('', cat));
 			assert.equal('bcd', new Fragment(b, d, L).fold('', cat));
 			assert.equal('bcd', new Fragment(d, b, R).fold('', cat));
-			assert.throws(function() { new Fragment(d, b, L); });
-			assert.throws(function() { new Fragment(b, d, R); });
+			assert.throws(() => new Fragment(d, b, L));
+			assert.throws(() => new Fragment(b, d, R));
 		});
 
-		test('disown is idempotent', function() {
-			var parent = new Node();
-			var one = new Node().adopt(parent, 0, 0);
-			var two = new Node().adopt(parent, one, 0);
+		test('disown is idempotent', () => {
+			const parent = new Node();
+			const one = new Node().adopt(parent, 0, 0);
+			const two = new Node().adopt(parent, one, 0);
 
-			var frag = new Fragment(one, two);
+			const frag = new Fragment(one, two);
 			frag.disown();
 			frag.disown();
 		});

@@ -1,37 +1,37 @@
-import { L, R, prayWellFormed } from 'src/constants';
+/* global suite, test, assert, setup, MQ */
+
+import { jQuery, L, R, prayWellFormed } from 'src/constants';
 import { Controller } from 'src/controller';
 import { latexMathParser } from 'commands/mathElements';
 
-suite('text', function() {
+suite('text', () => {
 
-	var mq, mostRecentlyReportedLatex;
-	setup(function() {
+	let mq, mostRecentlyReportedLatex;
+	setup(() => {
 		mostRecentlyReportedLatex = NaN; // != to everything
-		mq = MQ.MathField($('<span></span>').appendTo('#mock')[0], {
+		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], {
 			handlers: {
-				edit: function() {
-					mostRecentlyReportedLatex = mq.latex();
-				}
+				edit: () => mostRecentlyReportedLatex = mq.latex()
 			}
 		});
 	});
 
-	function prayWellFormedPoint(pt) { prayWellFormed(pt.parent, pt[L], pt[R]); }
-	function assertLatex(latex) {
+	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
+	const assertLatex = (latex) => {
 		prayWellFormedPoint(mq.__controller.cursor);
 		assert.equal(mostRecentlyReportedLatex, latex, 'assertLatex failed');
 		assert.equal(mq.latex(), latex, 'assertLatex failed');
-	}
+	};
 
-	function fromLatex(latex) {
-		var block = latexMathParser.parse(latex);
+	const fromLatex = (latex) => {
+		const block = latexMathParser.parse(latex);
 		block.jQize();
 
 		return block;
-	}
+	};
 
-	function assertSplit(jQ, prev, next) {
-		var dom = jQ[0];
+	const assertSplit = (jQ, prev, next) => {
+		const dom = jQ[0];
 
 		if (prev) {
 			assert.ok(dom.previousSibling instanceof Text);
@@ -48,12 +48,12 @@ suite('text', function() {
 		else {
 			assert.ok(!dom.nextSibling);
 		}
-	}
+	};
 
-	test('changes the text nodes as the cursor moves around', function() {
-		var block = fromLatex('\\text{abc}');
-		var ctrlr = new Controller(block, 0, 0);
-		var cursor = ctrlr.cursor.insAtRightEnd(block);
+	test('changes the text nodes as the cursor moves around', () => {
+		const block = fromLatex('\\text{abc}');
+		const ctrlr = new Controller(block, 0, 0);
+		const cursor = ctrlr.cursor.insAtRightEnd(block);
 
 		ctrlr.moveLeft();
 		assertSplit(cursor.jQ, 'abc', null);
@@ -77,10 +77,10 @@ suite('text', function() {
 		assertSplit(cursor.jQ, 'abc', null);
 	});
 
-	test('does not change latex as the cursor moves around', function() {
-		var block = fromLatex('\\text{x}');
-		var ctrlr = new Controller(block, 0, 0);
-		var cursor = ctrlr.cursor.insAtRightEnd(block);
+	test('does not change latex as the cursor moves around', () => {
+		const block = fromLatex('\\text{x}');
+		const ctrlr = new Controller(block, 0, 0);
+		ctrlr.cursor.insAtRightEnd(block);
 
 		ctrlr.moveLeft();
 		ctrlr.moveLeft();
@@ -89,10 +89,10 @@ suite('text', function() {
 		assert.equal(block.latex(), '\\text{x}');
 	});
 
-	suite('typing', function() {
-		test('stepping out of an empty block deletes it', function() {
-			var controller = mq.__controller;
-			var cursor = controller.cursor;
+	suite('typing', () => {
+		test('stepping out of an empty block deletes it', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
 			mq.latex('\\text{x}');
 			assertLatex('\\text{x}');
@@ -111,9 +111,9 @@ suite('text', function() {
 			assertLatex('');
 		});
 
-		test('typing $ in a textblock splits it', function() {
-			var controller = mq.__controller;
-			var cursor = controller.cursor;
+		test('typing $ in a textblock splits it', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
 			mq.latex('\\text{asdf}');
 			assertLatex('\\text{asdf}');
@@ -127,10 +127,10 @@ suite('text', function() {
 		});
 	});
 
-	suite('pasting', function() {
-		test('sanity', function() {
-			var controller = mq.__controller;
-			var cursor = controller.cursor;
+	suite('pasting', () => {
+		test('sanity', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');
@@ -144,9 +144,9 @@ suite('text', function() {
 
 		});
 
-		test('pasting a dollar sign', function() {
-			var controller = mq.__controller;
-			var cursor = controller.cursor;
+		test('pasting a dollar sign', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');
@@ -159,9 +159,9 @@ suite('text', function() {
 			prayWellFormedPoint(cursor);
 		});
 
-		test('pasting a backslash', function() {
-			var controller = mq.__controller;
-			var cursor = controller.cursor;
+		test('pasting a backslash', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');
@@ -174,9 +174,9 @@ suite('text', function() {
 			prayWellFormedPoint(cursor);
 		});
 
-		test('pasting a curly brace', function() {
-			var controller = mq.__controller;
-			var cursor = controller.cursor;
+		test('pasting a curly brace', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');

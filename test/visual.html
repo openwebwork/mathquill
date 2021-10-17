@@ -134,10 +134,10 @@ should look the same as
 
 <p><span id="custom-behavior">x_a^b + \frac{\sqrt[n]{x}}{\frac{1}{2}}</span></p>
 <p>
-Space should behave like Tab, left and right should go through the upper block, sums should start with <code>n=</code>, exponents
-should require an base, any of <code>+-=&lt;&gt;</code> should break out of an exponent, <code>pi</code>, <code>theta</code>,
-<code>sqrt</code>, and <code>sum</code> should all be auto-commands, but <code>only</code> should be the only auto-operator name
-(so <code>sin</code> etc. shouldn't automatically become non-italicized).
+Space should behave like Tab, left and right should go through the upper block, sums should start with <code>n=</code>,
+exponents should require an base, any of <code>+-=&lt;&gt;</code> should break out of an exponent, <code>pi</code>,
+<code>theta</code>, <code>sqrt</code>, and <code>sum</code> should all be auto-commands, but <code>only</code> should be
+the only auto-operator name (so <code>sin</code> etc. shouldn't automatically become non-italicized).
 </p>
 
 <script>
@@ -165,8 +165,8 @@ should require an base, any of <code>+-=&lt;&gt;</code> should break out of an e
 </p>
 
 <p>
-&uarr; If you hit down from next to the 1, you should end up inside one of the square roots. If you hit up from the right of the x
-and then hit down again, you should end up where you were.
+&uarr; If you hit down from next to the 1, you should end up inside one of the square roots. If you hit up from the
+right of the x and then hit down again, you should end up where you were.
 </p>
 
 <h3>Horizontal overflow</h3>
@@ -211,13 +211,19 @@ Static math with mouseEvents set to false should not interact with the mouse:
 	<tr><th colspan=3>Initial LaTeX</th></tr>
 	<tr>
 		<td>
-			<span>\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{\frac{1}{2}} = \frac{1}{2}x^{-\frac{1}{2}} = \frac{1}{2\sqrt{x}}</span>
+			<span>
+				\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{\frac{1}{2}} = \frac{1}{2}x^{-\frac{1}{2}} = \frac{1}{2\sqrt{x}}
+			</span>
 		</td>
 		<td>
-			<span>\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{\frac{1}{2}} = \frac{1}{2}x^{-\frac{1}{2}} = \frac{1}{2\sqrt{x}}</span>
+			<span>
+				\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{\frac{1}{2}} = \frac{1}{2}x^{-\frac{1}{2}} = \frac{1}{2\sqrt{x}}
+			</span>
 		</td>
 		<td>
-			<span>\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{\frac{1}{2}} = \frac{1}{2}x^{-\frac{1}{2}} = \frac{1}{2\sqrt{x}}</span>
+			<span>
+				\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{\frac{1}{2}} = \frac{1}{2}x^{-\frac{1}{2}} = \frac{1}{2\sqrt{x}}
+			</span>
 		</td>
 	</tr>
 	<tr>
@@ -318,18 +324,24 @@ Static math with mouseEvents set to false should not interact with the mouse:
 		<td><span>\left(\frac{\frac{\frac{1}{2}}{\frac{3}{4}}}{\frac{\frac{5}{6}}{\frac{7}{8}}}\right)</span></td>
 	</tr>
 	<tr>
-		<td><span class="mathquill-static-math" style="font-size:1.4375em">\left| a + \left| b \right| \right|</span></td>
+		<td>
+			<span class="mathquill-static-math" style="font-size:1.4375em">
+				\left| a + \left| b \right| \right|
+			</span>
+		</td>
 		<td><span>\left| a + \left| b \right| \right|</span></td>
 	</tr>
 	<tr>
 		<td>
 			<span class="mathquill-static-math" style="font-size:1.4375em">
-				\sqrt{x}+\sqrt{\frac{x}{\frac{ }{\frac{ }{ }}}}+\sqrt{\frac{x}{\frac{ }{\frac{ }{\frac{ }{\frac{ }{ }}}}}}
+				\sqrt{x}+\sqrt{\frac{x}{\frac{ }{\frac{ }{ }}}}+
+				\sqrt{\frac{x}{\frac{ }{\frac{ }{\frac{ }{\frac{ }{ }}}}}}
 			</span>
 		</td>
 		<td>
 			<span>
-				\sqrt{x}+\sqrt{\frac{x}{\frac{ }{\frac{ }{ }}}}+\sqrt{\frac{x}{\frac{ }{\frac{ }{\frac{ }{\frac{ }{ }}}}}}
+				\sqrt{x}+\sqrt{\frac{x}{\frac{ }{\frac{ }{ }}}}+
+				\sqrt{\frac{x}{\frac{ }{\frac{ }{\frac{ }{\frac{ }{ }}}}}}
 			</span>
 		</td>
 	</tr>
@@ -346,30 +358,36 @@ Static math with mouseEvents set to false should not interact with the mouse:
 		<td><span>\sum _{n=0}^3\cos x</span></td>
 	</tr>
 	<tr>
-		<td><span class="mathquill-static-math">\vec x + \tilde x + \vec A + \tilde A + \vec{abcd} + \tilde{abcd}</span></td>
+		<td>
+			<span class="mathquill-static-math">\vec x + \tilde x + \vec A + \tilde A + \vec{abcd} + \tilde{abcd}</span>
+		</td>
 		<td><span>\vec x + \tilde x + \vec A + \tilde A + \vec{abcd} + \tilde{abcd}</span></td>
 	</tr>
 	<tr>
 		<td>
 			<span class="mathquill-static-math">
-				\int _{\phi =0}^{2\pi }\int _{\theta =0}^{\pi }\int _{r=0}^{\infty }f(r,\theta ,\phi )r^2\sin \theta drd\theta d\phi
+				\int _{\phi =0}^{2\pi }\int _{\theta =0}^{\pi }
+				\int _{r=0}^{\infty }f(r,\theta ,\phi )r^2\sin \theta drd\theta d\phi
 			</span>
 		</td>
 		<td>
 			<span>
-				\int _{\phi =0}^{2\pi }\int _{\theta =0}^{\pi }\int _{r=0}^{\infty }f(r,\theta ,\phi )r^2\sin \theta drd\theta d\phi
+				\int _{\phi =0}^{2\pi }\int _{\theta =0}^{\pi }
+				\int _{r=0}^{\infty }f(r,\theta ,\phi )r^2\sin \theta drd\theta d\phi
 			</span>
 		</td>
 	</tr>
 	<tr>
 		<td>
 			<span class="mathquill-static-math">
-				\int_0^{\frac{\frac{1}{2}}{3}} \int_0^{\frac{1}{\frac{2}{3}}} \int_0^{\frac{1}{\frac{2}{\frac{3}{\frac{4}{5}}}}}
+				\int_0^{\frac{\frac{1}{2}}{3}} \int_0^{\frac{1}{\frac{2}{3}}}
+			   	\int_0^{\frac{1}{\frac{2}{\frac{3}{\frac{4}{5}}}}}
 			</span>
 		</td>
 		<td>
 			<span>
-				\int_0^{\frac{\frac{1}{2}}{3}} \int_0^{\frac{1}{\frac{2}{3}}} \int_0^{\frac{1}{\frac{2}{\frac{3}{\frac{4}{5}}}}}
+				\int_0^{\frac{\frac{1}{2}}{3}} \int_0^{\frac{1}{\frac{2}{3}}}
+			   	\int_0^{\frac{1}{\frac{2}{\frac{3}{\frac{4}{5}}}}}
 			</span>
 		</td>
 	</tr>
@@ -411,16 +429,20 @@ Static math with mouseEvents set to false should not interact with the mouse:
 	</script>
 </table>
 
-<p id="paren-alignment">Parentheses vertical alignment at font sizes ranging from 10px to 24px: <button>Click Me</button></p>
+<p id="paren-alignment">
+Parentheses vertical alignment at font sizes ranging from 10px to 24px: <button>Click Me</button>
+</p>
 <script>
 	$('#paren-alignment button').click(function() {
 		var html = '<div>';
 		for (var i = 10; i <= 24; i += 1) {
 			html += i + 'px: <span class="mathquill-static-math" style="font-size:' + i + 'px">' +
-				'\\left(\\left(\\left(\\left(\\left(\\left(\\left(\\right)\\right)\\right)\\right)\\right)\\right)\\right)+' +
+				'\\left(\\left(\\left(\\left(\\left(\\left(\\left(' +
+			   	'\\right)\\right)\\right)\\right)\\right)\\right)\\right)+' +
 			   	'\\left(1\\right)+\\left(x\\right)+\\left(y\\right)+\\left(\\frac{1}{2}\\right)+' +
 				'\\left(\\frac{\\frac{1}{x}}{2}\\right)+\\left(\\frac{1}{\\frac{x}{2}}\\right)+' +
-			   	'\\left(\\frac{\\frac{\\frac{1}{2}}{\\frac{3}{4}}}{\\frac{\\frac{5}{6}}{\\frac{7}{8}}}\\right)</span><br>';
+				'\\left(\\frac{\\frac{\\frac{1}{2}}{\\frac{3}{4}}}{\\frac{\\frac{5}{6}}{\\frac{7}{8}}}\\right)' +
+				'</span><br>';
 		}
 		html += '</div>';
 		$(html).insertAfter('#paren-alignment').find('.mathquill-static-math').each(function() {
@@ -430,8 +452,12 @@ Static math with mouseEvents set to false should not interact with the mouse:
 </script>
 
 <h3>Dynamic rendering performance</h3>
-<p id="latex-render-perf">LaTeX: <textarea></textarea> <button>&rarr;</button> <span class="mathquill-math-field"></span></p>
-<p id="html-render-perf">HTML: <textarea></textarea> <button>&rarr;</button> <span class="mq-math-mode"></span></p>
+<p id="latex-render-perf">
+LaTeX: <textarea></textarea> <button>&rarr;</button> <span class="mathquill-math-field"></span>
+</p>
+<p id="html-render-perf">
+HTML: <textarea></textarea> <button>&rarr;</button> <span class="mq-math-mode"></span>
+</p>
 
 <p>
 There should be no space between here <span class="mathquill-static-math">            </span>and here.
@@ -470,8 +496,8 @@ There should be no space between here <span class="mathquill-static-math">      
 <h3>substituteTextarea</h3>
 
 <p>
-In Safari on iOS, this should be focusable but not bring up the on-screen keyboard; to test, try focusing anything else and
-confirm this blurs: <span id="no-kbd-math"></span> (confirmed working on iOS 6.1.3)
+In Safari on iOS, this should be focusable but not bring up the on-screen keyboard; to test, try focusing anything else
+and confirm this blurs: <span id="no-kbd-math"></span> (confirmed working on iOS 6.1.3)
 </p>
 
 <h3>substituteKeyboardEvents</h3>
@@ -483,7 +509,8 @@ confirm this blurs: <span id="no-kbd-math"></span> (confirmed working on iOS 6.1
 <h3>Text mode</h3>
 
 <p>
-Spaces at the beginning and end of text mode blocks should be visible: <span class="mathquill-static-math">1\text{ And }2</span>
+Spaces at the beginning and end of text mode blocks should be visible:
+<span class="mathquill-static-math">1\text{ And }2</span>
 </p>
 
 <p>
@@ -639,7 +666,8 @@ Mutiple consecutive spaces in the middle of a text mode block should not collaps
 			var duration = timeAndLog(function() {
 				mathquill.mathquill('latex', latex);
 			});
-			$('#html-render-perf').after('<p>'+duration+'ms rendering <code>'+latex+'</code>, for an average of '+avgs.add(latex, duration)+'</p>');
+			$('#html-render-perf').after(`<p>${duration}ms rendering <code>${latex}</code>, for an average of ${
+				avgs.add(latex, duration)$}</p>`);
 			$('#html-render-perf textarea').val(mathquill.mathquill('html'));
 		});
 	}());
@@ -652,7 +680,8 @@ Mutiple consecutive spaces in the middle of a text mode block should not collaps
 			var duration = timeAndLog(function() {
 				span.html(html);
 			});
-			$('<p>'+duration+'ms rendering <code></code>, for an average of '+avgs.add(html, duration)+'</p>').find('code').text(html).end()
+			$(`<p>${duration}ms rendering <code></code>, for an average of ${avgs.add(html, duration)}</p>`)
+				.find('code').text(html).end()
 				.insertAfter('#html-render-perf');
 		});
 	}());

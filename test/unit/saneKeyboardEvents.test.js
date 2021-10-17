@@ -1,25 +1,21 @@
-import { noop } from 'src/constants';
+/* global suite, test, assert, setup */
+
+import { jQuery, noop } from 'src/constants';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 
-suite('saneKeyboardEvents', function() {
-	var el;
-	var Event = function(type, props) {
-		return jQuery.extend(jQuery.Event(type), props);
-	};
+suite('saneKeyboardEvents', () => {
+	let el;
+	const Event = (type, props) => jQuery.extend(jQuery.Event(type), props);
 
-	function supportsSelectionAPI() {
-		return 'selectionStart' in el[0];
-	}
+	const supportsSelectionAPI = () => 'selectionStart' in el[0];
 
-	setup(function() {
-		el = $('<textarea>').appendTo('#mock');
-	});
+	setup(() => el = jQuery('<textarea>').appendTo('#mock'));
 
-	test('normal keys', function(done) {
-		var counter = 0;
+	test('normal keys', (done) => {
+		let counter = 0;
 		saneKeyboardEvents(el, {
 			keystroke: noop,
-			typedText: function(text, keydown, keypress) {
+			typedText: (text) => {
 				counter += 1;
 				assert.ok(counter <= 1, 'callback is only called once');
 				assert.equal(text, 'a', 'text comes back as a');
@@ -34,11 +30,11 @@ suite('saneKeyboardEvents', function() {
 		el.val('a');
 	});
 
-	test('normal keys without keypress', function(done) {
-		var counter = 0;
+	test('normal keys without keypress', (done) => {
+		let counter = 0;
 		saneKeyboardEvents(el, {
 			keystroke: noop,
-			typedText: function(text) {
+			typedText: (text) => {
 				counter += 1;
 				assert.ok(counter <= 1, 'callback is only called once');
 				assert.equal(text, 'a', 'text comes back as a');
@@ -53,11 +49,11 @@ suite('saneKeyboardEvents', function() {
 		el.val('a');
 	});
 
-	test('one keydown only', function(done) {
-		var counter = 0;
+	test('one keydown only', (done) => {
+		let counter = 0;
 
 		saneKeyboardEvents(el, {
-			keystroke: function(key, evt) {
+			keystroke: (key) => {
 				counter += 1;
 				assert.ok(counter <= 1, 'callback is called only once');
 				assert.equal(key, 'Backspace', 'key is correctly set');
@@ -69,11 +65,11 @@ suite('saneKeyboardEvents', function() {
 		el.trigger(Event('keydown', { which: 8 }));
 	});
 
-	test('a series of keydowns only', function(done) {
-		var counter = 0;
+	test('a series of keydowns only', (done) => {
+		let counter = 0;
 
 		saneKeyboardEvents(el, {
-			keystroke: function(key, keydown) {
+			keystroke: (key, keydown) => {
 				counter += 1;
 				assert.ok(counter <= 3, 'callback is called at most 3 times');
 
@@ -89,11 +85,11 @@ suite('saneKeyboardEvents', function() {
 		el.trigger(Event('keydown', { which: 37 }));
 	});
 
-	test('one keydown and a series of keypresses', function(done) {
-		var counter = 0;
+	test('one keydown and a series of keypresses', (done) => {
+		let counter = 0;
 
 		saneKeyboardEvents(el, {
-			keystroke: function(key, keydown) {
+			keystroke: (key, keydown) => {
 				counter += 1;
 				assert.ok(counter <= 3, 'callback is called at most 3 times');
 
@@ -110,9 +106,9 @@ suite('saneKeyboardEvents', function() {
 		el.trigger(Event('keypress', { which: 8 }));
 	});
 
-	suite('select', function() {
-		test('select populates the textarea but doesn\'t call .typedText()', function() {
-			var shim = saneKeyboardEvents(el, { keystroke: noop });
+	suite('select', () => {
+		test('select populates the textarea but doesn\'t call .typedText()', () => {
+			const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 			shim.select('foobar');
 
@@ -130,8 +126,8 @@ suite('saneKeyboardEvents', function() {
 
 		test('select populates the textarea but doesn\'t call text' +
 			' on keydown, even when the selection is not properly' +
-			' detectable', function() {
-			var shim = saneKeyboardEvents(el, { keystroke: noop });
+			' detectable', () => {
+			const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 			shim.select('foobar');
 			// monkey-patch the dom-level selection so that hasSelection()
@@ -142,8 +138,8 @@ suite('saneKeyboardEvents', function() {
 			assert.equal(el.val(), 'foobar', 'value remains after keydown');
 		});
 
-		test('blurring', function() {
-			var shim = saneKeyboardEvents(el, { keystroke: noop });
+		test('blurring', () => {
+			const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 			shim.select('foobar');
 			el.trigger('blur');
@@ -158,8 +154,8 @@ suite('saneKeyboardEvents', function() {
 			assert.equal(el.val(), 'foobar', 'it still has content');
 		});
 
-		test('blur then empty selection', function() {
-			var shim = saneKeyboardEvents(el, { keystroke: noop });
+		test('blur then empty selection', () => {
+			const shim = saneKeyboardEvents(el, { keystroke: noop });
 			shim.select('foobar');
 			el.blur();
 			shim.select('');
@@ -168,6 +164,7 @@ suite('saneKeyboardEvents', function() {
 
 		test('blur in keystroke handler', function(done) {
 			if (!document.hasFocus()) {
+				// eslint-disable-next-line no-console
 				console.warn(
 					'The test "blur in keystroke handler" needs the document to have ' +
 					'focus. Only when the document has focus does .select() on an ' +
@@ -180,12 +177,12 @@ suite('saneKeyboardEvents', function() {
 					'clicked on something in the Developer Tools or on the page itself. ' +
 					'Click the page, or close the Developer Tools, and Refresh.'
 				);
-				$('#mock').empty(); // LOL next line skips teardown https://git.io/vaUWq
+				jQuery('#mock').empty(); // LOL next line skips teardown https://git.io/vaUWq
 				this.skip();
 			}
 
-			var shim = saneKeyboardEvents(el, {
-				keystroke: function(key) {
+			const shim = saneKeyboardEvents(el, {
+				keystroke: (key) => {
 					assert.equal(key, 'Left');
 					el[0].blur();
 				}
@@ -197,20 +194,18 @@ suite('saneKeyboardEvents', function() {
 			el.trigger(Event('keydown', { which: 37 }));
 			assert.ok(document.activeElement !== el[0], 'textarea blurred');
 
-			setTimeout(function() {
+			setTimeout(() => {
 				assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
 				done();
 			});
 		});
 
 		suite('selected text after keypress or paste doesn\'t get mistaken' +
-			' for inputted text', function() {
-			test('select() immediately after paste', function() {
-				var pastedText;
-				var onPaste = function(text) { pastedText = text; };
-				var shim = saneKeyboardEvents(el, {
-					paste: function(text) { onPaste(text); }
-				});
+			' for inputted text', () => {
+			test('select() immediately after paste', () => {
+				let pastedText;
+				let onPaste = (text) => pastedText = text;
+				const shim = saneKeyboardEvents(el, { paste: (text) => onPaste(text) });
 
 				el.trigger('paste').val('$x^2+1$');
 
@@ -224,12 +219,10 @@ suite('saneKeyboardEvents', function() {
 				assert.equal(el.val(), '$2$');
 			});
 
-			test('select() after paste/input', function() {
-				var pastedText;
-				var onPaste = function(text) { pastedText = text; };
-				var shim = saneKeyboardEvents(el, {
-					paste: function(text) { onPaste(text); }
-				});
+			test('select() after paste/input', () => {
+				let pastedText;
+				let onPaste = (text) => pastedText = text;
+				const shim = saneKeyboardEvents(el, { paste: (text) => onPaste(text) });
 
 				el.trigger('paste').val('$x^2+1$');
 
@@ -246,12 +239,12 @@ suite('saneKeyboardEvents', function() {
 				assert.equal(el.val(), '$2$');
 			});
 
-			test('select() immediately after keydown/keypress', function() {
-				var typedText;
-				var onText = function(text) { typedText = text; };
-				var shim = saneKeyboardEvents(el, {
+			test('select() immediately after keydown/keypress', () => {
+				let typedText;
+				let onText = (text) => typedText = text;
+				const shim = saneKeyboardEvents(el, {
 					keystroke: noop,
-					typedText: function(text) { onText(text); }
+					typedText: (text) => onText(text)
 				});
 
 				el.trigger(Event('keydown', { which: 97 }));
@@ -268,12 +261,12 @@ suite('saneKeyboardEvents', function() {
 				assert.equal(el.val(), '$2$');
 			});
 
-			test('select() after keydown/keypress/input', function() {
-				var typedText;
-				var onText = function(text) { typedText = text; };
-				var shim = saneKeyboardEvents(el, {
+			test('select() after keydown/keypress/input', () => {
+				let typedText;
+				let onText = (text) => typedText = text;
+				const shim = saneKeyboardEvents(el, {
 					keystroke: noop,
-					typedText: function(text) { onText(text); }
+					typedText: (text) => onText(text)
 				});
 
 				el.trigger(Event('keydown', { which: 97 }));
@@ -292,9 +285,9 @@ suite('saneKeyboardEvents', function() {
 				assert.equal(el.val(), '$2$');
 			});
 
-			suite('unrecognized keys that move cursor and clear selection', function() {
-				test('without keypress', function() {
-					var shim = saneKeyboardEvents(el, { keystroke: noop });
+			suite('unrecognized keys that move cursor and clear selection', () => {
+				test('without keypress', () => {
+					const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 					shim.select('a');
 					assert.equal(el.val(), 'a');
@@ -311,8 +304,8 @@ suite('saneKeyboardEvents', function() {
 					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
 				});
 
-				test('with keypress, many characters selected', function() {
-					var shim = saneKeyboardEvents(el, { keystroke: noop });
+				test('with keypress, many characters selected', () => {
+					const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 					shim.select('many characters');
 					assert.equal(el.val(), 'many characters');
@@ -331,11 +324,11 @@ suite('saneKeyboardEvents', function() {
 					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
 				});
 
-				test('with keypress, only 1 character selected', function() {
-					var count = 0;
-					var shim = saneKeyboardEvents(el, {
+				test('with keypress, only 1 character selected', () => {
+					let count = 0;
+					const shim = saneKeyboardEvents(el, {
 						keystroke: noop,
-						typedText: function(ch) {
+						typedText: (ch) => {
 							assert.equal(ch, 'a');
 							assert.equal(el.val(), '');
 							count += 1;
@@ -362,12 +355,11 @@ suite('saneKeyboardEvents', function() {
 		});
 	});
 
-	suite('paste', function() {
-		test('paste event only', function(done) {
+	suite('paste', () => {
+		test('paste event only', (done) => {
 			saneKeyboardEvents(el, {
-				paste: function(text) {
+				paste: (text) => {
 					assert.equal(text, '$x^2+1$');
-
 					done();
 				}
 			});
@@ -376,10 +368,10 @@ suite('saneKeyboardEvents', function() {
 			el.val('$x^2+1$');
 		});
 
-		test('paste after keydown/keypress', function(done) {
+		test('paste after keydown/keypress', (done) => {
 			saneKeyboardEvents(el, {
 				keystroke: noop,
-				paste: function(text) {
+				paste: (text) => {
 					assert.equal(text, 'foobar');
 					done();
 				}
@@ -393,10 +385,10 @@ suite('saneKeyboardEvents', function() {
 			el.val('foobar');
 		});
 
-		test('paste after keydown/keypress/input', function(done) {
+		test('paste after keydown/keypress/input', (done) => {
 			saneKeyboardEvents(el, {
 				keystroke: noop,
-				paste: function(text) {
+				paste: (text) => {
 					assert.equal(text, 'foobar');
 					done();
 				}
@@ -411,10 +403,10 @@ suite('saneKeyboardEvents', function() {
 			el.trigger('input');
 		});
 
-		test('keypress timeout happening before paste timeout', function(done) {
+		test('keypress timeout happening before paste timeout', (done) => {
 			saneKeyboardEvents(el, {
 				keystroke: noop,
-				paste: function(text) {
+				paste: (text) => {
 					assert.equal(text, 'foobar');
 					done();
 				}
@@ -431,14 +423,10 @@ suite('saneKeyboardEvents', function() {
 		});
 	});
 
-	suite('copy', function() {
-		test('only runs handler once even if handler synchronously selects', function() {
+	suite('copy', () => {
+		test('only runs handler once even if handler synchronously selects', () => {
 			// ...which MathQuill does and resulted in a stack overflow: https://git.io/vosm0
-			var shim = saneKeyboardEvents(el, {
-				copy: function() {
-					shim.select();
-				}
-			});
+			const shim = saneKeyboardEvents(el, { copy: () => shim.select() });
 
 			el.trigger('copy');
 		});

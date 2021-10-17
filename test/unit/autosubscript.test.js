@@ -1,13 +1,17 @@
-suite('autoSubscript', function() {
-	var mq;
-	setup(function() {
-		mq = MQ.MathField($('<span></span>').appendTo('#mock')[0], { autoSubscriptNumerals: true });
+/* global suite, test, assert, setup, MQ */
+
+import { jQuery } from 'src/constants';
+
+suite('autoSubscript', () => {
+	let mq, rootBlock, controller, cursor;
+	setup(() => {
+		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], { autoSubscriptNumerals: true });
 		rootBlock = mq.__controller.root;
 		controller = mq.__controller;
 		cursor = controller.cursor;
 	});
 
-	test('auto subscripting variables', function() {
+	test('auto subscripting variables', () => {
 		mq.latex('x');
 		mq.typedText('2');
 		assert.equal(mq.latex(), 'x_2');
@@ -15,7 +19,7 @@ suite('autoSubscript', function() {
 		assert.equal(mq.latex(), 'x_{23}');
 	});
 
-	test('do not autosubscript functions', function() {
+	test('do not autosubscript functions', () => {
 		mq.latex('sin');
 		mq.typedText('2');
 		assert.equal(mq.latex(), '\\sin2');
@@ -23,7 +27,7 @@ suite('autoSubscript', function() {
 		assert.equal(mq.latex(), '\\sin23');
 	});
 
-	test('autosubscript exponentiated variables', function() {
+	test('autosubscript exponentiated variables', () => {
 		mq.latex('x^2');
 		mq.typedText('2');
 		assert.equal(mq.latex(), 'x_2^2');
@@ -31,7 +35,7 @@ suite('autoSubscript', function() {
 		assert.equal(mq.latex(), 'x_{23}^2');
 	});
 
-	test('do not autosubscript exponentiated functions', function() {
+	test('do not autosubscript exponentiated functions', () => {
 		mq.latex('sin^{2}');
 		mq.typedText('2');
 		assert.equal(mq.latex(), '\\sin^22');
@@ -39,13 +43,13 @@ suite('autoSubscript', function() {
 		assert.equal(mq.latex(), '\\sin^223');
 	});
 
-	test('do not autosubscript subscripted functions', function() {
+	test('do not autosubscript subscripted functions', () => {
 		mq.latex('sin_{10}');
 		mq.typedText('2');
 		assert.equal(mq.latex(), '\\sin_{10}2');
 	});
 
-	test('backspace through compound subscript', function() {
+	test('backspace through compound subscript', () => {
 		mq.latex('x_{2_2}');
 
 		//first backspace moves to cursor in subscript and peels it off
@@ -61,7 +65,7 @@ suite('autoSubscript', function() {
 		assert.equal(mq.latex(), 'x');
 	});
 
-	test('backspace through simple subscript', function() {
+	test('backspace through simple subscript', () => {
 		mq.latex('x_{2+3}');
 
 		assert.equal(cursor.parent, rootBlock, 'start in the root block');
@@ -79,7 +83,7 @@ suite('autoSubscript', function() {
 		assert.equal(mq.latex(), 'x');
 	});
 
-	test('backspace through subscript & superscript with autosubscripting on', function() {
+	test('backspace through subscript & superscript with autosubscripting on', () => {
 		mq.latex('x_2^{32}');
 
 		//first backspace peels off the subscript

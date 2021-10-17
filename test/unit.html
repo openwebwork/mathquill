@@ -38,7 +38,8 @@ Mocha.process.stdout.write = (line) => xunit += line;
 
 <!-- include the library with the tests inlined -->
 <script id="mathquill" src="../dist/mathquill.test.js"
-	onerror="alert('Couldn\'t find `dist/mathquill.test.js`. Please execute `npm run devbuild` before opening this file.')">
+	onerror="alert('Couldn\'t find `dist/mathquill.test.js`.' +
+	' Please execute `npm run devbuild` before opening this file.')">
 </script>
 
 <!-- include MathQuill-basic -->
@@ -62,7 +63,8 @@ Mocha.process.stdout.write = (line) => xunit += line;
 
 	if (post_xunit_to) {
 		// the following is based on
-		// https://github.com/saucelabs-sample-scripts/JavaScript/blob/4946c5cf0ab7325dce5562881dba7c28e30989e5/reporting_mocha.js
+		// https://github.com/saucelabs-sample-scripts/JavaScript/blob/
+		// 4946c5cf0ab7325dce5562881dba7c28e30989e5/reporting_mocha.js
 		const failedTests = [];
 		runner.on('fail', (test, err) => {
 			const flattenTitles = (test) => {
