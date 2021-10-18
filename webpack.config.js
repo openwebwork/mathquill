@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const StyleLintPlugin = require('stylelint-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const VERSION = require('./package.json').version;
@@ -73,7 +74,11 @@ module.exports = (env, argv) => {
 					'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
 				}),
 				new MiniCssExtractPlugin(),
-				new ESLintPlugin()
+				new ESLintPlugin(),
+				new StyleLintPlugin({
+					extensions: ['html', 'css', 'scss', 'sass', 'less'],
+					files: ['**/*.{html,css,scss,sass,less}']
+				})
 			],
 			performance: {
 				assetFilter: (asset) => {

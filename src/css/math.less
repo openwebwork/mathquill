@@ -1,419 +1,427 @@
 .mq-root-block, .mq-math-mode .mq-root-block {
-  .inline-block;
-  width: 100%;
-  padding: 2px;
-  .box-sizing(border-box); // supported by IE8+: http://caniuse.com/css3-boxsizing
-  white-space: nowrap;
-  overflow: hidden;
-  vertical-align: middle;
+	.inline-block;
+
+	width: 100%;
+	padding: 2px;
+	.box-sizing(border-box); // supported by IE8+: http://caniuse.com/css3-boxsizing
+
+	white-space: nowrap;
+	overflow: hidden;
+	vertical-align: middle;
 }
+
 .mq-math-mode {
-  font-variant: normal;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 115%;
-  line-height: 1;
+	font-variant: normal;
+	font-weight: normal;
+	font-style: normal;
+	font-size: 115%;
+	line-height: 1;
 
-  .inline-block;
-  .mq-non-leaf, .mq-scaled {
-    .inline-block;
-  }
+	.inline-block;
 
-  // TODO: dasherize non-symbola
-  var, .mq-text-mode, .mq-nonSymbola {
-    font-family: @times;
-    line-height: .9;
-  }
+	.mq-non-leaf, .mq-scaled {
+		.inline-block;
+	}
 
-  * {
-    font-size: inherit;
-    line-height: inherit;
-    margin: 0;
-    padding: 0;
-    border-color: black;
-    .user-select(none);
-    box-sizing: border-box;
-  }
+	// TODO: dasherize non-symbola
+	var, .mq-text-mode, .mq-nonSymbola {
+		font-family: @times;
+		line-height: .9;
+	}
 
-  // TODO: what's the difference between these?
-  .mq-empty {
-    background: skyblue;
-    &.mq-root-block {
-      background: transparent;
-    }
-  }
+	* {
+		font-size: inherit;
+		line-height: inherit;
+		margin: 0;
+		padding: 0;
+		border-color: black;
+		.user-select(none);
 
-  &.mq-empty {
-    background: transparent;
-  }
+		box-sizing: border-box;
+	}
 
+	// TODO: what's the difference between these?
+	.mq-empty {
+		background: skyblue;
 
-  .mq-text-mode {
-    display: inline-block;
-    white-space: pre;  
-  }
+		&.mq-root-block {
+			background: transparent;
+		}
+	}
 
-  .mq-text-mode.mq-hasCursor {
-    box-shadow: inset darkgray 0 .1em .2em;
-    padding: 0 .1em;
-    margin: 0 -.1em;
+	&.mq-empty {
+		background: transparent;
+	}
 
-    min-width: 1ex;
-  }
+	.mq-text-mode {
+		display: inline-block;
+		white-space: pre;  
+	}
 
-  .mq-font {
-    font: 1em @times;
+	.mq-text-mode.mq-hasCursor {
+		box-shadow: inset darkgray 0 .1em .2em;
+		padding: 0 .1em;
+		margin: 0 -.1em;
+		min-width: 1ex;
+	}
 
-    * {
-      font-family: inherit;
-      font-style: inherit;
-    }
-  }
+	.mq-font {
+		font: 1em @times;
 
-  // TODO [Han]: Why do we have to special-case .font?
-  b, b.mq-font {
-    font-weight: bolder;
-  }
+		* {
+			font-family: inherit;
+			font-style: inherit;
+		}
+	}
 
-  var, i, i.mq-font {
-    font-style: italic;
-  }
+	// TODO [Han]: Why do we have to special-case .font?
+	b, b.mq-font {
+		font-weight: bolder;
+	}
 
-  var.mq-f {
-    margin-right: 0.2em;
-    margin-left: 0.1em;
-  }
+	var, i, i.mq-font {
+		font-style: italic;
+	}
 
-  .mq-roman var.mq-f {
-    margin: 0;
-  }
+	var.mq-f {
+		margin-right: 0.2em;
+		margin-left: 0.1em;
+	}
 
-  big {
-    font-size: 200%;
-  }
+	.mq-roman var.mq-f {
+		margin: 0;
+	}
 
-  .mq-int {
-    > big {
-      display: inline-block;
-      .transform(scaleX(.7));
-      vertical-align: -.16em;
-    }
+	big {
+		font-size: 200%;
+	}
 
-    > .mq-supsub {
-      font-size: 80%;
-      vertical-align: -1.1em;
-      padding-right: .2em;
+	.mq-int {
+		> big {
+			display: inline-block;
+			.transform(scaleX(.7));
 
-      > .mq-sup > .mq-sup-inner {
-        vertical-align: 1.3em;
-      }
+			vertical-align: -.16em;
+		}
 
-      > .mq-sub {
-        margin-left: -.35em;
-      }
-    }
-  }
+		> .mq-supsub {
+			font-size: 80%;
+			vertical-align: -1.1em;
+			padding-right: .2em;
 
-  .mq-roman {
-    font-style: normal;
-  }
+			> .mq-sup > .mq-sup-inner {
+				vertical-align: 1.3em;
+			}
 
-  .mq-sans-serif {
-    font-family: sans-serif, Symbola, serif;
-  }
+			> .mq-sub {
+				margin-left: -.35em;
+			}
+		}
+	}
 
-  .mq-monospace {
-    font-family: monospace, Symbola, serif;
-  }
+	.mq-roman {
+		font-style: normal;
+	}
 
-  .mq-overline {
-    border-top: 1px solid black;
-    margin-top: 1px;
-  }
-  .mq-underline {
-    border-bottom: 1px solid black;
-    margin-bottom: 1px;
-  }
+	.mq-sans-serif {
+		font-family: sans-serif, Symbola, serif;
+	}
 
-  ////
-  // operators
-  @operator-padding: 0.2em;
+	.mq-monospace {
+		font-family: monospace, Symbola, serif;
+	}
 
-  .mq-binary-operator {
-    padding: 0 @operator-padding;
-    .inline-block;
-  }
+	.mq-overline {
+		border-top: 1px solid black;
+		margin-top: 1px;
+	}
 
-  ////
-  // ^, _
-  // sup/sub
-  // TODO: try http://jsbin.com/gabunebe/3/edit instead
-  //   obsoletes the &nbsp; in HTML template, but needs cross-browser
-  //   testing. Should also make the superscript shrink to the size of
-  //   its contents, rather than always being as wide as the subscript.
-  //   See also .fraction
-  .mq-supsub {
-    text-align: left;
-    font-size: 90%;
-    vertical-align: -.5em;
+	.mq-underline {
+		border-bottom: 1px solid black;
+		margin-bottom: 1px;
+	}
 
-    &.mq-sup-only {
-      vertical-align: .5em;
+	////
+	// operators
+	@operator-padding: 0.2em;
 
-      .mq-sup {
-        display: inline-block;
-        vertical-align: text-bottom;
-      }
-    }
+	.mq-binary-operator {
+		padding: 0 @operator-padding;
+		.inline-block;
+	}
 
-    .mq-sup {
-      display: block;
-    }
+	////
+	// ^, _
+	// sup/sub
+	// TODO: try http://jsbin.com/gabunebe/3/edit instead
+	//   obsoletes the &nbsp; in HTML template, but needs cross-browser
+	//   testing. Should also make the superscript shrink to the size of
+	//   its contents, rather than always being as wide as the subscript.
+	//   See also .fraction
+	.mq-supsub {
+		text-align: left;
+		font-size: 90%;
+		vertical-align: -.5em;
 
-    .mq-sub {
-      display: block;
-      float: left;
-    }
+		&.mq-sup-only {
+			vertical-align: .5em;
 
-    .mq-binary-operator {
-      padding: 0 .1em;
-    }
+			.mq-sup {
+				display: inline-block;
+				vertical-align: text-bottom;
+			}
+		}
 
-    // special styles for fractions
-    // within sup/sub.
-    .mq-fraction {
-      font-size: 70%;
-    }
-  }
+		.mq-sup {
+			display: block;
+		}
 
-  span.mq-nthroot {
-    font-size: 60%;
-    vertical-align: 0.9em;
-    margin-right: -.9em;
-    margin-left: .2em;
-    min-width: .5em;
-  }
+		.mq-sub {
+			display: block;
+			float: left;
+		}
 
-  ////
-  // parentheses
-  .mq-paren {
-    padding: 0 .1em;
-    vertical-align: top;
-    -webkit-transform-origin: center .06em;
-    -moz-transform-origin: center .06em;
-    -ms-transform-origin: center .06em;
-    -o-transform-origin: center .06em;
-    transform-origin: center .06em;
+		.mq-binary-operator {
+			padding: 0 .1em;
+		}
 
-    &.mq-ghost { color: silver; }
+		// special styles for fractions
+		// within sup/sub.
+		.mq-fraction {
+			font-size: 70%;
+		}
+	}
 
-    + span {
-      margin-top: .1em;
-      margin-bottom: .1em;
-    }
-  }
+	span.mq-nthroot {
+		font-size: 60%;
+		vertical-align: 0.9em;
+		margin-right: -.9em;
+		margin-left: .2em;
+		min-width: .5em;
+	}
 
-  .mq-array {
-    vertical-align: middle;
-    text-align: center;
-  }
+	////
+	// parentheses
+	.mq-paren {
+		padding: 0 .1em;
+		vertical-align: top;
+		-webkit-transform-origin: center .06em;
+		-moz-transform-origin: center .06em;
+		-ms-transform-origin: center .06em;
+		-o-transform-origin: center .06em;
+		transform-origin: center .06em;
 
-  .mq-array > span {
-    display: block;
-  }
+		&.mq-ghost {
+			color: silver;
+		}
 
-  ////
-  // non-italicized operator names
-  // like \sin, \cos, \ln, etc.
-  .mq-operator-name {
-    font-family: Symbola, "Times New Roman", serif;
-    line-height: .9;
-    font-style: normal;
-  }
-  var.mq-operator-name.mq-first {
-    padding-left: .2em;
-  }
-  var.mq-operator-name.mq-last, .mq-supsub.mq-after-operator-name {
-    padding-right: .2em;
-  }
+		+ span {
+			margin-top: .1em;
+			margin-bottom: .1em;
+		}
+	}
 
-  ////
-  // \frac
-  // fractions
-  // TODO: try http://jsbin.com/gabunebe/4/edit instead
-  //   obsoletes the &nbsp; in HTML template, but needs cross-browser
-  //   testing. See also .supsub
-  .mq-fraction {
-    font-size: 90%;
-    text-align: center;
-    vertical-align: -.4em;
-    padding: 0 .2em;
-  }
+	.mq-array {
+		vertical-align: middle;
+		text-align: center;
+	}
 
-  // Firefox 2 (and older?) only
-  // because display:inline-block is FUBAR in Gecko < 1.9.0
-  .mq-fraction, .mq-large-operator, x:-moz-any-link {
-    display: -moz-groupbox;
-  }
+	.mq-array > span {
+		display: block;
+	}
 
-  // Firefox 3+ (Gecko 1.9.0+)
-  .mq-fraction, .mq-large-operator, x:-moz-any-link, x:default {
-    display: inline-block;
-  }
+	////
+	// non-italicized operator names
+	// like \sin, \cos, \ln, etc.
+	.mq-operator-name {
+		font-family: Symbola, "Times New Roman", serif;
+		line-height: .9;
+		font-style: normal;
+	}
 
-  .mq-numerator, .mq-denominator, .mq-dot-recurring {
-    display: block;
-  }
+	var.mq-operator-name.mq-first {
+		padding-left: .2em;
+	}
 
-  .mq-numerator {
-    padding: 0 0.1em;
-  }
+	var.mq-operator-name.mq-last, .mq-supsub.mq-after-operator-name {
+		padding-right: .2em;
+	}
 
-  .mq-denominator {
-    border-top: 1px solid;
-    float: right; // take out of normal flow to manipulate baseline
-    width: 100%;
-    padding: 0.1em;
-  }
+	////
+	// \frac
+	// fractions
+	// TODO: try http://jsbin.com/gabunebe/4/edit instead
+	//   obsoletes the &nbsp; in HTML template, but needs cross-browser
+	//   testing. See also .supsub
+	.mq-fraction {
+		font-size: 90%;
+		text-align: center;
+		vertical-align: -.4em;
+		padding: 0 .2em;
+	}
 
-  .mq-dot-recurring {
-    text-align: center;
-    height: 0.3em;
-  }
+	.mq-fraction, .mq-large-operator {
+		display: inline-block;
+	}
 
-  ////
-  // \sqrt
-  // square roots
-  .mq-sqrt-prefix {
-    padding-top: 0;
-    position: relative;
-    top: 0.1em;
-    vertical-align: top;
-    .transform-origin(top);
-  }
+	.mq-numerator, .mq-denominator, .mq-dot-recurring {
+		display: block;
+	}
 
-  .mq-sqrt-stem {
-    border-top: 1px solid;
-    margin-top: 1px;
-    padding-left: .15em;
-    padding-right: .2em;
-    margin-right: .1em;
-    padding-top: 1px;
-  }
+	.mq-numerator {
+		padding: 0 0.1em;
+	}
 
-  .mq-diacritic-above {
-    display: block;
-    text-align: center;
-    line-height: .4em;
-  }
+	.mq-denominator {
+		border-top: 1px solid;
+		float: right; // take out of normal flow to manipulate baseline
+		width: 100%;
+		padding: 0.1em;
+	}
 
-  .mq-diacritic-stem {
-    display: block;
-    text-align: center;
-  }
-  
-  .mq-hat-prefix {
-    display: block;
-    text-align: center;
-    line-height: .95em;
-    margin-bottom: -.7em;
-    transform: scaleX(1.5);
-    -moz-transform: scaleX(1.5);
-    -o-transform: scaleX(1.5);
-    -webkit-transform: scaleX(1.5);
-  }
+	.mq-dot-recurring {
+		text-align: center;
+		height: 0.3em;
+	}
 
-  .mq-hat-stem {
-    display: block;
-  }
+	////
+	// \sqrt
+	// square roots
+	.mq-sqrt-prefix {
+		padding-top: 0;
+		position: relative;
+		top: 0.1em;
+		vertical-align: top;
+		.transform-origin(top);
+	}
 
-  .mq-large-operator {
-    vertical-align: -.2em;
-    padding: .2em;
-    text-align: center;
+	.mq-sqrt-stem {
+		border-top: 1px solid;
+		margin-top: 1px;
+		padding-left: .15em;
+		padding-right: .2em;
+		margin-right: .1em;
+		padding-top: 1px;
+	}
 
-    .mq-from, big, .mq-to  {
-      display: block;
-    }
-    .mq-from, .mq-to  {
-      font-size: 80%;
-    }
-    .mq-from {
-      float: right; /* take out of normal flow to manipulate baseline */
-      width: 100%;
-    }
-  }
+	.mq-diacritic-above {
+		display: block;
+		text-align: center;
+		line-height: .4em;
+	}
 
+	.mq-diacritic-stem {
+		display: block;
+		text-align: center;
+	}
 
-  &, .mq-editable-field {
-    cursor: text;
-    font-family: @symbola;
-  }
+	.mq-hat-prefix {
+		display: block;
+		text-align: center;
+		line-height: .95em;
+		margin-bottom: -.7em;
+		transform: scaleX(1.5);
+		-moz-transform: scaleX(1.5);
+		-o-transform: scaleX(1.5);
+		-webkit-transform: scaleX(1.5);
+	}
 
-  .mq-overarc {
-    border-top: 1px solid black;
-    -webkit-border-top-right-radius: 50% .3em;
-    -moz-border-radius-topright: 50% .3em;
-    border-top-right-radius: 50% .3em;
-    -webkit-border-top-left-radius: 50% .3em;
-    -moz-border-radius-topleft: 50% .3em;
-    border-top-left-radius: 50% .3em;
-    margin-top: 1px;
-    padding-top: 0.15em;
-  }
+	.mq-hat-stem {
+		display: block;
+	}
 
-  .mq-overarrow {
-    min-width: .5em;
-    border-top: 1px solid black;
-    margin-top: 1px;
-    padding-top: 0.2em;
-    text-align: center;
+	.mq-large-operator {
+		vertical-align: -.2em;
+		padding: .2em;
+		text-align: center;
 
-    &:before {
-      display: block;
-      position: relative;
-      top: -0.34em;
-      font-size: 0.5em;
-      line-height: 0em;
-      content: '\27A4';
-      text-align: right;
-    }
-    &.mq-arrow-left:before {
-      -moz-transform: scaleX(-1);
-      -o-transform: scaleX(-1);
-      -webkit-transform: scaleX(-1);
-      transform: scaleX(-1);
-      filter: FlipH;
-      -ms-filter: "FlipH";
-    }
-    &.mq-arrow-both {
-      vertical-align: text-bottom;
+		.mq-from, big, .mq-to  {
+			display: block;
+		}
 
-      &.mq-empty {
-        min-height: 1.23em;
+		.mq-from, .mq-to  {
+			font-size: 80%;
+		}
 
-        &:after {
-          top: -0.34em;
-        }
-      }
-      &:before{
-        -moz-transform: scaleX(-1);
-        -o-transform: scaleX(-1);
-        -webkit-transform: scaleX(-1);
-        transform: scaleX(-1);
-        filter: FlipH;
-        -ms-filter: "FlipH";
-      }
-      &:after {
-        display: block;
-        position: relative;
-        top: -2.3em;
-        font-size: 0.5em;
-        line-height: 0em;
-        content: '\27A4';
-        visibility: visible; //must override .mq-editable-field.mq-empty:after
-        text-align: right;
-      }
-    }
-  }
+		.mq-from {
+			float: right; /* take out of normal flow to manipulate baseline */
+			width: 100%;
+		}
+	}
+
+	&, .mq-editable-field {
+		cursor: text;
+		font-family: @symbola;
+	}
+
+	.mq-overarc {
+		border-top: 1px solid black;
+		-webkit-border-top-right-radius: 50% .3em;
+		-moz-border-radius-topright: 50% .3em;
+		border-top-right-radius: 50% .3em;
+		-webkit-border-top-left-radius: 50% .3em;
+		-moz-border-radius-topleft: 50% .3em;
+		border-top-left-radius: 50% .3em;
+		margin-top: 1px;
+		padding-top: 0.15em;
+	}
+
+	.mq-overarrow {
+		min-width: .5em;
+		border-top: 1px solid black;
+		margin-top: 1px;
+		padding-top: 0.2em;
+		text-align: center;
+
+		&::before {
+			display: block;
+			position: relative;
+			top: -0.34em;
+			font-size: 0.5em;
+			line-height: 0em;
+			content: '\27A4';
+			text-align: right;
+		}
+
+		&.mq-arrow-left::before {
+			-moz-transform: scaleX(-1);
+			-o-transform: scaleX(-1);
+			-webkit-transform: scaleX(-1);
+			transform: scaleX(-1);
+			filter: fliph;
+			-ms-filter: "FlipH";
+		}
+
+		&.mq-arrow-both {
+			vertical-align: text-bottom;
+
+			&.mq-empty {
+				min-height: 1.23em;
+
+				&::after {
+					top: -0.34em;
+				}
+			}
+
+			&::before{
+				-moz-transform: scaleX(-1);
+				-o-transform: scaleX(-1);
+				-webkit-transform: scaleX(-1);
+				transform: scaleX(-1);
+				filter: fliph;
+				-ms-filter: "FlipH";
+			}
+
+			&::after {
+				display: block;
+				position: relative;
+				top: -2.3em;
+				font-size: 0.5em;
+				line-height: 0em;
+				content: '\27A4';
+				visibility: visible; //must override .mq-editable-field.mq-empty:after
+				text-align: right;
+			}
+		}
+	}
 }

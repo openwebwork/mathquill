@@ -2,6 +2,7 @@ html {
 	background-color: #DDF;
 	height: 100%;
 }
+
 body {
 	min-height: 100%;
 	max-width: 6.5in;
@@ -13,16 +14,20 @@ body {
 	-moz-box-shadow: 0 0 1em black;
 	-webkit-box-shadow: 0 0 1em black;
 }
+
 #body {
 	padding: 1em;
 }
+
 h1 {
 	font-size: 2em;
 	margin: 0;
 }
+
 h1 small {
 	font-size: 60%;
 }
+
 code {
 	font: 90% monospace;
 	background: #DDD;
@@ -31,22 +36,27 @@ code {
 	-webkit-border-radius: .3em;
 	padding: 0 .3em;
 }
+
 code:hover {
 	color: #DDD;
 	background: #222;
 }
+
 a {
 	color: mediumblue;
 	text-decoration: none;
 }
+
 a:hover {
 	color: black;
 	text-shadow: #40F 0 0 .2em;
 }
+
 a:active {
 	color: #400;
 	text-shadow: red 0 0 .2em;
 }
+
 ul {
 	padding-left: 1em;
 }

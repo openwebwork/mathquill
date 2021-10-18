@@ -18,24 +18,31 @@
 body {
 	font-size: .8em;
 }
+
 #body {
 	padding: 1.25em;
 }
+
 h1 {
 	font-size: 2.5em;
 }
+
 td {
 	width: 33%;
 }
+
 #static-latex-rendering-table td {
 	width: 50%;
 }
+
 #show-textareas-button {
 	float: right;
 }
+
 .show-textareas .mq-editable-field.mq-text-mode {
 	overflow: visible;
 }
+
 .show-textareas .mq-textarea textarea {
 	font-size: inherit;
 	clip: auto !important;
@@ -51,6 +58,7 @@ td {
 	background: black;
 	color: white;
 }
+
 .different-bgcolor.mq-editable-field .cursor {
 	border-color: white;
 }
@@ -88,15 +96,19 @@ td {
 <h3>MathQuill Editables</h3>
 
 <p>
-In all editable fields, the selection should clear and ghost parens should solidify if you click outside, but not if you switch
-tabs/windows and switch back to this page.
+In all editable fields, the selection should clear and ghost parens should solidify if you click outside, but not if you
+switch tabs/windows and switch back to this page.
 </p>
 
 <table id="editables">
 	<tr><th colspan=3>Initial LaTeX</th></tr>
 	<tr>
 		<td><span class="mathquill-math-field">\frac{d}{dx}\sqrt{x}=\frac{1}{2\sqrt{x}}</span></td>
-		<td><span class="mathquill-text-field">lolwut $a^2 + b^2 = c^2$.  Also, awesomesauce: $\int_0^1 \sin x dx.</span></td>
+		<td>
+			<span class="mathquill-text-field">
+				lolwut $a^2 + b^2 = c^2$.  Also, awesomesauce: $\int_0^1 \sin x dx.
+			</span>
+		</td>
 		<td><span class="mathquill-static-math">\sqrt{\MathQuillMathField{x^2+y^2}}</span></td>
 	</tr>
 </table>
@@ -438,7 +450,7 @@ Parentheses vertical alignment at font sizes ranging from 10px to 24px: <button>
 		for (var i = 10; i <= 24; i += 1) {
 			html += i + 'px: <span class="mathquill-static-math" style="font-size:' + i + 'px">' +
 				'\\left(\\left(\\left(\\left(\\left(\\left(\\left(' +
-			   	'\\right)\\right)\\right)\\right)\\right)\\right)\\right)+' +
+				'\\right)\\right)\\right)\\right)\\right)\\right)\\right)+' +
 			   	'\\left(1\\right)+\\left(x\\right)+\\left(y\\right)+\\left(\\frac{1}{2}\\right)+' +
 				'\\left(\\frac{\\frac{1}{x}}{2}\\right)+\\left(\\frac{1}{\\frac{x}{2}}\\right)+' +
 				'\\left(\\frac{\\frac{\\frac{1}{2}}{\\frac{3}{4}}}{\\frac{\\frac{5}{6}}{\\frac{7}{8}}}\\right)' +
@@ -667,7 +679,7 @@ Mutiple consecutive spaces in the middle of a text mode block should not collaps
 				mathquill.mathquill('latex', latex);
 			});
 			$('#html-render-perf').after(`<p>${duration}ms rendering <code>${latex}</code>, for an average of ${
-				avgs.add(latex, duration)$}</p>`);
+				avgs.add(latex, duration)}</p>`);
 			$('#html-render-perf textarea').val(mathquill.mathquill('html'));
 		});
 	}());
