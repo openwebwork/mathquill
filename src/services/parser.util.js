@@ -20,7 +20,7 @@ export class Parser {
 	}
 
 	parse(stream) {
-		return this.skip(Parser.eof)._(''+stream, (stream, result) => result, Parser.parseError);
+		return this.skip(Parser.eof)._(`${stream}`, (stream, result) => result, Parser.parseError);
 	}
 
 	// -*- primitive combinators -*- //
@@ -139,7 +139,7 @@ export class Parser {
 	static regex(re) {
 		pray('regexp parser is anchored', re.toString().charAt(1) === '^');
 
-		const expected = 'expected ' + re;
+		const expected = `expected ${re}`;
 
 		return new Parser((stream, onSuccess, onFailure) => {
 			const match = re.exec(stream);

@@ -37,7 +37,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	// and selection of the MathQuill tree, these all take in a direction and
 	// the cursor
 	moveOutOf(dir, cursor, updown) {
-		const updownInto = updown && this.parent[updown+'Into'];
+		const updownInto = updown && this.parent[`${updown}Into`];
 		if (!updownInto && this[dir]) cursor.insAtDirEnd(-dir, this[dir]);
 		else cursor.insDirOf(dir, this.parent);
 	}

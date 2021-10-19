@@ -22,8 +22,8 @@ suite('SupSub', () => {
 		'typed, wrote, wrote empty'.split(', ').forEach((did, j) => {
 			const doTo = [
 				(mq, supsub) => mq.typedText(supsub).typedText('b'),
-				(mq, supsub) => mq.write(supsub+'b'),
-				(mq, supsub) => mq.write(supsub+'{}')
+				(mq, supsub) => mq.write(`${supsub}b`),
+				(mq, supsub) => mq.write(`${supsub}{}`)
 			][j];
 
 			'sub super'.split(' ').forEach((supsub, k) => {

@@ -16,7 +16,7 @@
 		"devbuild": "webpack --mode development",
 		"build": "webpack --mode production",
 		"serve": "node script/test_server.js",
-		"lint": "eslint --ext .js ./src --fix && stylelint \"./src/**/*.less\" \"./test/**/*.less\" --fix"
+		"lint": "eslint --ext .js ./src ./test --fix && stylelint \"./src/**/*.less\" \"./test/**/*.less\" --fix"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.15.7",

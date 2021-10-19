@@ -345,7 +345,7 @@ export class Symbol extends MathCommand {
 
 	seek(pageX, cursor) {
 		// insert at whichever side the click was closer to
-		if (pageX - this.jQ.offset().left < this.jQ.outerWidth()/2)
+		if (pageX - this.jQ.offset().left < this.jQ.outerWidth() / 2)
 			cursor.insLeftOf(this);
 		else
 			cursor.insRightOf(this);
@@ -443,7 +443,7 @@ export class Variable extends Symbol {
 				else
 					text = text.slice(1, text.length);
 			}
-			else if (text[text.length-1] == ' ' || text[text.length-1] == '}') {
+			else if (text[text.length - 1] == ' ' || text[text.length - 1] == '}') {
 				text = text.slice (0, -1);
 			}
 		}
@@ -694,8 +694,8 @@ export class SupSub extends MathCommand {
 				}
 				cmd.supsub = oppositeSupsub;
 				delete cmd[supsub];
-				delete cmd[updown+'Into'];
-				cmd[oppositeSupsub][updown+'OutOf'] = insLeftOfMeUnlessAtEnd;
+				delete cmd[`${updown}Into`];
+				cmd[oppositeSupsub][`${updown}OutOf`] = insLeftOfMeUnlessAtEnd;
 				delete cmd[oppositeSupsub].deleteOutOf;
 				if (supsub === 'sub') jQuery(cmd.jQ.addClass('mq-sup-only')[0].lastChild).remove();
 				this.remove();
@@ -766,7 +766,7 @@ export class UpperLowerLimitCommand extends MathCommand {
 //   far end of current block, until you type an opposing one
 export class Bracket extends DelimsMixin(MathCommand) {
 	constructor(side, open, close, ctrlSeq, end) {
-		super('\\left'+ctrlSeq, undefined, [open, close]);
+		super(`\\left${ctrlSeq}`, undefined, [open, close]);
 		this.side = side;
 		this.sides = {};
 		this.sides[L] = { ch: open, ctrlSeq: ctrlSeq };
@@ -780,11 +780,11 @@ export class Bracket extends DelimsMixin(MathCommand) {
 		// wait until now so that .side may be set by createLeftOf or parser
 		this.htmlTemplate =
 			'<span class="mq-non-leaf">'
-			+   '<span class="mq-scaled mq-paren'+(this.side === R ? ' mq-ghost' : '')+'">'
+			+   `<span class="mq-scaled mq-paren${this.side === R ? ' mq-ghost' : ''}">`
 			+     this.sides[L].ch
 			+   '</span>'
 			+   '<span class="mq-non-leaf">&0</span>'
-			+   '<span class="mq-scaled mq-paren'+(this.side === L ? ' mq-ghost' : '')+'">'
+			+   `<span class="mq-scaled mq-paren${this.side === L ? ' mq-ghost' : ''}">`
 			+     this.sides[R].ch
 			+   '</span>'
 			+ '</span>';
@@ -968,7 +968,7 @@ export const latexMathParser = (() => {
 				if (cmdKlass) {
 					return new cmdKlass(ctrlSeq).parser();
 				} else {
-					return fail('unknown command: \\'+ctrlSeq);
+					return fail(`unknown command: \\${ctrlSeq}`);
 				}
 			});
 

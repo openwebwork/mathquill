@@ -94,7 +94,7 @@ LatexCmds['class'] = class extends MathCommand {
 			.skip(string('}'))
 			.then((cls) => {
 				this.cls = cls || '';
-				this.htmlTemplate = '<span class="mq-class '+cls+'">&0</span>';
+				this.htmlTemplate = `<span class="mq-class ${cls}">&0</span>`;
 				return super.parser();
 			})
 		;
@@ -282,7 +282,7 @@ const SquareRoot = LatexCmds.sqrt = LatexCmds['\u221a'] = class extends MathComm
 
 	reflow() {
 		const block = this.ends[R].jQ;
-		scale(block.prev(), 1, block.innerHeight()/+block.css('fontSize').slice(0, -2) - .1);
+		scale(block.prev(), 1, block.innerHeight() / +block.css('fontSize').slice(0, -2) - .1);
 	}
 };
 
@@ -331,7 +331,7 @@ class DiacriticAbove extends MathCommand {
 	constructor(ctrlSeq, symbol, textTemplate) {
 		const htmlTemplate =
 			'<span class="mq-non-leaf">'
-			+   '<span class="mq-diacritic-above">'+symbol+'</span>'
+			+   `<span class="mq-diacritic-above">${symbol}</span>`
 			+   '<span class="mq-diacritic-stem">&0</span>'
 			+ '</span>';
 		super(ctrlSeq, htmlTemplate, textTemplate);
@@ -364,14 +364,14 @@ LatexCmds.left = class extends MathCommand {
 		return optWhitespace.then(regex(/^(?:[([|]|\\\{|\\langle(?![a-zA-Z])|\\lVert(?![a-zA-Z]))/))
 			.then((ctrlSeq) => {
 				let open = (ctrlSeq.charAt(0) === '\\' ? ctrlSeq.slice(1) : ctrlSeq);
-				if (ctrlSeq=='\\langle') { open = '&lang;'; ctrlSeq = ctrlSeq + ' '; }
-				if (ctrlSeq=='\\lVert') { open = '&#8741;'; ctrlSeq = ctrlSeq + ' '; }
+				if (ctrlSeq == '\\langle') { open = '&lang;'; ctrlSeq = ctrlSeq + ' '; }
+				if (ctrlSeq == '\\lVert') { open = '&#8741;'; ctrlSeq = ctrlSeq + ' '; }
 				return latexMathParser.then((block) => {
 					return string('\\right').skip(optWhitespace)
 						.then(regex(/^(?:[\])|]|\\\}|\\rangle(?![a-zA-Z])|\\rVert(?![a-zA-Z]))/)).map((end) => {
 							let close = (end.charAt(0) === '\\' ? end.slice(1) : end);
-							if (end=='\\rangle') { close = '&rang;'; end = end + ' '; }
-							if (end=='\\rVert') { close = '&#8741;'; end = end + ' '; }
+							if (end == '\\rangle') { close = '&rang;'; end = end + ' '; }
+							if (end == '\\rVert') { close = '&#8741;'; end = end + ' '; }
 							const cmd = new Bracket(0, open, close, ctrlSeq, end);
 							cmd.blocks = [ block ];
 							block.adopt(cmd, 0, 0);
