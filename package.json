@@ -8,8 +8,8 @@
 		"url": "https://github.com/mathquill/mathquill.git"
 	},
 	"files": [
-		"build/mathquill.{css,js,min.js}",
-		"build/fonts/Symbola.*",
+		"dist/mathquill.{css,js}",
+		"dist/fonts/Symbola.*",
 		"quickstart.html"
 	],
 	"scripts": {
