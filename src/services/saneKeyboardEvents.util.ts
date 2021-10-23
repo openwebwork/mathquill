@@ -21,6 +21,15 @@
 
 import { jQuery, noop } from 'src/constants';
 
+export interface Handlers {
+	container: HTMLElement;
+	keystroke: (key: string, event: JQueryKeyEventObject) => void;
+	typedText: (text: string) => void;
+	paste: (text: string) => void;
+	cut: () => void;
+	copy: () => void;
+}
+
 export const saneKeyboardEvents = (() => {
 	// The following [key values][1] map was compiled from the
 	// [DOM3 Events appendix section on key codes][2] and
@@ -31,7 +40,7 @@ export const saneKeyboardEvents = (() => {
 	// [1]: http://www.w3.org/TR/2012/WD-DOM-Level-3-Events-20120614/#keys-keyvalues
 	// [2]: http://www.w3.org/TR/2012/WD-DOM-Level-3-Events-20120614/#fixed-virtual-key-codes
 	// [3]: http://unixpapa.com/js/key.html
-	const KEY_VALUES = {
+	const KEY_VALUES: { [key: number]: string } = {
 		8: 'Backspace',
 		9: 'Tab',
 
@@ -67,14 +76,15 @@ export const saneKeyboardEvents = (() => {
 
 	// To the extent possible, create a normalized string representation
 	// of the key combo (i.e., key code and modifier keys).
-	const stringify = (evt) => {
+	const stringify = (evt: JQueryKeyEventObject) => {
 		const which = evt.which || evt.keyCode;
 		const keyVal = KEY_VALUES[which];
 		let key;
 		const modifiers = [];
 
 		if (evt.ctrlKey) modifiers.push('Ctrl');
-		if (evt.originalEvent && evt.originalEvent.metaKey) modifiers.push('Meta');
+		if (evt.originalEvent && evt.originalEvent instanceof KeyboardEvent && evt.originalEvent.metaKey)
+			modifiers.push('Meta');
 		if (evt.altKey) modifiers.push('Alt');
 		if (evt.shiftKey) modifiers.push('Shift');
 
@@ -88,9 +98,9 @@ export const saneKeyboardEvents = (() => {
 
 	// create a keyboard events shim that calls callbacks at useful times
 	// and exports useful public methods
-	return (el, handlers) => {
-		let keydown = null;
-		let keypress = null;
+	return (el: HTMLElement, handlers: Handlers) => {
+		let keydown: JQueryKeyEventObject | null = null;
+		let keypress: JQueryKeyEventObject | null = null;
 
 		const textarea = jQuery(el);
 		const target = jQuery(handlers.container || textarea);
@@ -103,15 +113,15 @@ export const saneKeyboardEvents = (() => {
 		// after selecting something and then typing, the textarea is
 		// incorrectly reported as selected during the input event (but not
 		// subsequently).
-		let checkTextarea = noop, timeoutId;
+		let checkTextarea: ((e?: JQuery.TriggeredEvent) => void) = noop, timeoutId: ReturnType<typeof setInterval>;
 
-		const checkTextareaFor = (checker) => {
+		const checkTextareaFor = (checker: (e?: JQuery.TriggeredEvent) => void) => {
 			checkTextarea = checker;
 			clearTimeout(timeoutId);
 			timeoutId = setTimeout(checker);
 		};
 
-		const checkTextareaOnce = (checker) => {
+		const checkTextareaOnce = (checker: (e?: JQuery.TriggeredEvent) => void) => {
 			checkTextareaFor((e) => {
 				checkTextarea = noop;
 				clearTimeout(timeoutId);
@@ -122,7 +132,7 @@ export const saneKeyboardEvents = (() => {
 		target.on('keydown keypress input keyup focusout paste', (e) => checkTextarea(e));
 
 		// -*- public methods -*- //
-		const select = (text) => {
+		const select = (text: string) => {
 			// check textarea at least once/one last time before munging (so
 			// no race condition if selection happens after keypress/paste but
 			// before checkTextarea), then never again ('cos it's been munged)
@@ -131,7 +141,7 @@ export const saneKeyboardEvents = (() => {
 			clearTimeout(timeoutId);
 
 			textarea.val(text);
-			if (text && textarea[0].select) textarea[0].select();
+			if (text && (textarea[0] as HTMLTextAreaElement).select) (textarea[0] as HTMLTextAreaElement).select();
 			shouldBeSelected = !!text;
 		};
 
@@ -143,33 +153,34 @@ export const saneKeyboardEvents = (() => {
 		// This will always return false in IE < 9, which don't support
 		// HTMLTextareaElement::selection{Start,End}.
 		const hasSelection = () => {
-			const dom = textarea[0];
+			const dom = textarea[0] as HTMLTextAreaElement;
 
 			if (!('selectionStart' in dom)) return false;
 			return dom.selectionStart !== dom.selectionEnd;
 		};
 
-		const handleKey = () => handlers.keystroke(stringify(keydown), keydown);
+		const handleKey =
+			() => handlers.keystroke(stringify(keydown as JQueryKeyEventObject), keydown as JQueryKeyEventObject);
 
 		// -*- event handlers -*- //
-		const onKeydown = (e) => {
+		const onKeydown = (e: JQueryKeyEventObject) => {
 			if (e.target !== textarea[0]) return;
 
 			keydown = e;
 			keypress = null;
 
 			if (shouldBeSelected) checkTextareaOnce((e) => {
-				if (!(e && e.type === 'focusout') && textarea[0].select) {
+				if (!(e && e.type === 'focusout') && (textarea[0] as HTMLTextAreaElement).select) {
 					// re-select textarea in case it's an unrecognized key that clears
 					// the selection, then never again, 'cos next thing might be blur
-					textarea[0].select();
+					(textarea[0] as HTMLTextAreaElement).select();
 				}
 			});
 
 			handleKey();
 		};
 
-		const onKeypress = (e) => {
+		const onKeypress = (e: JQueryKeyEventObject) => {
 			if (e.target !== textarea[0]) return;
 
 			// call the key handler for repeated keypresses.
@@ -183,7 +194,7 @@ export const saneKeyboardEvents = (() => {
 			checkTextareaFor(typedText);
 		};
 
-		const onKeyup = (e) => {
+		const onKeyup = (e: JQueryKeyEventObject) => {
 			if (e.target !== textarea[0]) return;
 
 			// Handle case of no keypress event being sent
@@ -210,18 +221,19 @@ export const saneKeyboardEvents = (() => {
 			// b1318e5349160b665003e36d4eedd64101ceacd8
 			if (hasSelection()) return;
 
-			const text = textarea.val();
+			const text = textarea.val() as string;
 			if (text.length === 1) {
 				textarea.val('');
 				handlers.typedText(text);
 			} // in Firefox, keys that don't type text, just clear seln, fire keypress
 			// https://github.com/mathquill/mathquill/issues/293#issuecomment-40997668
-			else if (text && textarea[0].select) textarea[0].select(); // re-select if that's why we're here
+			else if (text && (textarea[0] as HTMLTextAreaElement).select)
+				(textarea[0] as HTMLTextAreaElement).select(); // re-select if that's why we're here
 		};
 
 		const onBlur = () => { keydown = keypress = null; };
 
-		const onPaste = (e) => {
+		const onPaste = (e: JQueryKeyEventObject) => {
 			if (e.target !== textarea[0]) return;
 
 			// In Linux, middle-click pasting causes onPaste to be called,
@@ -238,7 +250,7 @@ export const saneKeyboardEvents = (() => {
 		};
 
 		const pastedText = () => {
-			const text = textarea.val();
+			const text = textarea.val() as string;
 			textarea.val('');
 			if (text) handlers.paste(text);
 		};

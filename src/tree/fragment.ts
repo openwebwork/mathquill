@@ -1,6 +1,9 @@
 // Fragment base classes of edit tree-related objects
 
+import type JQuery from 'jquery';
+import type { Direction } from 'src/constants';
 import { jQuery, L, R, iterator, pray, prayDirection, prayWellFormed } from 'src/constants';
+import type { Ends } from 'tree/node';
 import { Node } from 'tree/node';
 
 // An entity outside the virtual tree with one-way pointers (so it's only a
@@ -14,26 +17,22 @@ import { Node } from 'tree/node';
 // DocumentFragment, whose contents must be detached from the visible tree
 // and have their 'parent' pointers set to the DocumentFragment).
 export class Fragment {
-	constructor(withDir, oppDir, dir) {
-		this.jQ = jQuery();
+	jQ: JQuery = jQuery();
+	ends: Ends = { [L]: 0, [R]: 0 };
+	disowned: boolean | undefined = undefined;
+	each = iterator((yield_: (node: Node) => Node | boolean) => {
+		let el = this.ends[L];
+		if (!el) return this;
 
-		this.each = iterator((yield_) => {
-			let el = this.ends[L];
-			if (!el) return this;
+		for (; el !== (this.ends[R] as Node)[R]; el = (el as Node)[R]) {
+			if (yield_(el as Node) === false) break;
+		}
 
-			for (; el !== this.ends[R][R]; el = el[R]) {
-				if (yield_(el) === false) break;
-			}
+		return this;
+	});
 
-			return this;
-		});
-
-		if (dir === undefined) dir = L;
-		prayDirection(dir);
-
+	constructor(withDir: Node, oppDir: Node, dir: Direction = L) {
 		pray('no half-empty fragments', !withDir === !oppDir);
-
-		this.ends = {};
 
 		if (!withDir) return;
 
@@ -43,7 +42,7 @@ export class Fragment {
 			withDir.parent === oppDir.parent);
 
 		this.ends[dir] = withDir;
-		this.ends[-dir] = oppDir;
+		this.ends[dir === L ? R : L] = oppDir;
 
 		// To build the jquery collection for a fragment, accumulate elements
 		// into an array and then call jQ.add once on the result. jQ.add sorts the
@@ -52,8 +51,8 @@ export class Fragment {
 		// quadratic time in the number of elements.
 		//
 		// https://github.com/jquery/jquery/blob/2.1.4/src/traversing.js#L112
-		const accum = this.fold([], (accum, el) => {
-			accum.push.apply(accum, el.jQ.get());
+		const accum = this.fold<Array<HTMLElement>>([], (accum, el) => {
+			accum.push(...el.jQ.get());
 			return accum;
 		});
 
@@ -61,12 +60,12 @@ export class Fragment {
 	}
 
 	// like Cursor::withDirInsertAt(dir, parent, withDir, oppDir)
-	withDirAdopt(dir, parent, withDir, oppDir) {
+	withDirAdopt(dir: Direction, parent: Node, withDir: Node, oppDir: Node) {
 		return (dir === L ? this.adopt(parent, withDir, oppDir)
 			: this.adopt(parent, oppDir, withDir));
 	}
 
-	adopt(parent, leftward, rightward) {
+	adopt(parent: Node, leftward: Node, rightward: Node) {
 		prayWellFormed(parent, leftward, rightward);
 
 		this.disowned = false;
@@ -89,9 +88,9 @@ export class Fragment {
 			parent.ends[R] = rightEnd;
 		}
 
-		this.ends[R][R] = rightward;
+		(this.ends[R] as Node)[R] = rightward;
 
-		this.each((el) => {
+		this.each((el: Node) => {
 			el[L] = leftward;
 			el.parent = parent;
 			if (leftward) leftward[R] = el;
@@ -103,27 +102,27 @@ export class Fragment {
 	}
 
 	disown() {
-		const leftEnd = this.ends[L];
+		const leftEnd = this.ends[L] as Node;
 
 		// guard for empty and already-disowned fragments
 		if (!leftEnd || this.disowned) return this;
 
 		this.disowned = true;
 
-		const rightEnd = this.ends[R];
-		const parent = leftEnd.parent;
+		const rightEnd = this.ends[R] as Node;
+		const parent = leftEnd.parent as Node;
 
 		prayWellFormed(parent, leftEnd[L], leftEnd);
 		prayWellFormed(parent, rightEnd, rightEnd[R]);
 
 		if (leftEnd[L]) {
-			leftEnd[L][R] = rightEnd[R];
+			(leftEnd[L] as Node)[R] = rightEnd[R];
 		} else {
 			parent.ends[L] = rightEnd[R];
 		}
 
 		if (rightEnd[R]) {
-			rightEnd[R][L] = leftEnd[L];
+			(rightEnd[R] as Node)[L] = leftEnd[L];
 		} else {
 			parent.ends[R] = leftEnd[L];
 		}
@@ -137,11 +136,9 @@ export class Fragment {
 		return this.disown();
 	}
 
-	fold(fold, fn) {
-		this.each(function(el) {
-			fold = fn.call(this, fold, el);
-		});
-
-		return fold;
+	fold<T>(fold: T, fn: (fold: T, child: Node) => T): T {
+		let ret = fold;
+		this.each((el: Node) => ret = fn(ret, el));
+		return ret;
 	}
 }

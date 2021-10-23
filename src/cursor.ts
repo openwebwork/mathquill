@@ -4,20 +4,29 @@
 // many such textboxes, so any one JS environment could actually contain many instances.
 // A fake cursor in the fake textbox that the math is rendered in.
 
+import type { Direction } from 'src/constants';
 import { jQuery, L, R, pray, prayDirection } from 'src/constants';
 import { Point } from 'tree/point';
+import type { Node } from 'tree/node';
+import type { Selection } from 'src/selection';
 import { MathBlock } from 'commands/mathBlock';
 
 export class Cursor extends Point {
-	constructor(initParent, options) {
+	options: any;
+	jQ: JQuery;
+	upDownCache: { [key: number]: Point } = {};
+	intervalId: ReturnType<typeof setInterval> | undefined = undefined;
+	selection?: Selection;
+	anticursor?: Point;
+	selectionChanged?: (() => void);
+
+	//closured for setInterval
+	blink = () => this.jQ.toggleClass('mq-blink');
+
+	constructor(initParent: Node, options: any) {
 		super(initParent);
 		this.options = options;
-
 		this.jQ = jQuery('<span class="mq-cursor">&#8203;</span>');
-		//closured for setInterval
-		this.blink = () => this.jQ.toggleClass('mq-blink');
-
-		this.upDownCache = {};
 	}
 
 	show() {
@@ -27,13 +36,13 @@ export class Cursor extends Point {
 			clearInterval(this.intervalId);
 		else { //was hidden and detached, insert this.jQ back into HTML DOM
 			if (this[R]) {
-				if (this.selection && this.selection.ends[L][L] === this[L])
+				if (this.selection && (this.selection.ends[L] as Node)[L] === this[L])
 					this.jQ.insertBefore(this.selection.jQ);
 				else
-					this.jQ.insertBefore(this[R].jQ.first());
+					this.jQ.insertBefore((this[R] as Node).jQ.first());
 			} else
-				this.jQ.appendTo(this.parent.jQ);
-			this.parent.focus();
+				this.jQ.appendTo((this.parent as Node).jQ);
+			(this.parent as Node).focus();
 		}
 		this.intervalId = setInterval(this.blink, 500);
 		return this;
@@ -48,40 +57,40 @@ export class Cursor extends Point {
 		return this;
 	}
 
-	withDirInsertAt(dir, parent, withDir, oppDir) {
+	withDirInsertAt(dir: Direction, parent: Node, withDir: Node | 0, oppDir: Node) {
 		const oldParent = this.parent;
 		this.parent = parent;
 		this[dir] = withDir;
-		this[-dir] = oppDir;
+		this[dir === L ? R : L] = oppDir;
 		// by contract, .blur() is called after all has been said and done
 		// and the cursor has actually been moved
 		// FIXME pass cursor to .blur() so text can fix cursor pointers when removing itself
-		if (oldParent !== parent && oldParent.blur) oldParent.blur(this);
+		if (oldParent !== parent && (oldParent as Node).blur) (oldParent as Node).blur(this);
 	}
 
-	insDirOf(dir, el) {
+	insDirOf(dir: Direction, el: Node) {
 		prayDirection(dir);
 		this.jQ.insDirOf(dir, el.jQ);
-		this.withDirInsertAt(dir, el.parent, el[dir], el);
-		this.parent.jQ.addClass('mq-hasCursor');
+		this.withDirInsertAt(dir, el.parent as Node, el[dir] as Node, el);
+		(this.parent as Node).jQ.addClass('mq-hasCursor');
 		return this;
 	}
 
-	insLeftOf(el) { return this.insDirOf(L, el); }
+	insLeftOf(el: Node) { return this.insDirOf(L, el); }
 
-	insRightOf(el) { return this.insDirOf(R, el); }
+	insRightOf(el: Node) { return this.insDirOf(R, el); }
 
-	insAtDirEnd(dir, el) {
+	insAtDirEnd(dir: Direction, el: Node) {
 		prayDirection(dir);
 		this.jQ.insAtDirEnd(dir, el.jQ);
-		this.withDirInsertAt(dir, el, 0, el.ends[dir]);
+		this.withDirInsertAt(dir, el, 0, el.ends[dir] as Node);
 		el.focus();
 		return this;
 	}
 
-	insAtLeftEnd(el) { return this.insAtDirEnd(L, el); }
+	insAtLeftEnd(el: Node) { return this.insAtDirEnd(L, el); }
 
-	insAtRightEnd(el) { return this.insAtDirEnd(R, el); }
+	insAtRightEnd(el: Node) { return this.insAtDirEnd(R, el); }
 
 	// jump up or down from one block Node to another:
 	// - cache the current Point in the node we're jumping from
@@ -89,13 +98,13 @@ export class Cursor extends Point {
 	//   + if so put the cursor there,
 	//   + if not seek a position in the node that is horizontally closest to
 	//     the cursor's current position
-	jumpUpDown(from, to) {
+	jumpUpDown(from: Node, to: Node) {
 		this.upDownCache[from.id] = Point.copy(this);
 		const cached = this.upDownCache[to.id];
 		if (cached) {
-			cached[R] ? this.insLeftOf(cached[R]) : this.insAtRightEnd(cached.parent);
+			cached[R] ? this.insLeftOf(cached[R] as Node) : this.insAtRightEnd(cached.parent as Node);
 		} else {
-			to.seek(this.offset().left, this);
+			to.seek(this.offset()?.left, this);
 		}
 	}
 
@@ -113,30 +122,30 @@ export class Cursor extends Point {
 	}
 
 	unwrapGramp() {
-		const gramp = this.parent.parent;
-		const greatgramp = gramp.parent;
-		const rightward = gramp[R];
+		const gramp = (this.parent as Node).parent as Node;
+		const greatgramp = gramp.parent as Node;
+		const rightward = gramp[R] as Node;
 
-		let leftward = gramp[L];
+		let leftward = gramp[L] as Node;
 		gramp.disown().eachChild((uncle) => {
 			if (uncle.isEmpty()) return;
 
 			uncle.children()
 				.adopt(greatgramp, leftward, rightward)
-				.each((cousin) => cousin.jQ.insertBefore(gramp.jQ.first()))
+				.each((cousin: Node) => cousin.jQ.insertBefore(gramp.jQ.first()))
 			;
 
-			leftward = uncle.ends[R];
+			leftward = uncle.ends[R] as Node;
 		});
 
 		if (!this[R]) { //then find something to be rightward to insLeftOf
 			if (this[L])
-				this[R] = this[L][R];
+				this[R] = (this[L] as Node)[R];
 			else {
 				while (!this[R]) {
-					this.parent = this.parent[R];
+					this.parent = (this.parent as Node)[R];
 					if (this.parent)
-						this[R] = this.parent.ends[L];
+						this[R] = (this.parent as Node).ends[L];
 					else {
 						this[R] = gramp[R];
 						this.parent = greatgramp;
@@ -146,14 +155,14 @@ export class Cursor extends Point {
 			}
 		}
 		if (this[R])
-			this.insLeftOf(this[R]);
+			this.insLeftOf(this[R] as Node);
 		else
 			this.insAtRightEnd(greatgramp);
 
 		gramp.jQ.remove();
 
-		if (gramp[L].siblingDeleted) gramp[L].siblingDeleted(this.options, R);
-		if (gramp[R].siblingDeleted) gramp[R].siblingDeleted(this.options, L);
+		if ((gramp[L] as Node)?.siblingDeleted) (gramp[L] as Node).siblingDeleted?.(this.options, R);
+		if ((gramp[R] as Node)?.siblingDeleted) (gramp[R] as Node).siblingDeleted?.(this.options, L);
 	}
 
 	startSelection() {
@@ -161,7 +170,7 @@ export class Cursor extends Point {
 		// Create a map from each ancestor of the anticursor to its child that is also an ancestor.
 		// In other words, the anticursor's ancestor chain in reverse order.
 		this.anticursor.ancestors = {};
-		for (let ancestor = this.anticursor; ancestor.parent; ancestor = ancestor.parent) {
+		for (let ancestor: Point | Node = this.anticursor; ancestor.parent; ancestor = ancestor.parent) {
 			this.anticursor.ancestors[ancestor.parent.id] = ancestor;
 		}
 	}
@@ -171,18 +180,21 @@ export class Cursor extends Point {
 	}
 
 	select() {
-		if (this[L] === this.anticursor[L] && this.parent === this.anticursor.parent) return false;
+		if (this[L] === this.anticursor?.[L] && this.parent === this.anticursor?.parent) return false;
+
+		pray('selection well formed', !!this.anticursor && !!this.anticursor.ancestors);
+		if (!this.anticursor || !this.anticursor.ancestors) return false;
 
 		// Find the lowest common ancestor (`lca`), and the ancestor of the cursor
 		// whose parent is the LCA (which'll be an end of the selection fragment).
-		let ancestor = this, lca;
+		let ancestor: Point | Node = this, lca: Node | null = null;
 		for (; ancestor.parent; ancestor = ancestor.parent) {
 			if (ancestor.parent.id in this.anticursor.ancestors) {
 				lca = ancestor.parent;
 				break;
 			}
 		}
-		pray('cursor and anticursor in the same tree', lca);
+		pray('cursor and anticursor in the same tree', !!lca);
 		// The cursor and the anticursor should be in the same tree, because the
 		// mousemove handler attached to the document, unlike the one attached to
 		// the root HTML DOM element, doesn't try to get the math tree node of the
@@ -191,7 +203,7 @@ export class Cursor extends Point {
 
 		// The other end of the selection fragment, the ancestor of the anticursor
 		// whose parent is the LCA.
-		const antiAncestor = this.anticursor.ancestors[lca.id];
+		const antiAncestor = this.anticursor.ancestors[lca?.id ?? 0];
 
 		// Now we have two either Nodes or Points, guaranteed to have a common
 		// parent and guaranteed that if both are Points, they are not the same,
@@ -210,7 +222,7 @@ export class Cursor extends Point {
 		// `ancestor` or to its right, if and only if `antiAncestor` is to
 		// the right of `ancestor`.
 		if (ancestor[L] !== antiAncestor) {
-			for (let rightward = ancestor; rightward; rightward = rightward[R]) {
+			for (let rightward = ancestor; rightward; rightward = rightward[R] as Node) {
 				if (rightward[R] === antiAncestor[R]) {
 					dir = L;
 					leftEnd = ancestor;
@@ -228,9 +240,9 @@ export class Cursor extends Point {
 		if (leftEnd instanceof Point) leftEnd = leftEnd[R];
 		if (rightEnd instanceof Point) rightEnd = rightEnd[L];
 
-		this.hide().selection = lca.selectChildren(leftEnd, rightEnd);
-		this.insDirOf(dir, this.selection.ends[dir]);
-		this.selectionChanged();
+		this.hide().selection = lca?.selectChildren(leftEnd as Node, rightEnd as Node);
+		this.insDirOf(dir, (this.selection as Selection).ends[dir] as Node);
+		this.selectionChanged?.();
 		return true;
 	}
 
@@ -238,7 +250,7 @@ export class Cursor extends Point {
 		if (this.selection) {
 			this.selection.clear();
 			delete this.selection;
-			this.selectionChanged();
+			this.selectionChanged?.();
 		}
 		return this;
 	}
@@ -246,18 +258,18 @@ export class Cursor extends Point {
 	deleteSelection() {
 		if (!this.selection) return;
 
-		this[L] = this.selection.ends[L][L];
-		this[R] = this.selection.ends[R][R];
+		this[L] = (this.selection.ends[L] as Node)[L];
+		this[R] = (this.selection.ends[R] as Node)[R];
 		this.selection.remove();
-		this.selectionChanged();
+		this.selectionChanged?.();
 		delete this.selection;
 	}
 
 	replaceSelection() {
 		const seln = this.selection;
 		if (seln) {
-			this[L] = seln.ends[L][L];
-			this[R] = seln.ends[R][R];
+			this[L] = (seln.ends[L] as Node)[L];
+			this[R] = (seln.ends[R] as Node)[R];
 			delete this.selection;
 		}
 		return seln;
@@ -273,7 +285,7 @@ export class Cursor extends Point {
 		return depth;
 	}
 
-	isTooDeep(offset) {
+	isTooDeep(offset: number) {
 		if (this.options.maxDepth !== undefined) {
 			return this.depth() + (offset || 0) > this.options.maxDepth;
 		}

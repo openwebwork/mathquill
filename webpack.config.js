@@ -26,10 +26,16 @@ module.exports = (env, argv) => {
 					commands: path.resolve(__dirname, 'src/commands'),
 					css: path.resolve(__dirname, 'src/css'),
 					fonts: path.resolve(__dirname, 'src/fonts')
-				}
+				},
+				extensions: ["", ".webpack.js", ".ts", ".tsx", ".js"]
 			},
 			module: {
 				rules: [
+					{
+						// typescript
+						test: /\.tsx?$/,
+						loader: 'ts-loader'
+					},
 					{
 						// js
 						test: /\.m?js$/,

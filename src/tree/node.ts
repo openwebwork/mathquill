@@ -1,8 +1,16 @@
 // Node base class of edit tree-related objects
 
-import { jQuery, L, R, iterator, pray, prayDirection } from 'src/constants';
+import type JQuery from 'jquery';
+import type { Direction } from 'src/constants';
+import { jQuery, L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
+import type { Cursor } from 'src/cursor';
 import { Selection } from 'src/selection';
 import { Fragment } from 'tree/fragment';
+
+export interface Ends {
+	[L]: Node | 0;
+	[R]: Node | 0;
+}
 
 const prayOverridden = () => pray('overridden or never called on this node');
 
@@ -10,76 +18,76 @@ const prayOverridden = () => pray('overridden or never called on this node');
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
 export class Node {
 	static id = 0;
-	static byId = {};
+	static byId: { [key: number]: Node } = {};
 	static uniqueNodeId = () => ++Node.id;
 
-	constructor() {
-		this[L] = 0;
-		this[R] = 0;
-		this.parent = 0;
+	jQ: JQuery = jQuery();
+	id: number;
+	parent: Node | 0 = 0;
+	ends: Ends = { [L]: 0, [R]: 0 };
+	[L]: Node | 0 = 0;
+	[R]: Node | 0 = 0;
+	siblingDeleted?: (opts?: any, dir?: Direction) => void;
 
+	bubble = iterator((yield_: (node: Node) => Node | boolean) => {
+		for (let ancestor: Node | 0 = this; ancestor; ancestor = ancestor.parent) {
+			if (yield_(ancestor) === false) break;
+		}
+
+		return this;
+	});;
+
+	postOrder = iterator((yield_: (node: Node) => Node | boolean) => {
+		(function recurse(descendant: Node) {
+			descendant.eachChild(recurse);
+			yield_(descendant);
+		})(this);
+
+		return this;
+	});;
+
+	constructor() {
 		this.id = Node.uniqueNodeId();
 		Node.byId[this.id] = this;
-
-		this.ends = { [L]: 0, [R]: 0 };
-
-		this.jQ = jQuery();
-
-		this.bubble = iterator((yield_) => {
-			for (let ancestor = this; ancestor; ancestor = ancestor.parent) {
-				if (yield_(ancestor) === false) break;
-			}
-
-			return this;
-		});
-
-		this.postOrder = iterator((yield_) => {
-			(function recurse(descendant) {
-				descendant.eachChild(recurse);
-				yield_(descendant);
-			})(this);
-
-			return this;
-		});
 	}
 
 	dispose() { delete Node.byId[this.id]; }
 
 	toString() { return `{{ MathQuill Node #${this.id} }}`; }
 
-	jQadd(jQ) { return this.jQ = this.jQ.add(jQ); }
+	jQadd(jQ: JQuery | HTMLElement) { return this.jQ = this.jQ.add(jQ); }
 
-	jQize(jQ) {
+	jQize(jQ?: JQuery) {
 		// jQuery-ifies this.html() and links up the .jQ of all corresponding Nodes
-		const jQlocal = jQuery(jQ || this.html());
+		const jQlocal = jQ ? jQuery(jQ) : jQuery(this.html());
 
-		const jQadd = (el) => {
+		const jQadd = (el: HTMLElement) => {
 			if (el.getAttribute) {
-				const cmdId = el.getAttribute('mathquill-command-id');
-				const blockId = el.getAttribute('mathquill-block-id');
+				const cmdId = parseInt(el.getAttribute(mqCmdId) ?? '0');
+				const blockId = parseInt(el.getAttribute(mqBlockId) ?? '0');
 				if (cmdId) Node.byId[cmdId].jQadd(el);
 				if (blockId) Node.byId[blockId].jQadd(el);
 			}
-			for (el = el.firstChild; el; el = el.nextSibling) {
-				jQadd(el);
+			for (let child = el.firstChild; child; child = child.nextSibling) {
+				jQadd(child as HTMLElement);
 			}
 		};
 
-		jQlocal.each(function() { jQadd(this); });
+		jQlocal.each((index, element) => jQadd(element));
 		return jQlocal;
 	}
 
-	createDir(dir, cursor) {
+	createDir(dir: Direction, cursor: Node) {
 		prayDirection(dir);
 		this.jQize();
 		this.jQ.insDirOf(dir, cursor.jQ);
-		cursor[dir] = this.adopt(cursor.parent, cursor[L], cursor[R]);
+		cursor[dir] = this.adopt(cursor.parent as Node, cursor[L] as Node, cursor[R] as Node);
 		return this;
 	}
 
-	createLeftOf(el) { return this.createDir(L, el); }
+	createLeftOf(el: Node) { return this.createDir(L, el); }
 
-	selectChildren(leftEnd, rightEnd) {
+	selectChildren(leftEnd: Node, rightEnd: Node) {
 		return new Selection(leftEnd, rightEnd);
 	}
 
@@ -92,25 +100,25 @@ export class Node {
 	}
 
 	children() {
-		return new Fragment(this.ends[L], this.ends[R]);
+		return new Fragment(this.ends[L] as Node, this.ends[R] as Node);
 	}
 
-	eachChild(...args) {
+	eachChild(method: 'postOrder' | ((node: Node) => boolean) | ((node: Node) => void), order?: string) {
 		const children = this.children();
-		children.each.apply(children, args);
+		children.each(method, order);
 		return this;
 	}
 
-	foldChildren(fold, fn) {
-		return this.children().fold(fold, fn);
+	foldChildren<T>(fold: T, fn: ((fold: T, child: Node) => T)): T {
+		return this.children().fold<T>(fold, fn);
 	}
 
-	withDirAdopt(dir, parent, withDir, oppDir) {
+	withDirAdopt(dir: Direction, parent: Node, withDir: Node, oppDir: Node) {
 		new Fragment(this, this).withDirAdopt(dir, parent, withDir, oppDir);
 		return this;
 	}
 
-	adopt(parent, leftward, rightward) {
+	adopt(parent: Node, leftward: Node, rightward: Node) {
 		new Fragment(this, this).adopt(parent, leftward, rightward);
 		return this;
 	}
@@ -128,7 +136,7 @@ export class Node {
 
 	// Methods that deal with the browser DOM events from interaction with the typist.
 
-	keystroke(key, e, ctrlr) {
+	keystroke(key: string, e: Event, ctrlr: any) {
 		const cursor = ctrlr.cursor;
 
 		switch (key) {
@@ -255,6 +263,13 @@ export class Node {
 		e.preventDefault();
 		ctrlr.scrollHoriz();
 	}
+
+	html() { prayOverridden(); return ''; }
+	text() { prayOverridden(); return ''; }
+	latex() { prayOverridden(); return ''; }
+	focus() {}
+	blur(cursor: Cursor) {}
+	seek(left: number | undefined, cursor: Cursor) {}
 
 	// called by Controller::escapeDir, moveDir
 	moveOutOf() { prayOverridden(); }

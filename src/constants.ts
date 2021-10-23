@@ -11,23 +11,43 @@
  * one at http://mozilla.org/MPL/2.0/.
  */
 
+import type JQueryStatic from 'jquery';
+import type JQuery from 'jquery';
+import type { Node } from 'tree/node';
+
+declare global {
+	interface JQuery {
+		insDirOf(dir: Direction, el: JQuery): JQuery;
+		insAtDirEnd(dir: Direction, el: JQuery): JQuery;
+	}
+
+	interface Window {
+		jQuery: JQueryStatic;
+	}
+}
+
+export const enum Direction {
+	L = -1,
+	R = 1
+}
+
 export const jQuery = window.jQuery,
 	mqCmdId = 'mathquill-command-id',
 	mqBlockId = 'mathquill-block-id',
 
 	// L = 'left', R = 'right'
 	// The contract is that they can be used as object properties and -L === R, and -R === L.
-	L = -1, R = 1;
+	L = Direction.L, R = Direction.R;
 
 if (!jQuery) throw 'MathQuill requires jQuery 1.9+ to be loaded first';
 
 // Tiny extension of jQuery adding directionalized DOM manipulation methods.
 jQuery.fn.extend({
-	insDirOf: function(dir, el) {
+	insDirOf: function(this: JQuery, dir: Direction, el: JQuery) {
 		return dir === L ?
 			this.insertBefore(el.first()) : this.insertAfter(el.last());
 	},
-	insAtDirEnd: function(dir, el) {
+	insAtDirEnd: function(this: JQuery, dir: Direction, el: JQuery) {
 		return dir === L ? this.prependTo(el) : this.appendTo(el);
 	}
 });
@@ -57,22 +77,17 @@ export function noop() {}
 //  Note that the for-in loop will yield 'each', but 'each' maps to
 //  the function object created by iterator() which does not have a
 //  .method() method, so that just fails silently.
-export const iterator = (generator) => {
-	return (fn, ...args) => {
-		if (typeof fn !== 'function') {
-			fn = ((method) =>
-				(obj, ...args) => {
-					if (method in obj) return obj[method](...args);
-				}
-			)(fn);
-		}
-		const yield_ = (obj) => fn(obj, ...args);
+export const iterator = (generator: any) => {
+	return (fn: any, arg1?: any, arg2?: any) => {
+		const yield_ = typeof fn === 'function'
+			? (obj: Node) => fn(obj)
+			: (obj: any) => { if (fn in obj) return obj[fn](arg1, arg2); };
 		return generator(yield_);
 	};
 };
 
 // sugar to make defining lots of commands easier.
-export const bindMixin = (cons, ...args) => class extends cons { constructor() { super(...args); } };
+export const bindMixin = (cons: any, ...args: any[]) => class extends cons { constructor() { super(...args); } };
 
 // a development-only debug method.  This definition and all
 // calls to `pray` will be stripped from the minified
@@ -82,15 +97,17 @@ export const bindMixin = (cons, ...args) => class extends cons { constructor() {
 // at compile time.  Do not define another function
 // with the same name, and only call this function by
 // name.
-export const pray = (message, cond) => { if (!cond) throw new Error(`prayer failed: ${message}`); };
+export const pray = (message: string, cond: boolean = false) => {
+	if (!cond) throw new Error(`prayer failed: ${message}`);
+};
 
-export const prayDirection = (dir) => { pray('a direction was passed', dir === L || dir === R); };
+export const prayDirection = (dir: Direction) => { pray('a direction was passed', dir === L || dir === R); };
 
-export const prayWellFormed = (parent, leftward, rightward) => {
-	pray('a parent is always present', parent);
+export const prayWellFormed = (parent?: Node | 0, leftward?: Node | 0, rightward?: Node | 0) => {
+	pray('a parent is always present', !!parent);
 	pray('leftward is properly set up', (() => {
 		// either it's empty and `rightward` is the left end child (possibly empty)
-		if (!leftward) return parent.ends[L] === rightward;
+		if (!leftward) return (parent as Node)?.ends[L] === rightward;
 
 		// or it's there and its [R] and .parent are properly set up
 		return leftward[R] === rightward && leftward.parent === parent;
@@ -98,7 +115,7 @@ export const prayWellFormed = (parent, leftward, rightward) => {
 
 	pray('rightward is properly set up', (() => {
 		// either it's empty and `leftward` is the right end child (possibly empty)
-		if (!rightward) return parent.ends[R] === leftward;
+		if (!rightward) return (parent as Node)?.ends[R] === leftward;
 
 		// or it's there and its [L] and .parent are properly set up
 		return rightward[L] === leftward && rightward.parent === parent;
@@ -135,7 +152,7 @@ export const EMBEDS = {};
 // and 'arsinh', which must be exported as \operatorname{hcf} and
 // \operatorname{arsinh}. Note: over/under line/arrow \lim variants like
 // \varlimsup are not supported
-export const BuiltInOpNames = {};
+export const BuiltInOpNames: { [key: string]: 1 } = {};
 
 // Standard operators
 for (const op of [
