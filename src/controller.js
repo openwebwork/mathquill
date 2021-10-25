@@ -91,8 +91,8 @@ class ControllerBase {
 	moveUpDown(dir) {
 		const cursor = this.notify('upDown').cursor;
 		const dirInto = `${dir}Into`, dirOutOf = `${dir}OutOf`;
-		if (cursor[R][dirInto]) cursor.insAtLeftEnd(cursor[R][dirInto]);
-		else if (cursor[L][dirInto]) cursor.insAtRightEnd(cursor[L][dirInto]);
+		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R][dirInto]);
+		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L][dirInto]);
 		else {
 			cursor.parent.bubble((ancestor) => {
 				let prop = ancestor[dirOutOf];
@@ -119,8 +119,8 @@ class ControllerBase {
 			else cursor.parent.deleteOutOf(dir, cursor);
 		}
 
-		if (cursor[L].siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
-		if (cursor[R].siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
+		if (cursor[L]?.siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
+		if (cursor[R]?.siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
 		cursor.parent.bubble('reflow');
 
 		return this;
@@ -139,8 +139,8 @@ class ControllerBase {
 		};
 		cursor.insAtDirEnd(dir, cursor.parent);
 
-		if (cursor[L].siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
-		if (cursor[R].siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
+		if (cursor[L]?.siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
+		if (cursor[R]?.siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
 		cursor.parent.bubble('reflow');
 
 		return this;

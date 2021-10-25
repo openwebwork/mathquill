@@ -107,7 +107,7 @@ suite('text', () => {
 
 			mq.keystroke('Right');
 			assertSplit(cursor.jQ);
-			assert.equal(cursor[L], 0);
+			assert.equal(cursor[L], undefined);
 			assertLatex('');
 		});
 

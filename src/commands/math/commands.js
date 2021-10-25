@@ -245,7 +245,7 @@ const FractionChooseCreateLeftOfMixin = (base) => class extends (base) {
 			}
 
 			if (leftward !== cursor[L] && !cursor.isTooDeep(1)) {
-				this.replaces(new Fragment(leftward[R] || cursor.parent.ends[L], cursor[L]));
+				this.replaces(new Fragment(leftward?.[R] || cursor.parent.ends[L], cursor[L]));
 				cursor[L] = leftward;
 			}
 		}
@@ -273,8 +273,8 @@ const SquareRoot = LatexCmds.sqrt = LatexCmds['\u221a'] = class extends MathComm
 			return latexMathParser.block.map((block) => {
 				const nthroot = new NthRoot();
 				nthroot.blocks = [ optBlock, block ];
-				optBlock.adopt(nthroot, 0, 0);
-				block.adopt(nthroot, optBlock, 0);
+				optBlock.adopt(nthroot);
+				block.adopt(nthroot, optBlock);
 				return nthroot;
 			});
 		}).or(super.parser());
@@ -374,7 +374,7 @@ LatexCmds.left = class extends MathCommand {
 							if (end == '\\rVert') { close = '&#8741;'; end = end + ' '; }
 							const cmd = new Bracket(0, open, close, ctrlSeq, end);
 							cmd.blocks = [ block ];
-							block.adopt(cmd, 0, 0);
+							block.adopt(cmd);
 							return cmd;
 						})
 					;

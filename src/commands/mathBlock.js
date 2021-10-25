@@ -17,7 +17,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	latex() { return this.join('latex'); }
 
 	text() {
-		return (this.ends[L] === this.ends[R] && this.ends[L] !== 0) ?
+		return (this.ends[L] && this.ends[L] === this.ends[R]) ?
 			this.ends[L].text() :
 			this.join('text')
 		;
@@ -89,8 +89,8 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 			jQ.insertBefore(cursor.jQ);
 			cursor[L] = block.ends[R];
 			block.finalizeInsert(cursor.options, cursor);
-			if (block.ends[R][R].siblingCreated) block.ends[R][R].siblingCreated(cursor.options, L);
-			if (block.ends[L][L].siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
+			if (block.ends[R]?.[R]?.siblingCreated) block.ends[R][R].siblingCreated(cursor.options, L);
+			if (block.ends[L]?.[L]?.siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
 			cursor.parent.bubble('reflow');
 		}
 	}

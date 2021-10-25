@@ -24,10 +24,11 @@ export const LatexControllerExtension = (base) => class extends base {
 		const block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
 
 		this.root.eachChild('postOrder', 'dispose');
-		this.root.ends[L] = this.root.ends[R] = 0;
+		delete this.root.ends[L];
+		delete this.root.ends[R];
 
 		if (block && block.prepareInsertionAt(this.cursor)) {
-			block.children().adopt(this.root, 0, 0);
+			block.children().adopt(this.root);
 			const html = block.join('html');
 			this.root.jQ.html(html);
 			this.root.jQize(this.root.jQ.children());
@@ -42,9 +43,12 @@ export const LatexControllerExtension = (base) => class extends base {
 	}
 
 	renderLatexText(latex) {
+		const root = this.root, cursor = this.cursor;
+
 		this.root.jQ.children().slice(1).remove();
 		this.root.eachChild('postOrder', 'dispose');
-		this.root.ends[L] = this.root.ends[R] = 0;
+		delete this.root.ends[L];
+		delete this.root.ends[R];
 		delete this.cursor.selection;
 		this.cursor.show().insAtRightEnd(this.root);
 
@@ -65,7 +69,7 @@ export const LatexControllerExtension = (base) => class extends base {
 
 				rootMathCommand.createBlocks();
 				const rootMathBlock = rootMathCommand.ends[L];
-				block.children().adopt(rootMathBlock, 0, 0);
+				block.children().adopt(rootMathBlock);
 
 				return rootMathCommand;
 			})
@@ -78,7 +82,7 @@ export const LatexControllerExtension = (base) => class extends base {
 
 		if (commands) {
 			for (const command of commands) {
-				command.adopt(this.root, this.root.ends[R], 0);
+				command.adopt(this.root, this.root.ends[R]);
 			}
 
 			this.root.jQize().appendTo(this.root.jQ);

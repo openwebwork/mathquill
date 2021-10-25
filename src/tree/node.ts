@@ -8,8 +8,8 @@ import { Selection } from 'src/selection';
 import { Fragment } from 'tree/fragment';
 
 export interface Ends {
-	[L]: Node | 0;
-	[R]: Node | 0;
+	[L]?: Node;
+	[R]?: Node;
 }
 
 const prayOverridden = () => pray('overridden or never called on this node');
@@ -23,14 +23,14 @@ export class Node {
 
 	jQ: JQuery = jQuery();
 	id: number;
-	parent: Node | 0 = 0;
-	ends: Ends = { [L]: 0, [R]: 0 };
-	[L]: Node | 0 = 0;
-	[R]: Node | 0 = 0;
+	parent?: Node;
+	ends: Ends = {};
+	[L]?: Node;
+	[R]?: Node;
 	siblingDeleted?: (opts?: any, dir?: Direction) => void;
 
 	bubble = iterator((yield_: (node: Node) => Node | boolean) => {
-		for (let ancestor: Node | 0 = this; ancestor; ancestor = ancestor.parent) {
+		for (let ancestor: Node | undefined = this; ancestor; ancestor = ancestor.parent) {
 			if (yield_(ancestor) === false) break;
 		}
 
@@ -81,18 +81,18 @@ export class Node {
 		prayDirection(dir);
 		this.jQize();
 		this.jQ.insDirOf(dir, cursor.jQ);
-		cursor[dir] = this.adopt(cursor.parent as Node, cursor[L] as Node, cursor[R] as Node);
+		cursor[dir] = this.adopt(cursor.parent as Node, cursor[L], cursor[R]);
 		return this;
 	}
 
 	createLeftOf(el: Node) { return this.createDir(L, el); }
 
-	selectChildren(leftEnd: Node, rightEnd: Node) {
+	selectChildren(leftEnd?: Node, rightEnd?: Node) {
 		return new Selection(leftEnd, rightEnd);
 	}
 
 	isEmpty() {
-		return this.ends[L] === 0 && this.ends[R] === 0;
+		return !this.ends[L] && !this.ends[R];
 	}
 
 	isStyleBlock() {
@@ -100,7 +100,7 @@ export class Node {
 	}
 
 	children() {
-		return new Fragment(this.ends[L] as Node, this.ends[R] as Node);
+		return new Fragment(this.ends[L], this.ends[R]);
 	}
 
 	eachChild(method: 'postOrder' | ((node: Node) => boolean) | ((node: Node) => void), order?: string) {
@@ -113,12 +113,12 @@ export class Node {
 		return this.children().fold<T>(fold, fn);
 	}
 
-	withDirAdopt(dir: Direction, parent: Node, withDir: Node, oppDir: Node) {
+	withDirAdopt(dir: Direction, parent: Node, withDir?: Node, oppDir?: Node) {
 		new Fragment(this, this).withDirAdopt(dir, parent, withDir, oppDir);
 		return this;
 	}
 
-	adopt(parent: Node, leftward: Node, rightward: Node) {
+	adopt(parent: Node, leftward?: Node, rightward?: Node) {
 		new Fragment(this, this).adopt(parent, leftward, rightward);
 		return this;
 	}

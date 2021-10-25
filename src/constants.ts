@@ -103,11 +103,11 @@ export const pray = (message: string, cond: boolean = false) => {
 
 export const prayDirection = (dir: Direction) => { pray('a direction was passed', dir === L || dir === R); };
 
-export const prayWellFormed = (parent?: Node | 0, leftward?: Node | 0, rightward?: Node | 0) => {
+export const prayWellFormed = (parent?: Node, leftward?: Node, rightward?: Node) => {
 	pray('a parent is always present', !!parent);
 	pray('leftward is properly set up', (() => {
 		// either it's empty and `rightward` is the left end child (possibly empty)
-		if (!leftward) return (parent as Node)?.ends[L] === rightward;
+		if (!leftward) return parent?.ends[L] === rightward;
 
 		// or it's there and its [R] and .parent are properly set up
 		return leftward[R] === rightward && leftward.parent === parent;
@@ -115,7 +115,7 @@ export const prayWellFormed = (parent?: Node | 0, leftward?: Node | 0, rightward
 
 	pray('rightward is properly set up', (() => {
 		// either it's empty and `leftward` is the right end child (possibly empty)
-		if (!rightward) return (parent as Node)?.ends[R] === leftward;
+		if (!rightward) return parent?.ends[R] === leftward;
 
 		// or it's there and its [L] and .parent are properly set up
 		return rightward[L] === leftward && rightward.parent === parent;

@@ -76,7 +76,8 @@ export class EditableField extends AbstractMathQuill {
 	empty() {
 		const root = this.__controller.root, cursor = this.__controller.cursor;
 		root.eachChild('postOrder', 'dispose');
-		root.ends[L] = root.ends[R] = 0;
+		delete root.ends[L];
+		delete root.ends[R];
 		root.jQ.empty();
 		delete cursor.selection;
 		cursor.insAtRightEnd(root);

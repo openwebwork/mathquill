@@ -36,16 +36,16 @@ suite('Cursor::select()', () => {
 	};
 
 	const parent = new Node();
-	const child1 = new Node().adopt(parent, parent.ends[R], 0);
-	const child2 = new Node().adopt(parent, parent.ends[R], 0);
-	const child3 = new Node().adopt(parent, parent.ends[R], 0);
-	const A = new Point(parent, 0, child1);
+	const child1 = new Node().adopt(parent, parent.ends[R]);
+	const child2 = new Node().adopt(parent, parent.ends[R]);
+	const child3 = new Node().adopt(parent, parent.ends[R]);
+	const A = new Point(parent, undefined, child1);
 	const B = new Point(parent, child1, child2);
 	const C = new Point(parent, child2, child3);
-	const D = new Point(parent, child3, 0);
-	const pt1 = new Point(child1, 0, 0);
-	const pt2 = new Point(child2, 0, 0);
-	const pt3 = new Point(child3, 0, 0);
+	const D = new Point(parent, child3, undefined);
+	const pt1 = new Point(child1);
+	const pt2 = new Point(child2);
+	const pt3 = new Point(child3);
 
 	test('same parent, one Node', () => {
 		assertSelection(A, B, child1);

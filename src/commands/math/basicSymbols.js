@@ -23,7 +23,7 @@ class OperatorName extends Symbol {
 	parser() {
 		const block = new MathBlock();
 		for (const char of this.ctrlSeq) {
-			new Letter(char).adopt(block, block.ends[R], 0);
+			new Letter(char).adopt(block, block.ends[R]);
 		}
 		return Parser.succeed(block.children());
 	}
@@ -197,8 +197,8 @@ class LatexFragment extends MathCommand {
 		cursor[L] = block.ends[R];
 		block.jQize().insertBefore(cursor.jQ);
 		block.finalizeInsert(cursor.options, cursor);
-		if (block.ends[R][R].siblingCreated) block.ends[R][R].siblingCreated(cursor.options, L);
-		if (block.ends[L][L].siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
+		if (block.ends[R]?.[R]?.siblingCreated) block.ends[R][R].siblingCreated(cursor.options, L);
+		if (block.ends[L]?.[L]?.siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
 		cursor.parent.bubble('reflow');
 	}
 

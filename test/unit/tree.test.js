@@ -23,7 +23,7 @@ suite('tree', () => {
 			const parent = new Node();
 			const child = new Node();
 
-			child.adopt(parent, 0, 0);
+			child.adopt(parent);
 
 			assert.equal(child.parent, parent, 'child.parent is set');
 			assert.ok(!child[R], 'child has nothing rightward');
@@ -38,8 +38,8 @@ suite('tree', () => {
 			const one = new Node();
 			const two = new Node();
 
-			one.adopt(parent, 0, 0);
-			two.adopt(parent, one, 0);
+			one.adopt(parent);
+			two.adopt(parent, one);
 
 			assertTwoChildren(parent, one, two);
 		});
@@ -49,8 +49,8 @@ suite('tree', () => {
 			const one = new Node();
 			const two = new Node();
 
-			two.adopt(parent, 0, 0);
-			one.adopt(parent, 0, two);
+			two.adopt(parent);
+			one.adopt(parent, undefined, two);
 
 			assertTwoChildren(parent, one, two);
 		});
@@ -61,8 +61,8 @@ suite('tree', () => {
 			const rightward = new Node();
 			const middle = new Node();
 
-			leftward.adopt(parent, 0, 0);
-			rightward.adopt(parent, leftward, 0);
+			leftward.adopt(parent);
+			rightward.adopt(parent, leftward);
 			middle.adopt(parent, leftward, rightward);
 
 			assert.equal(middle.parent, parent, 'middle.parent is set');
@@ -89,7 +89,7 @@ suite('tree', () => {
 			const parent = new Node();
 			const child = new Node();
 
-			child.adopt(parent, 0, 0);
+			child.adopt(parent);
 			child.disown();
 
 			assert.ok(!parent.ends[L], 'parent has no left end child');
@@ -101,8 +101,8 @@ suite('tree', () => {
 			const one = new Node();
 			const two = new Node();
 
-			one.adopt(parent, 0, 0);
-			two.adopt(parent, one, 0);
+			one.adopt(parent);
+			two.adopt(parent, one);
 
 			two.disown();
 
@@ -119,8 +119,8 @@ suite('tree', () => {
 			const one = new Node();
 			const two = new Node();
 
-			one.adopt(parent, 0, 0);
-			two.adopt(parent, one, 0);
+			one.adopt(parent);
+			two.adopt(parent, one);
 
 			one.disown();
 
@@ -138,8 +138,8 @@ suite('tree', () => {
 			const rightward = new Node();
 			const middle = new Node();
 
-			leftward.adopt(parent, 0, 0);
-			rightward.adopt(parent, leftward, 0);
+			leftward.adopt(parent);
+			rightward.adopt(parent, leftward);
 			middle.adopt(parent, leftward, rightward);
 
 			middle.disown();
@@ -175,11 +175,11 @@ suite('tree', () => {
 		test('directionalized constructor call', () => {
 			const ChNode = class extends Node { constructor(ch) { super(); this.ch = ch; } };
 			const parent = new Node();
-			new ChNode('a').adopt(parent, parent.ends[R], 0);
-			const b = new ChNode('b').adopt(parent, parent.ends[R], 0);
-			new ChNode('c').adopt(parent, parent.ends[R], 0);
-			const d = new ChNode('d').adopt(parent, parent.ends[R], 0);
-			new ChNode('e').adopt(parent, parent.ends[R], 0);
+			new ChNode('a').adopt(parent, parent.ends[R]);
+			const b = new ChNode('b').adopt(parent, parent.ends[R]);
+			new ChNode('c').adopt(parent, parent.ends[R]);
+			const d = new ChNode('d').adopt(parent, parent.ends[R]);
+			new ChNode('e').adopt(parent, parent.ends[R]);
 
 			const cat = (str, node) => str + node.ch;
 			assert.equal('bcd', new Fragment(b, d).fold('', cat));
@@ -191,8 +191,8 @@ suite('tree', () => {
 
 		test('disown is idempotent', () => {
 			const parent = new Node();
-			const one = new Node().adopt(parent, 0, 0);
-			const two = new Node().adopt(parent, one, 0);
+			const one = new Node().adopt(parent);
+			const two = new Node().adopt(parent, one);
 
 			const frag = new Fragment(one, two);
 			frag.disown();

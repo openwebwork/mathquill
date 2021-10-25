@@ -29,8 +29,8 @@ export class MathElement extends Node {
 		this.postOrder('blur');
 
 		this.postOrder('reflow');
-		if (this[R].siblingCreated) this[R].siblingCreated(options, L);
-		if (this[L].siblingCreated) this[L].siblingCreated(options, R);
+		if (this[R]?.siblingCreated) this[R].siblingCreated(options, L);
+		if (this[L]?.siblingCreated) this[L].siblingCreated(options, R);
 		this.bubble('reflow');
 	}
 
@@ -102,7 +102,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 			this.blocks = blocks;
 
 			for (const block of blocks) {
-				block.adopt(this, this.ends[R], 0);
+				block.adopt(this, this.ends[R]);
 			}
 
 			return this;
@@ -116,7 +116,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		this.createBlocks();
 		super.createLeftOf(cursor);
 		if (replacedFragment) {
-			replacedFragment.adopt(this.ends[L], 0, 0);
+			replacedFragment.adopt(this.ends[L]);
 			replacedFragment.jQ.appendTo(this.ends[L].jQ);
 			this.placeCursor(cursor);
 			this.prepareInsertionAt(cursor);
@@ -131,7 +131,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 
 		for (let i = 0; i < numBlocks; ++i) {
 			this.blocks[i] = new MathBlock();
-			this.blocks[i].adopt(this, this.ends[R], 0);
+			this.blocks[i].adopt(this, this.ends[R]);
 		}
 	}
 
@@ -416,14 +416,14 @@ export class Equality extends BinaryOperator {
 export class Digit extends VanillaSymbol {
 	createLeftOf(cursor) {
 		if (cursor.options.autoSubscriptNumerals
-			&& cursor.parent !== cursor.parent.parent.sub
+			&& cursor.parent !== cursor.parent?.parent?.sub
 			&& ((cursor[L] instanceof Variable && cursor[L].isItalic !== false)
 				|| (cursor[L] instanceof SupSub
 					&& cursor[L][L] instanceof Variable
 					&& cursor[L][L].isItalic !== false))) {
 			new LatexCmds._().createLeftOf(cursor);
 			super.createLeftOf(cursor);
-			cursor.insRightOf(cursor.parent.parent);
+			cursor.insRightOf(cursor.parent?.parent);
 		}
 		else super.createLeftOf(cursor);
 	}
@@ -507,14 +507,14 @@ export class Letter extends Variable {
 
 		// removeClass and delete flags from all letters before figuring out
 		// which, if any, are part of an operator name
-		new Fragment(l[R] || this.parent.ends[L], r[L] || this.parent.ends[R]).each((el) => {
+		new Fragment(l?.[R] || this.parent.ends[L], r?.[L] || this.parent.ends[R]).each((el) => {
 			el.italicize(true).jQ.removeClass('mq-first mq-last mq-followed-by-supsub');
 			el.ctrlSeq = el.letter;
 		});
 
 		// check for operator names: at each position from left to right, check
 		// substrings from longest to shortest
-		outer: for (let i = 0, first = l[R] || this.parent.ends[L]; i < str.length; ++i, first = first[R]) {
+		outer: for (let i = 0, first = l?.[R] || this.parent.ends[L]; i < str.length; ++i, first = first[R]) {
 			for (let len = Math.min(autoOps._maxLength, str.length - i); len > 0; --len) {
 				const word = str.slice(i, i + len);
 				if (autoOps[word]) {
@@ -602,9 +602,9 @@ export class SupSub extends MathCommand {
 						src.jQ.children().insAtDirEnd(-dir, dest.jQ);
 						const children = src.children().disown();
 						pt = new Point(dest, children.ends[R], dest.ends[L]);
-						if (dir === L) children.adopt(dest, dest.ends[R], 0);
-						else children.adopt(dest, 0, dest.ends[L]);
-					} else pt = new Point(dest, 0, dest.ends[L]);
+						if (dir === L) children.adopt(dest, dest.ends[R]);
+						else children.adopt(dest, undefined, dest.ends[L]);
+					} else pt = new Point(dest, undefined, dest.ends[L]);
 					this.placeCursor = (cursor) => cursor.insAtDirEnd(-dir, dest || src);
 				}
 				this.remove();
@@ -667,13 +667,13 @@ export class SupSub extends MathCommand {
 	addBlock(block) {
 		if (this.supsub === 'sub') {
 			this.sup = this.upInto = this.sub.upOutOf = block;
-			block.adopt(this, this.sub, 0).downOutOf = this.sub;
+			block.adopt(this, this.sub).downOutOf = this.sub;
 			block.jQ = jQuery('<span class="mq-sup"/>').append(block.jQ.children())
 				.attr(mqBlockId, block.id).prependTo(this.jQ);
 		}
 		else {
 			this.sub = this.downInto = this.sup.downOutOf = block;
-			block.adopt(this, 0, this.sup).upOutOf = this.sup;
+			block.adopt(this, undefined, this.sup).upOutOf = this.sup;
 			block.jQ = jQuery('<span class="mq-sub"></span>').append(block.jQ.children())
 				.attr(mqBlockId, block.id).appendTo(this.jQ.removeClass('mq-sup-only'));
 			this.jQ.append('<span style="display:inline-block;width:0">&#8203;</span>');
@@ -741,13 +741,13 @@ export class UpperLowerLimitCommand extends MathCommand {
 		const self = this;
 		const blocks = self.blocks = [ new MathBlock(), new MathBlock() ];
 		for (const block of blocks) {
-			block.adopt(self, self.ends[R], 0);
+			block.adopt(self, self.ends[R]);
 		}
 
 		return optWhitespace.then(string('_').or(string('^'))).then((supOrSub) => {
 			const child = blocks[supOrSub === '_' ? 0 : 1];
 			return block.then((block) => {
-				block.children().adopt(child, child.ends[R], 0);
+				block.children().adopt(child, child.ends[R]);
 				return succeed(self);
 			});
 		}).many().result(self);
@@ -844,7 +844,7 @@ export class Bracket extends DelimsMixin(MathCommand) {
 			if (brack.replacedFragment) brack.side = 0; // wrapping seln, don't be one-sided
 			else if (cursor[-side]) { // elsewise, auto-expand so ghost is at far end
 				brack.replaces(new Fragment(cursor[-side], cursor.parent.ends[-side], side));
-				cursor[-side] = 0;
+				delete cursor[-side];
 			}
 			super.createLeftOf.call(brack, cursor);
 		}
@@ -874,7 +874,7 @@ export class Bracket extends DelimsMixin(MathCommand) {
 			this.closeOpposing(this.ends[L].ends[this.side]); // then become [1+2)+3
 			const origEnd = this.ends[L].ends[side];
 			this.unwrap();
-			if (origEnd.siblingCreated) origEnd.siblingCreated(cursor.options, side);
+			if (origEnd?.siblingCreated) origEnd.siblingCreated(cursor.options, side);
 			sib ? cursor.insDirOf(-side, sib) : cursor.insAtDirEnd(side, parent);
 		}
 		else { // if deleting like, inner close-brace of ([1+2}+3) where outer
@@ -896,9 +896,9 @@ export class Bracket extends DelimsMixin(MathCommand) {
 			if (sib) { // auto-expand so ghost is at far end
 				const origEnd = this.ends[L].ends[side];
 				new Fragment(sib, farEnd, -side).disown()
-					.withDirAdopt(-side, this.ends[L], origEnd, 0)
+					.withDirAdopt(-side, this.ends[L], origEnd)
 					.jQ.insAtDirEnd(side, this.ends[L].jQ.removeClass('mq-empty'));
-				if (origEnd.siblingCreated) origEnd.siblingCreated(cursor.options, side);
+				if (origEnd?.siblingCreated) origEnd.siblingCreated(cursor.options, side);
 				cursor.insDirOf(-side, sib);
 			} // didn't auto-expand, cursor goes just outside or just inside parens
 			else (outward ? cursor.insDirOf(side, this)
@@ -930,14 +930,14 @@ export class Bracket extends DelimsMixin(MathCommand) {
 export const latexMathParser = (() => {
 	const commandToBlock = (cmd) => { // can also take in a Fragment
 		const block = new MathBlock();
-		cmd.adopt(block, 0, 0);
+		cmd.adopt(block);
 		return block;
 	};
 	const joinBlocks = (blocks) => {
 		const firstBlock = blocks[0] || new MathBlock();
 
 		for (const block of blocks.slice(1)) {
-			block.children().adopt(firstBlock, firstBlock.ends[R], 0);
+			block.children().adopt(firstBlock, firstBlock.ends[R]);
 		}
 
 		return firstBlock;

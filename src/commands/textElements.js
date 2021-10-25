@@ -41,8 +41,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 				this.write(cursor, char);
 		}
 
-		if (this[R].siblingCreated) this[R].siblingCreated(cursor.options, L);
-		if (this[L].siblingCreated) this[L].siblingCreated(cursor.options, R);
+		if (this[R]?.siblingCreated) this[R].siblingCreated(cursor.options, L);
+		if (this[L]?.siblingCreated) this[L].siblingCreated(cursor.options, R);
 		this.bubble('reflow');
 	}
 
@@ -56,7 +56,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			.map((text) => {
 				if (text.length === 0) return new Fragment();
 
-				new TextPiece(text.replace(/\\{/g, '{').replace(/\\}/g, '}')).adopt(this, 0, 0);
+				new TextPiece(text.replace(/\\{/g, '{').replace(/\\}/g, '}')).adopt(this);
 				return this;
 			})
 		;
@@ -115,7 +115,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			const leftBlock = new TextBlock();
 			const leftPc = this.ends[L];
 			leftPc.disown().jQ.detach();
-			leftPc.adopt(leftBlock, 0, 0);
+			leftPc.adopt(leftBlock);
 
 			cursor.insLeftOf(this);
 			super.createLeftOf.call(leftBlock, cursor); // micro-optimization, not for correctness
@@ -207,7 +207,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 		textPc.jQadd(textPcDom);
 
 		this.children().disown();
-		return textPc.adopt(this, 0, 0);
+		return textPc.adopt(this);
 	}
 
 	focus() {

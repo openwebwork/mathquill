@@ -36,13 +36,13 @@ export class Cursor extends Point {
 			clearInterval(this.intervalId);
 		else { //was hidden and detached, insert this.jQ back into HTML DOM
 			if (this[R]) {
-				if (this.selection && (this.selection.ends[L] as Node)[L] === this[L])
+				if (this.selection && this.selection.ends[L]?.[L] === this[L])
 					this.jQ.insertBefore(this.selection.jQ);
 				else
 					this.jQ.insertBefore((this[R] as Node).jQ.first());
 			} else
 				this.jQ.appendTo((this.parent as Node).jQ);
-			(this.parent as Node).focus();
+			this.parent?.focus();
 		}
 		this.intervalId = setInterval(this.blink, 500);
 		return this;
@@ -57,22 +57,22 @@ export class Cursor extends Point {
 		return this;
 	}
 
-	withDirInsertAt(dir: Direction, parent: Node, withDir: Node | 0, oppDir: Node) {
-		const oldParent = this.parent;
+	withDirInsertAt(dir: Direction, parent: Node, withDir?: Node, oppDir?: Node) {
+		const oldParent = this.parent as Node;
 		this.parent = parent;
 		this[dir] = withDir;
 		this[dir === L ? R : L] = oppDir;
 		// by contract, .blur() is called after all has been said and done
 		// and the cursor has actually been moved
 		// FIXME pass cursor to .blur() so text can fix cursor pointers when removing itself
-		if (oldParent !== parent && (oldParent as Node).blur) (oldParent as Node).blur(this);
+		if (oldParent !== parent && oldParent.blur) oldParent.blur(this);
 	}
 
 	insDirOf(dir: Direction, el: Node) {
 		prayDirection(dir);
 		this.jQ.insDirOf(dir, el.jQ);
-		this.withDirInsertAt(dir, el.parent as Node, el[dir] as Node, el);
-		(this.parent as Node).jQ.addClass('mq-hasCursor');
+		this.withDirInsertAt(dir, el.parent as Node, el[dir], el);
+		this.parent?.jQ.addClass('mq-hasCursor');
 		return this;
 	}
 
@@ -83,7 +83,7 @@ export class Cursor extends Point {
 	insAtDirEnd(dir: Direction, el: Node) {
 		prayDirection(dir);
 		this.jQ.insAtDirEnd(dir, el.jQ);
-		this.withDirInsertAt(dir, el, 0, el.ends[dir] as Node);
+		this.withDirInsertAt(dir, el, undefined, el.ends[dir]);
 		el.focus();
 		return this;
 	}
@@ -122,12 +122,12 @@ export class Cursor extends Point {
 	}
 
 	unwrapGramp() {
-		const gramp = (this.parent as Node).parent as Node;
+		const gramp = this.parent?.parent as Node;
 		const greatgramp = gramp.parent as Node;
-		const rightward = gramp[R] as Node;
+		const rightward = gramp[R];
 
-		let leftward = gramp[L] as Node;
-		gramp.disown().eachChild((uncle) => {
+		let leftward = gramp[L];
+		gramp.disown().eachChild((uncle: Node) => {
 			if (uncle.isEmpty()) return;
 
 			uncle.children()
@@ -135,17 +135,17 @@ export class Cursor extends Point {
 				.each((cousin: Node) => cousin.jQ.insertBefore(gramp.jQ.first()))
 			;
 
-			leftward = uncle.ends[R] as Node;
+			leftward = uncle.ends[R];
 		});
 
 		if (!this[R]) { //then find something to be rightward to insLeftOf
 			if (this[L])
-				this[R] = (this[L] as Node)[R];
+				this[R] = this[L]?.[R];
 			else {
 				while (!this[R]) {
-					this.parent = (this.parent as Node)[R];
+					this.parent = this.parent?.[R];
 					if (this.parent)
-						this[R] = (this.parent as Node).ends[L];
+						this[R] = this.parent?.ends[L];
 					else {
 						this[R] = gramp[R];
 						this.parent = greatgramp;
@@ -161,8 +161,8 @@ export class Cursor extends Point {
 
 		gramp.jQ.remove();
 
-		if ((gramp[L] as Node)?.siblingDeleted) (gramp[L] as Node).siblingDeleted?.(this.options, R);
-		if ((gramp[R] as Node)?.siblingDeleted) (gramp[R] as Node).siblingDeleted?.(this.options, L);
+		if (gramp[L]?.siblingDeleted) gramp[L]?.siblingDeleted?.(this.options, R);
+		if (gramp[R]?.siblingDeleted) gramp[R]?.siblingDeleted?.(this.options, L);
 	}
 
 	startSelection() {
@@ -222,7 +222,7 @@ export class Cursor extends Point {
 		// `ancestor` or to its right, if and only if `antiAncestor` is to
 		// the right of `ancestor`.
 		if (ancestor[L] !== antiAncestor) {
-			for (let rightward = ancestor; rightward; rightward = rightward[R] as Node) {
+			for (let rightward: Point | Node | undefined = ancestor; rightward; rightward = rightward[R]) {
 				if (rightward[R] === antiAncestor[R]) {
 					dir = L;
 					leftEnd = ancestor;
@@ -240,8 +240,8 @@ export class Cursor extends Point {
 		if (leftEnd instanceof Point) leftEnd = leftEnd[R];
 		if (rightEnd instanceof Point) rightEnd = rightEnd[L];
 
-		this.hide().selection = lca?.selectChildren(leftEnd as Node, rightEnd as Node);
-		this.insDirOf(dir, (this.selection as Selection).ends[dir] as Node);
+		this.hide().selection = lca?.selectChildren(leftEnd, rightEnd);
+		this.insDirOf(dir, this.selection?.ends[dir] as Node);
 		this.selectionChanged?.();
 		return true;
 	}
@@ -258,8 +258,8 @@ export class Cursor extends Point {
 	deleteSelection() {
 		if (!this.selection) return;
 
-		this[L] = (this.selection.ends[L] as Node)[L];
-		this[R] = (this.selection.ends[R] as Node)[R];
+		this[L] = this.selection.ends[L]?.[L];
+		this[R] = this.selection.ends[R]?.[R];
 		this.selection.remove();
 		this.selectionChanged?.();
 		delete this.selection;
@@ -268,8 +268,8 @@ export class Cursor extends Point {
 	replaceSelection() {
 		const seln = this.selection;
 		if (seln) {
-			this[L] = (seln.ends[L] as Node)[L];
-			this[R] = (seln.ends[R] as Node)[R];
+			this[L] = seln.ends[L]?.[L];
+			this[R] = seln.ends[R]?.[R];
 			delete this.selection;
 		}
 		return seln;

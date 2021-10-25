@@ -18,20 +18,20 @@ import { Node } from 'tree/node';
 // and have their 'parent' pointers set to the DocumentFragment).
 export class Fragment {
 	jQ: JQuery = jQuery();
-	ends: Ends = { [L]: 0, [R]: 0 };
+	ends: Ends = {};
 	disowned: boolean | undefined = undefined;
-	each = iterator((yield_: (node: Node) => Node | boolean) => {
+	each = iterator((yield_: (node?: Node) => Node | boolean) => {
 		let el = this.ends[L];
 		if (!el) return this;
 
-		for (; el !== (this.ends[R] as Node)[R]; el = (el as Node)[R]) {
-			if (yield_(el as Node) === false) break;
+		for (; el !== this.ends[R]?.[R]; el = el?.[R]) {
+			if (yield_(el) === false) break;
 		}
 
 		return this;
 	});
 
-	constructor(withDir: Node, oppDir: Node, dir: Direction = L) {
+	constructor(withDir?: Node, oppDir?: Node, dir: Direction = L) {
 		pray('no half-empty fragments', !withDir === !oppDir);
 
 		if (!withDir) return;
@@ -39,7 +39,7 @@ export class Fragment {
 		pray('withDir is passed to Fragment', withDir instanceof Node);
 		pray('oppDir is passed to Fragment', oppDir instanceof Node);
 		pray('withDir and oppDir have the same parent',
-			withDir.parent === oppDir.parent);
+			withDir.parent === oppDir?.parent);
 
 		this.ends[dir] = withDir;
 		this.ends[dir === L ? R : L] = oppDir;
@@ -60,12 +60,12 @@ export class Fragment {
 	}
 
 	// like Cursor::withDirInsertAt(dir, parent, withDir, oppDir)
-	withDirAdopt(dir: Direction, parent: Node, withDir: Node, oppDir: Node) {
+	withDirAdopt(dir: Direction, parent: Node, withDir?: Node, oppDir?: Node) {
 		return (dir === L ? this.adopt(parent, withDir, oppDir)
 			: this.adopt(parent, oppDir, withDir));
 	}
 
-	adopt(parent: Node, leftward: Node, rightward: Node) {
+	adopt(parent: Node, leftward?: Node, rightward?: Node) {
 		prayWellFormed(parent, leftward, rightward);
 
 		this.disowned = false;
@@ -102,26 +102,26 @@ export class Fragment {
 	}
 
 	disown() {
-		const leftEnd = this.ends[L] as Node;
+		const leftEnd = this.ends[L];
 
 		// guard for empty and already-disowned fragments
 		if (!leftEnd || this.disowned) return this;
 
 		this.disowned = true;
 
-		const rightEnd = this.ends[R] as Node;
+		const rightEnd = this.ends[R];
 		const parent = leftEnd.parent as Node;
 
 		prayWellFormed(parent, leftEnd[L], leftEnd);
-		prayWellFormed(parent, rightEnd, rightEnd[R]);
+		prayWellFormed(parent, rightEnd, rightEnd?.[R]);
 
 		if (leftEnd[L]) {
-			(leftEnd[L] as Node)[R] = rightEnd[R];
+			(leftEnd[L] as Node)[R] = rightEnd?.[R];
 		} else {
-			parent.ends[L] = rightEnd[R];
+			parent.ends[L] = rightEnd?.[R];
 		}
 
-		if (rightEnd[R]) {
+		if (rightEnd?.[R]) {
 			(rightEnd[R] as Node)[L] = leftEnd[L];
 		} else {
 			parent.ends[R] = leftEnd[L];

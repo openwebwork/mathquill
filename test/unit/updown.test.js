@@ -27,7 +27,7 @@ suite('up/down', () => {
 
 		mq.keystroke('Up Left Left');
 		assert.equal(cursor.parent, expBlock, 'cursor up left stays in exponent');
-		assert.equal(cursor[L], 0, 'cursor is at the beginning of exponent');
+		assert.equal(cursor[L], undefined, 'cursor is at the beginning of exponent');
 
 		mq.keystroke('Down');
 		assert.equal(cursor.parent, rootBlock, 'cursor down leaves exponent');
@@ -60,7 +60,7 @@ suite('up/down', () => {
 
 		mq.keystroke('Down Left Left');
 		assert.equal(cursor.parent, subBlock, 'cursor down left stays in subscript');
-		assert.equal(cursor[L], 0, 'cursor is at the beginning of subscript');
+		assert.equal(cursor[L], undefined, 'cursor is at the beginning of subscript');
 
 		mq.keystroke('Up');
 		assert.equal(cursor.parent, rootBlock, 'cursor up leaves subscript');
@@ -86,15 +86,15 @@ suite('up/down', () => {
 
 		mq.keystroke('Up');
 		assert.equal(cursor.parent, numer, 'cursor up goes into numerator');
-		assert.equal(cursor[R], 0, 'cursor up from right of fraction inserts at right end of numerator');
+		assert.equal(cursor[R], undefined, 'cursor up from right of fraction inserts at right end of numerator');
 
 		mq.keystroke('Down');
 		assert.equal(cursor.parent, denom, 'cursor down goes into denominator');
-		assert.equal(cursor[R], 0, 'cursor down from numerator inserts at right end of denominator');
+		assert.equal(cursor[R], undefined, 'cursor down from numerator inserts at right end of denominator');
 
 		mq.keystroke('Up');
 		assert.equal(cursor.parent, numer, 'cursor up goes into numerator');
-		assert.equal(cursor[R], 0, 'cursor up from denominator inserts at right end of numerator');
+		assert.equal(cursor[R], undefined, 'cursor up from denominator inserts at right end of numerator');
 
 		mq.keystroke('Left Left Left');
 		assert.equal(cursor.parent, rootBlock, 'cursor outside fraction');
@@ -102,7 +102,7 @@ suite('up/down', () => {
 
 		mq.keystroke('Up');
 		assert.equal(cursor.parent, numer, 'cursor up goes into numerator');
-		assert.equal(cursor[L], 0, 'cursor up from left of fraction inserts at left end of numerator');
+		assert.equal(cursor[L], undefined, 'cursor up from left of fraction inserts at left end of numerator');
 
 		mq.keystroke('Left');
 		assert.equal(cursor.parent, rootBlock, 'cursor outside fraction');
@@ -110,7 +110,7 @@ suite('up/down', () => {
 
 		mq.keystroke('Down');
 		assert.equal(cursor.parent, denom, 'cursor down goes into denominator');
-		assert.equal(cursor[L], 0, 'cursor down from left of fraction inserts at left end of denominator');
+		assert.equal(cursor[L], undefined, 'cursor down from left of fraction inserts at left end of denominator');
 	});
 
 	test('nested subscripts and fractions', () => {
@@ -158,7 +158,7 @@ suite('up/down', () => {
 
 		cursor.insAtRightEnd(subBlock);
 		controller.backspace();
-		assert.equal(subFrac[R], 0, 'subscript fraction is at right end');
+		assert.equal(subFrac[R], undefined, 'subscript fraction is at right end');
 		assert.equal(cursor[L], subFrac, 'cursor after subscript fraction');
 
 		mq.keystroke('Down');

@@ -203,19 +203,19 @@ suite('backspace', () => {
 
 		const textBlock = rootBlock.ends[R];
 		assert.equal(cursor.parent, textBlock, 'cursor is in text block');
-		assert.equal(cursor[R], 0, 'cursor is at the end of text block');
+		assert.equal(cursor[R], undefined, 'cursor is at the end of text block');
 		assert.equal(cursor[L].text, 'x', 'cursor is rightward of the x');
 		assert.equal(mq.latex(), '\\text{x}', 'the x has been deleted');
 
 		mq.keystroke('Backspace');
 		assert.equal(cursor.parent, textBlock, 'cursor is still in text block');
-		assert.equal(cursor[R], 0, 'cursor is at the right end of the text block');
-		assert.equal(cursor[L], 0, 'cursor is at the left end of the text block');
+		assert.equal(cursor[R], undefined, 'cursor is at the right end of the text block');
+		assert.equal(cursor[L], undefined, 'cursor is at the left end of the text block');
 		assert.equal(mq.latex(), '', 'the x has been deleted');
 
 		mq.keystroke('Backspace');
-		assert.equal(cursor[R], 0, 'cursor is at the right end of the root block');
-		assert.equal(cursor[L], 0, 'cursor is at the left end of the root block');
+		assert.equal(cursor[R], undefined, 'cursor is at the right end of the root block');
+		assert.equal(cursor[L], undefined, 'cursor is at the left end of the root block');
 		assert.equal(mq.latex(), '');
 	});
 

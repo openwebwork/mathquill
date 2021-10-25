@@ -8,13 +8,13 @@ import { L } from 'src/constants';
 import { Fragment } from 'tree/fragment';
 
 export class Selection extends Fragment {
-	constructor(withDir: Node, oppDir: Node, dir: Direction = L) {
+	constructor(withDir?: Node, oppDir?: Node, dir: Direction = L) {
 		super(withDir, oppDir, dir);
 		this.jQ = this.jQ.wrapAll('<span class="mq-selection"></span>').parent();
 		//can't do wrapAll(this.jQ = $(...)) because wrapAll will clone it
 	}
 
-	adopt(parent: Node, leftward: Node, rightward: Node) {
+	adopt(parent: Node, leftward?: Node, rightward?: Node) {
 		this.jQ.replaceWith(this.jQ = this.jQ.children());
 		return super.adopt(parent, leftward, rightward);
 	}
