@@ -1,8 +1,17 @@
 // Manage the MathQuill instance's textarea (as owned by the Controller)
 
 import { jQuery } from 'src/constants';
+import type { Controllerable } from 'src/controller';
+import type { Latexable } from 'services/latex';
+import type { HorizontalScrollable } from 'services/scrollHoriz';
+import type { FocusBlurable } from 'services/focusBlur';
 
-export const TextAreaController = (base) => class extends base {
+export const TextAreaController =
+	<TBase extends Controllerable & Latexable & HorizontalScrollable & FocusBlurable>(Base: TBase) =>
+	class extends Base {
+	textareaSelectionTimeout?: ReturnType<typeof setTimeout>;
+	selectFn?: (text: string) => void;
+
 	createTextarea() {
 		this.textareaSpan = jQuery('<span class="mq-textarea"></span>');
 		const textarea = this.options.substituteTextarea();
@@ -33,7 +42,7 @@ export const TextAreaController = (base) => class extends base {
 				latex = `$${latex}$`;
 			}
 		}
-		this.selectFn(latex);
+		this.selectFn?.(latex);
 	}
 
 	staticMathTextareaEvents() {
@@ -42,11 +51,11 @@ export const TextAreaController = (base) => class extends base {
 		this.blurred = true;
 
 		const detach = () => {
-			this.textareaSpan.detach();
+			this.textareaSpan?.detach();
 			this.blurred = true;
 		};
 
-		this.textarea.on('cut paste', false)
+		this.textarea?.on('cut paste', false)
 			.on('copy', () => this.setTextareaSelection())
 			.focus(() => this.blurred = false).blur(() => {
 				if (this.cursor.selection) this.cursor.selection.clear();
@@ -54,35 +63,35 @@ export const TextAreaController = (base) => class extends base {
 			});
 
 		this.selectFn = (text) => {
-			this.textarea.val(text);
-			if (text) this.textarea.select();
+			this.textarea?.val(text);
+			if (text) this.textarea?.select();
 		};
 	}
 
 	editablesTextareaEvents() {
 		const keyboardEventsShim = this.options.substituteKeyboardEvents(this.textarea, this);
 		this.selectFn = (text) => keyboardEventsShim.select(text);
-		this.container.prepend(this.textareaSpan);
+		this.container.prepend(this.textareaSpan as JQuery);
 		this.focusBlurEvents();
 	}
 
 	unbindEditablesEvents() {
 		this.selectFn = (text) => {
-			this.textarea.val(text);
-			if (text) this.textarea.select();
+			this.textarea?.val(text);
+			if (text) this.textarea?.select();
 		};
-		this.textareaSpan.remove();
+		this.textareaSpan?.remove();
 
 		this.unbindFocusBlurEvents();
 
 		this.blurred = true;
-		this.textarea.on('cut paste', false);
+		this.textarea?.on('cut paste', false);
 	}
 
-	typedText(ch) {
+	typedText(ch: string) {
 		if (ch === '\n') return this.handle('enter');
 		const cursor = this.notify().cursor;
-		cursor.parent.write(cursor, ch);
+		cursor.parent?.write(cursor, ch);
 		this.scrollHoriz();
 	}
 
@@ -90,7 +99,7 @@ export const TextAreaController = (base) => class extends base {
 		if (this.cursor.selection) {
 			setTimeout(() => {
 				this.notify('edit'); // deletes selection if present
-				this.cursor.parent.bubble('reflow');
+				this.cursor.parent?.bubble('reflow');
 			});
 		}
 	}
@@ -99,7 +108,7 @@ export const TextAreaController = (base) => class extends base {
 		this.setTextareaSelection();
 	}
 
-	paste(text) {
+	paste(text: string) {
 		// TODO: document `statelessClipboard` config option in README, after
 		// making it work like it should, that is, in both text and math mode
 		// (currently only works in math fields, so worse than pointless, it

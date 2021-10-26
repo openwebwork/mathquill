@@ -26,7 +26,7 @@ export class Selection extends Fragment {
 		return this;
 	}
 
-	join(methodName: {[P in keyof Node]: Node[P] extends (() => string) ? P: never}[keyof Node]) {
+	join(methodName: {[P in keyof Node]: Node[P] extends (() => string) ? P : never}[keyof Node]) {
 		return this.fold<string>('', (fold, child) => fold + child[methodName ?? 'latex']());
 	}
 }

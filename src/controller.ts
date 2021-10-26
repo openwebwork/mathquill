@@ -1,5 +1,7 @@
 // Controller for a MathQuill instance, on which services are registered.
 
+import type { Direction } from 'src/constants';
+import type { Constructor } from 'src/constants';
 import { L, R, prayDirection } from 'src/constants';
 import { Cursor } from 'src/cursor';
 import { Node } from 'tree/node';
@@ -11,21 +13,30 @@ import { FocusBlurEvents } from 'services/focusBlur';
 import { ExportText } from 'services/exportText';
 import { TextAreaController } from 'services/textarea';
 
-class ControllerBase {
-	constructor(root, container, options) {
+export class ControllerBase {
+	id: number;
+	data: { [key: string]: any } = {};
+	root: Node;
+	container: JQuery;
+	options: any;
+	cursor: Cursor;
+	apiClass?: any;
+	editable = false;
+	blurred?: boolean;
+	textareaSpan?: JQuery<HTMLSpanElement>;
+	textarea?: JQuery<HTMLTextAreaElement>;
+
+	constructor(root: Node, container: JQuery, options: any) {
 		this.id = root.id;
-		this.data = {};
 
 		this.root = root;
 		this.container = container;
 		this.options = options;
 
-		root.controller = this;
-
 		this.cursor = new Cursor(root, options);
 	}
 
-	handle(name, dir) {
+	handle(name: string, dir?: Direction) {
 		const handlers = this.options.handlers;
 		if (handlers && handlers[name]) {
 			if (dir === L || dir === R) handlers[name](dir, this.apiClass);
@@ -33,7 +44,7 @@ class ControllerBase {
 		}
 	}
 
-	notify(e) {
+	notify(e?: string) {
 		if (e === 'move' || e === 'upDown') this.cursor.show().clearSelection();
 		if (e !== 'upDown') this.cursor.upDownCache = {};
 		if (e === 'edit') this.cursor.show().deleteSelection();
@@ -42,13 +53,38 @@ class ControllerBase {
 		return this;
 	}
 
-	// Methods that deal with the browser DOM events from interaction with the typist.
+	// The textarea mixin overrides this.
+	selectionChanged() {};
+}
 
-	keystroke(key, evt) {
-		this.cursor.parent.keystroke(key, evt, this);
+export type Controllerable = Constructor<ControllerBase>;
+
+export class Controller extends
+ExportText(
+	TextAreaController(
+		LatexControllerExtension(
+			FocusBlurEvents(
+				MouseEventController(
+					HorizontalScroll(
+						ControllerBase
+					)
+				)
+			)
+		)
+	)
+) {
+	constructor(root: Node, container: JQuery, options: any) {
+		super(root, container, options);
+		root.controller = this;
 	}
 
-	escapeDir(dir, key, e) {
+	// Methods that deal with the browser DOM events from interaction with the typist.
+
+	keystroke(key: string, evt: Event) {
+		this.cursor.parent?.keystroke(key, evt, this);
+	}
+
+	escapeDir(dir: Direction, key: string, e: Event) {
 		prayDirection(dir);
 		const cursor = this.cursor;
 
@@ -59,19 +95,19 @@ class ControllerBase {
 		// default browser action if so)
 		if (cursor.parent === this.root) return;
 
-		cursor.parent.moveOutOf(dir, cursor);
+		cursor.parent?.moveOutOf(dir, cursor);
 		return this.notify('move');
 	}
 
-	moveDir(dir) {
+	moveDir(dir: Direction) {
 		prayDirection(dir);
 		const cursor = this.cursor, updown = cursor.options.leftRightIntoCmdGoes;
 
 		if (cursor.selection) {
-			cursor.insDirOf(dir, cursor.selection.ends[dir]);
+			cursor.insDirOf(dir, cursor.selection.ends[dir] as Node);
 		}
-		else if (cursor[dir]) cursor[dir].moveTowards(dir, cursor, updown);
-		else cursor.parent.moveOutOf(dir, cursor, updown);
+		else if (cursor[dir]) cursor[dir]?.moveTowards(dir, cursor, updown);
+		else cursor.parent?.moveOutOf(dir, cursor, updown);
 
 		return this.notify('move');
 	}
@@ -88,18 +124,20 @@ class ControllerBase {
 	//     - else, seekHoriz within the block to the current x-coordinate (to be
 	//       as close to directly above/below the current position as possible)
 	//   + unless it's exactly `true`, stop bubbling
-	moveUpDown(dir) {
+	moveUpDown(dir: 'up' | 'down') {
 		const cursor = this.notify('upDown').cursor;
-		const dirInto = `${dir}Into`, dirOutOf = `${dir}OutOf`;
-		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R][dirInto]);
-		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L][dirInto]);
+		const dirInto: keyof Node = `${dir}Into`, dirOutOf: keyof Node = `${dir}OutOf`;
+		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R]?.[dirInto] as Node);
+		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L]?.[dirInto] as Node);
 		else {
-			cursor.parent.bubble((ancestor) => {
-				let prop = ancestor[dirOutOf];
-				if (prop) {
-					if (typeof prop === 'function') prop = ancestor[dirOutOf](cursor);
-					if (prop instanceof Node) cursor.jumpUpDown(ancestor, prop);
-					if (prop !== true) return false;
+			cursor.parent?.bubble((ancestor: Node) => {
+				if (ancestor[dirOutOf]) {
+					if (typeof ancestor[dirOutOf] === 'function')
+						(ancestor[dirOutOf] as (cursor: Cursor) => void)(cursor);
+					if (ancestor[dirOutOf] instanceof Node)
+						cursor.jumpUpDown(ancestor, ancestor[dirOutOf] as Node);
+					if (ancestor[dirOutOf] !== true)
+						return false;
 				}
 			});
 		}
@@ -108,40 +146,40 @@ class ControllerBase {
 	moveUp() { return this.moveUpDown('up'); }
 	moveDown() { return this.moveUpDown('down'); }
 
-	deleteDir(dir) {
+	deleteDir(dir: Direction) {
 		prayDirection(dir);
 		const cursor = this.cursor;
 
 		const hadSelection = cursor.selection;
 		this.notify('edit'); // deletes selection if present
 		if (!hadSelection) {
-			if (cursor[dir]) cursor[dir].deleteTowards(dir, cursor);
-			else cursor.parent.deleteOutOf(dir, cursor);
+			if (cursor[dir]) cursor[dir]?.deleteTowards(dir, cursor);
+			else cursor.parent?.deleteOutOf(dir, cursor);
 		}
 
-		if (cursor[L]?.siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
-		if (cursor[R]?.siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
-		cursor.parent.bubble('reflow');
+		cursor[L]?.siblingDeleted?.(cursor.options, R);
+		cursor[R]?.siblingDeleted?.(cursor.options, L);
+		cursor.parent?.bubble('reflow');
 
 		return this;
 	}
 
-	ctrlDeleteDir(dir) {
+	ctrlDeleteDir(dir: Direction) {
 		prayDirection(dir);
 		const cursor = this.cursor;
 		if (!cursor[dir] || cursor.selection) return this.deleteDir(dir);
 
 		this.notify('edit');
 		if (dir === L) {
-			new Fragment(cursor.parent.ends[L], cursor[L]).remove();
+			new Fragment(cursor.parent?.ends[L], cursor[L]).remove();
 		} else {
-			new Fragment(cursor[R], cursor.parent.ends[R]).remove();
+			new Fragment(cursor[R], cursor.parent?.ends[R]).remove();
 		};
-		cursor.insAtDirEnd(dir, cursor.parent);
+		cursor.insAtDirEnd(dir, cursor.parent as Node);
 
-		if (cursor[L]?.siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
-		if (cursor[R]?.siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
-		cursor.parent.bubble('reflow');
+		cursor[L]?.siblingDeleted?.(cursor.options, R);
+		cursor[R]?.siblingDeleted?.(cursor.options, L);
+		cursor.parent?.bubble('reflow');
 
 		return this;
 	}
@@ -150,7 +188,7 @@ class ControllerBase {
 
 	deleteForward() { return this.deleteDir(R); }
 
-	selectDir(dir) {
+	selectDir(dir: Direction) {
 		const cursor = this.notify('select').cursor, seln = cursor.selection;
 		prayDirection(dir);
 
@@ -161,12 +199,11 @@ class ControllerBase {
 			// "if node we're selecting towards is inside selection (hence retracting)
 			// and is on the *far side* of the selection (hence is only node selected)
 			// and the anticursor is *inside* that node, not just on the other side"
-			if (seln && seln.ends[dir] === node && cursor.anticursor[-dir] !== node) {
+			if (seln && seln?.ends[dir] === node && cursor.anticursor?.[dir === L ? R : L] !== node) {
 				node.unselectInto(dir, cursor);
 			}
 			else node.selectTowards(dir, cursor);
-		}
-		else cursor.parent.selectOutOf(dir, cursor);
+		} else cursor.parent?.selectOutOf(dir, cursor);
 
 		cursor.clearSelection();
 		cursor.select() || cursor.show();
@@ -175,17 +212,4 @@ class ControllerBase {
 	selectLeft() { return this.selectDir(L); }
 
 	selectRight() { return this.selectDir(R); }
-
 }
-
-export class Controller extends HorizontalScroll(
-	LatexControllerExtension(
-		MouseEventController(
-			FocusBlurEvents(
-				ExportText(
-					TextAreaController(ControllerBase)
-				)
-			)
-		)
-	)
-) {}

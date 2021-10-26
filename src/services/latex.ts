@@ -1,23 +1,33 @@
 // Latex Controller Extension
 
+import type { Constructor } from 'src/constants';
 import { L, R } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
 import { RootMathCommand } from 'commands/textElements';
+import type { ControllerBase, Controllerable } from 'src/controller';
+import type { Node } from 'tree/node';
 
-export const LatexControllerExtension = (base) => class extends base {
+interface LatexControllerExtension {
+	exportLatex: () => string;
+	writeLatex: (latex: string) => ControllerBase;
+	renderLatexMath: (latex: string) => void;
+}
+
+export const LatexControllerExtension = <TBase extends Controllerable>(Base: TBase) =>
+	class extends Base implements LatexControllerExtension {
 	exportLatex() {
 		return this.root.latex().replace(/(\\[a-z]+) (?![a-z])/ig, '$1');
 	}
 
-	writeLatex(latex) {
+	writeLatex(latex: string) {
 		const cursor = this.notify('edit').cursor;
-		cursor.parent.writeLatex(cursor, latex);
+		cursor.parent?.writeLatex(cursor, latex);
 
 		return this;
 	}
 
-	renderLatexMath(latex) {
+	renderLatexMath(latex: string) {
 		const all = Parser.all;
 		const eof = Parser.eof;
 
@@ -42,7 +52,7 @@ export const LatexControllerExtension = (base) => class extends base {
 		this.cursor.insAtRightEnd(this.root);
 	}
 
-	renderLatexText(latex) {
+	renderLatexText(latex: string) {
 		const root = this.root, cursor = this.cursor;
 
 		this.root.jQ.children().slice(1).remove();
@@ -63,7 +73,7 @@ export const LatexControllerExtension = (base) => class extends base {
 		// have to end.  So we allow for the case that math mode
 		// continues to the end of the stream.
 			.skip(string('$').or(eof))
-			.map((block) => {
+			.map((block: Node) => {
 				// HACK FIXME: this shouldn't have to have access to cursor
 				const rootMathCommand = new RootMathCommand(this.cursor);
 
@@ -91,3 +101,5 @@ export const LatexControllerExtension = (base) => class extends base {
 		}
 	}
 };
+
+export type Latexable = Constructor<LatexControllerExtension>;

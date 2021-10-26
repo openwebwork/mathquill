@@ -18,10 +18,10 @@ export class Cursor extends Point {
 	intervalId: ReturnType<typeof setInterval> | undefined = undefined;
 	selection?: Selection;
 	anticursor?: Point;
-	selectionChanged?: (() => void);
+	selectionChanged?: () => void;
 
 	//closured for setInterval
-	blink = () => this.jQ.toggleClass('mq-blink');
+	blink: () => JQuery | void = () => this.jQ.toggleClass('mq-blink');
 
 	constructor(initParent: Node, options: any) {
 		super(initParent);

@@ -3,6 +3,7 @@
 import type JQuery from 'jquery';
 import type { Direction } from 'src/constants';
 import { jQuery, L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
+import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
 import { Selection } from 'src/selection';
 import { Fragment } from 'tree/fragment';
@@ -28,6 +29,12 @@ export class Node {
 	[L]?: Node;
 	[R]?: Node;
 	siblingDeleted?: (opts?: any, dir?: Direction) => void;
+	controller?: Controller;
+
+	upInto?: Node;
+	downInto?: Node;
+	upOutOf?: ((cursor: Cursor) => void) | Node | boolean;
+	downOutOf?: ((cursor: Cursor) => void) | Node | boolean;
 
 	bubble = iterator((yield_: (node: Node) => Node | boolean) => {
 		for (let ancestor: Node | undefined = this; ancestor; ancestor = ancestor.parent) {
@@ -136,7 +143,7 @@ export class Node {
 
 	// Methods that deal with the browser DOM events from interaction with the typist.
 
-	keystroke(key: string, e: Event, ctrlr: any) {
+	keystroke(key: string, e: Event, ctrlr: Controller) {
 		const cursor = ctrlr.cursor;
 
 		switch (key) {
@@ -164,7 +171,7 @@ export class Node {
 
 		// End -> move to the end of the current block.
 		case 'End':
-			ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent);
+			ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent as Node);
 			break;
 
 		// Ctrl-End -> move all the way to the end of the root block.
@@ -188,7 +195,7 @@ export class Node {
 
 		// Home -> move to the start of the root block or the current block.
 		case 'Home':
-			ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent);
+			ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent as Node);
 			break;
 
 		// Ctrl-Home -> move to the start of the current block.
@@ -264,25 +271,28 @@ export class Node {
 		ctrlr.scrollHoriz();
 	}
 
-	html() { prayOverridden(); return ''; }
-	text() { prayOverridden(); return ''; }
-	latex() { prayOverridden(); return ''; }
+	html() { return ''; }
+	text() { return ''; }
+	latex() { return ''; }
 	focus() {}
-	blur(cursor: Cursor) {}
+	blur(cursor?: Cursor) {}
 	seek(left: number | undefined, cursor: Cursor) {}
+	writeLatex(cursor: Cursor, latex: string) {}
+	finalizeInsert(options: any, cursor?: Cursor) {}
+	write(cursor: Cursor, ch: string): Node | undefined { return this; }
 
 	// called by Controller::escapeDir, moveDir
-	moveOutOf() { prayOverridden(); }
+	moveOutOf(dir: Direction, cursor: Cursor, updown?: string) { prayOverridden(); }
 	// called by Controller::moveDir
-	moveTowards() { prayOverridden(); }
+	moveTowards(dir: Direction, cursor: Cursor, updown?: string) { prayOverridden(); }
 	// called by Controller::deleteDir
-	deleteOutOf() { prayOverridden(); }
+	deleteOutOf(dir: Direction, cursor: Cursor) { prayOverridden(); }
 	// called by Controller::deleteDir
-	deleteTowards() { prayOverridden(); }
+	deleteTowards(dir: Direction, cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
-	unselectInto() { prayOverridden(); }
+	unselectInto(dir: Direction, cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
-	selectOutOf() { prayOverridden(); }
+	selectOutOf(dir: Direction, cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
-	selectTowards() { prayOverridden(); }
+	selectTowards(dir: Direction, cursor: Cursor) { prayOverridden(); }
 }

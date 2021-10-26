@@ -2,14 +2,23 @@
 
 import { jQuery, mqCmdId, mqBlockId, noop, pray } from 'src/constants';
 import { Node } from 'tree/node';
+import type { Controllerable } from 'src/controller';
+import type { HorizontalScrollable } from 'services/scrollHoriz';
 
-export const MouseEventController = (base) => class extends base {
+export const MouseEventController =
+	<TBase extends Controllerable & HorizontalScrollable>(Base: TBase) => class extends Base {
 	delegateMouseEvents() {
 		const ultimateRootjQ = this.root.jQ;
 		//drag-to-select event handling
 		this.container.on('mousedown.mathquill', (e) => {
 			const rootjQ = jQuery(e.target).closest('.mq-root-block');
-			const root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
+			const root = Node.byId[parseInt((rootjQ?.attr(mqBlockId) || ultimateRootjQ?.attr(mqBlockId)) ?? '0')];
+
+			if (!root.controller) {
+				throw "controller undefined... what?";
+				return;
+			}
+
 			const ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
 			const textareaSpan = ctrlr.textareaSpan, textarea = ctrlr.textarea;
 
@@ -21,23 +30,23 @@ export const MouseEventController = (base) => class extends base {
 			// End any previous selection.
 			cursor.endSelection();
 
-			let target;
-			const mousemove = (e) => target = jQuery(e.target);
-			const docmousemove = (e) => {
+			let target: JQuery | undefined;
+			const mousemove = (e: JQuery.TriggeredEvent) => target = jQuery(e.target);
+			const docmousemove = (e: JQuery.TriggeredEvent) => {
 				if (!cursor.anticursor) cursor.startSelection();
-				ctrlr.seek(target, e.pageX).cursor.select();
+				ctrlr.seek(target as JQuery, e.pageX).cursor.select();
 				target = undefined;
 			};
 			// outside rootjQ, the MathQuill node corresponding to the target (if any)
 			// won't be inside this root, so don't mislead Controller::seek with it
 
-			const mouseup = (e) => {
+			const mouseup = (e: JQuery.TriggeredEvent) => {
 				cursor.blink = blink;
 				if (!cursor.selection) {
 					if (ctrlr.editable) {
 						cursor.show();
 					} else {
-						textareaSpan.detach();
+						textareaSpan?.detach();
 					}
 				}
 
@@ -47,8 +56,8 @@ export const MouseEventController = (base) => class extends base {
 			};
 
 			if (ctrlr.blurred) {
-				if (!ctrlr.editable) rootjQ.prepend(textareaSpan);
-				textarea.focus();
+				if (!ctrlr.editable) rootjQ.prepend(textareaSpan as JQuery);
+				textarea?.focus();
 			}
 
 			cursor.blink = noop;
@@ -61,19 +70,19 @@ export const MouseEventController = (base) => class extends base {
 		});
 	}
 
-	seek(target, pageX) {
+	seek(target: JQuery, pageX?: number) {
 		const cursor = this.notify('select').cursor;
 
-		let nodeId;
+		let nodeId: number = 0;
 		if (target) {
-			nodeId = target.attr(mqBlockId) || target.attr(mqCmdId);
+			nodeId = parseInt((target.attr(mqBlockId) || target.attr(mqCmdId)) ?? '0');
 			if (!nodeId) {
 				const targetParent = target.parent();
-				nodeId = targetParent.attr(mqBlockId) || targetParent.attr(mqCmdId);
+				nodeId = parseInt((targetParent.attr(mqBlockId) || targetParent.attr(mqCmdId)) ?? '0');
 			}
 		}
 		const node = nodeId ? Node.byId[nodeId] : this.root;
-		pray('nodeId is the id of some Node that exists', node);
+		pray('nodeId is the id of some Node that exists', !!node);
 
 		// don't clear selection until after getting node from target, in case
 		// target was selection span, otherwise target will have no parent and will

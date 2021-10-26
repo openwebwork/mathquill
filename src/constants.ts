@@ -86,6 +86,8 @@ export const iterator = (generator: any) => {
 	};
 };
 
+export type Constructor<T = {}> = new (...args: any[]) => T;
+
 // sugar to make defining lots of commands easier.
 export const bindMixin = (cons: any, ...args: any[]) => class extends cons { constructor() { super(...args); } };
 
