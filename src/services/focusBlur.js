@@ -2,26 +2,25 @@
 
 export const FocusBlurEvents = (base) => class extends base {
 	focusBlurEvents() {
-		const ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
-		ctrlr.textarea.focus(() => {
-			ctrlr.blurred = false;
-			ctrlr.container.addClass('mq-focused');
-			if (!cursor.parent)
-				cursor.insAtRightEnd(root);
-			if (cursor.selection) {
-				cursor.selection.jQ.removeClass('mq-blur');
-				ctrlr.selectionChanged(); //re-select textarea contents after tabbing away and back
+		this.textarea.focus(() => {
+			this.blurred = false;
+			this.container.addClass('mq-focused');
+			if (!this.cursor.parent)
+				this.cursor.insAtRightEnd(this.root);
+			if (this.cursor.selection) {
+				this.cursor.selection.jQ.removeClass('mq-blur');
+				this.selectionChanged(); //re-select textarea contents after tabbing away and back
 			}
 			else
-				cursor.show();
+				this.cursor.show();
 		}).blur(() => {
-			ctrlr.blurred = true;
-			ctrlr.container.removeClass('mq-focused');
-			cursor.hide().parent.blur();
-			if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
+			this.blurred = true;
+			this.container.removeClass('mq-focused');
+			this.cursor.hide().parent.blur();
+			if (this.cursor.selection) this.cursor.selection.jQ.addClass('mq-blur');
 		});
-		ctrlr.blurred = true;
-		cursor.hide().parent.blur();
+		this.blurred = true;
+		this.cursor.hide().parent.blur();
 	}
 
 	unbindFocusBlurEvents() {

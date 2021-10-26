@@ -18,41 +18,35 @@ export const LatexControllerExtension = (base) => class extends base {
 	}
 
 	renderLatexMath(latex) {
-		const root = this.root;
-		const cursor = this.cursor;
-		const jQ = root.jQ;
-
 		const all = Parser.all;
 		const eof = Parser.eof;
 
 		const block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
 
-		root.eachChild('postOrder', 'dispose');
-		root.ends[L] = root.ends[R] = 0;
+		this.root.eachChild('postOrder', 'dispose');
+		this.root.ends[L] = this.root.ends[R] = 0;
 
-		if (block && block.prepareInsertionAt(cursor)) {
-			block.children().adopt(root, 0, 0);
+		if (block && block.prepareInsertionAt(this.cursor)) {
+			block.children().adopt(this.root, 0, 0);
 			const html = block.join('html');
-			jQ.html(html);
-			root.jQize(jQ.children());
-			root.finalizeInsert(cursor.options);
+			this.root.jQ.html(html);
+			this.root.jQize(this.root.jQ.children());
+			this.root.finalizeInsert(this.cursor.options);
 		}
 		else {
-			jQ.empty();
+			this.root.jQ.empty();
 		}
 
-		delete cursor.selection;
-		cursor.insAtRightEnd(root);
+		delete this.cursor.selection;
+		this.cursor.insAtRightEnd(this.root);
 	}
 
 	renderLatexText(latex) {
-		const root = this.root, cursor = this.cursor;
-
-		root.jQ.children().slice(1).remove();
-		root.eachChild('postOrder', 'dispose');
-		root.ends[L] = root.ends[R] = 0;
-		delete cursor.selection;
-		cursor.show().insAtRightEnd(root);
+		this.root.jQ.children().slice(1).remove();
+		this.root.eachChild('postOrder', 'dispose');
+		this.root.ends[L] = this.root.ends[R] = 0;
+		delete this.cursor.selection;
+		this.cursor.show().insAtRightEnd(this.root);
 
 		const regex = Parser.regex;
 		const string = Parser.string;
@@ -67,7 +61,7 @@ export const LatexControllerExtension = (base) => class extends base {
 			.skip(string('$').or(eof))
 			.map((block) => {
 				// HACK FIXME: this shouldn't have to have access to cursor
-				const rootMathCommand = new RootMathCommand(cursor);
+				const rootMathCommand = new RootMathCommand(this.cursor);
 
 				rootMathCommand.createBlocks();
 				const rootMathBlock = rootMathCommand.ends[L];
@@ -84,12 +78,12 @@ export const LatexControllerExtension = (base) => class extends base {
 
 		if (commands) {
 			for (const command of commands) {
-				command.adopt(root, root.ends[R], 0);
+				command.adopt(this.root, this.root.ends[R], 0);
 			}
 
-			root.jQize().appendTo(root.jQ);
+			this.root.jQize().appendTo(this.root.jQ);
 
-			root.finalizeInsert(cursor.options);
+			this.root.finalizeInsert(this.cursor.options);
 		}
 	}
 };

@@ -4,12 +4,12 @@ import { jQuery } from 'src/constants';
 
 export const TextAreaController = (base) => class extends base {
 	createTextarea() {
-		const textareaSpan = this.textareaSpan = jQuery('<span class="mq-textarea"></span>');
+		this.textareaSpan = jQuery('<span class="mq-textarea"></span>');
 		const textarea = this.options.substituteTextarea();
 		if (!textarea.nodeType) {
 			throw 'substituteTextarea() must return a DOM element, got ' + textarea;
 		}
-		this.textarea = jQuery(textarea).appendTo(textareaSpan);
+		this.textarea = jQuery(textarea).appendTo(this.textareaSpan);
 
 		this.cursor.selectionChanged = () => this.selectionChanged();
 	}
@@ -18,13 +18,13 @@ export const TextAreaController = (base) => class extends base {
 		// throttle calls to setTextareaSelection(), because setting textarea.value
 		// and/or calling textarea.select() can have anomalously bad performance:
 		// https://github.com/mathquill/mathquill/issues/43#issuecomment-1399080
-		if (this.textareaSelectionTimeout === undefined) {
+		if (!this.textareaSelectionTimeout) {
 			this.textareaSelectionTimeout = setTimeout(() => this.setTextareaSelection());
 		}
 	}
 
 	setTextareaSelection() {
-		this.textareaSelectionTimeout = undefined;
+		delete this.textareaSelectionTimeout;
 		let latex = '';
 		if (this.cursor.selection) {
 			latex = this.cursor.selection.join('latex');
@@ -37,53 +37,46 @@ export const TextAreaController = (base) => class extends base {
 	}
 
 	staticMathTextareaEvents() {
-		const cursor = this.cursor,
-			textarea = this.textarea, textareaSpan = this.textareaSpan;
-
 		this.container.prepend(jQuery('<span class="mq-selectable">')
 			.text(`$${this.exportLatex()}$`));
 		this.blurred = true;
 
 		const detach = () => {
-			textareaSpan.detach();
+			this.textareaSpan.detach();
 			this.blurred = true;
 		};
 
-		textarea.on('cut paste', false)
+		this.textarea.on('cut paste', false)
 			.on('copy', () => this.setTextareaSelection())
 			.focus(() => this.blurred = false).blur(() => {
-				if (cursor.selection) cursor.selection.clear();
+				if (this.cursor.selection) this.cursor.selection.clear();
 				setTimeout(detach); //detaching during blur explodes in WebKit
 			});
 
 		this.selectFn = (text) => {
-			textarea.val(text);
-			if (text) textarea.select();
+			this.textarea.val(text);
+			if (text) this.textarea.select();
 		};
 	}
 
 	editablesTextareaEvents() {
-		const textarea = this.textarea, textareaSpan = this.textareaSpan;
-
-		const keyboardEventsShim = this.options.substituteKeyboardEvents(textarea, this);
+		const keyboardEventsShim = this.options.substituteKeyboardEvents(this.textarea, this);
 		this.selectFn = (text) => keyboardEventsShim.select(text);
-		this.container.prepend(textareaSpan);
+		this.container.prepend(this.textareaSpan);
 		this.focusBlurEvents();
 	}
 
 	unbindEditablesEvents() {
-		const textarea = this.textarea, textareaSpan = this.textareaSpan;
-
 		this.selectFn = (text) => {
-			textarea.val(text);
-			if (text) textarea.select();
+			this.textarea.val(text);
+			if (text) this.textarea.select();
 		};
-		textareaSpan.remove();
+		this.textareaSpan.remove();
 
 		this.unbindFocusBlurEvents();
 
 		this.blurred = true;
-		textarea.on('cut paste', false);
+		this.textarea.on('cut paste', false);
 	}
 
 	typedText(ch) {
@@ -94,11 +87,10 @@ export const TextAreaController = (base) => class extends base {
 	}
 
 	cut() {
-		const cursor = this.cursor;
-		if (cursor.selection) {
+		if (this.cursor.selection) {
 			setTimeout(() => {
 				this.notify('edit'); // deletes selection if present
-				cursor.parent.bubble('reflow');
+				this.cursor.parent.bubble('reflow');
 			});
 		}
 	}
