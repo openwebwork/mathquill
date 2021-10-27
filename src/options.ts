@@ -56,10 +56,13 @@ export class Options {
 	// The set of commands that are automatically typeset without typing a preceding backslash.
 	static autoCommands: { [key: string]: number } = { _maxLength: 0 };
 	_autoCommands?: { [key: string]: number };
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore: The autoCommands getter returns and object, and the setter takes a string.
 	get autoCommands() { return this._autoCommands ?? Options.autoCommands; }
-	set autoCommands(cmds: string) {
+	set autoCommands(cmds: string | { [key: string]: number }) {
+		if (typeof cmds === 'object') {
+			this._autoCommands = cmds;
+			return;
+		}
+
 		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
@@ -98,10 +101,13 @@ export class Options {
 		return ops;
 	})();
 	_autoOperatorNames?: { [key: string]: number };
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore: The autoOperatorNames getter returns and object, and the setter takes a string.
 	get autoOperatorNames() { return this._autoOperatorNames ?? Options.autoOperatorNames; }
-	set autoOperatorNames(cmds: string) {
+	set autoOperatorNames(cmds: string | { [key: string]: number }) {
+		if (typeof cmds === 'object') {
+			this._autoCommands = cmds;
+			return;
+		}
+
 		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
