@@ -2,14 +2,16 @@
 
 import { jQuery } from 'src/constants';
 import type { Controllerable } from 'src/controller';
-import type { Latexable } from 'services/latex';
-import type { HorizontalScrollable } from 'services/scrollHoriz';
-import type { FocusBlurable } from 'services/focusBlur';
+import type { LatexControllerExtension } from 'services/latex';
+import type { HorizontalScroll } from 'services/scrollHoriz';
+import type { FocusBlurEvents } from 'services/focusBlur';
 import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
 
 export const TextAreaController =
-	<TBase extends Controllerable & Latexable & HorizontalScrollable & FocusBlurable>(Base: TBase) =>
-		class extends Base implements TextAreaHandlers {
+	<TBase extends Controllerable &
+	ReturnType<typeof LatexControllerExtension> &
+	ReturnType<typeof HorizontalScroll> &
+	ReturnType<typeof FocusBlurEvents>>(Base: TBase) => class extends Base implements TextAreaHandlers {
 		textareaSelectionTimeout?: ReturnType<typeof setTimeout>;
 		selectFn?: (text: string) => void;
 
@@ -128,4 +130,4 @@ export const TextAreaController =
 		}
 
 		keystroke(_ignore_key: string, _ignore_event: JQueryKeyEventObject) { /* do nothing */ };
-		};
+	};

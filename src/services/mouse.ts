@@ -3,10 +3,10 @@
 import { jQuery, mqCmdId, mqBlockId, noop, pray } from 'src/constants';
 import { Node } from 'tree/node';
 import type { Controllerable } from 'src/controller';
-import type { HorizontalScrollable } from 'services/scrollHoriz';
+import type { HorizontalScroll } from 'services/scrollHoriz';
 
 export const MouseEventController =
-	<TBase extends Controllerable & HorizontalScrollable>(Base: TBase) => class extends Base {
+	<TBase extends Controllerable & ReturnType<typeof HorizontalScroll>>(Base: TBase) => class extends Base {
 		delegateMouseEvents() {
 			const ultimateRootjQ = this.root.jQ;
 			//drag-to-select event handling
