@@ -85,7 +85,6 @@ module.exports = {
 			'@typescript-eslint/explicit-function-return-type': 'off',
 			'@typescript-eslint/explicit-module-boundary-types': 'off',
 			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_ignore_' }],
-			'@typescript-eslint/unbound-method': ['error', { ignoreStatic: true }],
 
 			// TODO: These are disabled for now during the js to ts conversion process.
 			'@typescript-eslint/no-explicit-any': 'off',

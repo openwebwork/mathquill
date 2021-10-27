@@ -18,7 +18,7 @@ export class Parser {
 
 	_: ParserBody;
 
-	static parseError(stream: string, message: string) {
+	static parseError(this: void, stream: string, message: string) {
 		if (stream) stream = `'${stream}'`;
 		else stream = 'EOF';
 

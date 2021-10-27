@@ -20,10 +20,7 @@ export const LatexControllerExtension = <TBase extends Controllerable>(Base: TBa
 	}
 
 	renderLatexMath(latex: string) {
-		const all = Parser.all;
-		const eof = Parser.eof;
-
-		const block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
+		const block = latexMathParser.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
 
 		this.root.eachChild('postOrder', 'dispose');
 		delete this.root.ends[L];
@@ -52,17 +49,12 @@ export const LatexControllerExtension = <TBase extends Controllerable>(Base: TBa
 		delete this.cursor.selection;
 		this.cursor.show().insAtRightEnd(this.root);
 
-		const regex = Parser.regex;
-		const string = Parser.string;
-		const eof = Parser.eof;
-		const all = Parser.all;
-
 		// Parser RootMathCommand
-		const mathMode = string('$').then(latexMathParser)
+		const mathMode = Parser.string('$').then(latexMathParser)
 			// because TeX is insane, math mode doesn't necessarily
 			// have to end.  So we allow for the case that math mode
 			// continues to the end of the stream.
-			.skip(string('$').or(eof))
+			.skip(Parser.string('$').or(Parser.eof))
 			.map((block: Node) => {
 				// HACK FIXME: this shouldn't have to have access to cursor
 				const rootMathCommand = new RootMathCommand(this.cursor);
@@ -75,10 +67,10 @@ export const LatexControllerExtension = <TBase extends Controllerable>(Base: TBa
 			})
 		;
 
-		const escapedDollar = string('\\$').result('$');
-		const textChar = escapedDollar.or(regex(/^[^$]/)).map(VanillaSymbol);
+		const escapedDollar = Parser.string('\\$').result('$');
+		const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);
 		const latexText = mathMode.or(textChar).many();
-		const commands = latexText.skip(eof).or(all.result(false)).parse(latex);
+		const commands = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
 
 		if (commands) {
 			for (const command of commands) {
