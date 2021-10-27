@@ -3,6 +3,7 @@
 import type { Direction } from 'src/constants';
 import type { Constructor } from 'src/constants';
 import { L, R, prayDirection } from 'src/constants';
+import type { Handler, DirectionHandler, Handlers, Options } from 'src/options';
 import { Cursor } from 'src/cursor';
 import { Node } from 'tree/node';
 import { Fragment } from 'tree/fragment';
@@ -15,10 +16,11 @@ import { TextAreaController } from 'services/textarea';
 
 export class ControllerBase {
 	id: number;
+	// FIXME: I don't think this is used at all.
 	data: { [key: string]: any } = {};
 	root: Node;
 	container: JQuery;
-	options: any;
+	options: Options;
 	cursor: Cursor;
 	apiClass?: any;
 	editable = false;
@@ -26,7 +28,7 @@ export class ControllerBase {
 	textareaSpan?: JQuery<HTMLSpanElement>;
 	textarea?: JQuery<HTMLTextAreaElement>;
 
-	constructor(root: Node, container: JQuery, options: any) {
+	constructor(root: Node, container: JQuery, options: Options) {
 		this.id = root.id;
 
 		this.root = root;
@@ -36,11 +38,11 @@ export class ControllerBase {
 		this.cursor = new Cursor(root, options);
 	}
 
-	handle(name: string, dir?: Direction) {
+	handle(name: keyof Handlers, dir?: Direction) {
 		const handlers = this.options.handlers;
 		if (handlers && handlers[name]) {
-			if (dir === L || dir === R) handlers[name](dir, this.apiClass);
-			else handlers[name](this.apiClass);
+			if (dir === L || dir === R) (handlers[name] as DirectionHandler)?.(dir, this.apiClass);
+			else (handlers[name] as Handler)?.(this.apiClass);
 		}
 	}
 
@@ -73,7 +75,7 @@ ExportText(
 		)
 	)
 ) {
-	constructor(root: Node, container: JQuery, options: any) {
+	constructor(root: Node, container: JQuery, options: Options) {
 		super(root, container, options);
 		root.controller = this;
 	}

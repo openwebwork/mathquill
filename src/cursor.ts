@@ -6,13 +6,14 @@
 
 import type { Direction } from 'src/constants';
 import { jQuery, L, R, pray, prayDirection } from 'src/constants';
+import type { Options } from 'src/options';
 import { Point } from 'tree/point';
 import type { Node } from 'tree/node';
 import type { Selection } from 'src/selection';
 import { MathBlock } from 'commands/mathBlock';
 
 export class Cursor extends Point {
-	options: any;
+	options: Options;
 	jQ: JQuery;
 	upDownCache: { [key: number]: Point } = {};
 	intervalId: ReturnType<typeof setInterval> | undefined = undefined;
@@ -23,7 +24,7 @@ export class Cursor extends Point {
 	//closured for setInterval
 	blink: () => JQuery | void = () => this.jQ.toggleClass('mq-blink');
 
-	constructor(initParent: Node, options: any) {
+	constructor(initParent: Node, options: Options) {
 		super(initParent);
 		this.options = options;
 		this.jQ = jQuery('<span class="mq-cursor">&#8203;</span>');

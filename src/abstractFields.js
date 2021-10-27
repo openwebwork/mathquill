@@ -7,6 +7,7 @@ export class AbstractMathQuill {
 		this.__controller.apiClass = this;
 		this.__options = ctrlr.options;
 		this.id = ctrlr.id;
+		// FIXME: I don't think this is used at all.
 		this.data = ctrlr.data;
 	}
 

@@ -21,8 +21,8 @@
 
 import { jQuery, noop } from 'src/constants';
 
-export interface Handlers {
-	container: HTMLElement;
+export interface TextAreaHandlers {
+	container: HTMLElement | JQuery<HTMLElement>;
 	keystroke: (key: string, event: JQueryKeyEventObject) => void;
 	typedText: (text: string) => void;
 	paste: (text: string) => void;
@@ -98,7 +98,7 @@ export const saneKeyboardEvents = (() => {
 
 	// create a keyboard events shim that calls callbacks at useful times
 	// and exports useful public methods
-	return (el: HTMLElement, handlers: Handlers) => {
+	return (el: HTMLTextAreaElement | JQuery<HTMLTextAreaElement>, handlers: TextAreaHandlers) => {
 		let keydown: JQueryKeyEventObject | null = null;
 		let keypress: JQueryKeyEventObject | null = null;
 

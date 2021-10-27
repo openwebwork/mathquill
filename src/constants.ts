@@ -126,7 +126,7 @@ export const prayWellFormed = (parent?: Node, leftward?: Node, rightward?: Node)
 
 // Registry of LaTeX commands and commands created when typing a single character.
 // (Commands are all subclasses of tree/Node.)
-export const LatexCmds = {}, CharCmds = {};
+export const LatexCmds: { [key: string]: Node } = {}, CharCmds: { [key: string]: Node } = {};
 
 export const OPP_BRACKS = {
 	'(': ')',

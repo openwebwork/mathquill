@@ -3,6 +3,7 @@
 import type JQuery from 'jquery';
 import type { Direction } from 'src/constants';
 import { jQuery, L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
+import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
 import { Selection } from 'src/selection';
@@ -28,7 +29,7 @@ export class Node {
 	ends: Ends = {};
 	[L]?: Node;
 	[R]?: Node;
-	siblingDeleted?: (opts?: any, dir?: Direction) => void;
+	siblingDeleted?: (opts?: Options, dir?: Direction) => void;
 	controller?: Controller;
 
 	upInto?: Node;
@@ -278,7 +279,7 @@ export class Node {
 	blur(cursor?: Cursor) {}
 	seek(left: number | undefined, cursor: Cursor) {}
 	writeLatex(cursor: Cursor, latex: string) {}
-	finalizeInsert(options: any, cursor?: Cursor) {}
+	finalizeInsert(options: Options, cursor?: Cursor) {}
 	write(cursor: Cursor, ch: string): Node | undefined { return this; }
 
 	// called by Controller::escapeDir, moveDir

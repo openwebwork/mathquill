@@ -5,10 +5,11 @@ import type { Controllerable } from 'src/controller';
 import type { Latexable } from 'services/latex';
 import type { HorizontalScrollable } from 'services/scrollHoriz';
 import type { FocusBlurable } from 'services/focusBlur';
+import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
 
 export const TextAreaController =
 	<TBase extends Controllerable & Latexable & HorizontalScrollable & FocusBlurable>(Base: TBase) =>
-	class extends Base {
+	class extends Base implements TextAreaHandlers {
 	textareaSelectionTimeout?: ReturnType<typeof setTimeout>;
 	selectFn?: (text: string) => void;
 
@@ -18,7 +19,7 @@ export const TextAreaController =
 		if (!textarea.nodeType) {
 			throw 'substituteTextarea() must return a DOM element, got ' + textarea;
 		}
-		this.textarea = jQuery(textarea).appendTo(this.textareaSpan);
+		this.textarea = jQuery(textarea).appendTo(this.textareaSpan) as JQuery<HTMLTextAreaElement>;
 
 		this.cursor.selectionChanged = () => this.selectionChanged();
 	}
@@ -69,7 +70,8 @@ export const TextAreaController =
 	}
 
 	editablesTextareaEvents() {
-		const keyboardEventsShim = this.options.substituteKeyboardEvents(this.textarea, this);
+		const keyboardEventsShim =
+			this.options.substituteKeyboardEvents(this.textarea as JQuery<HTMLTextAreaElement>, this);
 		this.selectFn = (text) => keyboardEventsShim.select(text);
 		this.container.prepend(this.textareaSpan as JQuery);
 		this.focusBlurEvents();
@@ -124,4 +126,6 @@ export const TextAreaController =
 		// FIXME: this always inserts math or a TextBlock, even in a RootTextBlock
 		this.writeLatex(text).cursor.show();
 	}
+
+	keystroke(key: string, event: JQueryKeyEventObject) {}
 };

@@ -25,7 +25,7 @@ export const MouseEventController =
 			e.preventDefault();
 
 			if (cursor.options.ignoreNextMousedown(e)) return;
-			else cursor.options.ignoreNextMousedown = noop;
+			else cursor.options.ignoreNextMousedown = () => false;
 
 			// End any previous selection.
 			cursor.endSelection();
