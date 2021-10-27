@@ -38,6 +38,7 @@ export class Node {
 	downOutOf?: ((cursor: Cursor) => void) | Node | boolean;
 
 	bubble = iterator((yield_: (node: Node) => Node | boolean) => {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		for (let ancestor: Node | undefined = this; ancestor; ancestor = ancestor.parent) {
 			if (yield_(ancestor) === false) break;
 		}
@@ -275,25 +276,25 @@ export class Node {
 	html() { return ''; }
 	text() { return ''; }
 	latex() { return ''; }
-	focus() {}
-	blur(cursor?: Cursor) {}
-	seek(left: number | undefined, cursor: Cursor) {}
-	writeLatex(cursor: Cursor, latex: string) {}
-	finalizeInsert(options: Options, cursor?: Cursor) {}
-	write(cursor: Cursor, ch: string): Node | undefined { return this; }
+	focus() { /* do nothing */ }
+	blur(_ignore_cursor?: Cursor) { /* do nothing */ }
+	seek(_ignore_left: number | undefined, _ignore_cursor: Cursor) { /* do nothing */ }
+	writeLatex(_ignore_cursor: Cursor, _ignore_latex: string) { /* do nothing */ }
+	finalizeInsert(_ignore_options: Options, _ignore_cursor?: Cursor) { /* do nothing */ }
+	write(_ignore_cursor: Cursor, _ignore_ch: string): Node | undefined { return this; }
 
 	// called by Controller::escapeDir, moveDir
-	moveOutOf(dir: Direction, cursor: Cursor, updown?: string) { prayOverridden(); }
+	moveOutOf(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: string) { prayOverridden(); }
 	// called by Controller::moveDir
-	moveTowards(dir: Direction, cursor: Cursor, updown?: string) { prayOverridden(); }
+	moveTowards(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: string) { prayOverridden(); }
 	// called by Controller::deleteDir
-	deleteOutOf(dir: Direction, cursor: Cursor) { prayOverridden(); }
+	deleteOutOf(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 	// called by Controller::deleteDir
-	deleteTowards(dir: Direction, cursor: Cursor) { prayOverridden(); }
+	deleteTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
-	unselectInto(dir: Direction, cursor: Cursor) { prayOverridden(); }
+	unselectInto(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
-	selectOutOf(dir: Direction, cursor: Cursor) { prayOverridden(); }
+	selectOutOf(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
-	selectTowards(dir: Direction, cursor: Cursor) { prayOverridden(); }
+	selectTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 }

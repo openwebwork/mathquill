@@ -29,7 +29,8 @@ export class Parser {
 		this._ = body;
 	}
 
-	parse(stream?: string | number | boolean | Object) {
+	parse(stream?: string | number | boolean | object) {
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		return this.skip(Parser.eof)._(`${stream}`, (stream, result) => result, Parser.parseError);
 	}
 
@@ -147,7 +148,7 @@ export class Parser {
 	static regex(re: RegExp) {
 		pray('regexp parser is anchored', re.toString().charAt(1) === '^');
 
-		const expected = `expected ${re}`;
+		const expected = `expected ${re.toString()}`;
 
 		return new Parser((stream, onSuccess, onFailure) => {
 			const match = re.exec(stream);

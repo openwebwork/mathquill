@@ -2,7 +2,7 @@
 
 import type JQuery from 'jquery';
 import type { Direction } from 'src/constants';
-import { jQuery, L, R, iterator, pray, prayDirection, prayWellFormed } from 'src/constants';
+import { jQuery, L, R, iterator, pray, prayWellFormed } from 'src/constants';
 import type { Ends } from 'tree/node';
 import { Node } from 'tree/node';
 

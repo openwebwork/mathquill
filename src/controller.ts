@@ -56,25 +56,25 @@ export class ControllerBase {
 	}
 
 	// The textarea mixin overrides this.
-	selectionChanged() {};
+	selectionChanged() { /* do nothing */ };
 }
 
 export type Controllerable = Constructor<ControllerBase>;
 
 export class Controller extends
-ExportText(
-	TextAreaController(
-		LatexControllerExtension(
-			FocusBlurEvents(
-				MouseEventController(
-					HorizontalScroll(
-						ControllerBase
+	ExportText(
+		TextAreaController(
+			LatexControllerExtension(
+				FocusBlurEvents(
+					MouseEventController(
+						HorizontalScroll(
+							ControllerBase
+						)
 					)
 				)
 			)
 		)
-	)
-) {
+	) {
 	constructor(root: Node, container: JQuery, options: Options) {
 		super(root, container, options);
 		root.controller = this;

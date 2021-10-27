@@ -56,6 +56,7 @@ export class Options {
 	// The set of commands that are automatically typeset without typing a preceding backslash.
 	static autoCommands: { [key: string]: number } = { _maxLength: 0 };
 	_autoCommands?: { [key: string]: number };
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore: The autoCommands getter returns and object, and the setter takes a string.
 	get autoCommands() { return this._autoCommands ?? Options.autoCommands; }
 	set autoCommands(cmds: string) {
@@ -97,6 +98,7 @@ export class Options {
 		return ops;
 	})();
 	_autoOperatorNames?: { [key: string]: number };
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore: The autoOperatorNames getter returns and object, and the setter takes a string.
 	get autoOperatorNames() { return this._autoOperatorNames ?? Options.autoOperatorNames; }
 	set autoOperatorNames(cmds: string) {
@@ -136,11 +138,11 @@ export class Options {
 	static leftRightIntoCmdGoes = undefined;
 	_leftRightIntoCmdGoes?: 'up' | 'down';
 	get leftRightIntoCmdGoes() { return this._leftRightIntoCmdGoes ?? Options.leftRightIntoCmdGoes; }
-	set leftRightIntoCmdGoes(updown: 'up' | 'down' | undefined) {
+	set leftRightIntoCmdGoes(updown: 'up' | 'down' | string | undefined) {
 		if (updown && updown !== 'up' && updown !== 'down') {
 			throw `"up" or "down" required for leftRightIntoCmdGoes option, got "${updown}"`;
 		}
-		this._leftRightIntoCmdGoes = updown;
+		this._leftRightIntoCmdGoes = updown as 'up' | 'down' | undefined;
 	}
 
 	// If true then you can type '[a,b)' and '(a,b]', but if you type '[x}' or '{x)', you'll get '[{x}]' or '{(x)}'
@@ -192,5 +194,5 @@ export class Options {
 		return saneKeyboardEvents(el, handlers);
 	}
 
-	ignoreNextMousedown(e?: JQuery.TriggeredEvent) { return false; }
+	ignoreNextMousedown: (e?: JQuery.TriggeredEvent) => boolean = () =>  { return false; }
 }

@@ -23,7 +23,7 @@ import { jQuery, noop } from 'src/constants';
 
 export interface TextAreaHandlers {
 	container: HTMLElement | JQuery<HTMLElement>;
-	keystroke: (key: string, event: JQueryKeyEventObject) => void;
+	keystroke?: (key: string, event: JQueryKeyEventObject) => void;
 	typedText: (text: string) => void;
 	paste: (text: string) => void;
 	cut: () => void;
@@ -79,7 +79,6 @@ export const saneKeyboardEvents = (() => {
 	const stringify = (evt: JQueryKeyEventObject) => {
 		const which = evt.which || evt.keyCode;
 		const keyVal = KEY_VALUES[which];
-		let key;
 		const modifiers = [];
 
 		if (evt.ctrlKey) modifiers.push('Ctrl');
@@ -88,7 +87,7 @@ export const saneKeyboardEvents = (() => {
 		if (evt.altKey) modifiers.push('Alt');
 		if (evt.shiftKey) modifiers.push('Shift');
 
-		key = keyVal || String.fromCharCode(which);
+		const key = keyVal || String.fromCharCode(which);
 
 		if (!modifiers.length && !keyVal) return key;
 
@@ -141,7 +140,7 @@ export const saneKeyboardEvents = (() => {
 			clearTimeout(timeoutId);
 
 			textarea.val(text);
-			if (text && (textarea[0] as HTMLTextAreaElement).select) (textarea[0] as HTMLTextAreaElement).select();
+			if (text && textarea[0].select) textarea[0].select();
 			shouldBeSelected = !!text;
 		};
 
@@ -153,14 +152,14 @@ export const saneKeyboardEvents = (() => {
 		// This will always return false in IE < 9, which don't support
 		// HTMLTextareaElement::selection{Start,End}.
 		const hasSelection = () => {
-			const dom = textarea[0] as HTMLTextAreaElement;
+			const dom = textarea[0] ;
 
 			if (!('selectionStart' in dom)) return false;
 			return dom.selectionStart !== dom.selectionEnd;
 		};
 
 		const handleKey =
-			() => handlers.keystroke(stringify(keydown as JQueryKeyEventObject), keydown as JQueryKeyEventObject);
+			() => handlers.keystroke?.(stringify(keydown as JQueryKeyEventObject), keydown as JQueryKeyEventObject);
 
 		// -*- event handlers -*- //
 		const onKeydown = (e: JQueryKeyEventObject) => {
@@ -170,10 +169,10 @@ export const saneKeyboardEvents = (() => {
 			keypress = null;
 
 			if (shouldBeSelected) checkTextareaOnce((e) => {
-				if (!(e && e.type === 'focusout') && (textarea[0] as HTMLTextAreaElement).select) {
+				if (!(e && e.type === 'focusout') && textarea[0].select) {
 					// re-select textarea in case it's an unrecognized key that clears
 					// the selection, then never again, 'cos next thing might be blur
-					(textarea[0] as HTMLTextAreaElement).select();
+					textarea[0].select();
 				}
 			});
 
@@ -227,8 +226,8 @@ export const saneKeyboardEvents = (() => {
 				handlers.typedText(text);
 			} // in Firefox, keys that don't type text, just clear seln, fire keypress
 			// https://github.com/mathquill/mathquill/issues/293#issuecomment-40997668
-			else if (text && (textarea[0] as HTMLTextAreaElement).select)
-				(textarea[0] as HTMLTextAreaElement).select(); // re-select if that's why we're here
+			else if (text && textarea[0].select)
+				textarea[0].select(); // re-select if that's why we're here
 		};
 
 		const onBlur = () => { keydown = keypress = null; };

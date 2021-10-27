@@ -52,7 +52,7 @@ jQuery.fn.extend({
 	}
 });
 
-export function noop() {}
+export function noop() { /* do nothing */ }
 
 // A utility higher-order function that creates "implicit iterators"
 // from "generators": given a function that takes in a sole argument,
@@ -86,7 +86,7 @@ export const iterator = (generator: any) => {
 	};
 };
 
-export type Constructor<T = {}> = new (...args: any[]) => T;
+export type Constructor<T = object> = new (...args: any[]) => T;
 
 // sugar to make defining lots of commands easier.
 export const bindMixin = (cons: any, ...args: any[]) => class extends cons { constructor() { super(...args); } };
@@ -99,7 +99,7 @@ export const bindMixin = (cons: any, ...args: any[]) => class extends cons { con
 // at compile time.  Do not define another function
 // with the same name, and only call this function by
 // name.
-export const pray = (message: string, cond: boolean = false) => {
+export const pray = (message: string, cond = false) => {
 	if (!cond) throw new Error(`prayer failed: ${message}`);
 };
 

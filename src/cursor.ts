@@ -188,6 +188,7 @@ export class Cursor extends Point {
 
 		// Find the lowest common ancestor (`lca`), and the ancestor of the cursor
 		// whose parent is the LCA (which'll be an end of the selection fragment).
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		let ancestor: Point | Node = this, lca: Node | null = null;
 		for (; ancestor.parent; ancestor = ancestor.parent) {
 			if (ancestor.parent.id in this.anticursor.ancestors) {

@@ -80,7 +80,7 @@ module.exports = (env, argv) => {
 					'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
 				}),
 				new MiniCssExtractPlugin(),
-				new ESLintPlugin(),
+				new ESLintPlugin({ extensions: ['js', 'ts'] }),
 				new StyleLintPlugin({
 					extensions: ['html', 'css', 'scss', 'sass', 'less'],
 					files: ['**/*.{html,css,scss,sass,less}']
