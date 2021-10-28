@@ -287,7 +287,7 @@ export class Cursor extends Point {
 		return depth;
 	}
 
-	isTooDeep(offset: number) {
+	isTooDeep(offset?: number) {
 		if (this.options.maxDepth !== undefined) {
 			return this.depth() + (offset || 0) > this.options.maxDepth;
 		}

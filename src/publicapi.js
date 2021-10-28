@@ -28,13 +28,14 @@ export default class MathQuill {
 		//   const mathfield = MQ.MathField(mathFieldSpan);
 		//   assert(MQ(mathFieldSpan).id === mathfield.id);
 		//   assert(MQ(mathFieldSpan).id === MQ(mathFieldSpan).id);
-		function MQ(el) {
+		const MQ = (el) => {
 			if (!(el instanceof HTMLElement)) return;
 			const blockId = jQuery(el).children('.mq-root-block').attr(mqBlockId);
 			const ctrlr = blockId && Node.byId[blockId].controller;
 			return ctrlr?.apiClass;
 		};
 
+		// Why are these set?
 		MQ.L = L;
 		MQ.R = R;
 		MQ.saneKeyboardEvents = saneKeyboardEvents;
@@ -56,12 +57,12 @@ export default class MathQuill {
 		// different kind (or it's not an HTML element), return null.
 		for (const [kind, APIClass] of Object.entries({ StaticMath, MathField, InnerMathField, TextField })) {
 			APIClasses[kind] = APIClass;
-			MQ[kind] = function(el, opts) {
+			MQ[kind] = (el, opts) => {
 				const mq = MQ(el);
 				if (mq instanceof APIClasses[kind] || !(el instanceof HTMLElement)) return mq;
 				const ctrlr = new Controller(new APIClasses[kind].RootBlock, jQuery(el), new Options);
 				ctrlr.KIND_OF_MQ = kind;
-				return new APIClasses[kind](ctrlr).__mathquillify(opts);
+				return new APIClasses[kind](ctrlr).config(opts).__mathquillify();
 			};
 			MQ[kind].prototype = APIClasses[kind].prototype;
 		}

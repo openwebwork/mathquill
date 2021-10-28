@@ -16,6 +16,10 @@ export interface Ends {
 
 const prayOverridden = () => pray('overridden or never called on this node');
 
+export interface NodeConstructor {
+	new (...args: any[]): Node;
+}
+
 // MathQuill virtual-DOM tree-node abstract base class
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
 export class Node {
@@ -36,6 +40,8 @@ export class Node {
 	downInto?: Node;
 	upOutOf?: ((cursor: Cursor) => void) | Node | boolean;
 	downOutOf?: ((cursor: Cursor) => void) | Node | boolean;
+
+	reflow?: () => void;
 
 	bubble = iterator((yield_: (node: Node) => Node | boolean) => {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -86,7 +92,7 @@ export class Node {
 		return jQlocal;
 	}
 
-	createDir(dir: Direction, cursor: Node) {
+	createDir(dir: Direction, cursor: Cursor) {
 		prayDirection(dir);
 		this.jQize();
 		this.jQ.insDirOf(dir, cursor.jQ);
@@ -94,7 +100,7 @@ export class Node {
 		return this;
 	}
 
-	createLeftOf(el: Node) { return this.createDir(L, el); }
+	createLeftOf(el: Cursor) { return this.createDir(L, el); }
 
 	selectChildren(leftEnd?: Node, rightEnd?: Node) {
 		return new Selection(leftEnd, rightEnd);
@@ -282,6 +288,8 @@ export class Node {
 	writeLatex(_ignore_cursor: Cursor, _ignore_latex: string) { /* do nothing */ }
 	finalizeInsert(_ignore_options: Options, _ignore_cursor?: Cursor) { /* do nothing */ }
 	write(_ignore_cursor: Cursor, _ignore_ch: string): Node | undefined { return this; }
+	replaces(_ignore_fragment?: string | Fragment) { /* do nothing */ }
+	setOptions(_ignore_options: { text?: () => string, htmlTemplate?: string, latex?: () => string }) { return this; }
 
 	// called by Controller::escapeDir, moveDir
 	moveOutOf(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: string) { prayOverridden(); }

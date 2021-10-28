@@ -13,7 +13,7 @@
 
 import type JQueryStatic from 'jquery';
 import type JQuery from 'jquery';
-import type { Node } from 'tree/node';
+import type { NodeConstructor, Node } from 'tree/node';
 
 declare global {
 	interface JQuery {
@@ -126,7 +126,7 @@ export const prayWellFormed = (parent?: Node, leftward?: Node, rightward?: Node)
 
 // Registry of LaTeX commands and commands created when typing a single character.
 // (Commands are all subclasses of tree/Node.)
-export const LatexCmds: { [key: string]: Node } = {}, CharCmds: { [key: string]: Node } = {};
+export const LatexCmds: { [key: string]: NodeConstructor } = {}, CharCmds: { [key: string]: NodeConstructor } = {};
 
 export const OPP_BRACKS = {
 	'(': ')',

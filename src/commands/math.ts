@@ -1,19 +1,20 @@
 import { noop } from 'src/constants';
+import type { Controller } from 'src/controller';
 import { AbstractMathQuill, EditableField } from 'src/abstractFields';
 import { RootMathBlock, MathBlock } from 'commands/mathBlock';
 
 export class StaticMath extends AbstractMathQuill {
 	static RootBlock = MathBlock;
 
-	constructor(...args) {
-		super(...args);
+	innerFields: Array<AbstractMathQuill>;
 
-		this.__controller.root.postOrder(
-			'registerInnerField', this.innerFields = [], InnerMathField);
+	constructor(ctrlr: Controller) {
+		super(ctrlr);
+
+		this.__controller.root.postOrder('registerInnerField', this.innerFields = [], InnerMathField);
 	}
 
-	__mathquillify(opts) {
-		this.config(opts);
+	__mathquillify() {
 		super.__mathquillify('mq-math-mode');
 		if (this.__options.mouseEvents) {
 			this.__controller.delegateMouseEvents();
@@ -22,11 +23,10 @@ export class StaticMath extends AbstractMathQuill {
 		return this;
 	}
 
-	latex(...args) {
-		const returned = super.latex(...args);
-		if (args.length > 0) {
-			this.__controller.root.postOrder(
-				'registerInnerField', this.innerFields = [], InnerMathField);
+	latex(latex?: string) {
+		const returned = super.latex(latex);
+		if (typeof latex !== 'undefined') {
+			this.__controller.root.postOrder('registerInnerField', this.innerFields = [], InnerMathField);
 		}
 		return returned;
 	}
@@ -35,9 +35,7 @@ export class StaticMath extends AbstractMathQuill {
 export class MathField extends EditableField {
 	static RootBlock = RootMathBlock;
 
-	__mathquillify(opts) {
-		this.config(opts);
-
+	__mathquillify() {
 		// Disable reflow during initialization.
 		const reflowSave = this.__controller.root.reflow;
 		this.__controller.root.reflow = noop;
@@ -57,7 +55,7 @@ export class InnerMathField extends MathField {
 		this.__controller.root.blur();
 		this.__controller.unbindEditablesEvents();
 		this.__controller.container.removeClass('mq-editable-field');
-	};
+	}
 
 	makeEditable() {
 		this.__controller.editable = true;

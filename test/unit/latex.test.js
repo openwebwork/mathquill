@@ -197,7 +197,7 @@ suite('latex', () => {
 			});
 
 			test('coerces to a string', () => {
-				assertParsesLatex(undefined, 'undefined');
+				assertParsesLatex(undefined, '');
 				assertParsesLatex(null, 'null');
 				assertParsesLatex(0, '0');
 				assertParsesLatex(Infinity, 'Infinity');
