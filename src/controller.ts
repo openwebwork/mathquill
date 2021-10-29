@@ -103,7 +103,7 @@ export class Controller extends
 
 	moveDir(dir: Direction) {
 		prayDirection(dir);
-		const cursor = this.cursor, updown = cursor.options.leftRightIntoCmdGoes;
+		const cursor = this.cursor, updown = cursor.options.leftRightIntoCmdGoes as 'up' | 'down' | undefined;
 
 		if (cursor.selection) {
 			cursor.insDirOf(dir, cursor.selection.ends[dir] as Node);

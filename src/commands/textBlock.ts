@@ -1,24 +1,23 @@
 // The block for abstract classes of text blocks
 
+import type { Controller } from 'src/controller';
+import type { Cursor } from 'src/cursor';
 import { RootMathBlock } from 'commands/mathBlock';
 import { VanillaSymbol } from 'commands/mathElements';
 import { RootMathCommand } from 'commands/textElements';
 
 export class RootTextBlock extends RootMathBlock {
-	keystroke(key, ...args) {
+	keystroke(key: string, e: Event, ctrlr: Controller) {
 		if (key === 'Spacebar' || key === 'Shift-Spacebar') return;
-		return super.keystroke(key, ...args);
+		return super.keystroke(key, e, ctrlr);
 	}
 
-	write(cursor, ch) {
+	write(cursor: Cursor, ch: string) {
 		cursor.show().deleteSelection();
 		if (ch === '$')
 			new RootMathCommand(cursor).createLeftOf(cursor);
 		else {
-			let html;
-			if (ch === '<') html = '&lt;';
-			else if (ch === '>') html = '&gt;';
-			new VanillaSymbol(ch, html).createLeftOf(cursor);
+			new VanillaSymbol(ch, ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : undefined).createLeftOf(cursor);
 		}
 	}
 }

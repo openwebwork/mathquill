@@ -60,7 +60,7 @@ export const LatexControllerExtension = <TBase extends Controllerable>(Base: TBa
 				const rootMathCommand = new RootMathCommand(this.cursor);
 
 				rootMathCommand.createBlocks();
-				const rootMathBlock = rootMathCommand.ends[L];
+				const rootMathBlock = rootMathCommand.ends[L] as Node;
 				block.children().adopt(rootMathBlock);
 
 				return rootMathCommand;

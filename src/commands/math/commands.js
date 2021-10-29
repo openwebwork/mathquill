@@ -224,6 +224,7 @@ LatexCmds.fraction = class extends MathCommand {
 	}
 };
 
+// Mixin on MathCommandable
 const FractionChooseCreateLeftOfMixin = (base) => class extends (base) {
 	createLeftOf(cursor) {
 		if (!this.replacedFragment) {
@@ -440,8 +441,8 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 		RootBlockMixin(ctrlr.root);
 	}
 
-	registerInnerField(innerFields, MathField) {
-		innerFields.push(innerFields[this.name] = new MathField(this.ends[L].controller));
+	registerInnerField(innerFields, mathField) {
+		innerFields.push(innerFields[this.name] = new mathField(this.ends[L].controller));
 	}
 
 	latex() { return this.ends[L].latex(); }

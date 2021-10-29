@@ -52,7 +52,7 @@ jQuery.fn.extend({
 	}
 });
 
-export function noop() { /* do nothing */ }
+export const noop = () => { /* do nothing */ };
 
 // A utility higher-order function that creates "implicit iterators"
 // from "generators": given a function that takes in a sole argument,
@@ -86,10 +86,11 @@ export const iterator = (generator: any) => {
 	};
 };
 
-export type Constructor<T = object> = new (...args: any[]) => T;
+export type Constructor<T = object> = new (...args: Array<any>) => T;
 
 // sugar to make defining lots of commands easier.
-export const bindMixin = (cons: any, ...args: any[]) => class extends cons { constructor() { super(...args); } };
+export const bindMixin = (cons: any, ...args: Array<string>) =>
+	class extends cons { constructor() { super(...args); } };
 
 // a development-only debug method.  This definition and all
 // calls to `pray` will be stripped from the minified
@@ -128,7 +129,7 @@ export const prayWellFormed = (parent?: Node, leftward?: Node, rightward?: Node)
 // (Commands are all subclasses of tree/Node.)
 export const LatexCmds: { [key: string]: NodeConstructor } = {}, CharCmds: { [key: string]: NodeConstructor } = {};
 
-export const OPP_BRACKS = {
+export const OPP_BRACKS: { readonly [key: string]: string } = {
 	'(': ')',
 	')': '(',
 	'[': ']',

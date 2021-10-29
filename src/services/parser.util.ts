@@ -17,6 +17,8 @@ export class Parser {
 	// parser combinator methods.
 
 	_: ParserBody;
+	block?: Parser;
+	optBlock?: Parser;
 
 	static parseError(this: void, stream: string, message: string) {
 		if (stream) stream = `'${stream}'`;

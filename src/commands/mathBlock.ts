@@ -1,14 +1,19 @@
+import type { Direction } from 'src/constants';
 import { L, R, LatexCmds, CharCmds } from 'src/constants';
+import { RootBlockMixin, writeMethodMixin } from 'src/mixins';
+import type { Options } from 'src/options';
+import type { Controller } from 'src/controller';
+import type { Cursor } from 'src/cursor';
+import type { Node } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { BlockFocusBlur } from 'services/focusBlur';
-import { RootBlockMixin, writeMethodMixin } from 'src/mixins';
 import { VanillaSymbol, MathElement, Letter, Digit, latexMathParser } from 'commands/mathElements';
 
 // Children and parent of MathCommand's. Basically partitions all the
 // symbols and operators that descend (in the Math DOM tree) from
 // ancestor operators.
 export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
-	join(methodName) {
+	join(methodName: keyof Pick<Node, 'text' | 'latex' | 'html'>) {
 		return this.foldChildren('', (fold, child) => fold + child[methodName]());
 	}
 
@@ -17,50 +22,54 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	latex() { return this.join('latex'); }
 
 	text() {
-		return (this.ends[L] && this.ends[L] === this.ends[R]) ?
-			this.ends[L].text() :
-			this.join('text')
+		return this.ends[L] && this.ends[L] === this.ends[R]
+			? this.ends[L]?.text() ?? ''
+			: this.join('text')
 		;
 	}
 
-	keystroke(key, e, ctrlr, ...args) {
+	keystroke(key: string, e: Event, ctrlr: Controller) {
 		if (ctrlr.options.spaceBehavesLikeTab &&
 			(key === 'Spacebar' || key === 'Shift-Spacebar')) {
 			e.preventDefault();
 			ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
 			return;
 		}
-		return super.keystroke(key, e, ctrlr, ...args);
+		return super.keystroke(key, e, ctrlr);
 	}
 
 	// editability methods: called by the cursor for editing, cursor movements,
 	// and selection of the MathQuill tree, these all take in a direction and
 	// the cursor
-	moveOutOf(dir, cursor, updown) {
-		const updownInto = updown && this.parent[`${updown}Into`];
-		if (!updownInto && this[dir]) cursor.insAtDirEnd(-dir, this[dir]);
-		else cursor.insDirOf(dir, this.parent);
+	moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
+		const updownInto = updown && this.parent?.[`${updown}Into`];
+		if (!updownInto && this[dir]) cursor.insAtDirEnd(dir === L ? R : L, this[dir] as Node);
+		else cursor.insDirOf(dir, this.parent as Node);
 	}
 
-	selectOutOf(dir, cursor) {
-		cursor.insDirOf(dir, this.parent);
+	selectOutOf(dir: Direction, cursor: Cursor) {
+		cursor.insDirOf(dir, this.parent as Node);
 	}
 
-	deleteOutOf(dir, cursor) {
+	deleteOutOf(dir: Direction, cursor: Cursor) {
 		cursor.unwrapGramp();
 	}
 
-	seek(pageX, cursor) {
+	seek(pageX: number, cursor: Cursor) {
 		let node = this.ends[R];
-		if (!node || node.jQ.offset().left + node.jQ.outerWidth() < pageX) {
-			return cursor.insAtRightEnd(this);
+		if (!node || ((node?.jQ.offset()?.left ?? 0) + (node?.jQ.outerWidth() ?? 0) < pageX)) {
+			cursor.insAtRightEnd(this);
+			return;
 		}
-		if (pageX < this.ends[L].jQ.offset().left) return cursor.insAtLeftEnd(this);
-		while (pageX < node.jQ.offset().left) node = node[L];
-		return node.seek(pageX, cursor);
+		if (pageX < (this.ends[L]?.jQ.offset()?.left ?? 0)) {
+			cursor.insAtLeftEnd(this);
+			return;
+		}
+		while (pageX < (node?.jQ.offset()?.left ?? 0)) node = node?.[L];
+		node?.seek(pageX, cursor);
 	}
 
-	chToCmd(ch, options) {
+	chToCmd(ch: string, options: Options): Node {
 		const cons = CharCmds[ch] || LatexCmds[ch];
 		// exclude f because it gets a dedicated command with more spacing
 		if (ch.match(/^[a-eg-zA-Z]$/))
@@ -77,7 +86,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 			return new VanillaSymbol(ch);
 	}
 
-	writeLatex(cursor, latex) {
+	writeLatex(cursor: Cursor, latex: string) {
 		const all = Parser.all;
 		const eof = Parser.eof;
 
@@ -89,9 +98,9 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 			jQ.insertBefore(cursor.jQ);
 			cursor[L] = block.ends[R];
 			block.finalizeInsert(cursor.options, cursor);
-			if (block.ends[R]?.[R]?.siblingCreated) block.ends[R][R].siblingCreated(cursor.options, L);
-			if (block.ends[L]?.[L]?.siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
-			cursor.parent.bubble('reflow');
+			block.ends[R]?.[R]?.siblingCreated?.(cursor.options, L);
+			block.ends[L]?.[L]?.siblingCreated?.(cursor.options, R);
+			cursor.parent?.bubble('reflow');
 		}
 	}
 
@@ -107,9 +116,8 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 }
 
 export class RootMathBlock extends MathBlock {
-	constructor(...args) {
-		super(...args);
-
+	constructor() {
+		super();
 		RootBlockMixin(this);
 	}
 }

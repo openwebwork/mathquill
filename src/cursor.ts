@@ -105,7 +105,7 @@ export class Cursor extends Point {
 		if (cached) {
 			cached[R] ? this.insLeftOf(cached[R] as Node) : this.insAtRightEnd(cached.parent as Node);
 		} else {
-			to.seek(this.offset()?.left, this);
+			to.seek(this.offset()?.left ?? 0, this);
 		}
 	}
 

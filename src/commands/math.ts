@@ -6,7 +6,7 @@ import { RootMathBlock, MathBlock } from 'commands/mathBlock';
 export class StaticMath extends AbstractMathQuill {
 	static RootBlock = MathBlock;
 
-	innerFields: Array<AbstractMathQuill>;
+	innerFields: Array<InnerMathField>;
 
 	constructor(ctrlr: Controller) {
 		super(ctrlr);

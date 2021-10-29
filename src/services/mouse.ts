@@ -34,7 +34,7 @@ export const MouseEventController =
 				const mousemove = (e: JQuery.TriggeredEvent) => target = jQuery(e.target);
 				const docmousemove = (e: JQuery.TriggeredEvent) => {
 					if (!cursor.anticursor) cursor.startSelection();
-					ctrlr.seek(target as JQuery, e.pageX).cursor.select();
+					ctrlr.seek(target as JQuery, e.pageX ?? 0).cursor.select();
 					target = undefined;
 				};
 				// outside rootjQ, the MathQuill node corresponding to the target (if any)
@@ -61,7 +61,7 @@ export const MouseEventController =
 				}
 
 				cursor.blink = noop;
-				ctrlr.seek(jQuery(e.target), e.pageX).cursor.startSelection();
+				ctrlr.seek(jQuery(e.target), e.pageX ?? 0).cursor.startSelection();
 
 				rootjQ.mousemove(mousemove);
 				jQuery(e.target.ownerDocument).mousemove(docmousemove).mouseup(mouseup);
@@ -70,7 +70,7 @@ export const MouseEventController =
 			});
 		}
 
-		seek(target: JQuery, pageX?: number) {
+		seek(target: JQuery, pageX: number) {
 			const cursor = this.notify('select').cursor;
 
 			let nodeId = 0;

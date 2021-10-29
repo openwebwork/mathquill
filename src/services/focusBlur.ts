@@ -1,6 +1,7 @@
 // Focus and Blur events
 
 import type { Controllerable } from 'src/controller';
+import type { Nodeable } from 'tree/node';
 
 export const FocusBlurEvents = <TBase extends Controllerable>(Base: TBase) => class extends Base {
 	focusBlurEvents() {
@@ -30,9 +31,7 @@ export const FocusBlurEvents = <TBase extends Controllerable>(Base: TBase) => cl
 	}
 };
 
-export type FocusBlurable = ReturnType<typeof FocusBlurEvents>;
-
-export const BlockFocusBlur = (Base: any) => class extends Base {
+export const BlockFocusBlur = <TBase extends Nodeable>(Base: TBase) => class extends Base {
 	focus() {
 		this.jQ.addClass('mq-hasCursor');
 		this.jQ.removeClass('mq-empty');

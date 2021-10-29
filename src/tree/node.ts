@@ -1,7 +1,7 @@
 // Node base class of edit tree-related objects
 
 import type JQuery from 'jquery';
-import type { Direction } from 'src/constants';
+import type { Constructor, Direction } from 'src/constants';
 import { jQuery, L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
@@ -17,7 +17,7 @@ export interface Ends {
 const prayOverridden = () => pray('overridden or never called on this node');
 
 export interface NodeConstructor {
-	new (...args: any[]): Node;
+	new (...args: Array<any>): Node;
 }
 
 // MathQuill virtual-DOM tree-node abstract base class
@@ -33,13 +33,20 @@ export class Node {
 	ends: Ends = {};
 	[L]?: Node;
 	[R]?: Node;
-	siblingDeleted?: (opts?: Options, dir?: Direction) => void;
 	controller?: Controller;
+
+	ctrlSeq = '';
+	siblingDeleted?: (opts: Options, dir?: Direction) => void;
+	siblingCreated?: (opts: Options, dir?: Direction) => void;
+	sub?: Node;
+	sup?: Node;
+	isSymbol?: boolean;
+	isSupSubLeft?: boolean;
 
 	upInto?: Node;
 	downInto?: Node;
-	upOutOf?: ((cursor: Cursor) => void) | Node | boolean;
-	downOutOf?: ((cursor: Cursor) => void) | Node | boolean;
+	upOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | Node | boolean;
+	downOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | Node | boolean;
 
 	reflow?: () => void;
 
@@ -70,7 +77,7 @@ export class Node {
 
 	toString() { return `{{ MathQuill Node #${this.id} }}`; }
 
-	jQadd(jQ: JQuery | HTMLElement) { return this.jQ = this.jQ.add(jQ); }
+	jQadd(jQ: JQuery | HTMLElement) { this.jQ = this.jQ.add(jQ); }
 
 	jQize(jQ?: JQuery) {
 		// jQuery-ifies this.html() and links up the .jQ of all corresponding Nodes
@@ -100,7 +107,7 @@ export class Node {
 		return this;
 	}
 
-	createLeftOf(el: Cursor) { return this.createDir(L, el); }
+	createLeftOf(el: Cursor) { this.createDir(L, el); }
 
 	selectChildren(leftEnd?: Node, rightEnd?: Node) {
 		return new Selection(leftEnd, rightEnd);
@@ -284,25 +291,28 @@ export class Node {
 	latex() { return ''; }
 	focus() { /* do nothing */ }
 	blur(_ignore_cursor?: Cursor) { /* do nothing */ }
-	seek(_ignore_left: number | undefined, _ignore_cursor: Cursor) { /* do nothing */ }
+	seek(_ignore_left: number, _ignore_cursor: Cursor) { /* do nothing */ }
 	writeLatex(_ignore_cursor: Cursor, _ignore_latex: string) { /* do nothing */ }
 	finalizeInsert(_ignore_options: Options, _ignore_cursor?: Cursor) { /* do nothing */ }
-	write(_ignore_cursor: Cursor, _ignore_ch: string): Node | undefined { return this; }
+	write(_ignore_cursor: Cursor, _ignore_ch: string) { /* do nothing */ }
 	replaces(_ignore_fragment?: string | Fragment) { /* do nothing */ }
 	setOptions(_ignore_options: { text?: () => string, htmlTemplate?: string, latex?: () => string }) { return this; }
+	chToCmd(_ignore_ch: string, _ignore_options: Options): Node { return this; }
 
 	// called by Controller::escapeDir, moveDir
-	moveOutOf(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: string) { prayOverridden(); }
+	moveOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor, _ignore_updown?: 'up' | 'down') { prayOverridden(); }
 	// called by Controller::moveDir
-	moveTowards(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: string) { prayOverridden(); }
+	moveTowards(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: 'up' | 'down') { prayOverridden(); }
 	// called by Controller::deleteDir
-	deleteOutOf(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
+	deleteOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) { prayOverridden(); }
 	// called by Controller::deleteDir
 	deleteTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
 	unselectInto(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
-	selectOutOf(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
+	selectOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) { prayOverridden(); }
 	// called by Controller::selectDir
 	selectTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 }
+
+export type Nodeable = Constructor<Node>;

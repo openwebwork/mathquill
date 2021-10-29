@@ -11,6 +11,8 @@ export type DirectionHandler = (dir: Direction, mq: any) => void;
 export interface Handlers {
 	enter?: Handler;
 	edit?: Handler;
+	edited?: Handler;
+	reflow?: Handler;
 	textBlockEnter?: Handler;
 	textBlockExit?: Handler;
 	moveOutOf?: DirectionHandler;
@@ -34,10 +36,14 @@ export interface InputOptions {
 	rootsAreExponents?: boolean;
 	maxDepth?: number;
 	autoSubscriptNumerals?: boolean;
+	typingSlashWritesDivisionSymbol?: boolean;
+	typingAsteriskWritesTimesSymbol?: boolean;
 	substituteTextarea?: () => HTMLTextAreaElement;
 	substituteKeyboardEvents?: typeof saneKeyboardEvents;
 	handlers?: Handlers;
 }
+
+type NamesWLength = { [key: string]: number, _maxLength: number };
 
 export class Options {
 	static config(currentOptions: Options, newOptions: InputOptions) {
@@ -54,10 +60,10 @@ export class Options {
 	set mouseEvents(mouseEvents) { this._mouseEvents = mouseEvents; }
 
 	// The set of commands that are automatically typeset without typing a preceding backslash.
-	static autoCommands: { [key: string]: number } = { _maxLength: 0 };
-	_autoCommands?: { [key: string]: number };
-	get autoCommands() { return this._autoCommands ?? Options.autoCommands; }
-	set autoCommands(cmds: string | { [key: string]: number }) {
+	static autoCommands: NamesWLength = { _maxLength: 0 };
+	_autoCommands?: NamesWLength;
+	get autoCommands(): NamesWLength { return this._autoCommands ?? Options.autoCommands; }
+	set autoCommands(cmds: string | NamesWLength) {
 		if (typeof cmds === 'object') {
 			this._autoCommands = cmds;
 			return;
@@ -66,7 +72,7 @@ export class Options {
 		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
-		const list = cmds.split(' '), dict: { [key: string]: number } = { _maxLength: 0 };
+		const list = cmds.split(' '), dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
 			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
@@ -77,8 +83,8 @@ export class Options {
 	}
 
 	// The set of operator names that MathQuill auto-unitalicizes.
-	static autoOperatorNames: { [key: string]: number } = (() => {
-		const ops: { [key: string]: number } = {};
+	static autoOperatorNames: NamesWLength = (() => {
+		const ops: NamesWLength = { _maxLength: 9 };
 
 		// Standard operators
 		for (const op of [
@@ -96,13 +102,11 @@ export class Options {
 		// before #247. None of these are real LaTeX commands so, seems safe
 		for (const op of ['gcf', 'hcf', 'lcm', 'proj', 'span']) { ops[op] = 1; }
 
-		ops._maxLength = 9;
-
 		return ops;
 	})();
-	_autoOperatorNames?: { [key: string]: number };
-	get autoOperatorNames() { return this._autoOperatorNames ?? Options.autoOperatorNames; }
-	set autoOperatorNames(cmds: string | { [key: string]: number }) {
+	_autoOperatorNames?: NamesWLength;
+	get autoOperatorNames(): NamesWLength { return this._autoOperatorNames ?? Options.autoOperatorNames; }
+	set autoOperatorNames(cmds: string | NamesWLength) {
 		if (typeof cmds === 'object') {
 			this._autoCommands = cmds;
 			return;
@@ -111,7 +115,7 @@ export class Options {
 		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
-		const list = cmds.split(' '), dict: { [key: string]: number } = { _maxLength: 0 };
+		const list = cmds.split(' '), dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
 			dict[cmd] = 1;
@@ -141,7 +145,7 @@ export class Options {
 	set spaceBehavesLikeTab(spaceBehavesLikeTab) { this._spaceBehavesLikeTab = spaceBehavesLikeTab; }
 
 	// Set to 'up' or 'down' so that left and right go up or down (respectively) into commands.
-	static leftRightIntoCmdGoes = undefined;
+	static leftRightIntoCmdGoes: 'up' | 'down' | undefined = undefined;
 	_leftRightIntoCmdGoes?: 'up' | 'down';
 	get leftRightIntoCmdGoes() { return this._leftRightIntoCmdGoes ?? Options.leftRightIntoCmdGoes; }
 	set leftRightIntoCmdGoes(updown: 'up' | 'down' | string | undefined) {
@@ -189,6 +193,26 @@ export class Options {
 	_autoSubscriptNumerals?: boolean;
 	get autoSubscriptNumerals() { return this._autoSubscriptNumerals ?? Options.autoSubscriptNumerals; }
 	set autoSubscriptNumerals(autoSubscriptNumerals) { this._autoSubscriptNumerals = autoSubscriptNumerals; }
+
+	// If true then typing a slash gives the division symbol instead of a live fraction.
+	static typingSlashWritesDivisionSymbol = false;
+	_typingSlashWritesDivisionSymbol?: boolean;
+	get typingSlashWritesDivisionSymbol() {
+		return this._typingSlashWritesDivisionSymbol ?? Options.typingSlashWritesDivisionSymbol;
+	}
+	set typingSlashWritesDivisionSymbol(typingSlashWritesDivisionSymbol) {
+		this._typingSlashWritesDivisionSymbol = typingSlashWritesDivisionSymbol;
+	}
+
+	// If true then typing an asterisk gives the times symbol.
+	static typingAsteriskWritesTimesSymbol = false;
+	_typingAsteriskWritesTimesSymbol?: boolean;
+	get typingAsteriskWritesTimesSymbol() {
+		return this._typingAsteriskWritesTimesSymbol ?? Options.typingAsteriskWritesTimesSymbol;
+	}
+	set typingAsteriskWritesTimesSymbol(typingAsteriskWritesTimesSymbol) {
+		this._typingAsteriskWritesTimesSymbol = typingAsteriskWritesTimesSymbol;
+	}
 
 	handlers?: Handlers;
 
