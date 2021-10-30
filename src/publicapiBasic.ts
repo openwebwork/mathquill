@@ -14,6 +14,12 @@ import { StaticMath, MathField, InnerMathField } from 'commands/math';
 import 'commands/math/commands';
 import 'commands/math/basicSymbols';
 
+declare global {
+	interface Window {
+		MathQuill?: MathQuill;
+	}
+}
+
 interface MQApi {
 	(el: unknown): AbstractMathQuill | void;
 	saneKeyboardEvents: typeof saneKeyboardEvents;
@@ -22,13 +28,12 @@ interface MQApi {
 	StaticMath: (el: unknown, opts: InputOptions) => AbstractMathQuill | void;
 	MathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | void;
 	InnerMathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | void;
-	TextField: (el: unknown, opts: InputOptions) => AbstractMathQuill | void;
 }
 
 // globally exported API object
 export default class MathQuill {
-	static origMathQuill: MathQuill = window.MathQuill;
-	static VERSION: string = VERSION;
+	static origMathQuill?: MathQuill = window.MathQuill;
+	static VERSION?: string;
 
 	static getInterface() {
 		const APIClasses: { [key: string]: AbstractMathQuillConstructor } = {};

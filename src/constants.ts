@@ -24,10 +24,7 @@ declare global {
 
 	interface Window {
 		jQuery: JQueryStatic;
-		MathQuill?: any;
 	}
-
-	const VERSION: string;
 }
 
 export const enum Direction {

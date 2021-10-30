@@ -17,8 +17,6 @@ import { TextAreaController } from 'services/textarea';
 
 export class ControllerBase {
 	id: number;
-	// FIXME: I don't think this is used at all.
-	data: { [key: string]: any } = {};
 	root: Node;
 	container: JQuery;
 	options: Options;
@@ -43,8 +41,8 @@ export class ControllerBase {
 	handle(name: keyof Handlers, dir?: Direction) {
 		const handlers = this.options.handlers;
 		if (handlers && handlers[name]) {
-			if (dir === L || dir === R) (handlers[name] as DirectionHandler)?.(dir, this.apiClass);
-			else (handlers[name] as Handler)?.(this.apiClass);
+			if (dir === L || dir === R) (handlers[name] as DirectionHandler)?.(dir, this.apiClass as AbstractMathQuill);
+			else (handlers[name] as Handler)?.(this.apiClass as AbstractMathQuill);
 		}
 	}
 

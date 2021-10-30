@@ -17,6 +17,12 @@ import 'commands/math/LatexCommandInput';
 import 'commands/math/basicSymbols';
 import 'commands/math/advancedSymbols';
 
+declare global {
+	interface Window {
+		MathQuill?: MathQuill;
+	}
+}
+
 interface MQApi {
 	(el: unknown): AbstractMathQuill | void;
 	saneKeyboardEvents: typeof saneKeyboardEvents;
@@ -30,8 +36,8 @@ interface MQApi {
 
 // globally exported API object
 export default class MathQuill {
-	static origMathQuill: MathQuill = window.MathQuill;
-	static VERSION: string = VERSION;
+	static origMathQuill?: MathQuill = window.MathQuill;
+	static VERSION?: string;
 
 	static getInterface() {
 		const APIClasses: { [key: string]: AbstractMathQuillConstructor } = {};

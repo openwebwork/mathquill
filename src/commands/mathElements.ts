@@ -609,9 +609,8 @@ export class SupSub extends MathCommand {
 	sub?: Node;
 	supsub = 'sup';
 
-	constructor(...args: Array<any>) {
-		super(...args);
-		this.ctrlSeq = '_{...}^{...}';
+	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: Array<string>) {
+		super('_{...}^{...}', htmlTemplate, textTemplate);
 
 		this.reflow = () => {
 			const $block = this.jQ ;//mq-supsub

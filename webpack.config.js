@@ -13,7 +13,9 @@ module.exports = (env, argv) => {
 	const config = (entry, basic) => {
 		return {
 			mode: argv.mode,
-			entry,
+			entry: {
+				[entry]: 'src/index.ts'
+			},
 			output: {
 				path: path.resolve(__dirname, 'dist'),
 				filename: '[name].js'
@@ -27,23 +29,31 @@ module.exports = (env, argv) => {
 					css: path.resolve(__dirname, 'src/css'),
 					fonts: path.resolve(__dirname, 'src/fonts')
 				},
-				extensions: ["", ".webpack.js", ".ts", ".tsx", ".js"]
+				extensions: ["", ".webpack.js", ".ts", ".js"]
 			},
 			module: {
 				rules: [
 					{
-						// typescript
-						test: /\.tsx?$/,
-						loader: 'ts-loader'
-					},
-					{
 						// js
-						test: /\.m?js$/,
+						test: /\.js$/,
 						exclude: (file) => {
 							// Don't transpile node_modules
 							return /node_modules/.test(file)
 						},
 						use: ['babel-loader']
+					},
+					{
+						// typescript
+						test: /\.ts$/,
+						loader: 'ts-loader'
+					},
+					{
+						test: /\.ts$/,
+						loader: 'string-replace-loader',
+						options: {
+							search: '__PUBLIC_API__',
+							replace: basic ? 'src/publicapiBasic' : 'src/publicapi'
+						}
 					},
 					{
 						test: /\.css$/,
@@ -94,8 +104,8 @@ module.exports = (env, argv) => {
 		}
 	};
 
-	const fullConfig = config({ mathquill: './src/index.ts' }, false);
-	const basicConfig = config({ 'mathquill-basic': './src/indexBasic.ts' }, true);
+	const fullConfig = config('mathquill', false);
+	const basicConfig = config('mathquill-basic', true);
 
 	const builds = [fullConfig];
 

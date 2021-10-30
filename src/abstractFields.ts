@@ -14,7 +14,6 @@ export class AbstractMathQuill {
 	__controller: Controller;
 	__options: Options;
 	id: number;
-	data: { [key: string]: any };
 	revert?: () => void;
 	static RootBlock?: NodeConstructor;
 
@@ -23,8 +22,6 @@ export class AbstractMathQuill {
 		this.__controller.apiClass = this;
 		this.__options = ctrlr.options;
 		this.id = ctrlr.id;
-		// FIXME: I don't think this is used at all.
-		this.data = ctrlr.data;
 	}
 
 	__mathquillify(classNames?: string) {

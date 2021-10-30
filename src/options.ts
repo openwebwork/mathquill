@@ -2,11 +2,12 @@
 
 import type { Direction } from 'src/constants';
 import { jQuery, BuiltInOpNames } from 'src/constants';
+import type { AbstractMathQuill } from 'src/abstractFields';
 import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 
-export type Handler = (mq: any) => void;
-export type DirectionHandler = (dir: Direction, mq: any) => void;
+export type Handler = (mq: AbstractMathQuill) => void;
+export type DirectionHandler = (dir: Direction, mq: AbstractMathQuill) => void;
 
 export interface Handlers {
 	enter?: Handler;
