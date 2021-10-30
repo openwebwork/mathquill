@@ -94,8 +94,8 @@ module.exports = (env, argv) => {
 		}
 	};
 
-	const fullConfig = config({ mathquill: './src/index.js' }, false);
-	const basicConfig = config({ 'mathquill-basic': './src/indexBasic.js' }, true);
+	const fullConfig = config({ mathquill: './src/index.ts' }, false);
+	const basicConfig = config({ 'mathquill-basic': './src/indexBasic.ts' }, true);
 
 	const builds = [fullConfig];
 

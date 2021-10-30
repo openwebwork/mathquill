@@ -3,6 +3,12 @@ import { jQuery, L, R, noop, mqBlockId, LatexCmds } from 'src/constants';
 import type { InputOptions } from 'src/options';
 import { Options } from 'src/options';
 import type { Controller } from 'src/controller';
+import type { NodeConstructor } from 'tree/node';
+
+export interface AbstractMathQuillConstructor {
+	new (...args: Array<any>): AbstractMathQuill;
+	RootBlock: NodeConstructor;
+}
 
 export class AbstractMathQuill {
 	__controller: Controller;
@@ -10,6 +16,7 @@ export class AbstractMathQuill {
 	id: number;
 	data: { [key: string]: any };
 	revert?: () => void;
+	static RootBlock?: NodeConstructor;
 
 	constructor(ctrlr: Controller) {
 		this.__controller = ctrlr;
@@ -20,11 +27,11 @@ export class AbstractMathQuill {
 		this.data = ctrlr.data;
 	}
 
-	__mathquillify(classNames: string) {
+	__mathquillify(classNames?: string) {
 		const root = this.__controller.root, el = this.__controller.container;
 		this.__controller.createTextarea();
 
-		const contents = el.addClass(classNames).contents().detach();
+		const contents = el.addClass(classNames ?? '').contents().detach();
 		root.jQ =
 			jQuery('<span class="mq-root-block"/>').attr(mqBlockId, root.id).appendTo(el);
 		this.latex(contents.text());

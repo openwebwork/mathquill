@@ -5,6 +5,7 @@ import type { Constructor } from 'src/constants';
 import { L, R, prayDirection } from 'src/constants';
 import type { Handler, DirectionHandler, Handlers, Options } from 'src/options';
 import { Cursor } from 'src/cursor';
+import type { AbstractMathQuill } from 'src/abstractFields';
 import { Node } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { HorizontalScroll } from 'services/scrollHoriz';
@@ -22,7 +23,7 @@ export class ControllerBase {
 	container: JQuery;
 	options: Options;
 	cursor: Cursor;
-	apiClass?: any;
+	apiClass?: AbstractMathQuill;
 	KIND_OF_MQ = '';
 	editable = false;
 	blurred?: boolean;
