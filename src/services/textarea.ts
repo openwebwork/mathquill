@@ -60,7 +60,8 @@ export const TextAreaController =
 
 			this.textarea?.on('cut paste', false)
 				.on('copy', () => this.setTextareaSelection())
-				.focus(() => this.blurred = false).blur(() => {
+				.focus(() => this.blurred = false)
+				.blur(() => {
 					if (this.cursor.selection) this.cursor.selection.clear();
 					setTimeout(detach); //detaching during blur explodes in WebKit
 				});

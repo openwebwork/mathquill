@@ -312,9 +312,9 @@ suite('latex', () => {
 				'\\MathQuillMathField[mantissa]{}\\cdot\\MathQuillMathField[base]{}^{\\MathQuillMathField[exp]{}}');
 			assert.equal(outer.innerFields.length, 3);
 
-			const mantissa = outer.innerFields.mantissa;
-			const base = outer.innerFields.base;
-			const exp = outer.innerFields.exp;
+			const mantissa = outer.innerFields.get('mantissa');
+			const base = outer.innerFields.get('base');
+			const exp = outer.innerFields.get('exp');
 
 			assert.equal(mantissa, outer.innerFields[0]);
 			assert.equal(base, outer.innerFields[1]);
@@ -331,27 +331,27 @@ suite('latex', () => {
 			assert.equal(outer.innerFields.length, 2);
 			// assert.equal(outer.innerFields.m.__controller.container, false);
 
-			outer.innerFields.m.makeStatic();
-			assert.equal(outer.innerFields.m.__controller.editable, false);
-			assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), false);
-			assert.equal(outer.innerFields.b.__controller.editable, true);
+			outer.innerFields.get('m').makeStatic();
+			assert.equal(outer.innerFields.get('m').__controller.editable, false);
+			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), false);
+			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			//ensure no errors in making static field static
-			outer.innerFields.m.makeStatic();
-			assert.equal(outer.innerFields.m.__controller.editable, false);
-			assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), false);
-			assert.equal(outer.innerFields.b.__controller.editable, true);
+			outer.innerFields.get('m').makeStatic();
+			assert.equal(outer.innerFields.get('m').__controller.editable, false);
+			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), false);
+			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
-			outer.innerFields.m.makeEditable();
-			assert.equal(outer.innerFields.m.__controller.editable, true);
-			assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), true);
-			assert.equal(outer.innerFields.b.__controller.editable, true);
+			outer.innerFields.get('m').makeEditable();
+			assert.equal(outer.innerFields.get('m').__controller.editable, true);
+			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), true);
+			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			//ensure no errors with making editable field editable
-			outer.innerFields.m.makeEditable();
-			assert.equal(outer.innerFields.m.__controller.editable, true);
-			assert.equal(outer.innerFields.m.__controller.container.hasClass('mq-editable-field'), true);
-			assert.equal(outer.innerFields.b.__controller.editable, true);
+			outer.innerFields.get('m').makeEditable();
+			assert.equal(outer.innerFields.get('m').__controller.editable, true);
+			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), true);
+			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 		});
 
 		test('separate API object', () => {

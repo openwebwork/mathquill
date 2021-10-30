@@ -1,6 +1,6 @@
 import { pray } from 'src/constants';
 
-type SuccessOrFailure = (stream: string, result: any) => any
+type SuccessOrFailure = (stream: string, result?: any) => any
 
 type ParserBody = (
 	stream: string,
@@ -165,11 +165,11 @@ export class Parser {
 		});
 	}
 
-	static succeed(result: any) {
+	static succeed(result?: any) {
 		return new Parser((stream, onSuccess) => onSuccess?.(stream, result));
 	}
 
-	static fail(msg: string) {
+	static fail(msg?: string) {
 		return new Parser((stream, _, onFailure) => onFailure?.(stream, msg));
 	}
 

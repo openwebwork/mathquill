@@ -14,6 +14,7 @@
 import type JQueryStatic from 'jquery';
 import type JQuery from 'jquery';
 import type { NodeConstructor, Node } from 'tree/node';
+import type { MathCommandable } from 'commands/mathElements';
 
 declare global {
 	interface JQuery {
@@ -89,8 +90,9 @@ export const iterator = (generator: any) => {
 export type Constructor<T = object> = new (...args: Array<any>) => T;
 
 // sugar to make defining lots of commands easier.
-export const bindMixin = (cons: any, ...args: Array<string>) =>
-	class extends cons { constructor() { super(...args); } };
+export const bindMixin = <TBase extends MathCommandable>(
+	Base: TBase, ...args: Array<string | boolean | number | object>
+) => class extends Base { constructor(..._ignore_args: Array<any>) { super(...args); } };
 
 // a development-only debug method.  This definition and all
 // calls to `pray` will be stripped from the minified
@@ -147,7 +149,8 @@ export const OPP_BRACKS: { readonly [key: string]: string } = {
 	'\\rVert ' : '\\lVert ',
 };
 
-export const EMBEDS = {};
+export type EmbedOptions = { text?: () => string, htmlString?: string, latex?: () => string };
+export const EMBEDS: { [key: string]: (data: string) => EmbedOptions } = {};
 
 // The set of operator names like \sin, \cos, etc that are built-into LaTeX,
 // see Section 3.17 of the Short Math Guide: http://tinyurl.com/jm9okjc

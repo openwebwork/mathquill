@@ -1,17 +1,25 @@
 // Commands and Operators.
 
-import { noop, L, R, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS } from 'src/constants';
-import { Parser } from 'services/parser.util';
+import type { Direction } from 'src/constants';
+import { L, R, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
+import type { Options } from 'src/options';
 import { Controller } from 'src/controller';
+import { Cursor } from 'src/cursor';
+import { Parser } from 'services/parser.util';
 import { RootBlockMixin, scale, DelimsMixin } from 'src/mixins';
+import type { Node } from 'tree/node';
 import { Fragment } from 'tree/fragment';
+import type { InnerMathFieldStore } from 'commands/math';
+import { InnerMathField } from 'commands/math';
+import type { MathBlock } from 'commands/mathBlock';
+import type { MathCommandable, MathElement } from 'commands/mathElements';
 import {
 	BinaryOperator, Equality, MathCommand, Symbol, Letter, insLeftOfMeUnlessAtEnd, SupSub, UpperLowerLimitCommand,
 	Bracket, latexMathParser
 } from 'commands/mathElements';
 
 class Style extends MathCommand {
-	constructor(ctrlSeq, tagName, attrs) {
+	constructor(ctrlSeq: string, tagName: string, attrs: string) {
 		super(ctrlSeq, `<${tagName} ${attrs}>&0</${tagName}>`);
 	}
 }
@@ -50,25 +58,22 @@ LatexCmds.dot = class extends MathCommand {
 // [Mozilla docs]: https://developer.mozilla.org/en-US/docs/CSS/color_value#Values
 // [W3C spec]: http://dev.w3.org/csswg/css3-color/#colorunits
 LatexCmds.textcolor = class extends MathCommand {
-	setColor(color) {
+	color?: string;
+
+	setColor(color: string) {
 		this.color = color;
-		this.htmlTemplate =
-			`<span class="mq-textcolor" style="color:${color}">&0</span>`;
+		this.htmlTemplate = `<span class="mq-textcolor" style="color:${color}">&0</span>`;
 	}
 
 	latex() {
-		return `\\textcolor{${this.color}}{${this.blocks[0].latex()}}`;
+		return `\\textcolor{${this.color ?? ''}}{${this.blocks[0].latex()}}`;
 	}
 
 	parser() {
-		const optWhitespace = Parser.optWhitespace;
-		const string = Parser.string;
-		const regex = Parser.regex;
-
-		return optWhitespace
-			.then(string('{'))
-			.then(regex(/^[#\w\s.,()%-]*/))
-			.skip(string('}'))
+		return Parser.optWhitespace
+			.then(Parser.string('{'))
+			.then(Parser.regex(/^[#\w\s.,()%-]*/))
+			.skip(Parser.string('}'))
 			.then((color) => {
 				this.setColor(color);
 				return super.parser();
@@ -86,13 +91,14 @@ LatexCmds.textcolor = class extends MathCommand {
 // Note regex that whitelists valid CSS classname characters:
 // https://github.com/mathquill/mathquill/pull/191#discussion_r4327442
 LatexCmds['class'] = class extends MathCommand {
+	cls?: string;
+
 	parser() {
-		const string = Parser.string, regex = Parser.regex;
 		return Parser.optWhitespace
-			.then(string('{'))
-			.then(regex(/^[-\w\s\\\xA0-\xFF]*/))
-			.skip(string('}'))
-			.then((cls) => {
+			.then(Parser.string('{'))
+			.then(Parser.regex(/^[-\w\s\\\xA0-\xFF]*/))
+			.skip(Parser.string('}'))
+			.then((cls: string) => {
 				this.cls = cls || '';
 				this.htmlTemplate = `<span class="mq-class ${cls}">&0</span>`;
 				return super.parser();
@@ -101,7 +107,7 @@ LatexCmds['class'] = class extends MathCommand {
 	}
 
 	latex() {
-		return `\\class{${this.cls}}{${this.blocks[0].latex()}}`;
+		return `\\class{${this.cls ?? ''}}{${this.blocks[0].latex()}}`;
 	}
 
 	isStyleBlock() {
@@ -110,55 +116,55 @@ LatexCmds['class'] = class extends MathCommand {
 };
 
 LatexCmds.subscript = LatexCmds._ = class extends SupSub {
-	constructor(...args) {
-		super(...args);
+	constructor() {
+		super();
 		this.supsub = 'sub';
 		this.htmlTemplate =
 			'<span class="mq-supsub mq-non-leaf">'
 			+   '<span class="mq-sub">&0</span>'
 			+   '<span style="display:inline-block;width:0">&#8203;</span>'
 			+ '</span>';
-		this.textTemplate = [ '_' ];
+		this.textTemplate = ['_'];
 	}
 
 	finalizeTree() {
 		this.downInto = this.sub = this.ends[L];
-		this.sub.upOutOf = insLeftOfMeUnlessAtEnd;
+		(this.sub as Node).upOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
 };
 
 LatexCmds.superscript = LatexCmds.supscript = LatexCmds['^'] = class extends SupSub {
-	constructor(...args) {
-		super(...args);
+	constructor() {
+		super();
 		this.supsub = 'sup';
 		this.htmlTemplate =
 			'<span class="mq-supsub mq-non-leaf mq-sup-only">'
-			+   '<span class="mq-sup">&0</span>'
+			+ '<span class="mq-sup">&0</span>'
 			+ '</span>';
 		this.textTemplate = ['^(', ')'];
 	}
 
 	finalizeTree() {
 		this.upInto = this.sup = this.ends[R];
-		this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
+		(this.sup as Node).downOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
 };
 
 class SummationNotation extends UpperLowerLimitCommand {
-	constructor(ch, html) {
+	constructor(ch: string, html: string) {
 		super(ch,
 			'<span class="mq-large-operator mq-non-leaf">'
 			+   '<span class="mq-to"><span>&1</span></span>'
-			+   '<big>' + html + '</big>'
+			+   `<big>${html}</big>`
 			+   '<span class="mq-from"><span>&0</span></span>'
 			+ '</span>',
-			[ch && ch.length > 1 ? ch.slice(1) : ch]);
+			[ch.length > 1 ? ch.slice(1) : ch]);
 	}
 
-	createLeftOf(cursor, ...args) {
-		super.createLeftOf(cursor, ...args);
+	createLeftOf(cursor: Cursor) {
+		super.createLeftOf(cursor);
 		if (cursor.options.sumStartsWithNEquals) {
 			new Letter('n').createLeftOf(cursor);
 			new Equality().createLeftOf(cursor);
@@ -166,16 +172,9 @@ class SummationNotation extends UpperLowerLimitCommand {
 	}
 }
 
-LatexCmds['\u2211'] =
-	LatexCmds.sum =
-	LatexCmds.summation = bindMixin(SummationNotation, '\\sum ', '&sum;');
-
-LatexCmds['\u220f'] =
-	LatexCmds.prod =
-	LatexCmds.product = bindMixin(SummationNotation, '\\prod ', '&prod;');
-
-LatexCmds.coprod =
-	LatexCmds.coproduct = bindMixin(SummationNotation, '\\coprod ', '&#8720;');
+LatexCmds['\u2211'] = LatexCmds.sum = LatexCmds.summation = bindMixin(SummationNotation, '\\sum ', '&sum;');
+LatexCmds['\u220f'] = LatexCmds.prod = LatexCmds.product = bindMixin(SummationNotation, '\\prod ', '&prod;');
+LatexCmds.coprod = LatexCmds.coproduct = bindMixin(SummationNotation, '\\coprod ', '&#8720;');
 
 LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = class extends UpperLowerLimitCommand {
 	constructor() {
@@ -191,13 +190,9 @@ LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = class extends Uppe
 	}
 };
 
-const Fraction =
-LatexCmds.frac =
-LatexCmds.dfrac =
-LatexCmds.cfrac =
-LatexCmds.fraction = class extends MathCommand {
-	constructor(...args) {
-		super(...args);
+const Fraction = LatexCmds.frac = LatexCmds.dfrac = LatexCmds.cfrac = LatexCmds.fraction = class extends MathCommand {
+	constructor() {
+		super();
 
 		this.ctrlSeq = '\\frac';
 		this.htmlTemplate =
@@ -210,29 +205,28 @@ LatexCmds.fraction = class extends MathCommand {
 	}
 
 	text() {
-		const text = (dir, block) => {
+		const text = (dir: Direction) => {
 			const blankDefault = dir === L ? 0 : 1;
-			const l = (block.ends[dir] && block.ends[dir].text() !== ' ') && block.ends[dir].text();
+			const l = this.ends[dir]?.text() !== ' ' && this.ends[dir]?.text();
 			return l ? (l.length === 1 ? l : `(${l})`) : blankDefault;
 		};
-		return `(${text(L, this)}/${text(R, this)})`;
+		return `(${text(L)}/${text(R)})`;
 	}
 
 	finalizeTree() {
-		this.upInto = this.ends[R].upOutOf = this.ends[L];
-		this.downInto = this.ends[L].downOutOf = this.ends[R];
+		this.upInto = (this.ends[R] as Node).upOutOf = this.ends[L];
+		this.downInto = (this.ends[L] as Node).downOutOf = this.ends[R];
 	}
 };
 
-// Mixin on MathCommandable
-const FractionChooseCreateLeftOfMixin = (base) => class extends (base) {
-	createLeftOf(cursor) {
+const FractionChooseCreateLeftOfMixin = <TBase extends MathCommandable>(Base: TBase) => class extends (Base) {
+	createLeftOf(cursor: Cursor) {
 		if (!this.replacedFragment) {
-			let leftward = cursor[L];
+			let leftward: Node | undefined = cursor[L];
 			while (leftward &&
 				!(
 					leftward instanceof BinaryOperator ||
-					leftward instanceof (LatexCmds.text || noop) ||
+					('text' in LatexCmds && leftward instanceof LatexCmds.text) ||
 					leftward instanceof UpperLowerLimitCommand ||
 					leftward.ctrlSeq === '\\ ' ||
 					/^[,;:]$/.test(leftward.ctrlSeq)
@@ -241,12 +235,12 @@ const FractionChooseCreateLeftOfMixin = (base) => class extends (base) {
 
 			if (leftward instanceof UpperLowerLimitCommand && leftward[R] instanceof SupSub) {
 				leftward = leftward[R];
-				if (leftward[R] instanceof SupSub && leftward[R].ctrlSeq != leftward.ctrlSeq)
+				if (leftward && leftward[R] instanceof SupSub && leftward[R]?.ctrlSeq != leftward.ctrlSeq)
 					leftward = leftward[R];
 			}
 
 			if (leftward !== cursor[L] && !cursor.isTooDeep(1)) {
-				this.replaces(new Fragment(leftward?.[R] || cursor.parent.ends[L], cursor[L]));
+				this.replaces(new Fragment(leftward?.[R] || cursor.parent?.ends[L], cursor[L]));
 				cursor[L] = leftward;
 			}
 		}
@@ -258,8 +252,8 @@ const FractionChooseCreateLeftOfMixin = (base) => class extends (base) {
 LatexCmds.over = CharCmds['/'] = class extends FractionChooseCreateLeftOfMixin(Fraction) {};
 
 const SquareRoot = LatexCmds.sqrt = LatexCmds['\u221a'] = class extends MathCommand {
-	constructor(...args) {
-		super(...args);
+	constructor() {
+		super();
 		this.ctrlSeq = '\\sqrt';
 		this.htmlTemplate =
 			'<span class="mq-non-leaf">'
@@ -267,29 +261,30 @@ const SquareRoot = LatexCmds.sqrt = LatexCmds['\u221a'] = class extends MathComm
 			+   '<span class="mq-non-leaf mq-sqrt-stem">&0</span>'
 			+ '</span>';
 		this.textTemplate = ['sqrt(', ')'];
+
+		this.reflow = () => {
+			const block = this.ends[R]?.jQ;
+			if (block)
+				scale(block.prev(), 1, (block.innerHeight() ?? 0) / +block.css('fontSize').slice(0, -2) - .1);
+		};
 	}
 
 	parser() {
-		return latexMathParser.optBlock.then((optBlock) => {
-			return latexMathParser.block.map((block) => {
+		return (latexMathParser.optBlock as Parser).then((optBlock: MathBlock) => {
+			return (latexMathParser.block as Parser).map((block: MathBlock) => {
 				const nthroot = new NthRoot();
-				nthroot.blocks = [ optBlock, block ];
+				nthroot.blocks = [optBlock, block];
 				optBlock.adopt(nthroot);
 				block.adopt(nthroot, optBlock);
 				return nthroot;
 			});
 		}).or(super.parser());
 	}
-
-	reflow() {
-		const block = this.ends[R].jQ;
-		scale(block.prev(), 1, block.innerHeight() / +block.css('fontSize').slice(0, -2) - .1);
-	}
 };
 
 LatexCmds.hat = class extends MathCommand {
-	constructor(...args) {
-		super(...args);
+	constructor() {
+		super();
 		this.ctrlSeq = '\\hat';
 		this.htmlTemplate =
 			'<span class="mq-non-leaf">'
@@ -301,8 +296,8 @@ LatexCmds.hat = class extends MathCommand {
 };
 
 const NthRoot = LatexCmds.root = LatexCmds.nthroot = class extends SquareRoot {
-	constructor(...args) {
-		super(...args);
+	constructor() {
+		super();
 		this.htmlTemplate =
 			'<span class="mq-nthroot mq-non-leaf">&0</span>'
 			+ '<span class="mq-scaled">'
@@ -313,35 +308,36 @@ const NthRoot = LatexCmds.root = LatexCmds.nthroot = class extends SquareRoot {
 	}
 
 	latex() {
-		return `\\sqrt[${this.ends[L].latex()}]{${this.ends[R].latex()}}`;
+		return `\\sqrt[${this.ends[L]?.latex() ?? ''}]{${this.ends[R]?.latex() ?? ''}}`;
 	}
 
 	text() {
-		if (this.ends[L].text() === '') return `sqrt(${this.ends[R].text()})`;
-		const index = this.ends[L].text();
+		if (this.ends[L]?.text() === '') return `sqrt(${this.ends[R]?.text() ?? ''})`;
+		const index = this.ends[L]?.text() ?? '';
 		// Navigate up the tree to find the controller which has the options.
-		const ctrlr =
-			(function getCursor(node) { return !node.controller ? getCursor(node.parent) : node.controller; })(this);
+		const ctrlr = (function getCursor(node: Node): Controller {
+			return !node.controller ? getCursor(node.parent as Node) : node.controller;
+		})(this);
 		if (ctrlr.options.rootsAreExponents)
-			return `(${this.ends[R].text()})^(1/${index})`;
-		return `root(${index},${this.ends[R].text()})`;
+			return `(${this.ends[R]?.text() ?? ''})^(1/${index})`;
+		return `root(${index},${this.ends[R]?.text() ?? ''})`;
 	}
 };
 
 class DiacriticAbove extends MathCommand {
-	constructor(ctrlSeq, symbol, textTemplate) {
-		const htmlTemplate =
+	constructor(ctrlSeq: string, symbol: string, textTemplate: Array<string>) {
+		super(ctrlSeq,
 			'<span class="mq-non-leaf">'
 			+   `<span class="mq-diacritic-above">${symbol}</span>`
 			+   '<span class="mq-diacritic-stem">&0</span>'
-			+ '</span>';
-		super(ctrlSeq, htmlTemplate, textTemplate);
+			+ '</span>',
+			textTemplate);
 	}
 }
 LatexCmds.vec = bindMixin(DiacriticAbove, '\\vec', '&rarr;', ['vec(', ')']);
 LatexCmds.tilde = bindMixin(DiacriticAbove, '\\tilde', '~', ['tilde(', ')']);
 
-const bindCharBracketPair = (open, ctrlSeq) => {
+const bindCharBracketPair = (open: string, ctrlSeq?: string) => {
 	const curCtrlSeq = ctrlSeq || open, close = OPP_BRACKS[open], end = OPP_BRACKS[curCtrlSeq];
 	CharCmds[open] = bindMixin(Bracket, L, open, close, curCtrlSeq, end);
 	CharCmds[close] = bindMixin(Bracket, R, open, close, curCtrlSeq, end);
@@ -358,21 +354,18 @@ LatexCmds.rVert = bindMixin(Bracket, R, '&#8741;', '&#8741;', '\\lVert ', '\\rVe
 
 LatexCmds.left = class extends MathCommand {
 	parser() {
-		const regex = Parser.regex;
-		const string = Parser.string;
-		const optWhitespace = Parser.optWhitespace;
-
-		return optWhitespace.then(regex(/^(?:[([|]|\\\{|\\langle(?![a-zA-Z])|\\lVert(?![a-zA-Z]))/))
-			.then((ctrlSeq) => {
+		return Parser.optWhitespace.then(Parser.regex(/^(?:[([|]|\\\{|\\langle(?![a-zA-Z])|\\lVert(?![a-zA-Z]))/))
+			.then((ctrlSeq: string) => {
 				let open = (ctrlSeq.charAt(0) === '\\' ? ctrlSeq.slice(1) : ctrlSeq);
 				if (ctrlSeq == '\\langle') { open = '&lang;'; ctrlSeq = ctrlSeq + ' '; }
 				if (ctrlSeq == '\\lVert') { open = '&#8741;'; ctrlSeq = ctrlSeq + ' '; }
-				return latexMathParser.then((block) => {
-					return string('\\right').skip(optWhitespace)
-						.then(regex(/^(?:[\])|]|\\\}|\\rangle(?![a-zA-Z])|\\rVert(?![a-zA-Z]))/)).map((end) => {
+				return latexMathParser.then((block: MathBlock) => {
+					return Parser.string('\\right').skip(Parser.optWhitespace)
+						.then(Parser.regex(/^(?:[\])|]|\\\}|\\rangle(?![a-zA-Z])|\\rVert(?![a-zA-Z]))/))
+						.map((end: string) => {
 							let close = (end.charAt(0) === '\\' ? end.slice(1) : end);
-							if (end == '\\rangle') { close = '&rang;'; end = end + ' '; }
-							if (end == '\\rVert') { close = '&#8741;'; end = end + ' '; }
+							if (end == '\\rangle') { close = '&rang;'; end = `${end} `; }
+							if (end == '\\rVert') { close = '&#8741;'; end = `${end} `; }
 							const cmd = new Bracket(0, open, close, ctrlSeq, end);
 							cmd.blocks = [ block ];
 							block.adopt(cmd);
@@ -392,10 +385,8 @@ LatexCmds.right = class extends MathCommand {
 };
 
 const Binomial = LatexCmds.binom = LatexCmds.binomial = class extends DelimsMixin(MathCommand) {
-	constructor(...args) {
-		super(...args);
-		this.ctrlSeq = '\\binom';
-		this.htmlTemplate =
+	constructor() {
+		super('\\binom',
 			'<span class="mq-non-leaf">'
 			+   '<span class="mq-paren mq-scaled">(</span>'
 			+   '<span class="mq-non-leaf">'
@@ -405,8 +396,9 @@ const Binomial = LatexCmds.binom = LatexCmds.binomial = class extends DelimsMixi
 			+     '</span>'
 			+   '</span>'
 			+   '<span class="mq-paren mq-scaled">)</span>'
-			+ '</span>';
-		this.textTemplate = ['choose(', ',', ')'];
+			+ '</span>',
+			['choose(', ',', ')']
+		);
 	}
 };
 
@@ -414,40 +406,41 @@ LatexCmds.choose = class extends FractionChooseCreateLeftOfMixin(Binomial) {};
 
 // backcompat with before cfd3620 on #233
 LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
-	constructor(...args) {
-		super(...args);
-		this.ctrlSeq = '\\MathQuillMathField';
-		this.htmlTemplate =
+	name = '';
+	field?: InnerMathField;
+
+	constructor() {
+		super('\\MathQuillMathField',
 			'<span class="mq-editable-field">'
 			+   '<span class="mq-root-block">&0</span>'
-			+ '</span>';
+			+ '</span>'
+		);
 	}
 
 	parser() {
-		const self = this,
-			string = Parser.string, regex = Parser.regex, succeed = Parser.succeed;
-		return string('[').then(regex(/^[a-z][a-z0-9]*/i)).skip(string(']'))
-			.map((name) => self.name = name).or(succeed())
+		return Parser.string('[').then(Parser.regex(/^[a-z][a-z0-9]*/i)).skip(Parser.string(']'))
+			.map((name: string) => this.name = name).or(Parser.succeed())
 			.then(super.parser());
 	}
 
-	finalizeTree(options) {
-		const ctrlr = new Controller(this.ends[L], this.jQ, options);
+	finalizeTree(options: Options) {
+		const ctrlr = new Controller(this.ends[L] as Node, this.jQ, options);
 		ctrlr.KIND_OF_MQ = 'MathField';
+		this.field = new InnerMathField(ctrlr);
+		this.field.name = this.name;
 		ctrlr.editable = true;
 		ctrlr.createTextarea();
 		ctrlr.editablesTextareaEvents();
 		ctrlr.cursor.insAtRightEnd(ctrlr.root);
-		RootBlockMixin(ctrlr.root);
+		RootBlockMixin(ctrlr.root as MathElement);
+		this.field.blur();
 	}
 
-	registerInnerField(innerFields, mathField) {
-		innerFields.push(innerFields[this.name] = new mathField(this.ends[L].controller));
-	}
+	registerInnerField(innerFields: InnerMathFieldStore) { innerFields.push(this.field as InnerMathField); }
 
-	latex() { return this.ends[L].latex(); }
+	latex() { return this.ends[L]?.latex() ?? ''; }
 
-	text() { return this.ends[L].text(); }
+	text() { return this.ends[L]?.text() ?? ''; }
 };
 
 // Embed arbitrary things
@@ -458,7 +451,7 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 // or by calling the global public API method .registerEmbed()
 // and rendering LaTeX like \embed{registeredName} (see test).
 LatexCmds.embed = class extends Symbol {
-	setOptions(options) {
+	setOptions(options: EmbedOptions) {
 		const noop = () => '';
 		this.text = options.text || noop;
 		this.htmlTemplate = options.htmlString || '';
@@ -467,13 +460,12 @@ LatexCmds.embed = class extends Symbol {
 	}
 
 	parser() {
-		const string = Parser.string, regex = Parser.regex, succeed = Parser.succeed;
-		return string('{').then(regex(/^[a-z][a-z0-9]*/i)).skip(string('}'))
+		return Parser.string('{').then(Parser.regex(/^[a-z][a-z0-9]*/i)).skip(Parser.string('}'))
 			.then((name) =>
 				// the chars allowed in the optional data block are arbitrary other than
 				// excluding curly braces and square brackets (which'd be too confusing)
-				string('[').then(regex(/^[-\w\s]*/)).skip(string(']'))
-					.or(succeed()).map((data) => this.setOptions(EMBEDS[name](data)))
+				Parser.string('[').then(Parser.regex(/^[-\w\s]*/)).skip(Parser.string(']'))
+					.or(Parser.succeed()).map((data: string) => this.setOptions(EMBEDS[name](data)))
 			);
 	}
 };

@@ -23,6 +23,7 @@ export class ControllerBase {
 	options: Options;
 	cursor: Cursor;
 	apiClass?: any;
+	KIND_OF_MQ = '';
 	editable = false;
 	blurred?: boolean;
 	textareaSpan?: JQuery<HTMLSpanElement>;

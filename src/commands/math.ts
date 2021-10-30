@@ -3,15 +3,41 @@ import type { Controller } from 'src/controller';
 import { AbstractMathQuill, EditableField } from 'src/abstractFields';
 import { RootMathBlock, MathBlock } from 'commands/mathBlock';
 
+interface NamedObject {
+	name: string
+}
+
+class Store<T extends NamedObject> {
+	[key: number]: T;
+
+	push(value: T) {
+		this[Object.keys(this).length] = value;
+	}
+
+	get length() {
+		return Object.keys(this).length;
+	}
+
+	get(indexName: string) {
+		for (const strIndex of Object.keys(this)) {
+			const index = parseInt(strIndex);
+			if (this[index].name === indexName) return this[index];
+		}
+	}
+}
+
+export type InnerMathFieldStore = Store<InnerMathField>;
+
 export class StaticMath extends AbstractMathQuill {
 	static RootBlock = MathBlock;
 
-	innerFields: Array<InnerMathField>;
+	innerFields: InnerMathFieldStore;
 
 	constructor(ctrlr: Controller) {
 		super(ctrlr);
 
-		this.__controller.root.postOrder('registerInnerField', this.innerFields = [], InnerMathField);
+		this.__controller.root.postOrder('registerInnerField',
+			this.innerFields = new Store<InnerMathField>(), InnerMathField);
 	}
 
 	__mathquillify() {
@@ -26,7 +52,8 @@ export class StaticMath extends AbstractMathQuill {
 	latex(latex?: string) {
 		const returned = super.latex(latex);
 		if (typeof latex !== 'undefined') {
-			this.__controller.root.postOrder('registerInnerField', this.innerFields = [], InnerMathField);
+			this.__controller.root.postOrder('registerInnerField',
+				this.innerFields = new Store<InnerMathField>(), InnerMathField);
 		}
 		return returned;
 	}
@@ -50,6 +77,8 @@ export class MathField extends EditableField {
 }
 
 export class InnerMathField extends MathField {
+	name = '';
+
 	makeStatic() {
 		this.__controller.editable = false;
 		this.__controller.root.blur();

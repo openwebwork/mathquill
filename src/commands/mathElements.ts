@@ -483,8 +483,8 @@ export class Variable extends Symbol {
 export class Letter extends Variable {
 	letter: string;
 
-	constructor(ch: string) {
-		super(ch);
+	constructor(ch: string, htmlTemplate?: string) {
+		super(ch, htmlTemplate);
 		this.letter = ch;
 		this.siblingDeleted = this.siblingCreated = (opts: Options, dir?: Direction) => this.finalizeTree(opts, dir);
 	}
@@ -1016,7 +1016,7 @@ export const latexMathParser = (() => {
 	const optMathBlock =
 		Parser.string('[').then(
 			mathBlock.then((block: MathBlock) => {
-				return block.join('latex') !== ']' ? Parser.succeed(block) : Parser.fail('');
+				return block.join('latex') !== ']' ? Parser.succeed(block) : Parser.fail();
 			})
 				.many().map(joinBlocks).skip(Parser.optWhitespace)
 		).skip(Parser.string(']'))

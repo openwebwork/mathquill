@@ -6,7 +6,7 @@ import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElement
 
 LatexCmds.notin = LatexCmds.cong = LatexCmds.equiv = LatexCmds.oplus = LatexCmds.otimes =
 	class extends BinaryOperator {
-		constructor(latex) {
+		constructor(latex: string) {
 			super(`\\${latex} `, `&${latex};`);
 		}
 	};
@@ -72,24 +72,21 @@ LatexCmds.nsupe = LatexCmds.nsupeq =
 
 // The canonical sets of numbers
 LatexCmds.mathbb = class extends MathCommand {
-	constructor(...args) {
-		super(...args);
+	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: Array<string>) {
+		super(ctrlSeq, htmlTemplate, textTemplate);
 		this.createLeftOf = noop;
 	}
 
 	numBlocks() { return 1; }
 
 	parser() {
-		const string = Parser.string;
-		const regex = Parser.regex;
-		const optWhitespace = Parser.optWhitespace;
-		return optWhitespace.then(string('{'))
-			.then(optWhitespace)
-			.then(regex(/^[NPZQRCH]/))
-			.skip(optWhitespace)
-			.skip(string('}'))
+		return Parser.optWhitespace.then(Parser.string('{'))
+			.then(Parser.optWhitespace)
+			.then(Parser.regex(/^[NPZQRCH]/))
+			.skip(Parser.optWhitespace)
+			.skip(Parser.string('}'))
 			// Instantiate the class for the matching char
-			.map((c) => new LatexCmds[c]);
+			.map((c: string) => new LatexCmds[c]);
 	}
 };
 

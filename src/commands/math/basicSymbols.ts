@@ -1,20 +1,23 @@
 // Symbols for Basic Mathematics
 
+import type { Direction } from 'src/constants';
 import { noop, L, R, bindMixin, LatexCmds, CharCmds } from 'src/constants';
 import { Options } from 'src/options';
+import type { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
+import { Node } from 'tree/node';
 import {
 	Symbol, VanillaSymbol, BinaryOperator, Equality, Inequality, MathCommand, Variable, Letter, latexMathParser
 } from 'commands/mathElements';
 import { MathBlock } from 'commands/mathBlock';
 
 class OperatorName extends Symbol {
-	constructor(fn) {
+	constructor(fn: string) {
 		super();
 		this.ctrlSeq = fn;
 	}
 
-	createLeftOf(cursor) {
+	createLeftOf(cursor: Cursor) {
 		for (const char of this.ctrlSeq) {
 			new Letter(char).createLeftOf(cursor);
 		}
@@ -36,13 +39,13 @@ for (const fn in Options.autoOperatorNames) {
 }
 
 LatexCmds.operatorname = class extends MathCommand {
-	constructor(...args) {
-		super(...args);
+	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: Array<string>) {
+		super(ctrlSeq, htmlTemplate, textTemplate);
 		this.createLeftOf = noop;
 	}
 	numBlocks() { return 1; };
 	parser() {
-		return latexMathParser.block.map((b) => b.children());
+		return (latexMathParser.block as Parser).map((b: MathBlock) => b.children());
 	};
 };
 
@@ -52,9 +55,9 @@ LatexCmds.f = class extends Letter {
 		this.letter = 'f';
 	}
 
-	italicize(bool, ...args) {
+	italicize(bool: boolean) {
 		this.jQ.html('f').toggleClass('mq-f', bool);
-		return super.italicize(bool, ...args);
+		return super.italicize(bool);
 	}
 };
 
@@ -71,7 +74,7 @@ LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
 
 // does not use Symbola font
 const NonSymbolaSymbol = class extends Symbol {
-	constructor(ch, html) {
+	constructor(ch: string, html?: string) {
 		super(ch, `<span class="mq-nonSymbola">${html || ch}</span>`);
 	}
 };
@@ -101,7 +104,7 @@ LatexCmds.alpha =
 	LatexCmds.chi =
 	LatexCmds.psi =
 	LatexCmds.omega = class extends Variable {
-		constructor(latex) {
+		constructor(latex: string) {
 			super(`\\${latex} `, `&${latex};`);
 		}
 	};
@@ -178,7 +181,7 @@ LatexCmds.Gamma =
 	LatexCmds.Psi =
 	LatexCmds.Omega =
 	LatexCmds.forall = class extends VanillaSymbol {
-		constructor(latex) {
+		constructor(latex: string) {
 			super(`\\${latex} `, `&${latex};`);
 		}
 	};
@@ -186,24 +189,24 @@ LatexCmds.Gamma =
 // symbols that aren't a single MathCommand, but are instead a whole
 // Fragment. Creates the Fragment from a LaTeX string
 class LatexFragment extends MathCommand {
-	constructor(latex) {
+	constructor(latex: string) {
 		super();
-		this.latex = latex;
+		this.latex = () => latex;
 	}
 
-	createLeftOf(cursor) {
-		const block = latexMathParser.parse(this.latex);
+	createLeftOf(cursor: Cursor) {
+		const block = latexMathParser.parse(this.latex());
 		block.children().adopt(cursor.parent, cursor[L], cursor[R]);
 		cursor[L] = block.ends[R];
 		block.jQize().insertBefore(cursor.jQ);
 		block.finalizeInsert(cursor.options, cursor);
-		if (block.ends[R]?.[R]?.siblingCreated) block.ends[R][R].siblingCreated(cursor.options, L);
-		if (block.ends[L]?.[L]?.siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
-		cursor.parent.bubble('reflow');
+		block.ends[R]?.[R]?.siblingCreated?.(cursor.options, L);
+		block.ends[L]?.[L]?.siblingCreated?.(cursor.options, R);
+		cursor.parent?.bubble('reflow');
 	}
 
 	parser() {
-		const frag = latexMathParser.parse(this.latex).children();
+		const frag = latexMathParser.parse(this.latex()).children();
 		return Parser.succeed(frag);
 	}
 }
@@ -240,19 +243,19 @@ LatexCmds['\u00bd'] = bindMixin(LatexFragment, '\\frac12');
 LatexCmds['\u00be'] = bindMixin(LatexFragment, '\\frac34');
 
 class PlusMinus extends BinaryOperator {
-	constructor(ctrlSeq, html, text) {
+	constructor(ctrlSeq: string, html?: string, text?: string) {
 		super(ctrlSeq, `<span>${html || ctrlSeq}</span>`, text, true);
 
-		this.siblingCreated = this.siblingDeleted = this.contactWeld;
+		this.siblingCreated = this.siblingDeleted = (opts: Options, dir?: Direction) => this.contactWeld(opts, dir);
 	}
 
-	contactWeld(opts, dir) {
-		const determineOpClassType = (node) => {
+	contactWeld(opts: Options, dir?: Direction) {
+		const determineOpClassType = (node: Node): string => {
 			if (node[L]) {
 				// If the left sibling is a binary operator or a separator (comma, semicolon, colon)
 				// or an open bracket (open parenthesis, open square bracket)
 				// consider the operator to be unary
-				if (node[L] instanceof BinaryOperator || /^[,;:([]$/.test(node[L].ctrlSeq)) {
+				if (node[L] instanceof BinaryOperator || /^[,;:([]$/.test((node[L] as BinaryOperator).ctrlSeq)) {
 					return '';
 				}
 			} else if (node.parent && node.parent.parent && node.parent.parent.isStyleBlock()) {
