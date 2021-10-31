@@ -96,6 +96,16 @@ module.exports = (env, argv) => {
 					files: ['**/*.{html,css,scss,sass,less}']
 				})
 			],
+			optimization: {
+				minimize: argv.mode == 'production',
+				minimizer: [
+					new TerserPlugin({
+						terserOptions: { format: { comments: /@license/i } },
+						extractComments: false
+					}),
+					new CssMinimizerPlugin()
+				]
+			},
 			performance: {
 				assetFilter: (asset) => {
 					return !asset.match(/fonts\/(.*\.svg$|.*\.ttf$|.*\.eot$)/);
@@ -111,6 +121,7 @@ module.exports = (env, argv) => {
 
 	if (argv.mode == 'development') {
 		console.log('Using development mode.');
+
 		fullConfig.devtool = 'source-map';
 		basicConfig.devtool = 'source-map';
 		fullConfig.entry['mathquill.test'] = './test/index.js';
@@ -119,16 +130,6 @@ module.exports = (env, argv) => {
 		builds.push(basicConfig);
 	} else {
 		console.log('Using production mode.');
-		// Minimize the production build.
-		const jsMinimizer = new TerserPlugin({
-			terserOptions: { format: { comments: /@license/i } },
-			extractComments: false
-		});
-		const cssMinimizer = { minimizer: [new CssMinimizerPlugin()] };
-		fullConfig.plugins.push(jsMinimizer);
-		basicConfig.plugins.push(jsMinimizer);
-		fullConfig.optimization = cssMinimizer;
-		basicConfig.optimization = cssMinimizer;
 
 		if (process.env.BUILD_BASIC) builds.push(basicConfig);
 	}
