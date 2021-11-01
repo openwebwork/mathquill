@@ -1,7 +1,6 @@
 // Controller for a MathQuill instance, on which services are registered.
 
 import type { Direction } from 'src/constants';
-import type { Constructor } from 'src/constants';
 import { L, R, prayDirection } from 'src/constants';
 import type { Handler, DirectionHandler, Handlers, Options } from 'src/options';
 import { Cursor } from 'src/cursor';
@@ -58,8 +57,6 @@ export class ControllerBase {
 	// The textarea mixin overrides this.
 	selectionChanged() { /* do nothing */ };
 }
-
-export type Controllerable = Constructor<ControllerBase>;
 
 export class Controller extends
 	ExportText(

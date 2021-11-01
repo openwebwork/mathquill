@@ -1,13 +1,13 @@
-import type { Direction } from 'src/constants';
+import type { Direction, Constructor } from 'src/constants';
 import { jQuery, L, R, noop, mqBlockId, LatexCmds } from 'src/constants';
 import type { InputOptions } from 'src/options';
 import { Options } from 'src/options';
 import type { Controller } from 'src/controller';
-import type { NodeConstructor } from 'tree/node';
+import type { Node } from 'tree/node';
 
 export interface AbstractMathQuillConstructor {
 	new (...args: Array<any>): AbstractMathQuill;
-	RootBlock: NodeConstructor;
+	RootBlock: Constructor<Node>;
 }
 
 export class AbstractMathQuill {
@@ -15,7 +15,7 @@ export class AbstractMathQuill {
 	__options: Options;
 	id: number;
 	revert?: () => void;
-	static RootBlock?: NodeConstructor;
+	static RootBlock?: Constructor<Node>;
 
 	constructor(ctrlr: Controller) {
 		this.__controller = ctrlr;

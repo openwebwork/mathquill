@@ -1,13 +1,14 @@
 // Latex Controller Extension
 
+import type { Constructor } from 'src/constants';
 import { L, R } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
 import { RootMathCommand } from 'commands/textElements';
-import type { Controllerable } from 'src/controller';
-import type { Node } from 'tree/node';
+import type { ControllerBase } from 'src/controller';
+import type { MathBlock } from 'commands/mathBlock';
 
-export const LatexControllerExtension = <TBase extends Controllerable>(Base: TBase) => class extends Base {
+export const LatexControllerExtension = <TBase extends Constructor<ControllerBase>>(Base: TBase) => class extends Base {
 	exportLatex() {
 		return this.root.latex().replace(/(\\[a-z]+) (?![a-z])/ig, '$1');
 	}
@@ -55,12 +56,12 @@ export const LatexControllerExtension = <TBase extends Controllerable>(Base: TBa
 			// have to end.  So we allow for the case that math mode
 			// continues to the end of the stream.
 			.skip(Parser.string('$').or(Parser.eof))
-			.map((block: Node) => {
+			.map((block: MathBlock) => {
 				// HACK FIXME: this shouldn't have to have access to cursor
 				const rootMathCommand = new RootMathCommand(this.cursor);
 
 				rootMathCommand.createBlocks();
-				const rootMathBlock = rootMathCommand.ends[L] as Node;
+				const rootMathBlock = rootMathCommand.ends[L] as MathBlock;
 				block.children().adopt(rootMathBlock);
 
 				return rootMathCommand;

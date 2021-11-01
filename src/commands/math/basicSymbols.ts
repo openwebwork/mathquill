@@ -73,7 +73,7 @@ if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
 
 // does not use Symbola font
-const NonSymbolaSymbol = class extends Symbol {
+class NonSymbolaSymbol extends Symbol {
 	constructor(ch: string, html?: string) {
 		super(ch, `<span class="mq-nonSymbola">${html || ch}</span>`);
 	}

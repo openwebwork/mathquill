@@ -1,12 +1,14 @@
 // Deals with mouse events for clicking, drag-to-select
 
+import type { Constructor } from 'src/constants';
 import { jQuery, mqCmdId, mqBlockId, noop, pray } from 'src/constants';
 import { Node } from 'tree/node';
-import type { Controllerable } from 'src/controller';
+import type { ControllerBase } from 'src/controller';
 import type { HorizontalScroll } from 'services/scrollHoriz';
 
 export const MouseEventController =
-	<TBase extends Controllerable & ReturnType<typeof HorizontalScroll>>(Base: TBase) => class extends Base {
+	<TBase extends Constructor<ControllerBase> & ReturnType<typeof HorizontalScroll>>(Base: TBase) => class extends Base
+	{
 		delegateMouseEvents() {
 			const ultimateRootjQ = this.root.jQ;
 			//drag-to-select event handling
@@ -37,8 +39,8 @@ export const MouseEventController =
 					ctrlr.seek(target as JQuery, e.pageX ?? 0).cursor.select();
 					target = undefined;
 				};
-				// outside rootjQ, the MathQuill node corresponding to the target (if any)
-				// won't be inside this root, so don't mislead Controller::seek with it
+					// outside rootjQ, the MathQuill node corresponding to the target (if any)
+					// won't be inside this root, so don't mislead Controller::seek with it
 
 				const mouseup = (e: JQuery.TriggeredEvent) => {
 					cursor.blink = blink;
@@ -65,8 +67,9 @@ export const MouseEventController =
 
 				rootjQ.mousemove(mousemove);
 				jQuery(e.target.ownerDocument).mousemove(docmousemove).mouseup(mouseup);
-			// listen on document not just body to not only hear about mousemove and
-			// mouseup on page outside field, but even outside page, except iframes: https://github.com/mathquill/mathquill/commit/8c50028afcffcace655d8ae2049f6e02482346c5#commitcomment-6175800
+				// listen on document not just body to not only hear about mousemove and
+				// mouseup on page outside field, but even outside page, except iframes:
+				// https://github.com/mathquill/mathquill/commit/8c50028afcffcace655d8ae2049f6e02482346c5#commitcomment-6175800
 			});
 		}
 

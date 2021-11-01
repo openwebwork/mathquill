@@ -1,7 +1,7 @@
 // Node base class of edit tree-related objects
 
 import type JQuery from 'jquery';
-import type { Constructor, Direction } from 'src/constants';
+import type { Direction } from 'src/constants';
 import { jQuery, L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
@@ -15,10 +15,6 @@ export interface Ends {
 }
 
 const prayOverridden = () => pray('overridden or never called on this node');
-
-export interface NodeConstructor {
-	new (...args: Array<any>): Node;
-}
 
 // MathQuill virtual-DOM tree-node abstract base class
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
@@ -314,5 +310,3 @@ export class Node {
 	// called by Controller::selectDir
 	selectTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
 }
-
-export type Nodeable = Constructor<Node>;

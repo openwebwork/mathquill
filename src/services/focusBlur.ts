@@ -1,9 +1,10 @@
 // Focus and Blur events
 
-import type { Controllerable } from 'src/controller';
-import type { Nodeable } from 'tree/node';
+import type { Constructor } from 'src/constants';
+import type { ControllerBase } from 'src/controller';
+import type { Node } from 'tree/node';
 
-export const FocusBlurEvents = <TBase extends Controllerable>(Base: TBase) => class extends Base {
+export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base: TBase) => class extends Base {
 	focusBlurEvents() {
 		this.textarea?.focus(() => {
 			this.blurred = false;
@@ -31,7 +32,7 @@ export const FocusBlurEvents = <TBase extends Controllerable>(Base: TBase) => cl
 	}
 };
 
-export const BlockFocusBlur = <TBase extends Nodeable>(Base: TBase) => class extends Base {
+export const BlockFocusBlur = <TBase extends Constructor<Node>>(Base: TBase) => class extends Base {
 	focus() {
 		this.jQ.addClass('mq-hasCursor');
 		this.jQ.removeClass('mq-empty');

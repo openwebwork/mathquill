@@ -1,8 +1,8 @@
-import type { Direction } from 'src/constants';
+import type { Direction, Constructor } from 'src/constants';
 import { L, R } from 'src/constants';
 import type { Cursor } from 'src/cursor';
-import type { Nodeable, Node } from 'tree/node';
-import type { MathCommandable, MathElement } from 'commands/mathElements';
+import type { Node } from 'tree/node';
+import type { MathCommand, MathElement } from 'commands/mathElements';
 
 export const RootBlockMixin = (_: MathElement) => {
 	_.moveOutOf = (dir: Direction) =>  _.controller?.handle('moveOutOf', dir);
@@ -21,7 +21,7 @@ export const RootBlockMixin = (_: MathElement) => {
 // Editability methods called by the cursor for editing, cursor movements, and selection of the MathQuill tree.
 // These all take in a direction and the cursor.
 // The MathCommand and TextBlock classes use this mixin.
-export const deleteSelectTowardsMixin = <TBase extends Nodeable>(Base: TBase) => class extends Base {
+export const deleteSelectTowardsMixin = <TBase extends Constructor<Node>>(Base: TBase) => class extends Base {
 	moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 		const updownInto = updown && this[`${updown}Into`];
 		cursor.insAtDirEnd(dir === L ? R : L, updownInto || this.ends[dir === L ? R : L] as Node);
@@ -40,7 +40,7 @@ export const deleteSelectTowardsMixin = <TBase extends Nodeable>(Base: TBase) =>
 };
 
 // The MathBlock and the RootMathCommand (used by the RootTextBlock) use this.
-export const writeMethodMixin = <TBase extends Nodeable>(Base: TBase) => class extends Base {
+export const writeMethodMixin = <TBase extends Constructor<Node>>(Base: TBase) => class extends Base {
 	write(cursor: Cursor, ch: string) {
 		if (this.isSupSubLeft) {
 			if (cursor.options.autoSubscriptNumerals && this === this.parent?.sub) {
@@ -88,7 +88,7 @@ export const scale = transformPropName
 	? (jQ: JQuery<HTMLElement>, x: number, y: number) => jQ.css(transformPropName, `scale(${x},${y})`)
 	: (jQ: JQuery<HTMLElement>, x: number, y: number) => jQ.css('fontSize', `${y}em`);
 
-export const DelimsMixin = <TBase extends MathCommandable>(Base: TBase) => class extends Base {
+export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends Base {
 	delimjQs?: JQuery;
 	contentjQ?: JQuery;
 

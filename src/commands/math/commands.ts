@@ -1,6 +1,6 @@
 // Commands and Operators.
 
-import type { Direction } from 'src/constants';
+import type { Direction, Constructor } from 'src/constants';
 import { L, R, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
 import type { Options } from 'src/options';
 import { Controller } from 'src/controller';
@@ -12,7 +12,7 @@ import { Fragment } from 'tree/fragment';
 import type { InnerMathFieldStore } from 'commands/math';
 import { InnerMathField } from 'commands/math';
 import type { MathBlock } from 'commands/mathBlock';
-import type { MathCommandable, MathElement } from 'commands/mathElements';
+import type { MathElement } from 'commands/mathElements';
 import {
 	BinaryOperator, Equality, MathCommand, Symbol, Letter, insLeftOfMeUnlessAtEnd, SupSub, UpperLowerLimitCommand,
 	Bracket, latexMathParser
@@ -190,7 +190,7 @@ LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = class extends Uppe
 	}
 };
 
-const Fraction = LatexCmds.frac = LatexCmds.dfrac = LatexCmds.cfrac = LatexCmds.fraction = class extends MathCommand {
+class Fraction extends MathCommand {
 	constructor() {
 		super();
 
@@ -218,8 +218,9 @@ const Fraction = LatexCmds.frac = LatexCmds.dfrac = LatexCmds.cfrac = LatexCmds.
 		this.downInto = (this.ends[L] as Node).downOutOf = this.ends[R];
 	}
 };
+LatexCmds.frac = LatexCmds.dfrac = LatexCmds.cfrac = LatexCmds.fraction = Fraction;
 
-const FractionChooseCreateLeftOfMixin = <TBase extends MathCommandable>(Base: TBase) => class extends (Base) {
+const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends (Base) {
 	createLeftOf(cursor: Cursor) {
 		if (!this.replacedFragment) {
 			let leftward: Node | undefined = cursor[L];
@@ -251,7 +252,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends MathCommandable>(Base: TB
 // LiveFraction
 LatexCmds.over = CharCmds['/'] = class extends FractionChooseCreateLeftOfMixin(Fraction) {};
 
-const SquareRoot = LatexCmds.sqrt = LatexCmds['\u221a'] = class extends MathCommand {
+class SquareRoot extends MathCommand {
 	constructor() {
 		super();
 		this.ctrlSeq = '\\sqrt';
@@ -281,6 +282,7 @@ const SquareRoot = LatexCmds.sqrt = LatexCmds['\u221a'] = class extends MathComm
 		}).or(super.parser());
 	}
 };
+LatexCmds.sqrt = LatexCmds['\u221a'] = SquareRoot;
 
 LatexCmds.hat = class extends MathCommand {
 	constructor() {
@@ -295,7 +297,7 @@ LatexCmds.hat = class extends MathCommand {
 	}
 };
 
-const NthRoot = LatexCmds.root = LatexCmds.nthroot = class extends SquareRoot {
+class NthRoot extends SquareRoot {
 	constructor() {
 		super();
 		this.htmlTemplate =
@@ -323,6 +325,7 @@ const NthRoot = LatexCmds.root = LatexCmds.nthroot = class extends SquareRoot {
 		return `root(${index},${this.ends[R]?.text() ?? ''})`;
 	}
 };
+LatexCmds.root = LatexCmds.nthroot = NthRoot;
 
 class DiacriticAbove extends MathCommand {
 	constructor(ctrlSeq: string, symbol: string, textTemplate: Array<string>) {
@@ -384,7 +387,7 @@ LatexCmds.right = class extends MathCommand {
 	}
 };
 
-const Binomial = LatexCmds.binom = LatexCmds.binomial = class extends DelimsMixin(MathCommand) {
+class Binomial extends DelimsMixin(MathCommand) {
 	constructor() {
 		super('\\binom',
 			'<span class="mq-non-leaf">'
@@ -401,6 +404,7 @@ const Binomial = LatexCmds.binom = LatexCmds.binomial = class extends DelimsMixi
 		);
 	}
 };
+LatexCmds.binom = LatexCmds.binomial = Binomial;
 
 LatexCmds.choose = class extends FractionChooseCreateLeftOfMixin(Binomial) {};
 

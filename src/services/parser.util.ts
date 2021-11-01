@@ -1,11 +1,9 @@
 import { pray } from 'src/constants';
 
-type SuccessOrFailure = (stream: string, result?: any) => any
-
 type ParserBody = (
 	stream: string,
-	success?: SuccessOrFailure,
-	failure?: SuccessOrFailure
+	success?: (stream: string, result?: any) => any,
+	failure?: (stream: string, result?: any) => any
 ) => any;
 
 export class Parser {
@@ -20,43 +18,40 @@ export class Parser {
 	block?: Parser;
 	optBlock?: Parser;
 
-	static parseError(this: void, stream: string, message: string) {
-		if (stream) stream = `'${stream}'`;
-		else stream = 'EOF';
-
-		throw `Parse Error: ${message} at ${stream}`;
-	}
-
 	constructor(body: ParserBody) {
 		this._ = body;
 	}
 
 	parse(stream?: string | number | boolean | object) {
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		return this.skip(Parser.eof)._(`${stream}`, (stream, result) => result, Parser.parseError);
+		return this.skip(Parser.eof)._(`${stream}`,
+			(stream, result) => result,
+			(stream: string, message?: string) => {
+				throw `Parse Error: ${message ?? 'Unexpected error'} at ${stream || 'EOF'}`;
+			}
+		);
 	}
 
 	// -*- primitive combinators -*- //
-	or(alternative?: Parser) {
+	or(alternative: Parser) {
 		pray('or is passed a parser', alternative instanceof Parser);
 
-		return new Parser((stream, onSuccess, onFailure) => {
-			const failure = () => alternative?._(stream, onSuccess, onFailure);
-
-			return this._(stream, onSuccess, failure);
-		});
+		return new Parser((stream, onSuccess, onFailure) =>
+			this._(stream, onSuccess, () => alternative?._(stream, onSuccess, onFailure))
+		);
 	}
 
 	then(next: Parser | ((result: any) => Parser)) {
-		return new Parser((stream, onSuccess, onFailure) => {
-			const success: SuccessOrFailure = (newStream, result) => {
-				const nextParser = (next instanceof Parser ? next : next(result));
-				pray('a parser is returned', nextParser instanceof Parser);
-				return nextParser._(newStream, onSuccess, onFailure);
-			};
-
-			return this._(stream, success, onFailure);
-		});
+		return new Parser((stream, onSuccess, onFailure) =>
+			this._(stream,
+				(newStream, result) => {
+					const nextParser = next instanceof Parser ? next
+						: typeof next === 'function' ? next(result) : undefined;
+					pray('a parser is returned', nextParser instanceof Parser);
+					return nextParser?._(newStream, onSuccess, onFailure);
+				},
+				onFailure)
+		);
 	}
 
 	// -*- optimized iterative combinators -*- //
@@ -64,15 +59,14 @@ export class Parser {
 		return new Parser((stream, onSuccess) => {
 			const xs: Array<string> = [];
 
-			const success: SuccessOrFailure = (newStream, x) => {
-				stream = newStream;
-				xs.push(x);
-				return true;
-			};
+			while (this._(stream,
+				(newStream, x) => {
+					stream = newStream;
+					xs.push(x);
+					return true;
+				},
+				() => false));
 
-			const failure: SuccessOrFailure = () => false;
-
-			while (this._(stream, success, failure));
 			return onSuccess?.(stream, xs);
 		});
 	}
@@ -81,28 +75,22 @@ export class Parser {
 		return new Parser((stream, onSuccess, onFailure) => {
 			const xs: Array<string> = [];
 			let result = true;
-			let failure;
 
-			const success: SuccessOrFailure = (newStream, x) => {
-				xs.push(x);
-				stream = newStream;
-				return true;
-			};
-
-			const firstFailure: SuccessOrFailure = (newStream, msg) => {
-				failure = msg;
-				stream = newStream;
-				return false;
-			};
-
-			let i = 0;
-			for (; i < min; ++i) {
-				result = this._(stream, success, firstFailure);
-				if (!result) return onFailure?.(stream, failure);
-			}
-
-			for (; i < max && result; ++i) {
-				result = this._(stream, success, () => false);
+			for (let i = 0; i < max && result; ++i) {
+				let failure;
+				result = this._(stream,
+					(newStream, x) => {
+						xs.push(x);
+						stream = newStream;
+						return true;
+					},
+					(newStream, msg) => {
+						failure = msg;
+						stream = newStream;
+						return false;
+					}
+				);
+				if (i < min && !result) return onFailure?.(stream, failure);
 			}
 
 			return onSuccess?.(stream, xs);
@@ -116,52 +104,39 @@ export class Parser {
 		return this.times(n).then((start: string) => this.many().map((end: string) => start.concat(end)));
 	}
 
-	map(fn: any) {
-		return this.then((result: string) => {
+	map<R, T>(fn: ((result: R) => T) | { new (arg: R): T }) {
+		return this.then((result: R) => {
 			if (fn.prototype && fn.prototype.constructor && fn.prototype.constructor.name) {
-				return Parser.succeed(new fn(result));
-			} else {
-				return Parser.succeed(fn(result));
+				return Parser.succeed(new (fn as { new (arg: R): T })(result));
+			} else if (typeof fn === 'function') {
+				return Parser.succeed((fn as (result: R) => T)(result));
 			}
+			return Parser.fail('Invalid map function');
 		});
 	}
 
-	skip(two: any) {
+	skip(two: Parser) {
 		return this.then((result) => two.result(result));
 	}
 
 	// -*- primitive parsers -*- //
 	static string(str: string) {
-		const len = str.length;
-		const expected = `expected '${str}'`;
-
 		return new Parser((stream, onSuccess, onFailure) => {
-			const head = stream.slice(0, len);
+			const head = stream.slice(0, str.length);
 
-			if (head === str) {
-				return onSuccess?.(stream.slice(len), head);
-			}
-			else {
-				return onFailure?.(stream, expected);
-			}
+			if (head === str) return onSuccess?.(stream.slice(str.length), head);
+			else return onFailure?.(stream, `expected '${str}'`);
 		});
 	}
 
 	static regex(re: RegExp) {
 		pray('regexp parser is anchored', re.toString().charAt(1) === '^');
 
-		const expected = `expected ${re.toString()}`;
-
 		return new Parser((stream, onSuccess, onFailure) => {
 			const match = re.exec(stream);
 
-			if (match) {
-				const result = match[0];
-				return onSuccess?.(stream.slice(result.length), result);
-			}
-			else {
-				return onFailure?.(stream, expected);
-			}
+			if (match) return onSuccess?.(stream.slice(match[0].length), match[0]);
+			else return onFailure?.(stream, `expected ${re.toString()}`);
 		});
 	}
 

@@ -1,14 +1,15 @@
 // Manage the MathQuill instance's textarea (as owned by the Controller)
 
+import type { Constructor } from 'src/constants';
 import { jQuery } from 'src/constants';
-import type { Controllerable } from 'src/controller';
+import type { ControllerBase } from 'src/controller';
 import type { LatexControllerExtension } from 'services/latex';
 import type { HorizontalScroll } from 'services/scrollHoriz';
 import type { FocusBlurEvents } from 'services/focusBlur';
 import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
 
 export const TextAreaController =
-	<TBase extends Controllerable &
+	<TBase extends Constructor<ControllerBase> &
 	ReturnType<typeof LatexControllerExtension> &
 	ReturnType<typeof HorizontalScroll> &
 	ReturnType<typeof FocusBlurEvents>>(Base: TBase) => class extends Base implements TextAreaHandlers {

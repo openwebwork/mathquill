@@ -1,6 +1,6 @@
 // Abstract classes of math blocks and commands.
 
-import type { Direction, Constructor } from 'src/constants';
+import type { Direction } from 'src/constants';
 import {
 	jQuery, noop, L, R, mqCmdId, pray, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames
 } from 'src/constants';
@@ -328,8 +328,6 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		});
 	}
 }
-
-export type MathCommandable = Constructor<MathCommand>;
 
 // Lightweight command without blocks or children.
 export class Symbol extends MathCommand {
@@ -812,7 +810,7 @@ export class Bracket extends DelimsMixin(MathCommand) {
 		};
 		this.placeCursor = noop;
 
-		this.siblingCreated = (_ignore_opts: Options, dir?: Direction) => { // if something typed between ghost and far
+		this.siblingCreated = (opts: Options, dir?: Direction) => { // if something typed between ghost and far
 			if (dir === (this.side === L ? R : L)) this.finalizeTree(); // end of its block, solidify
 		};
 	}

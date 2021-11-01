@@ -13,8 +13,8 @@
 
 import type JQueryStatic from 'jquery';
 import type JQuery from 'jquery';
-import type { NodeConstructor, Node } from 'tree/node';
-import type { MathCommandable } from 'commands/mathElements';
+import type { Node } from 'tree/node';
+import type { MathCommand } from 'commands/mathElements';
 
 declare global {
 	interface JQuery {
@@ -90,7 +90,7 @@ export const iterator = (generator: any) => {
 export type Constructor<T = object> = new (...args: Array<any>) => T;
 
 // sugar to make defining lots of commands easier.
-export const bindMixin = <TBase extends MathCommandable>(
+export const bindMixin = <TBase extends Constructor<MathCommand>>(
 	Base: TBase, ...args: Array<string | boolean | number | object>
 ) => class extends Base { constructor(..._ignore_args: Array<any>) { super(...args); } };
 
@@ -129,7 +129,8 @@ export const prayWellFormed = (parent?: Node, leftward?: Node, rightward?: Node)
 
 // Registry of LaTeX commands and commands created when typing a single character.
 // (Commands are all subclasses of tree/Node.)
-export const LatexCmds: { [key: string]: NodeConstructor } = {}, CharCmds: { [key: string]: NodeConstructor } = {};
+export const LatexCmds: { [key: string]: Constructor<Node> } = {},
+	CharCmds: { [key: string]: Constructor<Node> } = {};
 
 export const OPP_BRACKS: { readonly [key: string]: string } = {
 	'(': ')',
