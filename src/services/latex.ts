@@ -4,7 +4,7 @@ import type { Constructor } from 'src/constants';
 import { L, R } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
-import { RootMathCommand } from 'commands/textElements';
+import { RootMathCommand } from 'commands/mathBlock';
 import type { ControllerBase } from 'src/controller';
 import type { MathBlock } from 'commands/mathBlock';
 

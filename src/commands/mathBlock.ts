@@ -7,7 +7,7 @@ import type { Cursor } from 'src/cursor';
 import type { Node } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { BlockFocusBlur } from 'services/focusBlur';
-import { VanillaSymbol, MathElement, Letter, Digit, latexMathParser } from 'commands/mathElements';
+import { VanillaSymbol, MathElement, MathCommand, Letter, Digit, latexMathParser } from 'commands/mathElements';
 
 // Children and parent of MathCommand's. Basically partitions all the
 // symbols and operators that descend (in the Math DOM tree) from
@@ -119,5 +119,40 @@ export class RootMathBlock extends MathBlock {
 	constructor() {
 		super();
 		RootBlockMixin(this);
+	}
+}
+
+export class RootMathCommand extends writeMethodMixin(MathCommand) {
+	cursor: Cursor;
+
+	constructor(cursor: Cursor) {
+		super('$');
+		this.cursor = cursor;
+		this.htmlTemplate = '<span class="mq-math-mode">&0</span>';
+	}
+
+	createBlocks() {
+		super.createBlocks();
+
+		(this.ends[L] as RootMathCommand).cursor = this.cursor;
+		const leftEnd = this.ends[L] as Node;
+		leftEnd.write = (cursor: Cursor, ch: string) => {
+			if (ch !== '$')
+				leftEnd.write(cursor, ch);
+			else if (leftEnd.isEmpty()) {
+				cursor.insRightOf(leftEnd.parent as Node);
+				leftEnd.parent?.deleteTowards(L, cursor);
+				new VanillaSymbol('\\$', '$').createLeftOf(cursor.show());
+			} else if (!cursor[R])
+				cursor.insRightOf(leftEnd.parent as Node);
+			else if (!cursor[L])
+				cursor.insLeftOf(leftEnd.parent as Node);
+			else
+				leftEnd.write(cursor, ch);
+		};
+	}
+
+	latex() {
+		return `$${this.ends[L]?.latex() ?? ''}$`;
 	}
 }

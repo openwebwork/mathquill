@@ -8,8 +8,8 @@ import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
 import { Node } from 'tree/node';
 import { Fragment } from 'tree/fragment';
-import { VanillaSymbol, MathCommand } from 'commands/mathElements';
-import { deleteSelectTowardsMixin, writeMethodMixin } from 'src/mixins';
+import { VanillaSymbol } from 'commands/mathElements';
+import { deleteSelectTowardsMixin } from 'src/mixins';
 import { BlockFocusBlur } from 'services/focusBlur';
 
 // Blocks of plain text, with one or two TextPiece's as children.
@@ -328,12 +328,8 @@ class TextPiece extends Node {
 	}
 }
 
-LatexCmds.text =
-	LatexCmds.textnormal =
-	LatexCmds.textrm =
-	LatexCmds.textup =
-	CharCmds['"'] =
-	LatexCmds.textmd = TextBlock;
+LatexCmds.text = LatexCmds.textnormal = LatexCmds.textrm = LatexCmds.textup = CharCmds['"'] = LatexCmds.textmd =
+	TextBlock;
 
 const makeTextBlock = (latex: string, tagName: string, attrs: string) => class extends TextBlock {
 	htmlTemplate: string;
@@ -360,38 +356,3 @@ LatexCmds.uppercase =
 	makeTextBlock('\\uppercase', 'span', 'style="text-transform:uppercase" class="mq-text-mode"');
 LatexCmds.lowercase =
 	makeTextBlock('\\lowercase', 'span', 'style="text-transform:lowercase" class="mq-text-mode"');
-
-export class RootMathCommand extends writeMethodMixin(MathCommand) {
-	cursor: Cursor;
-
-	constructor(cursor: Cursor) {
-		super('$');
-		this.cursor = cursor;
-		this.htmlTemplate = '<span class="mq-math-mode">&0</span>';
-	}
-
-	createBlocks() {
-		super.createBlocks();
-
-		(this.ends[L] as RootMathCommand).cursor = this.cursor;
-		const leftEnd = this.ends[L] as Node;
-		leftEnd.write = (cursor: Cursor, ch: string) => {
-			if (ch !== '$')
-				leftEnd.write(cursor, ch);
-			else if (leftEnd.isEmpty()) {
-				cursor.insRightOf(leftEnd.parent as Node);
-				leftEnd.parent?.deleteTowards(L, cursor);
-				new VanillaSymbol('\\$', '$').createLeftOf(cursor.show());
-			} else if (!cursor[R])
-				cursor.insRightOf(leftEnd.parent as Node);
-			else if (!cursor[L])
-				cursor.insLeftOf(leftEnd.parent as Node);
-			else
-				leftEnd.write(cursor, ch);
-		};
-	}
-
-	latex() {
-		return `$${this.ends[L]?.latex() ?? ''}$`;
-	}
-}
