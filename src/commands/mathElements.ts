@@ -135,7 +135,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 
 	createBlocks() {
 		const numBlocks = this.numBlocks();
-		this.blocks = Array(numBlocks);
+		this.blocks = Array<MathBlock>(numBlocks);
 
 		for (let i = 0; i < numBlocks; ++i) {
 			this.blocks[i] = new MathBlock();
@@ -308,7 +308,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		}
 		return tokens.join('')
 			.replace(/>&(\d+)/g,
-				($0, $1) => ` ${mqBlockId}=${blocks[$1]?.id ?? ''}>${blocks[$1]?.join('html') ?? ''}`);
+				($0, $1: number) => ` ${mqBlockId}=${blocks[$1]?.id ?? ''}>${blocks[$1]?.join('html') ?? ''}`);
 	}
 
 	// methods to export a string representation of the math tree

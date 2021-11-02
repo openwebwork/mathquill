@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
 import { pray } from 'src/constants';
 
 type ParserBody = (
@@ -60,7 +61,7 @@ export class Parser {
 			const xs: Array<string> = [];
 
 			while (this._(stream,
-				(newStream, x) => {
+				(newStream, x: string) => {
 					stream = newStream;
 					xs.push(x);
 					return true;
@@ -79,17 +80,17 @@ export class Parser {
 			for (let i = 0; i < max && result; ++i) {
 				let failure;
 				result = this._(stream,
-					(newStream, x) => {
+					(newStream, x: string) => {
 						xs.push(x);
 						stream = newStream;
 						return true;
 					},
-					(newStream, msg) => {
+					(newStream, msg: string) => {
 						failure = msg;
 						stream = newStream;
 						return false;
 					}
-				);
+				) as boolean;
 				if (i < min && !result) return onFailure?.(stream, failure);
 			}
 
@@ -106,7 +107,7 @@ export class Parser {
 
 	map<R, T>(fn: ((result: R) => T) | { new (arg: R): T }) {
 		return this.then((result: R) => {
-			if (fn.prototype && fn.prototype.constructor && fn.prototype.constructor.name) {
+			if (typeof fn === 'function' && /^\s*class\s+/.test(fn.toString())) {
 				return Parser.succeed(new (fn as { new (arg: R): T })(result));
 			} else if (typeof fn === 'function') {
 				return Parser.succeed((fn as (result: R) => T)(result));

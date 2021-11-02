@@ -6,7 +6,7 @@ import type { Controller } from 'src/controller';
 import type { Node } from 'tree/node';
 
 export interface AbstractMathQuillConstructor {
-	new (...args: Array<any>): AbstractMathQuill;
+	new (ctrlr: Controller): AbstractMathQuill;
 	RootBlock: Constructor<Node>;
 }
 

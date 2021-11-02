@@ -19,7 +19,7 @@ import { Node } from 'tree/node';
 export class Fragment {
 	jQ: JQuery = jQuery();
 	ends: Ends = {};
-	disowned: boolean | undefined = undefined;
+	disowned?: boolean;
 	each = iterator((yield_: (node?: Node) => Node | boolean) => {
 		let el = this.ends[L];
 		if (!el) return this;

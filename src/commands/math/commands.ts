@@ -74,7 +74,7 @@ LatexCmds.textcolor = class extends MathCommand {
 			.then(Parser.string('{'))
 			.then(Parser.regex(/^[#\w\s.,()%-]*/))
 			.skip(Parser.string('}'))
-			.then((color) => {
+			.then((color: string) => {
 				this.setColor(color);
 				return super.parser();
 			})
@@ -465,7 +465,7 @@ LatexCmds.embed = class extends Symbol {
 
 	parser() {
 		return Parser.string('{').then(Parser.regex(/^[a-z][a-z0-9]*/i)).skip(Parser.string('}'))
-			.then((name) =>
+			.then((name: string) =>
 				// the chars allowed in the optional data block are arbitrary other than
 				// excluding curly braces and square brackets (which'd be too confusing)
 				Parser.string('[').then(Parser.regex(/^[-\w\s]*/)).skip(Parser.string(']'))

@@ -54,7 +54,7 @@ export const MouseEventController =
 
 					// delete the mouse handlers now that we're not dragging anymore
 					rootjQ.off('mousemove', mousemove);
-					jQuery(e.target.ownerDocument).off('mousemove', docmousemove).off('mouseup', mouseup);
+					jQuery((e.target as Element).ownerDocument).off('mousemove', docmousemove).off('mouseup', mouseup);
 				};
 
 				if (ctrlr.blurred) {

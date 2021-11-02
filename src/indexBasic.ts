@@ -1,4 +1,4 @@
-import MathQuill from 'src/publicapi';
+import MathQuill from 'src/publicapiBasic';
 import { MQ_VERSION } from 'src/version';
 import 'css/main.less';
 

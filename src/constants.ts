@@ -78,14 +78,17 @@ export const noop = () => { /* do nothing */ };
 //  Note that the for-in loop will yield 'each', but 'each' maps to
 //  the function object created by iterator() which does not have a
 //  .method() method, so that just fails silently.
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return,
+   @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 export const iterator = (generator: any) => {
-	return (fn: any, arg1?: any, arg2?: any) => {
+	return (fn: any, ...args: Array<any>) => {
 		const yield_ = typeof fn === 'function'
 			? (obj: Node) => fn(obj)
-			: (obj: any) => { if (fn in obj) return obj[fn](arg1, arg2); };
+			: (obj: any) => { if (fn in obj) return obj[fn](...args); };
 		return generator(yield_);
 	};
 };
+/* eslint-enable */
 
 export type Constructor<T = object> = new (...args: Array<any>) => T;
 

@@ -2,6 +2,7 @@
 
 import type { Constructor } from 'src/constants';
 import { L, R } from 'src/constants';
+import type { Node } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
 import { RootMathCommand } from 'commands/mathBlock';
@@ -21,7 +22,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 	}
 
 	renderLatexMath(latex: string) {
-		const block = latexMathParser.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+		const block = latexMathParser.skip(Parser.eof).or(Parser.all.result(false)).parse(latex) as MathBlock;
 
 		this.root.eachChild('postOrder', 'dispose');
 		delete this.root.ends[L];
@@ -71,7 +72,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 		const escapedDollar = Parser.string('\\$').result('$');
 		const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);
 		const latexText = mathMode.or(textChar).many();
-		const commands = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+		const commands = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex) as Array<Node>;
 
 		if (commands) {
 			for (const command of commands) {
