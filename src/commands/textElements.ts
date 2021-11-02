@@ -185,8 +185,10 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			this.remove();
 			if (cursor[L] === this) cursor[L] = this[L];
 			else if (cursor[R] === this) cursor[R] = this[R];
-		} else
+		} else {
+			cursor.clearSelection();
 			this.fuseChildren();
+		}
 
 		(function getCtrlr(node?: Node): Controller {
 			return (node?.controller) ? node?.controller : getCtrlr(node?.parent);
