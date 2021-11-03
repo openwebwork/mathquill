@@ -1,6 +1,6 @@
-import type { Direction } from 'src/constants';
+import type { Direction, Constructor } from 'src/constants';
 import { L, R, LatexCmds, CharCmds } from 'src/constants';
-import { RootBlockMixin, writeMethodMixin } from 'src/mixins';
+import { RootBlockMixin } from 'src/mixins';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
@@ -8,6 +8,48 @@ import type { Node } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { BlockFocusBlur } from 'services/focusBlur';
 import { VanillaSymbol, MathElement, MathCommand, Letter, Digit, latexMathParser } from 'commands/mathElements';
+
+// The MathBlock and the RootMathCommand (used by the RootTextBlock) use this.
+export const writeMethodMixin = <TBase extends Constructor<Node>>(Base: TBase) => class extends Base {
+	chToCmd(ch: string, options: Options): Node {
+		const cons = CharCmds[ch] || LatexCmds[ch];
+		// exclude f because it gets a dedicated command with more spacing
+		if (ch.match(/^[a-eg-zA-Z]$/))
+			return new Letter(ch);
+		else if (/^\d$/.test(ch))
+			return new Digit(ch);
+		else if (options && options.typingSlashWritesDivisionSymbol && ch === '/')
+			return new LatexCmds['\u00f7'](ch);
+		else if (options && options.typingAsteriskWritesTimesSymbol && ch === '*')
+			return new LatexCmds['\u00d7'](ch);
+		else if (cons)
+			return new cons(ch);
+		else
+			return new VanillaSymbol(ch);
+	}
+
+	write(cursor: Cursor, ch: string) {
+		if (this.isSupSubLeft) {
+			if (cursor.options.autoSubscriptNumerals && this === this.parent?.sub) {
+				if (ch === '_') return;
+				const cmd = this.chToCmd(ch, cursor.options);
+				if (cmd.isSymbol) cursor.deleteSelection();
+				else cursor.clearSelection().insRightOf(this.parent);
+				cmd.createLeftOf(cursor.show());
+			}
+			if (cursor[L] && !cursor[R] && !cursor.selection
+				&& cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
+				cursor.insRightOf(this.parent as Node);
+			}
+		}
+
+		const cmd = this.chToCmd(ch, cursor.options);
+		if (cursor.selection) cmd.replaces(cursor.replaceSelection());
+		if (!cursor.isTooDeep()) {
+			cmd.createLeftOf(cursor.show());
+		}
+	}
+};
 
 // Children and parent of MathCommand's. Basically partitions all the
 // symbols and operators that descend (in the Math DOM tree) from
@@ -69,23 +111,6 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 		node?.seek(pageX, cursor);
 	}
 
-	chToCmd(ch: string, options: Options): Node {
-		const cons = CharCmds[ch] || LatexCmds[ch];
-		// exclude f because it gets a dedicated command with more spacing
-		if (ch.match(/^[a-eg-zA-Z]$/))
-			return new Letter(ch);
-		else if (/^\d$/.test(ch))
-			return new Digit(ch);
-		else if (options && options.typingSlashWritesDivisionSymbol && ch === '/')
-			return new LatexCmds['\u00f7'](ch);
-		else if (options && options.typingAsteriskWritesTimesSymbol && ch === '*')
-			return new LatexCmds['\u00d7'](ch);
-		else if (cons)
-			return new cons(ch);
-		else
-			return new VanillaSymbol(ch);
-	}
-
 	writeLatex(cursor: Cursor, latex: string) {
 		const all = Parser.all;
 		const eof = Parser.eof;
@@ -134,11 +159,10 @@ export class RootMathCommand extends writeMethodMixin(MathCommand) {
 	createBlocks() {
 		super.createBlocks();
 
-		(this.ends[L] as RootMathCommand).cursor = this.cursor;
-		const leftEnd = this.ends[L] as Node;
+		const leftEnd = this.ends[L] as RootMathCommand;
 		leftEnd.write = (cursor: Cursor, ch: string) => {
 			if (ch !== '$')
-				leftEnd.write(cursor, ch);
+				this.write(cursor, ch);
 			else if (leftEnd.isEmpty()) {
 				cursor.insRightOf(leftEnd.parent as Node);
 				leftEnd.parent?.deleteTowards(L, cursor);
@@ -148,7 +172,7 @@ export class RootMathCommand extends writeMethodMixin(MathCommand) {
 			else if (!cursor[L])
 				cursor.insLeftOf(leftEnd.parent as Node);
 			else
-				leftEnd.write(cursor, ch);
+				this.write(cursor, ch);
 		};
 	}
 

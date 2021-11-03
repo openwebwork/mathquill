@@ -39,31 +39,6 @@ export const deleteSelectTowardsMixin = <TBase extends Constructor<Node>>(Base: 
 
 };
 
-// The MathBlock and the RootMathCommand (used by the RootTextBlock) use this.
-export const writeMethodMixin = <TBase extends Constructor<Node>>(Base: TBase) => class extends Base {
-	write(cursor: Cursor, ch: string) {
-		if (this.isSupSubLeft) {
-			if (cursor.options.autoSubscriptNumerals && this === this.parent?.sub) {
-				if (ch === '_') return;
-				const cmd = this.chToCmd(ch, cursor.options);
-				if (cmd.isSymbol) cursor.deleteSelection();
-				else cursor.clearSelection().insRightOf(this.parent);
-				cmd.createLeftOf(cursor.show());
-			}
-			if (cursor[L] && !cursor[R] && !cursor.selection
-				&& cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
-				cursor.insRightOf(this.parent as Node);
-			}
-		}
-
-		const cmd = this.chToCmd(ch, cursor.options);
-		if (cursor.selection) cmd.replaces(cursor.replaceSelection());
-		if (!cursor.isTooDeep()) {
-			cmd.createLeftOf(cursor.show());
-		}
-	}
-};
-
 const div_style = document.createElement('div').style,
 	transformPropNames = {
 		transform: 1,
