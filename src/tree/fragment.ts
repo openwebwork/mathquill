@@ -38,8 +38,7 @@ export class Fragment {
 
 		pray('withDir is passed to Fragment', withDir instanceof Node);
 		pray('oppDir is passed to Fragment', oppDir instanceof Node);
-		pray('withDir and oppDir have the same parent',
-			withDir.parent === oppDir?.parent);
+		pray('withDir and oppDir have the same parent', withDir.parent === oppDir?.parent);
 
 		this.ends[dir] = withDir;
 		this.ends[dir === L ? R : L] = oppDir;

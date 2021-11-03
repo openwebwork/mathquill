@@ -86,9 +86,23 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 	// the cursor
 	moveTowards(dir: Direction, cursor: Cursor) { cursor.insAtDirEnd(dir === L ? R : L, this); }
 	moveOutOf(dir: Direction, cursor: Cursor) { cursor.insDirOf(dir, this); }
-	unselectInto(dir: Direction, cursor: Cursor) { cursor.insAtDirEnd(dir === L ? R : L, this); }
+	unselectInto(dir: Direction, cursor: Cursor) {
+		cursor.insAtDirEnd(dir === L ? R : L, this);
+
+		// Split the text at the stored anticursor position, and reconstruct the anticursor.
+		const newTextPc = (cursor[dir] as TextPiece).splitRight(this.anticursorPosition);;
+		if (dir === L) cursor[L] = newTextPc;
+		cursor.anticursor = new Point(this, newTextPc[L], newTextPc);
+		cursor.anticursor.ancestors = {};
+		for (let ancestor = cursor.anticursor; ancestor.parent; ancestor = ancestor.parent) {
+			cursor.anticursor.ancestors[ancestor.parent.id] = ancestor;
+		}
+	}
 
 	selectOutOf(dir: Direction, cursor: Cursor) {
+		this.anticursorPosition = dir === L
+			? (cursor.selection?.jQ[0].textContent?.length ?? 1) - 1
+			: this.textContents().length - (cursor.selection?.jQ[0].textContent?.length ?? 1) + 1;
 		cursor.insDirOf(dir, this);
 	}
 
@@ -186,7 +200,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			if (cursor[L] === this) cursor[L] = this[L];
 			else if (cursor[R] === this) cursor[R] = this[R];
 		} else {
-			cursor.clearSelection();
+			// If the text block contains the selection, then that needs to be removed before fuseChildren is called.
+			if (this.jQ.find('.mq-selection').length) cursor.clearSelection();
 			this.fuseChildren();
 		}
 

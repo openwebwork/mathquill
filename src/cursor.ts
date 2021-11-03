@@ -16,7 +16,7 @@ export class Cursor extends Point {
 	options: Options;
 	jQ: JQuery;
 	upDownCache: { [key: number]: Point } = {};
-	intervalId: ReturnType<typeof setInterval> | undefined = undefined;
+	intervalId?: ReturnType<typeof setInterval>;
 	selection?: Selection;
 	anticursor?: Point;
 	selectionChanged?: () => void;
@@ -65,7 +65,6 @@ export class Cursor extends Point {
 		this[dir === L ? R : L] = oppDir;
 		// by contract, .blur() is called after all has been said and done
 		// and the cursor has actually been moved
-		// FIXME pass cursor to .blur() so text can fix cursor pointers when removing itself
 		if (oldParent !== parent && oldParent.blur) oldParent.blur(this);
 	}
 

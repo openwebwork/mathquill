@@ -32,6 +32,10 @@ export const MouseEventController =
 				// End any previous selection.
 				cursor.endSelection();
 
+				// Cache the ownerDocument as it is not available in the mouseup handler if the mouse button is released
+				// while the cursor is not in the window.
+				const ownerDocument = jQuery(e.target.ownerDocument);
+
 				let target: JQuery | undefined;
 				const mousemove = (e: JQuery.TriggeredEvent) => target = jQuery(e.target);
 				const docmousemove = (e: JQuery.TriggeredEvent) => {
@@ -42,7 +46,7 @@ export const MouseEventController =
 					// outside rootjQ, the MathQuill node corresponding to the target (if any)
 					// won't be inside this root, so don't mislead Controller::seek with it
 
-				const mouseup = (e: JQuery.TriggeredEvent) => {
+				const mouseup = () => {
 					cursor.blink = blink;
 					if (!cursor.selection) {
 						if (ctrlr.editable) {
@@ -54,7 +58,7 @@ export const MouseEventController =
 
 					// delete the mouse handlers now that we're not dragging anymore
 					rootjQ.off('mousemove', mousemove);
-					jQuery((e.target as Element).ownerDocument).off('mousemove', docmousemove).off('mouseup', mouseup);
+					ownerDocument.off('mousemove', docmousemove).off('mouseup', mouseup);
 				};
 
 				if (ctrlr.blurred) {
@@ -66,7 +70,7 @@ export const MouseEventController =
 				ctrlr.seek(jQuery(e.target), e.pageX ?? 0).cursor.startSelection();
 
 				rootjQ.mousemove(mousemove);
-				jQuery(e.target.ownerDocument).mousemove(docmousemove).mouseup(mouseup);
+				ownerDocument.mousemove(docmousemove).mouseup(mouseup);
 				// listen on document not just body to not only hear about mousemove and
 				// mouseup on page outside field, but even outside page, except iframes:
 				// https://github.com/mathquill/mathquill/commit/8c50028afcffcace655d8ae2049f6e02482346c5#commitcomment-6175800
