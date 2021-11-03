@@ -46,7 +46,7 @@ export class Node {
 
 	reflow?: () => void;
 
-	bubble = iterator((yield_: (node: Node) => Node | boolean) => {
+	bubble = iterator((yield_: (node: Node) => Node | boolean | void) => {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		for (let ancestor: Node | undefined = this; ancestor; ancestor = ancestor.parent) {
 			if (yield_(ancestor) === false) break;
@@ -55,7 +55,7 @@ export class Node {
 		return this;
 	});;
 
-	postOrder = iterator((yield_: (node: Node) => Node | boolean) => {
+	postOrder = iterator((yield_: (node: Node) => Node | boolean | void) => {
 		(function recurse(descendant: Node) {
 			descendant.eachChild(recurse);
 			yield_(descendant);

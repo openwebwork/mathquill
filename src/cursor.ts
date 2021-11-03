@@ -133,8 +133,7 @@ export class Cursor extends Point {
 
 			uncle.children()
 				.adopt(greatgramp, leftward, rightward)
-				.each((cousin: Node) => cousin.jQ.insertBefore(gramp.jQ.first()))
-			;
+				.each((cousin: Node) => { cousin.jQ.insertBefore(gramp.jQ.first()); });
 
 			leftward = uncle.ends[R];
 		});

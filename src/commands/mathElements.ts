@@ -538,9 +538,9 @@ export class Letter extends Variable {
 
 		// removeClass and delete flags from all letters before figuring out
 		// which, if any, are part of an operator name
-		new Fragment(l?.[R] || this.parent?.ends[L], r?.[L] || this.parent?.ends[R]).each((el: Letter) => {
-			el.italicize(true).jQ.removeClass('mq-first mq-last mq-followed-by-supsub');
-			el.ctrlSeq = el.letter;
+		new Fragment(l?.[R] || this.parent?.ends[L], r?.[L] || this.parent?.ends[R]).each((el: Node) => {
+			(el as Letter).italicize(true).jQ.removeClass('mq-first mq-last mq-followed-by-supsub');
+			el.ctrlSeq = (el as Letter).letter;
 		});
 
 		// check for operator names: at each position from left to right, check

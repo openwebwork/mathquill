@@ -20,12 +20,12 @@ export class Fragment {
 	jQ: JQuery = jQuery();
 	ends: Ends = {};
 	disowned?: boolean;
-	each = iterator((yield_: (node?: Node) => Node | boolean) => {
+	each = iterator((yield_: (node: Node) => Node | boolean | void) => {
 		let el = this.ends[L];
 		if (!el) return this;
 
 		for (; el !== this.ends[R]?.[R]; el = el?.[R]) {
-			if (yield_(el) === false) break;
+			if (yield_(el as Node) === false) break;
 		}
 
 		return this;
@@ -138,7 +138,7 @@ export class Fragment {
 
 	fold<T>(fold: T, fn: (fold: T, child: Node) => T): T {
 		let ret = fold;
-		this.each((el: Node) => ret = fn(ret, el));
+		this.each((el: Node) => { ret = fn(ret, el); });
 		return ret;
 	}
 }
