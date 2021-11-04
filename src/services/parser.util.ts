@@ -16,8 +16,6 @@ export class Parser {
 	// parser combinator methods.
 
 	_: ParserBody;
-	block?: Parser;
-	optBlock?: Parser;
 
 	constructor(body: ParserBody) {
 		this._ = body;
@@ -56,12 +54,12 @@ export class Parser {
 	}
 
 	// -*- optimized iterative combinators -*- //
-	many() {
+	many<T>() {
 		return new Parser((stream, onSuccess) => {
-			const xs: Array<string> = [];
+			const xs: Array<T> = [];
 
 			while (this._(stream,
-				(newStream, x: string) => {
+				(newStream, x: T) => {
 					stream = newStream;
 					xs.push(x);
 					return true;
@@ -72,20 +70,20 @@ export class Parser {
 		});
 	}
 
-	times(min: number, max: number = min) {
+	times<T>(min: number, max: number = min) {
 		return new Parser((stream, onSuccess, onFailure) => {
-			const xs: Array<string> = [];
+			const xs: Array<T> = [];
 			let result = true;
 
 			for (let i = 0; i < max && result; ++i) {
 				let failure;
 				result = this._(stream,
-					(newStream, x: string) => {
+					(newStream, x: T) => {
 						xs.push(x);
 						stream = newStream;
 						return true;
 					},
-					(newStream, msg: string) => {
+					(newStream, msg: T) => {
 						failure = msg;
 						stream = newStream;
 						return false;

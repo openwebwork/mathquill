@@ -119,7 +119,7 @@ suite('Public API', () => {
 			mq.latex('\\frac{3+2}{5-1}');
 			assert.equal(mq.text(), '((3+2)/(5-1))');
 			mq.latex('\\div');
-			assert.equal(mq.text(), '[/]');
+			assert.equal(mq.text(), '/');
 			mq.latex('^{}');
 			assert.equal(mq.text(), '');
 			mq.latex('3^{4}');

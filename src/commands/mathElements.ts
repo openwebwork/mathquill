@@ -104,9 +104,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 	}
 
 	parser() {
-		const block = latexMathParser.block as Parser;
-
-		return block.times(this.numBlocks()).map((blocks: Array<MathBlock>) => {
+		return latexMathParser.block.times(this.numBlocks()).map((blocks: Array<MathBlock>) => {
 			this.blocks = blocks;
 
 			for (const block of blocks) {
@@ -768,6 +766,11 @@ export class UpperLowerLimitCommand extends MathCommand {
 			simplify(this.ends[R]?.latex() ?? '')}`;
 	}
 
+	text() {
+		const operand = this.ctrlSeq.slice(1, this.ctrlSeq.length - 1);
+		return `${operand}(${this.ends[L]?.text() ?? ''},${this.ends[R]?.text() ?? ''})`;
+	}
+
 	parser() {
 		const blocks = this.blocks = [ new MathBlock(), new MathBlock() ];
 		for (const block of blocks) {
@@ -776,7 +779,7 @@ export class UpperLowerLimitCommand extends MathCommand {
 
 		return Parser.optWhitespace.then(Parser.string('_').or(Parser.string('^'))).then((supOrSub) => {
 			const child = blocks[supOrSub === '_' ? 0 : 1];
-			return (latexMathParser.block as Parser).then((block: Node) => {
+			return latexMathParser.block.then((block: Node) => {
 				block.children().adopt(child, child.ends[R]);
 				return Parser.succeed(this);
 			});
@@ -966,12 +969,18 @@ export class Bracket extends DelimsMixin(MathCommand) {
 	}
 }
 
-export const latexMathParser = (() => {
+interface LatexMathParser extends Parser {
+	block: Parser;
+	optBlock: Parser;
+}
+
+export const latexMathParser: LatexMathParser = (() => {
 	const commandToBlock = (cmd: Node | Fragment) => { // can also take in a Fragment
 		const block = new MathBlock();
 		cmd.adopt(block);
 		return block;
 	};
+
 	const joinBlocks = (blocks: Array<MathBlock>) => {
 		const firstBlock = blocks[0] || new MathBlock();
 
@@ -1014,14 +1023,12 @@ export const latexMathParser = (() => {
 		Parser.string('[').then(
 			mathBlock.then((block: MathBlock) => {
 				return block.join('latex') !== ']' ? Parser.succeed(block) : Parser.fail();
-			})
-				.many().map(joinBlocks).skip(Parser.optWhitespace)
-		).skip(Parser.string(']'))
-	;
+			}).many().map(joinBlocks).skip(Parser.optWhitespace)
+		).skip(Parser.string(']'));
 
 	const latexMath = mathSequence;
 
-	latexMath.block = mathBlock;
-	latexMath.optBlock = optMathBlock;
-	return latexMath;
+	(latexMath as LatexMathParser).block = mathBlock;
+	(latexMath as LatexMathParser).optBlock = optMathBlock;
+	return latexMath as LatexMathParser;
 })();

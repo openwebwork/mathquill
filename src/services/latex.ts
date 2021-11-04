@@ -66,8 +66,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 				block.children().adopt(rootMathBlock);
 
 				return rootMathCommand;
-			})
-		;
+			});
 
 		const escapedDollar = Parser.string('\\$').result('$');
 		const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);

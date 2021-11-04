@@ -61,8 +61,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 
 				new TextPiece(text.replace(/\\{/g, '{').replace(/\\}/g, '}')).adopt(this);
 				return this;
-			})
-		;
+			});
 	}
 
 	textContents() {

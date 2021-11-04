@@ -66,8 +66,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	text() {
 		return this.ends[L] && this.ends[L] === this.ends[R]
 			? this.ends[L]?.text() ?? ''
-			: this.join('text')
-		;
+			: this.join('text');
 	}
 
 	keystroke(key: string, e: Event, ctrlr: Controller) {

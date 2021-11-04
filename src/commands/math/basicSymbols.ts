@@ -45,7 +45,7 @@ LatexCmds.operatorname = class extends MathCommand {
 	}
 	numBlocks() { return 1; };
 	parser() {
-		return (latexMathParser.block as Parser).map((b: MathBlock) => b.children());
+		return latexMathParser.block.map((b: MathBlock) => b.children());
 	};
 };
 
@@ -299,9 +299,9 @@ LatexCmds['\u2265'] = LatexCmds.ge = LatexCmds.geq = bindMixin(Inequality, great
 
 LatexCmds['='] = Equality;
 
-LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&times;', '[x]');
+LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&times;', '*');
 
 LatexCmds['\u00f7'] = LatexCmds.div = LatexCmds.divide = LatexCmds.divides =
-	bindMixin(BinaryOperator, '\\div ', '&divide;', '[/]');
+	bindMixin(BinaryOperator, '\\div ', '&divide;', '/');
 
 CharCmds['~'] = LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~');

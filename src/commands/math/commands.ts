@@ -77,8 +77,7 @@ LatexCmds.textcolor = class extends MathCommand {
 			.then((color: string) => {
 				this.setColor(color);
 				return super.parser();
-			})
-		;
+			});
 	}
 
 	isStyleBlock() {
@@ -102,8 +101,7 @@ LatexCmds['class'] = class extends MathCommand {
 				this.cls = cls || '';
 				this.htmlTemplate = `<span class="mq-class ${cls}">&0</span>`;
 				return super.parser();
-			})
-		;
+			});
 	}
 
 	latex() {
@@ -165,7 +163,7 @@ class SummationNotation extends UpperLowerLimitCommand {
 
 	createLeftOf(cursor: Cursor) {
 		super.createLeftOf(cursor);
-		if (cursor.options.sumStartsWithNEquals) {
+		if (cursor.options.sumStartsWithNEquals && this.ends[L]?.isEmpty()) {
 			new Letter('n').createLeftOf(cursor);
 			new Equality().createLeftOf(cursor);
 		}
@@ -271,8 +269,8 @@ class SquareRoot extends MathCommand {
 	}
 
 	parser() {
-		return (latexMathParser.optBlock as Parser).then((optBlock: MathBlock) => {
-			return (latexMathParser.block as Parser).map((block: MathBlock) => {
+		return latexMathParser.optBlock.then((optBlock: MathBlock) => {
+			return latexMathParser.block.map((block: MathBlock) => {
 				const nthroot = new NthRoot();
 				nthroot.blocks = [optBlock, block];
 				optBlock.adopt(nthroot);
@@ -286,14 +284,13 @@ LatexCmds.sqrt = LatexCmds['\u221a'] = SquareRoot;
 
 LatexCmds.hat = class extends MathCommand {
 	constructor() {
-		super();
-		this.ctrlSeq = '\\hat';
-		this.htmlTemplate =
+		super('\\hat',
 			'<span class="mq-non-leaf">'
 			+   '<span class="mq-hat-prefix">^</span>'
 			+   '<span class="mq-hat-stem">&0</span>'
-			+ '</span>';
-		this.textTemplate = ['hat(', ')'];
+			+ '</span>',
+			['hat(', ')']
+		);
 	}
 };
 
@@ -373,11 +370,9 @@ LatexCmds.left = class extends MathCommand {
 							cmd.blocks = [ block ];
 							block.adopt(cmd);
 							return cmd;
-						})
-					;
+						});
 				});
-			})
-		;
+			});
 	}
 };
 
