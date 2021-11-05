@@ -974,7 +974,7 @@ interface LatexMathParser extends Parser {
 	optBlock: Parser;
 }
 
-export const latexMathParser: LatexMathParser = (() => {
+export const latexMathParser = (() => {
 	const commandToBlock = (cmd: Node | Fragment) => { // can also take in a Fragment
 		const block = new MathBlock();
 		cmd.adopt(block);
@@ -1015,9 +1015,9 @@ export const latexMathParser: LatexMathParser = (() => {
 	const command = controlSequence.or(variable).or(symbol);
 
 	// Parsers yielding MathBlocks
-	const mathGroup = Parser.string('{').then(() => mathSequence).skip(Parser.string('}'));
-	const mathBlock = Parser.optWhitespace.then(mathGroup.or(command.map(commandToBlock)));
-	const mathSequence = mathBlock.many().map(joinBlocks).skip(Parser.optWhitespace);
+	const mathGroup: Parser = Parser.string('{').then(() => mathSequence).skip(Parser.string('}'));
+	const mathBlock: Parser = Parser.optWhitespace.then(mathGroup.or(command.map(commandToBlock)));
+	const mathSequence: Parser = mathBlock.many().map(joinBlocks).skip(Parser.optWhitespace);
 
 	const optMathBlock =
 		Parser.string('[').then(

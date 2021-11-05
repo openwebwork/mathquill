@@ -82,7 +82,7 @@ export default class MathQuill {
 			(MQ as MQApi)[kind as keyof MQApi].prototype = APIClasses[kind].prototype;
 		}
 
-		return MQ;
+		return MQ as MQApi;
 	}
 
 	static noConflict() {
