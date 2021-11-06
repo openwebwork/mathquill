@@ -163,7 +163,7 @@ class SummationNotation extends UpperLowerLimitCommand {
 
 	createLeftOf(cursor: Cursor) {
 		super.createLeftOf(cursor);
-		if (cursor.options.sumStartsWithNEquals && this.ends[L]?.isEmpty()) {
+		if (cursor.options.sumStartsWithNEquals && !this.replacedFragment) {
 			new Letter('n').createLeftOf(cursor);
 			new Equality().createLeftOf(cursor);
 		}
