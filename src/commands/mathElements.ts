@@ -379,6 +379,8 @@ export class VanillaSymbol extends Symbol {
 }
 
 export class BinaryOperator extends Symbol {
+	isUnary = false;
+
 	constructor(ctrlSeq: string, html?: string, text?: string, useRawHtml = false) {
 		super(ctrlSeq,
 			useRawHtml === true ? html : `<span class="mq-binary-operator">${html ?? ''}</span>`,
@@ -600,6 +602,52 @@ export function insLeftOfMeUnlessAtEnd(this: SupSub, cursor: Cursor) {
 	cursor.insRightOf(cmd);
 }
 
+export class Fraction extends MathCommand {
+	constructor() {
+		super();
+
+		this.ctrlSeq = '\\frac';
+		this.htmlTemplate =
+			'<span class="mq-fraction mq-non-leaf">'
+			+   '<span class="mq-numerator">&0</span>'
+			+   '<span class="mq-denominator">&1</span>'
+			+   '<span style="display:inline-block;width:0">&#8203;</span>'
+			+ '</span>';
+		this.textTemplate = ['((', ')/(', '))'];
+	}
+
+	text() {
+		let leftward = this[L];
+		for (; leftward && leftward.ctrlSeq === '\\ '; leftward = leftward[L]);
+
+		const text = (dir: Direction) => {
+			let needParens = false;
+			this.ends[dir]?.eachChild((child: Node) => {
+				if ((child instanceof BinaryOperator && !child.isUnary) ||
+					('text' in LatexCmds && child instanceof LatexCmds.text) ||
+					child instanceof UpperLowerLimitCommand ||
+					child instanceof Fraction ||
+					child.ctrlSeq === '\\ ' ||
+					/^[,;:]$/.test(child.ctrlSeq)) {
+					needParens = true;
+				}
+				return !needParens;
+			});
+
+			const blankDefault = dir === L ? 0 : 1;
+			const l = this.ends[dir]?.text() !== ' ' && this.ends[dir]?.text();
+			return l ? (needParens ? `(${l})` : l) : blankDefault;
+		};
+		return leftward instanceof BinaryOperator && leftward.isUnary
+			? `(${text(L)}/${text(R)})` : ` ${text(L)}/${text(R)} `;
+	}
+
+	finalizeTree() {
+		this.upInto = (this.ends[R] as Node).upOutOf = this.ends[L];
+		this.downInto = (this.ends[L] as Node).downOutOf = this.ends[R];
+	}
+};
+
 export class SupSub extends MathCommand {
 	sup?: Node;
 	sub?: Node;
@@ -713,10 +761,29 @@ export class SupSub extends MathCommand {
 
 	text() {
 		const text = (prefix: string, block?: Node) => {
-			const l = (block && block.text() !== ' ') && block.text();
-			return l ? prefix + `(${l || ' '})` : '';
+			let needParens = false;
+			let numBlocks = 0;
+			let haveDigits = false;
+			block?.eachChild((child: Node) => {
+				if (child instanceof Digit) haveDigits = true;
+				if (!(child instanceof Digit || (child instanceof BinaryOperator && child.isUnary))) ++numBlocks;
+				if ((haveDigits && numBlocks) || numBlocks > 1 ||
+					(child instanceof BinaryOperator && !child.isUnary) ||
+					('text' in LatexCmds && child instanceof LatexCmds.text) ||
+					child instanceof Fraction ||
+					child instanceof UpperLowerLimitCommand ||
+					child.ctrlSeq === '\\ ' ||
+					/^[,;:]$/.test(child.ctrlSeq)) {
+					needParens = true;
+				}
+				return !needParens;
+			});
+
+			const l = block?.text() !== ' ' && block?.text();
+			return l ? prefix + (needParens ? `(${l})` : l) : '';
 		};
-		return text('_', this.sub) + text('^', this.sup);
+		const mainText = text('_', this.sub) + text('^', this.sup);
+		return mainText + (mainText && this[R] instanceof Digit ? ' ' : '');
 	}
 
 	addBlock(block: Node) {
@@ -994,6 +1061,7 @@ export const latexMathParser = (() => {
 	// Parsers yielding either MathCommands, or Fragments of MathCommands
 	//   (either way, something that can be adopted by a MathBlock)
 	const variable = Parser.letter.map((c: string) => new Letter(c));
+	const digit = Parser.regex(/^\d/).map((c: string) => new Digit(c));
 	const symbol = Parser.regex(/^[^${}\\_^]/).map((c: string) => new VanillaSymbol(c));
 
 	const controlSequence =
@@ -1012,7 +1080,7 @@ export const latexMathParser = (() => {
 				}
 			});
 
-	const command = controlSequence.or(variable).or(symbol);
+	const command = controlSequence.or(variable).or(digit).or(symbol);
 
 	// Parsers yielding MathBlocks
 	const mathGroup: Parser = Parser.string('{').then(() => mathSequence).skip(Parser.string('}'));

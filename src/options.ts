@@ -35,6 +35,7 @@ export interface InputOptions {
 	sumStartsWithNEquals?: boolean;
 	supSubsRequireOperand?: boolean;
 	rootsAreExponents?: boolean;
+	noExtraFractionParens?: boolean;
 	maxDepth?: number;
 	autoSubscriptNumerals?: boolean;
 	typingSlashWritesDivisionSymbol?: boolean;
@@ -182,6 +183,12 @@ export class Options {
 	_rootsAreExponents?: boolean;
 	get rootsAreExponents() { return this._rootsAreExponents ?? Options.rootsAreExponents; }
 	set rootsAreExponents(rootsAreExponents) { this._rootsAreExponents = rootsAreExponents; }
+
+	// If true then the text output for a fraction will not be wrapped in extra parentheses.
+	static noExtraFractionParens = false;
+	_noExtraFractionParens?: boolean;
+	get noExtraFractionParens() { return this._noExtraFractionParens ?? Options.noExtraFractionParens; }
+	set noExtraFractionParens(noExtraFractionParens) { this._noExtraFractionParens = noExtraFractionParens; }
 
 	// Specifies the maximum number of nested MathBlocks allowed.
 	static maxDepth = undefined;

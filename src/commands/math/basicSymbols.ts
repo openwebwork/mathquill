@@ -250,28 +250,28 @@ class PlusMinus extends BinaryOperator {
 	}
 
 	contactWeld(opts: Options, dir?: Direction) {
-		const determineOpClassType = (node: Node): string => {
+		const isUnary = (node: Node): boolean => {
 			if (node[L]) {
 				// If the left sibling is a binary operator or a separator (comma, semicolon, colon)
 				// or an open bracket (open parenthesis, open square bracket)
 				// consider the operator to be unary
 				if (node[L] instanceof BinaryOperator || /^[,;:([]$/.test((node[L] as BinaryOperator).ctrlSeq)) {
-					return '';
+					return true;
 				}
 			} else if (node.parent && node.parent.parent && node.parent.parent.isStyleBlock()) {
-				//if we are in a style block at the leftmost edge, determine unary/binary based on
-				//the style block
+				//if we are in a style block at the leftmost edge, determine unary/binary based on the style block
 				//this allows style blocks to be transparent for unary/binary purposes
-				return determineOpClassType(node.parent.parent);
+				return isUnary(node.parent.parent);
 			} else {
-				return '';
+				return true;
 			}
 
-			return 'mq-binary-operator';
+			return false;
 		};
 
 		if (dir === R) return; // ignore if sibling only changed on the right
-		this.jQ[0].className = determineOpClassType(this);
+		this.isUnary = isUnary(this);
+		this.jQ[0].className = this.isUnary ? '' : 'mq-binary-operator';
 		return this;
 	}
 }

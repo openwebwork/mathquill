@@ -71,7 +71,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 
 	keystroke(key: string, e: Event, ctrlr: Controller) {
 		if (ctrlr.options.spaceBehavesLikeTab &&
-			(key === 'Spacebar' || key === 'Shift-Spacebar')) {
+			(ctrlr.cursor.depth() > 1 && (key === 'Spacebar' || key === 'Shift-Spacebar'))) {
 			e.preventDefault();
 			ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
 			return;

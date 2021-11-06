@@ -1,6 +1,6 @@
 // Commands and Operators.
 
-import type { Direction, Constructor } from 'src/constants';
+import type { Constructor } from 'src/constants';
 import { L, R, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
 import type { Options } from 'src/options';
 import { Controller } from 'src/controller';
@@ -14,8 +14,8 @@ import { InnerMathField } from 'commands/math';
 import type { MathBlock } from 'commands/mathBlock';
 import type { MathElement } from 'commands/mathElements';
 import {
-	BinaryOperator, Equality, MathCommand, Symbol, Letter, insLeftOfMeUnlessAtEnd, SupSub, UpperLowerLimitCommand,
-	Bracket, latexMathParser
+	BinaryOperator, Equality, MathCommand, Symbol, Letter, insLeftOfMeUnlessAtEnd, Fraction, SupSub,
+	UpperLowerLimitCommand, Bracket, latexMathParser
 } from 'commands/mathElements';
 
 class Style extends MathCommand {
@@ -188,34 +188,6 @@ LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = class extends Uppe
 	}
 };
 
-class Fraction extends MathCommand {
-	constructor() {
-		super();
-
-		this.ctrlSeq = '\\frac';
-		this.htmlTemplate =
-			'<span class="mq-fraction mq-non-leaf">'
-			+   '<span class="mq-numerator">&0</span>'
-			+   '<span class="mq-denominator">&1</span>'
-			+   '<span style="display:inline-block;width:0">&#8203;</span>'
-			+ '</span>';
-		this.textTemplate = ['((', ')/(', '))'];
-	}
-
-	text() {
-		const text = (dir: Direction) => {
-			const blankDefault = dir === L ? 0 : 1;
-			const l = this.ends[dir]?.text() !== ' ' && this.ends[dir]?.text();
-			return l ? (l.length === 1 ? l : `(${l})`) : blankDefault;
-		};
-		return `(${text(L)}/${text(R)})`;
-	}
-
-	finalizeTree() {
-		this.upInto = (this.ends[R] as Node).upOutOf = this.ends[L];
-		this.downInto = (this.ends[L] as Node).downOutOf = this.ends[R];
-	}
-};
 LatexCmds.frac = LatexCmds.dfrac = LatexCmds.cfrac = LatexCmds.fraction = Fraction;
 
 const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends (Base) {

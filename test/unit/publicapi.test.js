@@ -113,21 +113,21 @@ suite('Public API', () => {
 			mq.latex('\\nthroot[]{}');
 			assert.equal(mq.text(), 'sqrt()');
 			mq.latex('\\frac{}{}');
-			assert.equal(mq.text(), '(0/1)');
+			assert.equal(mq.text(), ' 0/1 ');
 			mq.latex('\\frac{3}{5}');
-			assert.equal(mq.text(), '(3/5)');
+			assert.equal(mq.text(), ' 3/5 ');
 			mq.latex('\\frac{3+2}{5-1}');
-			assert.equal(mq.text(), '((3+2)/(5-1))');
+			assert.equal(mq.text(), ' (3+2)/(5-1) ');
 			mq.latex('\\div');
 			assert.equal(mq.text(), '/');
 			mq.latex('^{}');
 			assert.equal(mq.text(), '');
 			mq.latex('3^{4}');
-			assert.equal(mq.text(), '3^(4)');
+			assert.equal(mq.text(), '3^4');
 			mq.latex('3x+\\ 4');
 			assert.equal(mq.text(), '3x+ 4');
 			mq.latex('x^2');
-			assert.equal(mq.text(), 'x^(2)');
+			assert.equal(mq.text(), 'x^2');
 
 			mq.latex('');
 			mq.typedText('*2*3***4');
@@ -873,7 +873,7 @@ suite('Public API', () => {
 			});
 
 			assert.ok(jQuery('.embedded-html').length);
-			assert.equal(mq.text(), '((mmmm)/(mmembedded textmm))');
+			assert.equal(mq.text(), ' mmmm/mmembedded textmm ');
 			assert.equal(mq.latex(), '\\frac{mmmm}{mmembedded latexmm}');
 		});
 	});
