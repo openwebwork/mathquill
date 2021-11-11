@@ -545,7 +545,7 @@ export class Letter extends Variable {
 
 		// check for operator names: at each position from left to right, check
 		// substrings from longest to shortest
-		outer: for (let i = 0, first = l?.[R] || this.parent?.ends[L]; i < str.length; ++i, first = first?.[R]) {
+		for (let i = 0, first = l?.[R] || this.parent?.ends[L]; i < str.length; ++i, first = first?.[R]) {
 			for (let len = Math.min(autoOps._maxLength, str.length - i); len > 0; --len) {
 				const word = str.slice(i, i + len);
 				if (autoOps[word]) {
@@ -578,7 +578,7 @@ export class Letter extends Variable {
 
 					i += len - 1;
 					first = last;
-					continue outer;
+					break;
 				}
 			}
 		}
@@ -640,7 +640,9 @@ export class Fraction extends MathCommand {
 			const l = this.ends[dir]?.text() !== ' ' && this.ends[dir]?.text();
 			return l ? (needParens ? `(${l})` : l) : blankDefault;
 		};
-		return (leftward instanceof BinaryOperator && leftward.isUnary) || rightward instanceof SupSub
+		return (leftward instanceof BinaryOperator && leftward.isUnary) || rightward instanceof SupSub ||
+			leftward?.jQ.hasClass('mq-operator-name') ||
+			(leftward instanceof SupSub && leftward[L]?.jQ.hasClass('mq-operator-name'))
 			? `(${text(L)}/${text(R)})` : ` ${text(L)}/${text(R)} `;
 	}
 
@@ -957,7 +959,6 @@ export class Bracket extends DelimsMixin(MathCommand) {
 			}
 			brack.bubble('reflow');
 		} else {
-			// TODO:  Check this super usage.
 			brack = this, side = brack.side;
 			if (brack.replacedFragment) brack.side = 0; // wrapping seln, don't be one-sided
 			else if (cursor[side === L ? R : L]) { // elsewise, auto-expand so ghost is at far end
