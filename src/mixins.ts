@@ -68,8 +68,7 @@ export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase)
 	contentjQ?: JQuery;
 
 	reflow = () => {
-		const height = (this.contentjQ?.outerHeight() ?? 0)
-			/ parseFloat(this.contentjQ?.css('fontSize') ?? '1');
+		const height = (this.contentjQ?.outerHeight() ?? 0) / parseFloat(this.contentjQ?.css('fontSize') ?? '1');
 		scale(this.delimjQs as JQuery<HTMLElement>, Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
 	};
 

@@ -619,6 +619,8 @@ export class Fraction extends MathCommand {
 	text() {
 		let leftward = this[L];
 		for (; leftward && leftward.ctrlSeq === '\\ '; leftward = leftward[L]);
+		let rightward = this[R];
+		for (; rightward && rightward.ctrlSeq === '\\ '; rightward = rightward[R]);
 
 		const text = (dir: Direction) => {
 			let needParens = false;
@@ -638,7 +640,7 @@ export class Fraction extends MathCommand {
 			const l = this.ends[dir]?.text() !== ' ' && this.ends[dir]?.text();
 			return l ? (needParens ? `(${l})` : l) : blankDefault;
 		};
-		return leftward instanceof BinaryOperator && leftward.isUnary
+		return (leftward instanceof BinaryOperator && leftward.isUnary) || rightward instanceof SupSub
 			? `(${text(L)}/${text(R)})` : ` ${text(L)}/${text(R)} `;
 	}
 
@@ -680,7 +682,9 @@ export class SupSub extends MathCommand {
 	}
 
 	createLeftOf(cursor: Cursor) {
-		if (!this.replacedFragment && !cursor[L] && cursor.options.supSubsRequireOperand) return;
+		if (!this.replacedFragment && (!cursor[L] || cursor[L]?.ctrlSeq === '\\ ') &&
+			cursor.options.supSubsRequireOperand)
+			return;
 		return super.createLeftOf(cursor);
 	}
 
@@ -960,7 +964,7 @@ export class Bracket extends DelimsMixin(MathCommand) {
 				brack.replaces(new Fragment(cursor[side === L ? R : L], cursor.parent?.ends[side === L ? R : L], side));
 				delete cursor[side === L ? R : L];
 			}
-			super.createLeftOf.call(brack, cursor);
+			super.createLeftOf(cursor);
 		}
 		if (side === L) cursor.insAtLeftEnd(brack.ends[L] as Node);
 		else cursor.insRightOf(brack);
