@@ -873,7 +873,7 @@ suite('Public API', () => {
 			});
 
 			assert.ok(jQuery('.embedded-html').length);
-			assert.equal(mq.text(), ' mmmm/mmembedded textmm ');
+			assert.equal(mq.text(), ' (mmmm)/(mmembedded textmm) ');
 			assert.equal(mq.latex(), '\\frac{mmmm}{mmembedded latexmm}');
 		});
 	});

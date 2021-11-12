@@ -622,8 +622,18 @@ export class Fraction extends MathCommand {
 
 		const text = (dir: Direction) => {
 			let needParens = false;
+			let numBlocks = 0;
+			let haveDigits = false;
 			this.ends[dir]?.eachChild((child: Node) => {
-				if ((child instanceof BinaryOperator && !child.isUnary) ||
+				if (child instanceof Digit) haveDigits = true;
+
+				if (!(child instanceof Digit ||
+					(child instanceof BinaryOperator && child.isUnary) ||
+					child instanceof SupSub))
+					++numBlocks;
+
+				if ((haveDigits && numBlocks) || numBlocks > 1 ||
+					(child instanceof BinaryOperator && !child.isUnary) ||
 					('text' in LatexCmds && child instanceof LatexCmds.text) ||
 					child instanceof UpperLowerLimitCommand ||
 					child instanceof Fraction ||
@@ -791,8 +801,8 @@ export class SupSub extends MathCommand {
 				if ((haveDigits && numBlocks) || numBlocks > 1 ||
 					(child instanceof BinaryOperator && !child.isUnary) ||
 					('text' in LatexCmds && child instanceof LatexCmds.text) ||
-					child instanceof Fraction ||
 					child instanceof UpperLowerLimitCommand ||
+					child instanceof Fraction ||
 					child.ctrlSeq === '\\ ' ||
 					/^[,;:]$/.test(child.ctrlSeq)) {
 					needParens = true;
