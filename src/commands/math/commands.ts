@@ -199,6 +199,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 					leftward instanceof BinaryOperator ||
 					('text' in LatexCmds && leftward instanceof LatexCmds.text) ||
 					leftward instanceof UpperLowerLimitCommand ||
+					leftward?.jQ.hasClass('mq-operator-name') ||
 					leftward.ctrlSeq === '\\ ' ||
 					/^[,;:]$/.test(leftward.ctrlSeq)
 				) //lookbehind for operator

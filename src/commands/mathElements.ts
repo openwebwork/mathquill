@@ -469,9 +469,9 @@ export class Variable extends Symbol {
 					text = text.slice(14, text.length);
 				else
 					text = text.slice(1, text.length);
-			}
-			else if (text[text.length - 1] == ' ' || text[text.length - 1] == '}') {
+			} else if (text[text.length - 1] == ' ' || text[text.length - 1] == '}') {
 				text = text.slice (0, -1);
+				if (!(this[R] instanceof Bracket || this[R] instanceof Fraction)) text += ' ';
 			}
 		}
 		return text;
@@ -681,9 +681,18 @@ export class SupSub extends MathCommand {
 	}
 
 	createLeftOf(cursor: Cursor) {
-		if (!this.replacedFragment && (!cursor[L] || cursor[L]?.ctrlSeq === '\\ ') &&
-			cursor.options.supSubsRequireOperand)
+		if (cursor.options.supSubsRequireOperand && (
+			!cursor[L] ||
+			cursor[L]?.ctrlSeq === '\\ ' ||
+			cursor[L] instanceof BinaryOperator ||
+			/^[,;:]$/.test(cursor[L]?.ctrlSeq ?? '')
+		)) {
+			if (this.replacedFragment) {
+				this.replacedFragment.adopt(cursor.parent as Node, cursor[L], cursor[R]);
+				cursor[L] = this.replacedFragment.ends[R];
+			}
 			return;
+		}
 
 		// If this SupSub is being placed on a fraction, then add parentheses around the fraction.
 		if (cursor[L] instanceof Fraction) {
