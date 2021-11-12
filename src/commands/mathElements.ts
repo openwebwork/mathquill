@@ -619,8 +619,6 @@ export class Fraction extends MathCommand {
 	text() {
 		let leftward = this[L];
 		for (; leftward && leftward.ctrlSeq === '\\ '; leftward = leftward[L]);
-		let rightward = this[R];
-		for (; rightward && rightward.ctrlSeq === '\\ '; rightward = rightward[R]);
 
 		const text = (dir: Direction) => {
 			let needParens = false;
@@ -640,8 +638,7 @@ export class Fraction extends MathCommand {
 			const l = this.ends[dir]?.text() !== ' ' && this.ends[dir]?.text();
 			return l ? (needParens ? `(${l})` : l) : blankDefault;
 		};
-		return (leftward instanceof BinaryOperator && leftward.isUnary) || rightward instanceof SupSub ||
-			leftward?.jQ.hasClass('mq-operator-name') ||
+		return (leftward instanceof BinaryOperator && leftward.isUnary) || leftward?.jQ.hasClass('mq-operator-name') ||
 			(leftward instanceof SupSub && leftward[L]?.jQ.hasClass('mq-operator-name'))
 			? `(${text(L)}/${text(R)})` : ` ${text(L)}/${text(R)} `;
 	}
@@ -687,6 +684,15 @@ export class SupSub extends MathCommand {
 		if (!this.replacedFragment && (!cursor[L] || cursor[L]?.ctrlSeq === '\\ ') &&
 			cursor.options.supSubsRequireOperand)
 			return;
+
+		// If this SupSub is being placed on a fraction, then add parentheses around the fraction.
+		if (cursor[L] instanceof Fraction) {
+			const brack = new Bracket(R, '(', ')', '(', ')');
+			cursor.selection = (cursor[L] as Node).selectChildren();
+			brack.replaces(cursor.replaceSelection());
+			brack.createLeftOf(cursor);
+		}
+
 		return super.createLeftOf(cursor);
 	}
 
