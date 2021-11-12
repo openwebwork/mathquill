@@ -235,8 +235,9 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 
 	html() {
 		// Render the entire math subtree rooted at this command, as HTML.
-		// Expects .createBlocks() to have been called already, since it uses the
-		// .blocks array of child blocks.
+		// Expects the blocks for this object to have been created already (either
+		// by .createBlocks or the parser), since it uses the .blocks array of child
+		// blocks.
 		//
 		// See html.test.js for example templates and intended outputs.
 		//
@@ -490,15 +491,14 @@ export class Letter extends Variable {
 		super.createLeftOf(cursor);
 		const autoCmds = cursor.options.autoCommands, maxLength = autoCmds._maxLength;
 		if (maxLength > 0) {
-			// want longest possible autocommand, so join together longest
-			// sequence of letters
+			// To find the longest possible autocommand, join the longest sequence of letters.
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			let str = '', l: TNode | undefined = this, i = 0;
 			// FIXME: l.ctrlSeq === l.letter checks if first or last in an operator name
 			while (l instanceof Letter && l?.ctrlSeq === l?.letter && i < maxLength) {
 				str = l.letter + str, l = l[L], ++i;
 			}
-			// check for an autocommand, going thru substrings longest to shortest
+			// Check for an autocommand, going through substrings from longest to shortest.
 			while (str.length) {
 				if (autoCmds[str]) {
 					// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -660,9 +660,7 @@ export class Fraction extends MathCommand {
 };
 
 export class SupSub extends MathCommand {
-	sup?: TNode;
-	sub?: TNode;
-	supsub = 'sup';
+	supsub: 'sup' | 'sub' = 'sup';
 
 	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: Array<string>) {
 		super('_{...}^{...}', htmlTemplate, textTemplate);
@@ -692,12 +690,12 @@ export class SupSub extends MathCommand {
 	}
 
 	hasValidBase(cursor: Cursor) {
-		return !(cursor.options.supSubsRequireOperand && (
-			!cursor[L] ||
-			cursor[L]?.ctrlSeq === '\\ ' ||
-			cursor[L] instanceof BinaryOperator ||
-			/^[,;:]$/.test(cursor[L]?.ctrlSeq ?? '')
-		));
+		return !cursor.options.supSubsRequireOperand || (
+			cursor[L] &&
+			cursor[L]?.ctrlSeq !== '\\ ' &&
+			!(cursor[L] instanceof BinaryOperator) &&
+			!/^[,;:]$/.test(cursor[L]?.ctrlSeq ?? '')
+		);
 	}
 
 	createLeftOf(cursor: Cursor) {
@@ -795,8 +793,8 @@ export class SupSub extends MathCommand {
 				// to delete the 1 but to end up rightward of x^2; with non-negated
 				// `dir` (try it), the cursor appears to have gone "through" the ^2.
 			}
-		}
-		else super.deleteTowards(dir, cursor);
+		} else
+			super.deleteTowards(dir, cursor);
 	}
 
 	latex() {
@@ -863,7 +861,7 @@ export class SupSub extends MathCommand {
 			span.textContent = '\u200B';
 			this.elements.firstElement.append(span);
 		}
-		// like 'sub sup'.split(' ').forEach((supsub) => { ... });
+
 		for (const supsub of ['sub', 'sup'] as Array<keyof Pick<SupSub, 'sub' | 'sup'>>) {
 			const oppositeSupsub = supsub === 'sub' ? 'sup' : 'sub';
 			const updown = supsub === 'sub' ? 'down' : 'up';

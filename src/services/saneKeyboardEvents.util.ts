@@ -1,82 +1,22 @@
-// Sane Keyboard Events Shim
-//
-// An abstraction layer wrapping the textarea in an object with methods to manipulate and listen to events on, that
-// hides all the nasty cross-browser incompatibilities behind a uniform API.
-//
-// Design goal: This is a *HARD* internal abstraction barrier. Cross-browser inconsistencies are not allowed to leak
-// through and be dealt with by event handlers. All future cross-browser issues that arise must be dealt with here, and
-// if necessary, the API updated.
-//
-// Organization:
-// - key values map and stringify()
-// - saneKeyboardEvents()
-//    + event handler logic
-//    + attach event handlers and export methods
+// An abstraction layer wrapping the textarea in an object with methods to manipulate and listen to events.
+// This is an internal abstraction layer intented to handle cross-browser inconsistencies in event handlers.
 
-import { noop } from 'src/constants';
-
-export interface TextAreaHandlers {
-	container: HTMLElement;
-	keystroke?: (key: string, event: KeyboardEvent) => void;
-	typedText: (text: string) => void;
-	paste: (text: string) => void;
-	cut: () => void;
-	copy: () => void;
-}
+import type { Controller } from 'src/controller';
 
 export const saneKeyboardEvents = (() => {
-	// The following [key values][1] map was compiled from the [DOM3 Events appendix section on key codes][2] and
-	// [a widely cited report on cross-browser tests of key codes][3], except for 10: 'Enter', which has been
-	// empirically observed in Safari on iOS and doesn't appear to conflict with any other known key codes.
-	//
-	// [1]: http://www.w3.org/TR/2012/WD-DOM-Level-3-Events-20120614/#keys-keyvalues
-	// [2]: http://www.w3.org/TR/2012/WD-DOM-Level-3-Events-20120614/#fixed-virtual-key-codes
-	// [3]: http://unixpapa.com/js/key.html
-	//
-	// All of the information above is badly outdated, and this needs to be reworked.  Event.which and Event.keyCode are
-	// deprecated and should be replaced with Event.key, which is already a human readable string that could be used
-	// directly.  Touch screen devices with soft keyboards should be implemented separately with another methd.
-	// Currently those are still sending somewhat invalid values for Event.which, and that is what makes this partially
-	// work as is.
-	const KEY_VALUES: { [key: number]: string } = {
-		8: 'Backspace',
-		9: 'Tab',
-
-		10: 'Enter', // for Safari on iOS
-
-		13: 'Enter',
-
-		16: 'Shift',
-		17: 'Control',
-		18: 'Alt',
-		20: 'CapsLock',
-
-		27: 'Esc',
-
-		32: 'Spacebar',
-
-		33: 'PageUp',
-		34: 'PageDown',
-		35: 'End',
-		36: 'Home',
-
-		37: 'Left',
-		38: 'Up',
-		39: 'Right',
-		40: 'Down',
-
-		45: 'Insert',
-
-		46: 'Del',
-
-		144: 'NumLock'
+	const KEY_TO_MQ_VALUE: { [key: string]: string } = {
+		ArrowRight: 'Right',
+		ArrowLeft: 'Left',
+		ArrowDown: 'Down',
+		ArrowUp: 'Up',
+		' ': 'Spacebar',
 	};
+	const isLowercaseAlphaCharacter = (s: string) => s.length === 1 && s >= 'a' && s <= 'z';
 
-	// To the extent possible, create a normalized string representation of the key combo
-	// (i.e., key code and modifier keys).
+	// To the extent possible, create a normalized string representation of the key combo.
 	const stringify = (evt: KeyboardEvent) => {
-		const which = evt.which || evt.keyCode;
-		const keyVal = KEY_VALUES[which];
+		const key = isLowercaseAlphaCharacter(evt.key) ? evt.key.toUpperCase() : (KEY_TO_MQ_VALUE[evt.key] ?? evt.key);
+
 		const modifiers = [];
 
 		if (evt.ctrlKey) modifiers.push('Ctrl');
@@ -84,129 +24,37 @@ export const saneKeyboardEvents = (() => {
 		if (evt.altKey) modifiers.push('Alt');
 		if (evt.shiftKey) modifiers.push('Shift');
 
-		const key = keyVal || String.fromCharCode(which);
+		if (!modifiers.length) return key;
 
-		if (!modifiers.length && !keyVal) return key;
-
-		modifiers.push(key);
+		if (key !== 'Alt' && key !== 'Control' && key !== 'Meta' && key !== 'Shift') modifiers.push(key);
 		return modifiers.join('-');
 	};
 
 	// Create a keyboard events shim that calls callbacks at useful times and exports useful public methods.
-	return (el: HTMLTextAreaElement, handlers: TextAreaHandlers) => {
-		let keydown: KeyboardEvent | null = null;
-		let keypress: KeyboardEvent | null = null;
-
-		const textarea = el;
-		const target = handlers.container || textarea;
-
-		// checkTextareaFor() is called after key or clipboard events to say "Hey, I think something was just typed" or
-		// "pasted" etc, so that at all subsequent opportune times (next event or timeout), will check for expected
-		// typed or pasted text.  Need to check repeatedly because #135: in Safari 5.1 (at least), after selecting
-		// something and then typing, the textarea is incorrectly reported as selected during the input event (but not
-		// subsequently).
-		let checkTextarea: ((e?: Event) => void) = noop, timeoutId: ReturnType<typeof setInterval>;
-
-		const checkTextareaFor = (checker: (e?: Event) => void) => {
-			checkTextarea = checker;
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(checker);
-		};
-
-		const checkTextareaOnce = (checker: (e?: Event) => void) => {
-			checkTextareaFor((e) => {
-				checkTextarea = noop;
-				clearTimeout(timeoutId);
-				checker(e);
-			});
-		};
-
-		for (const event of ['keydown', 'keypress', 'input', 'keyup', 'focusout', 'paste'])
-			target.addEventListener(event, (e) => checkTextarea(e));
+	return (textarea: HTMLTextAreaElement, controller: Controller) => {
+		// Virtual keyboards on touch screen devices send 'Unidentified' for almost all keys in the 'keydown' event. As
+		// a result the keystroke handler called in that event handler passes 'Unidentified' for the key.  This makes
+		// the spaceBehavesLikeTab option fail on these devices.  So this flag detects the 'Unidentified' key, and calls
+		// the keystroke handler again passing 'Spacebar' for the key, when a space is typed.
+		let sendInputSpaceKeystroke = false;
 
 		// Public methods
 		const select = (text: string) => {
-			// Check textarea one last time before munging (so there is no race condition if selection happens after
-			// keypress/paste but before checkTextarea).  Then never again (because it has been munged).
-			checkTextarea();
-			checkTextarea = noop;
-			clearTimeout(timeoutId);
-
 			textarea.value = text;
-			if (text && textarea.select) textarea.select();
-			shouldBeSelected = !!text;
+			if (text && textarea instanceof HTMLTextAreaElement) textarea.select();
 		};
 
-		let shouldBeSelected = false;
-
-		// Helper subroutines
-
-		// Determine whether there's a selection in the textarea.
-		const hasSelection = () => {
-			const dom = textarea ;
-
-			if (!('selectionStart' in dom)) return false;
-			return dom.selectionStart !== dom.selectionEnd;
+		const handleKey = (key: string, e: KeyboardEvent) => {
+			if (controller.options.overrideKeystroke) controller.options.overrideKeystroke(key, e);
+			else controller.keystroke(key, e);
 		};
-
-		const handleKey = () =>
-			handlers.keystroke?.(stringify(keydown as KeyboardEvent), keydown as KeyboardEvent);
 
 		// Event handlers
 		const onKeydown = (e: KeyboardEvent) => {
 			if (e.target !== textarea) return;
-
-			keydown = e;
-			keypress = null;
-
-			if (shouldBeSelected) checkTextareaOnce((e) => {
-				if (!(e && e.type === 'focusout') && textarea.select) {
-					// Re-select textarea in case it's an unrecognized key that clears the selection.
-					// Then never again, because the next thing might be a blur.
-					textarea.select();
-				}
-			});
-
-			handleKey();
+			sendInputSpaceKeystroke = e.key === 'Unidentified';
+			handleKey(stringify(e), e);
 		};
-
-		const onKeypress = (e: KeyboardEvent) => {
-			if (e.target !== textarea) return;
-
-			// Call the key handler for repeated keypresses. This excludes keypresses that happen directly after
-			// keydown.  In that case, there will be no previous keypress, so we skip it here.
-			if (keydown && keypress) handleKey();
-
-			keypress = e;
-
-			checkTextareaFor(typedText);
-		};
-
-		const onKeyup = (e: KeyboardEvent) => {
-			if (e.target !== textarea) return;
-
-			// Handle the case of no keypress event being sent.
-			if (keydown && !keypress) checkTextareaOnce(typedText);
-		};
-
-		const typedText = () => {
-			// If there is a selection, the contents of the textarea couldn't possibly have just been typed in.  This
-			// happens in browsers like Firefox and Opera that fire keypress for keystrokes that are not text entry and
-			// leave the selection in the textarea alone, such as Ctrl-C.
-			if (hasSelection()) return;
-
-			const text = textarea.value;
-			if (text.length === 1) {
-				textarea.value = '';
-				handlers.typedText(text);
-			}
-			// In Firefox, keys that don't type text, just clear the selection and fire keypress.
-			// https://github.com/mathquill/mathquill/issues/293#issuecomment-40997668
-			else if (text && textarea.select)
-				textarea.select(); // Re-select if that's why we're here.
-		};
-
-		const onBlur = () => { keydown = keypress = null; };
 
 		const onPaste = (e: ClipboardEvent) => {
 			if (e.target !== textarea) return;
@@ -217,26 +65,49 @@ export const saneKeyboardEvents = (() => {
 			// (Actually, I don't think this is even needed, and is probably not doing anything.)
 			textarea.focus();
 
-			// This is a work around for the middle click in Firefox.  In that case the textarea value is not set, but
-			// the pasted text is in the event.  So get it here and fallback to this text in the case that the textarea
-			// value is not set.
-			const pastedText = e.clipboardData?.getData('text') ?? '';
+			// Get the pasted text from the clipboard data in the event.
+			const text = e.clipboardData?.getData('text') ?? '';
+			textarea.value = '';
+			if (text) {
+				if (controller.options.overridePaste) controller.options.overridePaste(text);
+				else controller.paste(text);
+			}
+		};
 
-			checkTextareaOnce(() => {
-				const text = textarea.value || pastedText;
-				textarea.value = '';
-				if (text) handlers.paste(text);
-			});
+		const onInput = (e: Event) => {
+			if ((e as InputEvent).inputType === 'insertFromPaste') return;
+			const text = (e as InputEvent).data ?? '';
+			if (text.length === 1) {
+				if (controller.options.overrideTypedText) {
+					controller.options.overrideTypedText(text);
+				} else {
+					if (text === ' ' &&
+						sendInputSpaceKeystroke &&
+						controller.options.spaceBehavesLikeTab &&
+						controller.cursor.depth() > 1)
+					{
+						handleKey('Spacebar', e as KeyboardEvent);
+						setTimeout(() => textarea.value = '');
+					} else {
+						controller.typedText(text);
+						setTimeout(() => textarea.value = '');
+					}
+				}
+			} else if (textarea.value.length > 1) textarea.select();
 		};
 
 		// Attach event handlers
-		target.addEventListener('keydown', onKeydown);
-		target.addEventListener('keypress', onKeypress);
-		target.addEventListener('keyup', onKeyup);
-		target.addEventListener('focusout', onBlur);
-		target.addEventListener('cut', () => checkTextareaOnce(() => handlers.cut()));
-		target.addEventListener('copy', () => checkTextareaOnce(() => handlers.copy()));
-		target.addEventListener('paste', onPaste);
+		textarea.addEventListener('keydown', onKeydown);
+		textarea.addEventListener('cut', () => {
+			if (controller.options.overrideCut) controller.options.overrideCut();
+			else controller.cut();
+		});
+		textarea.addEventListener('copy', () => {
+			if (controller.options.overrideCopy) controller.options.overrideCopy();
+			else controller.copy();
+		});
+		textarea.addEventListener('paste', onPaste);
+		textarea.addEventListener('input', onInput);
 
 		// Export public methods
 		return { select };

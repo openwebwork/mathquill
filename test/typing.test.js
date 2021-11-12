@@ -1,5 +1,6 @@
 /* global suite, test, assert, setup, MQ, MQBasic */
 
+import { Bracket } from 'commands/mathElements';
 import { L, R, prayWellFormed } from 'src/constants';
 
 suite('typing with auto-replaces', () => {
@@ -221,7 +222,7 @@ suite('typing with auto-replaces', () => {
 					test('(|', () => {
 						mq.typedText('||');
 						assertLatex('\\left|\\right|');
-						mq.keystroke('Left Left Del');
+						mq.keystroke('Left Left Delete');
 						assertLatex('\\left|\\right|');
 						mq.typedText('(');
 						assertLatex('\\left(\\right|');
@@ -471,12 +472,12 @@ suite('typing with auto-replaces', () => {
 			test('auto-expanding calls .siblingCreated() on new siblings 1+((2+3))', () => {
 				mq.typedText('1+((2+3))');
 				assertLatex('1+\\left(\\left(2+3\\right)\\right)');
-				mq.keystroke('Left Left Left Left Left Left Del');
+				mq.keystroke('Left Left Left Left Left Left Delete');
 				assertLatex('1+\\left(\\left(2+3\\right)\\right)');
-				mq.keystroke('Left Left Del');
+				mq.keystroke('Left Left Delete');
 				assertLatex('\\left(1+\\left(2+3\\right)\\right)');
 				// now check that the inner open-paren isn't still a ghost
-				mq.keystroke('Right Right Right Right Del');
+				mq.keystroke('Right Right Right Right Delete');
 				assertLatex('1+\\left(2+3\\right)');
 			});
 
@@ -503,13 +504,13 @@ suite('typing with auto-replaces', () => {
 				assertLatex('45');
 			});
 
-			test('typing Ctrl-Del deletes everything to the right of the cursor', function () {
+			test('typing Ctrl-Delete deletes everything to the right of the cursor', function () {
 				mq.typedText('12345');
 				assertLatex('12345');
 				mq.keystroke('Left Left');
-				mq.keystroke('Ctrl-Del');
+				mq.keystroke('Ctrl-Delete');
 				assertLatex('123');
-				mq.keystroke('Ctrl-Del');
+				mq.keystroke('Ctrl-Delete');
 				assertLatex('123');
 			});
 
@@ -721,7 +722,7 @@ suite('typing with auto-replaces', () => {
 					assertLatex('0+\\left|1+2+3\\right|+4');
 					mq.keystroke('Left Left Left Left Left Left').typedText('|');
 					assertLatex('0+\\left|1+\\left|2+3\\right|\\right|+4');
-					mq.keystroke('Shift-Tab Shift-Tab Del');
+					mq.keystroke('Shift-Tab Shift-Tab Delete');
 					assertLatex('0+1+\\left|2+3\\right|+4');
 				});
 
@@ -730,7 +731,7 @@ suite('typing with auto-replaces', () => {
 					assertLatex('0+1+\\left|2+3\\right|+4');
 					mq.keystroke('Home Right Right').typedText('|');
 					assertLatex('0+\\left|1+\\left|2+3\\right|+4\\right|');
-					mq.keystroke('Right Right Del');
+					mq.keystroke('Right Right Delete');
 					assertLatex('0+\\left|1+2+3\\right|+4');
 				});
 
@@ -769,7 +770,7 @@ suite('typing with auto-replaces', () => {
 						assertLatex('0+\\left(1+2+3\\right|+4');
 						mq.keystroke('Left Left Left Left Left Left').typedText('|');
 						assertLatex('0+\\left(1+\\left|2+3\\right|\\right|+4');
-						mq.keystroke('Shift-Tab Shift-Tab Del');
+						mq.keystroke('Shift-Tab Shift-Tab Delete');
 						assertLatex('0+1+\\left|2+3\\right|+4');
 					}
 				);
@@ -780,7 +781,7 @@ suite('typing with auto-replaces', () => {
 						assertLatex('0+1+\\left(2+3\\right|+4');
 						mq.keystroke('Home Right Right').typedText('|');
 						assertLatex('0+\\left|1+\\left(2+3\\right|+4\\right|');
-						mq.keystroke('Right Right Del');
+						mq.keystroke('Right Right Delete');
 						assertLatex('0+\\left|1+2+3\\right|+4');
 					}
 				);
@@ -791,24 +792,43 @@ suite('typing with auto-replaces', () => {
 			test('typing outside ghost paren solidifies ghost 1+(2+3)', () => {
 				mq.typedText('1+(2+3');
 				assertLatex('1+\\left(2+3\\right)');
+				const bracket = mq.__controller.cursor.parent?.parent;
+				assert.ok(bracket instanceof Bracket);
+				assert.ok(bracket.elements.children().last.classList.contains('mq-ghost'));
+
 				mq.keystroke('Right').typedText('+4');
 				assertLatex('1+\\left(2+3\\right)+4');
-				mq.keystroke('Left Left Left Left Left Left Left Del');
+				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
+
+				mq.keystroke('Left Left Left Left Left Left Left Delete');
 				assertLatex('\\left(1+2+3\\right)+4');
+				assert.ok(bracket.elements.children().first.classList.contains('mq-ghost'));
+				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
 			});
 
 			test('selected and replaced by LiveFraction solidifies ghosts (1+2)/( )', () => {
 				mq.typedText('1+2)/');
 				assertLatex('\\frac{\\left(1+2\\right)}{ }');
-				mq.keystroke('Left Backspace');
+				const bracket = mq.__controller.cursor.parent?.parent?.ends[L]?.ends[L];
+				assert.ok(bracket instanceof Bracket);
+				assert.ok(!bracket.elements.children().first.classList.contains('mq-ghost'));
+				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
+
+				mq.keystroke('Right Up Backspace');
 				assertLatex('\\frac{\\left(1+2\\right)}{ }');
+				assert.ok(!bracket.elements.children().first.classList.contains('mq-ghost'));
+				assert.ok(bracket.elements.children().last.classList.contains('mq-ghost'));
 			});
 
 			test('close paren group by typing close-bracket outside ghost paren (1+2]', () => {
 				mq.typedText('(1+2');
 				assertLatex('\\left(1+2\\right)');
+				const bracket = mq.__controller.cursor.parent?.parent;
+				assert.ok(bracket instanceof Bracket);
+
 				mq.keystroke('Right').typedText(']');
 				assertLatex('\\left(1+2\\right]');
+				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
 			});
 
 			test('close adjacent paren group before containing paren group (1+(2+3])', () => {
@@ -833,14 +853,14 @@ suite('typing with auto-replaces', () => {
 					assertLatex('\\left|1+2\\right|');
 					mq.keystroke('Right').typedText('|');
 					assertLatex('\\left|1+2\\right|');
-					mq.keystroke('Home Del');
+					mq.keystroke('Home Delete');
 					assertLatex('\\left|1+2\\right|');
 				});
 
 				test('close pipe pair from outside to the left |1+2|', () => {
 					mq.typedText('|1+2|');
 					assertLatex('\\left|1+2\\right|');
-					mq.keystroke('Home Del');
+					mq.keystroke('Home Delete');
 					assertLatex('\\left|1+2\\right|');
 					mq.keystroke('Left').typedText('|');
 					assertLatex('\\left|1+2\\right|');
@@ -925,7 +945,7 @@ suite('typing with auto-replaces', () => {
 			assertLatex('s\\pi spin\\pi');
 			mq.keystroke('Backspace');
 			assertLatex('s\\pi pin\\pi');
-			mq.keystroke('Del').keystroke('Backspace');
+			mq.keystroke('Delete').keystroke('Backspace');
 			assertLatex('\\sin\\pi');
 		});
 
@@ -955,14 +975,6 @@ suite('typing with auto-replaces', () => {
 			for (const cmd of cmds) {
 				assert.throws(() => MQ.config({ autoCommands: cmd }), `MQ.config({ autoCommands: "${cmd}" })`);
 			}
-		});
-
-		suite('command list not perfectly space-delimited', () => {
-			test('double space', () => assert.throws(() => MQ.config({ autoCommands: 'pi  theta' })));
-
-			test('leading space', () => assert.throws(() => MQ.config({ autoCommands: ' pi' })));
-
-			test('trailing space', () => assert.throws(() => MQ.config({ autoCommands: 'pi ' })));
 		});
 	});
 

@@ -26,8 +26,8 @@ suite('focusBlur', () => {
 		});
 
 		const triggerUpOutOf = (mq) => {
-			mq.el().querySelector('textarea')
-				?.dispatchEvent(new KeyboardEvent('keydown', { which: 38, keyCode: 38, bubbles: true }));
+			mq.el().querySelector('textarea')?.dispatchEvent(new KeyboardEvent('keydown',
+				{ key: 'ArrowUp', which: 38, keyCode: 38, bubbles: true }));
 			assert.ok(wasUpOutOfCalled);
 		};
 

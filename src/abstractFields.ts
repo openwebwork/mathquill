@@ -50,6 +50,7 @@ export class AbstractMathQuill {
 		};
 	}
 
+	get options() { return this.__options; }
 	config(opts: InputOptions) { Options.config(this.__options, opts); return this; }
 
 	el() { return this.__controller.container; }

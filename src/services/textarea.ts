@@ -1,17 +1,17 @@
 // Manage the MathQuill instance's textarea (as owned by the Controller)
 
 import type { Constructor } from 'src/constants';
-import type { ControllerBase } from 'src/controller';
+import type { ControllerBase, Controller } from 'src/controller';
 import type { LatexControllerExtension } from 'services/latex';
 import type { HorizontalScroll } from 'services/scrollHoriz';
 import type { FocusBlurEvents } from 'services/focusBlur';
-import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
+import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 
 export const TextAreaController =
 	<TBase extends Constructor<ControllerBase> &
 	ReturnType<typeof LatexControllerExtension> &
 	ReturnType<typeof HorizontalScroll> &
-	ReturnType<typeof FocusBlurEvents>>(Base: TBase) => class extends Base implements TextAreaHandlers {
+	ReturnType<typeof FocusBlurEvents>>(Base: TBase) => class extends Base {
 		textareaSelectionTimeout?: ReturnType<typeof setTimeout>;
 		selectFn?: (text: string) => void;
 
@@ -78,9 +78,8 @@ export const TextAreaController =
 		}
 
 		editablesTextareaEvents() {
-			const keyboardEventsShim =
-				this.options.substituteKeyboardEvents(this.textarea as HTMLTextAreaElement, this);
-			this.selectFn = (text) => keyboardEventsShim.select(text);
+			const { select } = saneKeyboardEvents(this.textarea as HTMLTextAreaElement, this as unknown as Controller);
+			this.selectFn = (text) => select(text);
 			this.container.prepend(this.textareaSpan as HTMLElement);
 			this.focusBlurEvents();
 		}
@@ -98,6 +97,10 @@ export const TextAreaController =
 
 			this.textarea?.addEventListener('cut', (e) => { e.stopPropagation(); e.preventDefault(); });
 			this.textarea?.addEventListener('paste', (e) => { e.stopPropagation(); e.preventDefault(); });
+		}
+
+		keystroke(key: string, evt: KeyboardEvent) {
+			this.cursor.parent?.keystroke(key, evt, this as unknown as Controller);
 		}
 
 		typedText(ch: string) {
@@ -136,6 +139,4 @@ export const TextAreaController =
 			// FIXME: this always inserts math or a TextBlock, even in a RootTextBlock
 			this.writeLatex(text).cursor.show();
 		}
-
-		keystroke(_ignore_key: string, _ignore_event: KeyboardEvent) { /* do nothing */ };
 	};

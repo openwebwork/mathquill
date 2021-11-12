@@ -466,6 +466,8 @@ suite('Public API', () => {
 			mq.keystroke('Spacebar');
 			assert.equal(cursor.parent, rootBlock, 'cursor in root block');
 			assert.equal(cursor[R], undefined, 'cursor at end of block');
+
+			MQ.config({ spaceBehavesLikeTab: false });
 		});
 	});
 
@@ -511,8 +513,9 @@ suite('Public API', () => {
 			const assertPaste = (paste, latex) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
-				textarea.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-				textarea.value = paste;
+				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+				event.clipboardData.setData('text/plain', paste);
+				textarea.dispatchEvent(event);
 				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(mq.latex(), latex);
 			};
@@ -553,8 +556,9 @@ suite('Public API', () => {
 			const assertPaste = (paste, latex) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
-				textarea.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-				textarea.value = paste;
+				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+				event.clipboardData.setData('text/plain', paste);
+				textarea.dispatchEvent(event);
 				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(mq.latex(), latex);
 			};
@@ -831,46 +835,28 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('substituteKeyboardEvents', () => {
+	suite('keyboard event overrides', () => {
 		test('can intercept key events', () => {
 			let key;
 
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
-			const mq = MQ.MathField(el, {
-				substituteKeyboardEvents: (textarea, handlers) => {
-					const options = Object.assign({}, handlers);
-					return MQ.saneKeyboardEvents(textarea, Object.assign(options, {
-						keystroke: (_key, ...args) => {
-							key = _key;
-							return handlers.keystroke.call(handlers, _key, ...args);
-						}
-					}));
-				}
-			});
 
-			mq.el().querySelector('textarea')
-				?.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
+			const mq = MQ.MathField(el, { overrideKeystroke: (_key) => key = _key });
+
+			mq.el().querySelector('textarea')?.dispatchEvent(new KeyboardEvent('keydown',
+				{ key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true }));
 			assert.equal(key, 'Left');
 		});
-		test('cut is async', () => {
+		test('cut is NOT async (why should it be?)', () => {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
-			const mq = MQ.MathField(el, {
-				substituteKeyboardEvents: (textarea, handlers) => {
-					const options = Object.assign({}, handlers);
-					return MQ.saneKeyboardEvents(textarea, Object.assign(options, {
-						cut: (...args) => {
-							count += 1;
-							return handlers.cut.apply(handlers, args);
-						}
-					}));
-				}
-			});
+
 			let count = 0;
+			const mq = MQ.MathField(el, { overrideCut: () => count += 1 });
 
 			mq.el().querySelector('textarea')?.dispatchEvent(new ClipboardEvent('cut', { bubbles: true }));
-			assert.equal(count, 0);
+			assert.equal(count, 1);
 
 			mq.el().querySelector('textarea')?.dispatchEvent(new InputEvent('input', { bubbles: true }));
 			assert.equal(count, 1);
@@ -896,7 +882,7 @@ suite('Public API', () => {
 			mq.el().scrollIntoView();
 
 			const box = mq.el().getBoundingClientRect();
-			const clientX = box.left + 30;
+			const clientX = box.left + 32;
 			const clientY = box.top + 30;
 			const target = document.elementFromPoint(clientX, clientY);
 
@@ -922,7 +908,7 @@ suite('Public API', () => {
 			mq.el().scrollIntoView();
 
 			const box = mq.el().getBoundingClientRect();
-			const clientX = box.left + 30;
+			const clientX = box.left + 32;
 			const clientY = box.top + 30;
 
 			assert.equal(document.activeElement, document.body);
@@ -968,7 +954,7 @@ suite('Public API', () => {
 
 			mq.el().scrollIntoView();
 
-			mq.dropEmbedded(mqx + 30, mqy + 30, {
+			mq.dropEmbedded(mqx + 32, mqy + 30, {
 				htmlString: '<span class="embedded-html"></span>',
 				text: () => 'embedded text',
 				latex: () => 'embedded latex'
