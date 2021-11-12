@@ -1089,7 +1089,7 @@ suite('typing with auto-replaces', () => {
 			assert.equal(mq.typedText('n').latex(), 'x^{2n}');
 			mq.latex('');
 			assert.equal(mq.typedText('2').latex(), '2');
-			assert.equal(mq.keystroke('Shift-Left').typedText('^').latex(), '^2');
+			assert.equal(mq.keystroke('Shift-Left').typedText('^').latex(), '2');
 		});
 	});
 

@@ -199,7 +199,6 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 					leftward instanceof BinaryOperator ||
 					('text' in LatexCmds && leftward instanceof LatexCmds.text) ||
 					leftward instanceof UpperLowerLimitCommand ||
-					leftward?.jQ.hasClass('mq-operator-name') ||
 					leftward.ctrlSeq === '\\ ' ||
 					/^[,;:]$/.test(leftward.ctrlSeq)
 				) //lookbehind for operator
@@ -211,7 +210,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 					leftward = leftward[R];
 			}
 
-			if (leftward !== cursor[L] && !cursor.isTooDeep(1)) {
+			if (leftward !== cursor[L] && !cursor.isTooDeep(1) && !cursor[L]?.jQ.hasClass('mq-operator-name')) {
 				this.replaces(new Fragment(leftward?.[R] || cursor.parent?.ends[L], cursor[L]));
 				cursor[L] = leftward;
 			}

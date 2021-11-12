@@ -59,7 +59,7 @@ suite('autoOperatorNames', () => {
 			assertText(`outputting ${latexStr}`, text);
 		};
 
-		assertTranslatedCorrectly('\\sin', 'sin');
+		assertTranslatedCorrectly('\\sin', 'sin ');
 		assertTranslatedCorrectly('\\sin\\left(xy\\right)', 'sin(xy)');
 	});
 
