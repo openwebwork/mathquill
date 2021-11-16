@@ -37,14 +37,14 @@ Mocha.process.stdout.write = (line) => xunit += line;
 </script>
 
 <!-- include the library with the tests inlined -->
-<script id="mathquill" src="../dist/mathquill.test.js"
-	onerror="alert('Couldn\'t find `dist/mathquill.test.js`.' +
+<script id="mathquill" src="../build/mathquill.test.js"
+	onerror="alert('Couldn\'t find `build/mathquill.test.js`.' +
 	' Please execute `npm run devbuild` before opening this file.')">
 </script>
 
 <!-- include MathQuill-basic -->
-<link rel="stylesheet" href="../dist/mathquill.css" />
-<script src="../dist/mathquill-basic.js"></script>
+<link rel="stylesheet" href="../build/mathquill.css" />
+<script src="../build/mathquill-basic.js"></script>
 <script>
 	MQBasic = MathQuill.noConflict().getInterface();
 	MQ = MathQuill.getInterface();

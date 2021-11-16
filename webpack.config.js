@@ -17,7 +17,7 @@ module.exports = (env, argv) => {
 			mode: argv.mode,
 			entry,
 			output: {
-				path: path.resolve(__dirname, 'dist'),
+				path: path.resolve(__dirname, 'build'),
 				filename: '[name].js'
 			},
 			resolve: {

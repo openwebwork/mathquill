@@ -16,7 +16,7 @@
 	],
 	"scripts": {
 		"build-lib": "tsc --project tsconfig-lib.json && tscpaths -p tsconfig-lib.json -s ./src -o ./lib",
-		"prepare": "npm run build-lib && npm run build",
+		"prepare": "npm run build-lib",
 		"devbuild": "webpack --mode development",
 		"build": "webpack --mode production",
 		"build-all-js": "BUILD_BASIC=true webpack --mode production",
