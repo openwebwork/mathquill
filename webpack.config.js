@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -27,7 +29,7 @@ module.exports = (env, argv) => {
 					css: path.resolve(__dirname, 'src/css'),
 					fonts: path.resolve(__dirname, 'src/fonts')
 				},
-				extensions: ["", ".webpack.js", ".ts", ".js"]
+				extensions: ['', '.webpack.js', '.ts', '.js']
 			},
 			module: {
 				rules: [
@@ -36,7 +38,7 @@ module.exports = (env, argv) => {
 						test: /\.js$/,
 						exclude: (file) => {
 							// Don't transpile node_modules
-							return /node_modules/.test(file)
+							return /node_modules/.test(file);
 						},
 						use: ['babel-loader']
 					},
@@ -60,7 +62,8 @@ module.exports = (env, argv) => {
 									lessOptions: {
 										modifyVars: {
 											basic: basic,
-											'omit-font-face': process.env.OMIT_FONT_FACE ?? false
+											'omit-font-face':
+												typeof process.env.OMIT_FONT_FACE === 'undefined' ? false : true
 										}
 									}
 								}
@@ -101,7 +104,7 @@ module.exports = (env, argv) => {
 					return !asset.match(/fonts\/(.*\.svg$|.*\.ttf$|.*\.eot$)/);
 				}
 			}
-		}
+		};
 	};
 
 	const fullConfig = config({ mathquill: './src/index.ts' }, false);
@@ -110,6 +113,7 @@ module.exports = (env, argv) => {
 	const builds = [fullConfig];
 
 	if (argv.mode == 'development') {
+		// eslint-disable-next-line no-console
 		console.log('Using development mode.');
 
 		fullConfig.devtool = 'source-map';
@@ -119,6 +123,7 @@ module.exports = (env, argv) => {
 
 		builds.push(basicConfig);
 	} else {
+		// eslint-disable-next-line no-console
 		console.log('Using production mode.');
 
 		if (process.env.BUILD_BASIC) builds.push(basicConfig);
