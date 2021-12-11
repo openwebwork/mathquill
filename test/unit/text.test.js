@@ -1,189 +1,193 @@
-suite('text', function() {
+/* global suite, test, assert, setup, MQ */
 
-  var mq, mostRecentlyReportedLatex;
-  setup(function() {
-    mostRecentlyReportedLatex = NaN; // != to everything
-    mq = MQ.MathField($('<span></span>').appendTo('#mock')[0], {
-      handlers: {
-        edit: function() {
-          mostRecentlyReportedLatex = mq.latex();
-        }
-      }
-    });
-  });
+import { jQuery, L, R, prayWellFormed } from 'src/constants';
+import { Controller } from 'src/controller';
+import { latexMathParser } from 'commands/mathElements';
 
-  function prayWellFormedPoint(pt) { prayWellFormed(pt.parent, pt[L], pt[R]); }
-  function assertLatex(latex) {
-    prayWellFormedPoint(mq.__controller.cursor);
-    assert.equal(mostRecentlyReportedLatex, latex, 'assertLatex failed');
-    assert.equal(mq.latex(), latex, 'assertLatex failed');
-  }
+suite('text', () => {
 
-  function fromLatex(latex) {
-    var block = latexMathParser.parse(latex);
-    block.jQize();
+	let mq, mostRecentlyReportedLatex;
+	setup(() => {
+		mostRecentlyReportedLatex = NaN; // != to everything
+		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], {
+			handlers: {
+				edit: () => mostRecentlyReportedLatex = mq.latex()
+			}
+		});
+	});
 
-    return block;
-  }
+	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
+	const assertLatex = (latex) => {
+		prayWellFormedPoint(mq.__controller.cursor);
+		assert.equal(mostRecentlyReportedLatex, latex, 'assertLatex failed');
+		assert.equal(mq.latex(), latex, 'assertLatex failed');
+	};
 
-  function assertSplit(jQ, prev, next) {
-    var dom = jQ[0];
+	const fromLatex = (latex) => {
+		const block = latexMathParser.parse(latex);
+		block.jQize();
 
-    if (prev) {
-      assert.ok(dom.previousSibling instanceof Text);
-      assert.equal(prev, dom.previousSibling.data, 'assertSplit failed');
-    }
-    else {
-      assert.ok(!dom.previousSibling);
-    }
+		return block;
+	};
 
-    if (next) {
-      assert.ok(dom.nextSibling instanceof Text);
-      assert.equal(next, dom.nextSibling.data, 'assertSplit failed');
-    }
-    else {
-      assert.ok(!dom.nextSibling);
-    }
-  }
+	const assertSplit = (jQ, prev, next) => {
+		const dom = jQ[0];
 
-  test('changes the text nodes as the cursor moves around', function() {
-    var block = fromLatex('\\text{abc}');
-    var ctrlr = Controller(block, 0, 0);
-    var cursor = ctrlr.cursor.insAtRightEnd(block);
+		if (prev) {
+			assert.ok(dom.previousSibling instanceof Text);
+			assert.equal(prev, dom.previousSibling.data, 'assertSplit failed');
+		}
+		else {
+			assert.ok(!dom.previousSibling);
+		}
 
-    ctrlr.moveLeft();
-    assertSplit(cursor.jQ, 'abc', null);
+		if (next) {
+			assert.ok(dom.nextSibling instanceof Text);
+			assert.equal(next, dom.nextSibling.data, 'assertSplit failed');
+		}
+		else {
+			assert.ok(!dom.nextSibling);
+		}
+	};
 
-    ctrlr.moveLeft();
-    assertSplit(cursor.jQ, 'ab', 'c');
+	test('changes the text nodes as the cursor moves around', () => {
+		const block = fromLatex('\\text{abc}');
+		const ctrlr = new Controller(block, 0, 0);
+		const cursor = ctrlr.cursor.insAtRightEnd(block);
 
-    ctrlr.moveLeft();
-    assertSplit(cursor.jQ, 'a', 'bc');
+		ctrlr.moveLeft();
+		assertSplit(cursor.jQ, 'abc', null);
 
-    ctrlr.moveLeft();
-    assertSplit(cursor.jQ, null, 'abc');
+		ctrlr.moveLeft();
+		assertSplit(cursor.jQ, 'ab', 'c');
 
-    ctrlr.moveRight();
-    assertSplit(cursor.jQ, 'a', 'bc');
+		ctrlr.moveLeft();
+		assertSplit(cursor.jQ, 'a', 'bc');
 
-    ctrlr.moveRight();
-    assertSplit(cursor.jQ, 'ab', 'c');
+		ctrlr.moveLeft();
+		assertSplit(cursor.jQ, null, 'abc');
 
-    ctrlr.moveRight();
-    assertSplit(cursor.jQ, 'abc', null);
-  });
+		ctrlr.moveRight();
+		assertSplit(cursor.jQ, 'a', 'bc');
 
-  test('does not change latex as the cursor moves around', function() {
-    var block = fromLatex('\\text{x}');
-    var ctrlr = Controller(block, 0, 0);
-    var cursor = ctrlr.cursor.insAtRightEnd(block);
+		ctrlr.moveRight();
+		assertSplit(cursor.jQ, 'ab', 'c');
 
-    ctrlr.moveLeft();
-    ctrlr.moveLeft();
-    ctrlr.moveLeft();
+		ctrlr.moveRight();
+		assertSplit(cursor.jQ, 'abc', null);
+	});
 
-    assert.equal(block.latex(), '\\text{x}');
-  });
+	test('does not change latex as the cursor moves around', () => {
+		const block = fromLatex('\\text{x}');
+		const ctrlr = new Controller(block, 0, 0);
+		ctrlr.cursor.insAtRightEnd(block);
 
-  suite('typing', function() {
-    test('stepping out of an empty block deletes it', function() {
-      var controller = mq.__controller;
-      var cursor = controller.cursor;
+		ctrlr.moveLeft();
+		ctrlr.moveLeft();
+		ctrlr.moveLeft();
 
-      mq.latex('\\text{x}');
-      assertLatex('\\text{x}');
+		assert.equal(block.latex(), '\\text{x}');
+	});
 
-      mq.keystroke('Left');
-      assertSplit(cursor.jQ, 'x');
-      assertLatex('\\text{x}');
+	suite('typing', () => {
+		test('stepping out of an empty block deletes it', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
-      mq.keystroke('Backspace');
-      assertSplit(cursor.jQ);
-      assertLatex('');
+			mq.latex('\\text{x}');
+			assertLatex('\\text{x}');
 
-      mq.keystroke('Right');
-      assertSplit(cursor.jQ);
-      assert.equal(cursor[L], 0);
-      assertLatex('');
-    });
+			mq.keystroke('Left');
+			assertSplit(cursor.jQ, 'x');
+			assertLatex('\\text{x}');
 
-    test('typing $ in a textblock splits it', function() {
-      var controller = mq.__controller;
-      var cursor = controller.cursor;
+			mq.keystroke('Backspace');
+			assertSplit(cursor.jQ);
+			assertLatex('');
 
-      mq.latex('\\text{asdf}');
-      assertLatex('\\text{asdf}');
+			mq.keystroke('Right');
+			assertSplit(cursor.jQ);
+			assert.equal(cursor[L], undefined);
+			assertLatex('');
+		});
 
-      mq.keystroke('Left Left Left');
-      assertSplit(cursor.jQ, 'as', 'df');
-      assertLatex('\\text{asdf}');
+		test('typing $ in a textblock splits it', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
-      mq.typedText('$');
-      assertLatex('\\text{as}\\text{df}');
-    });
-  });
+			mq.latex('\\text{asdf}');
+			assertLatex('\\text{asdf}');
 
-  suite('pasting', function() {
-    test('sanity', function() {
-      var controller = mq.__controller;
-      var cursor = controller.cursor;
+			mq.keystroke('Left Left Left');
+			assertSplit(cursor.jQ, 'as', 'df');
+			assertLatex('\\text{asdf}');
 
-      mq.latex('\\text{asdf}');
-      mq.keystroke('Left Left Left');
-      assertSplit(cursor.jQ, 'as', 'df');
+			mq.typedText('$');
+			assertLatex('\\text{as}\\text{df}');
+		});
+	});
 
-      controller.paste('foo');
+	suite('pasting', () => {
+		test('sanity', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
-      assertSplit(cursor.jQ, 'asfoo', 'df');
-      assertLatex('\\text{asfoodf}');
-      prayWellFormedPoint(cursor);
+			mq.latex('\\text{asdf}');
+			mq.keystroke('Left Left Left');
+			assertSplit(cursor.jQ, 'as', 'df');
 
-    });
+			controller.paste('foo');
 
-    test('pasting a dollar sign', function() {
-      var controller = mq.__controller;
-      var cursor = controller.cursor;
+			assertSplit(cursor.jQ, 'asfoo', 'df');
+			assertLatex('\\text{asfoodf}');
+			prayWellFormedPoint(cursor);
 
-      mq.latex('\\text{asdf}');
-      mq.keystroke('Left Left Left');
-      assertSplit(cursor.jQ, 'as', 'df');
+		});
 
-      controller.paste('$foo');
+		test('pasting a dollar sign', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
-      assertSplit(cursor.jQ, 'as$foo', 'df');
-      assertLatex('\\text{as$foodf}');
-      prayWellFormedPoint(cursor);
-    });
+			mq.latex('\\text{asdf}');
+			mq.keystroke('Left Left Left');
+			assertSplit(cursor.jQ, 'as', 'df');
 
-    test('pasting a backslash', function() {
-      var controller = mq.__controller;
-      var cursor = controller.cursor;
+			controller.paste('$foo');
 
-      mq.latex('\\text{asdf}');
-      mq.keystroke('Left Left Left');
-      assertSplit(cursor.jQ, 'as', 'df');
+			assertSplit(cursor.jQ, 'as$foo', 'df');
+			assertLatex('\\text{as$foodf}');
+			prayWellFormedPoint(cursor);
+		});
 
-      controller.paste('\\pi');
+		test('pasting a backslash', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
-      assertSplit(cursor.jQ, 'as\\pi', 'df');
-      assertLatex('\\text{as\\pidf}');
-      prayWellFormedPoint(cursor);
-    });
+			mq.latex('\\text{asdf}');
+			mq.keystroke('Left Left Left');
+			assertSplit(cursor.jQ, 'as', 'df');
 
-    test('pasting a curly brace', function() {
-      var controller = mq.__controller;
-      var cursor = controller.cursor;
+			controller.paste('\\pi');
 
-      mq.latex('\\text{asdf}');
-      mq.keystroke('Left Left Left');
-      assertSplit(cursor.jQ, 'as', 'df');
+			assertSplit(cursor.jQ, 'as\\pi', 'df');
+			assertLatex('\\text{as\\pidf}');
+			prayWellFormedPoint(cursor);
+		});
 
-      controller.paste('{');
+		test('pasting a curly brace', () => {
+			const controller = mq.__controller;
+			const cursor = controller.cursor;
 
-      assertSplit(cursor.jQ, 'as{', 'df');
-      assertLatex('\\text{as\\{df}');
-      prayWellFormedPoint(cursor);
-    });
+			mq.latex('\\text{asdf}');
+			mq.keystroke('Left Left Left');
+			assertSplit(cursor.jQ, 'as', 'df');
 
-  });
+			controller.paste('{');
+
+			assertSplit(cursor.jQ, 'as{', 'df');
+			assertLatex('\\text{as\\{df}');
+			prayWellFormedPoint(cursor);
+		});
+
+	});
 });

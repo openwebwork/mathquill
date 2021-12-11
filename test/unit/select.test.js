@@ -1,96 +1,111 @@
-suite('Cursor::select()', function() {
-  var cursor = Cursor();
-  cursor.selectionChanged = noop;
+/* global suite, test, assert */
 
-  function assertSelection(A, B, leftEnd, rightEnd) {
-    var lca = leftEnd.parent, frag = Fragment(leftEnd, rightEnd || leftEnd);
+import { L, R, noop } from 'src/constants';
+import { Cursor } from 'src/cursor';
+import { Point } from 'tree/point';
+import { Node } from 'tree/node';
+import { Fragment } from 'tree/fragment';
 
-    (function eitherOrder(A, B) {
+suite('Cursor::select()', () => {
+	const cursor = new Cursor();
+	cursor.selectionChanged = noop;
 
-      var count = 0;
-      lca.selectChildren = function(leftEnd, rightEnd) {
-        count += 1;
-        assert.equal(frag.ends[L], leftEnd);
-        assert.equal(frag.ends[R], rightEnd);
-        return Node.p.selectChildren.apply(this, arguments);
-      };
+	const assertSelection = (A, B, leftEnd, rightEnd) => {
+		const lca = leftEnd.parent, frag = new Fragment(leftEnd, rightEnd || leftEnd);
 
-      Point.p.init.call(cursor, A.parent, A[L], A[R]);
-      cursor.startSelection();
-      Point.p.init.call(cursor, B.parent, B[L], B[R]);
-      assert.equal(cursor.select(), true);
-      assert.equal(count, 1);
+		(function eitherOrder(A, B) {
 
-      return eitherOrder;
-    }(A, B)(B, A));
-  }
+			let count = 0;
+			lca.selectChildren = function(leftEnd, rightEnd) {
+				count += 1;
+				assert.equal(frag.ends[L], leftEnd);
+				assert.equal(frag.ends[R], rightEnd);
+				return Node.prototype.selectChildren.apply(this, arguments);
+			};
 
-  var parent = Node();
-  var child1 = Node().adopt(parent, parent.ends[R], 0);
-  var child2 = Node().adopt(parent, parent.ends[R], 0);
-  var child3 = Node().adopt(parent, parent.ends[R], 0);
-  var A = Point(parent, 0, child1);
-  var B = Point(parent, child1, child2);
-  var C = Point(parent, child2, child3);
-  var D = Point(parent, child3, 0);
-  var pt1 = Point(child1, 0, 0);
-  var pt2 = Point(child2, 0, 0);
-  var pt3 = Point(child3, 0, 0);
+			cursor.parent = A.parent;
+			cursor[L] = A[L]; cursor[R] = A[R];
+			cursor.startSelection();
+			cursor.parent = B.parent;
+			cursor[L] = B[L]; cursor[R] = B[R];
+			assert.equal(cursor.select(), true);
+			assert.equal(count, 1);
 
-  test('same parent, one Node', function() {
-    assertSelection(A, B, child1);
-    assertSelection(B, C, child2);
-    assertSelection(C, D, child3);
-  });
+			return eitherOrder;
+		})(A, B)(B, A);
+	};
 
-  test('same Parent, many Nodes', function() {
-    assertSelection(A, C, child1, child2);
-    assertSelection(A, D, child1, child3);
-    assertSelection(B, D, child2, child3);
-  });
+	const parent = new Node();
+	const child1 = new Node().adopt(parent, parent.ends[R]);
+	const child2 = new Node().adopt(parent, parent.ends[R]);
+	const child3 = new Node().adopt(parent, parent.ends[R]);
+	const A = new Point(parent, undefined, child1);
+	const B = new Point(parent, child1, child2);
+	const C = new Point(parent, child2, child3);
+	const D = new Point(parent, child3, undefined);
+	const pt1 = new Point(child1);
+	const pt2 = new Point(child2);
+	const pt3 = new Point(child3);
 
-  test('Point next to parent of other Point', function() {
-    assertSelection(A, pt1, child1);
-    assertSelection(B, pt1, child1);
+	test('same parent, one Node', () => {
+		assertSelection(A, B, child1);
+		assertSelection(B, C, child2);
+		assertSelection(C, D, child3);
+	});
 
-    assertSelection(B, pt2, child2);
-    assertSelection(C, pt2, child2);
+	test('same Parent, many Nodes', () => {
+		assertSelection(A, C, child1, child2);
+		assertSelection(A, D, child1, child3);
+		assertSelection(B, D, child2, child3);
+	});
 
-    assertSelection(C, pt3, child3);
-    assertSelection(D, pt3, child3);
-  });
+	test('Point next to parent of other Point', () => {
+		assertSelection(A, pt1, child1);
+		assertSelection(B, pt1, child1);
 
-  test('Points\' parents are siblings', function() {
-    assertSelection(pt1, pt2, child1, child2);
-    assertSelection(pt2, pt3, child2, child3);
-    assertSelection(pt1, pt3, child1, child3);
-  });
+		assertSelection(B, pt2, child2);
+		assertSelection(C, pt2, child2);
 
-  test('Point is sibling of parent of other Point', function() {
-    assertSelection(A, pt2, child1, child2);
-    assertSelection(A, pt3, child1, child3);
-    assertSelection(B, pt3, child2, child3);
-    assertSelection(pt1, D, child1, child3);
-    assertSelection(pt1, C, child1, child2);
-  });
+		assertSelection(C, pt3, child3);
+		assertSelection(D, pt3, child3);
+	});
 
-  test('same Point', function() {
-    Point.p.init.call(cursor, A.parent, A[L], A[R]);
-    cursor.startSelection();
-    assert.equal(cursor.select(), false);
-  });
+	test('Points\' parents are siblings', () => {
+		assertSelection(pt1, pt2, child1, child2);
+		assertSelection(pt2, pt3, child2, child3);
+		assertSelection(pt1, pt3, child1, child3);
+	});
 
-  test('different trees', function() {
-    var anotherTree = Node();
+	test('Point is sibling of parent of other Point', () => {
+		assertSelection(A, pt2, child1, child2);
+		assertSelection(A, pt3, child1, child3);
+		assertSelection(B, pt3, child2, child3);
+		assertSelection(pt1, D, child1, child3);
+		assertSelection(pt1, C, child1, child2);
+	});
 
-    Point.p.init.call(cursor, A.parent, A[L], A[R]);
-    cursor.startSelection();
-    Point.p.init.call(cursor, anotherTree, 0, 0);
-    assert.throws(function() { cursor.select(); });
+	test('same Point', () => {
+		cursor.parent = A.parent;
+		cursor[L] = A[L]; cursor[R] = A[R];
+		cursor.startSelection();
+		assert.equal(cursor.select(), false);
+	});
 
-    Point.p.init.call(cursor, anotherTree, 0, 0);
-    cursor.startSelection();
-    Point.p.init.call(cursor, A.parent, A[L], A[R]);
-    assert.throws(function() { cursor.select(); });
-  });
+	test('different trees', () => {
+		const anotherTree = new Node();
+
+		cursor.parent = A.parent;
+		cursor[L] = A[L]; cursor[R] = A[R];
+		cursor.startSelection();
+		cursor.parent = anotherTree;
+		cursor[L] = 0; cursor[R] = 0;
+		assert.throws(() => cursor.select());
+
+		cursor.parent = anotherTree;
+		cursor[L] = 0; cursor[R] = 0;
+		cursor.startSelection();
+		cursor.parent = A.parent;
+		cursor[L] = A[L]; cursor[R] = A[R];
+		assert.throws(() => cursor.select());
+	});
 });

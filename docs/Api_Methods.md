@@ -3,7 +3,7 @@
 To use the MathQuill API, first get the latest version of the interface:
 
 ```js
-var MQ = MathQuill.getInterface(2);
+var MQ = MathQuill.getInterface();
 ```
 
 By default, MathQuill overwrites the global `MathQuill` variable when loaded. If you do not want this behavior, you can use `.noConflict()` ([similar to `jQuery.noConflict()`](http://api.jquery.com/jQuery.noConflict)):
@@ -12,10 +12,10 @@ By default, MathQuill overwrites the global `MathQuill` variable when loaded. If
 <script src="/path/to/first-mathquill.js"></script>
 <script src="/path/to/second-mathquill.js"></script>
 <script>
-var secondMQ = MathQuill.noConflict().getInterface(2);
+var secondMQ = MathQuill.noConflict().getInterface();
 secondMQ.MathField(...);
 
-var firstMQ = MathQuill.getInterface(2);
+var firstMQ = MathQuill.getInterface();
 firstMQ.MathField(...);
 </script>
 ```

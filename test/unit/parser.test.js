@@ -1,230 +1,225 @@
-suite('parser', function() {
-  var string = Parser.string;
-  var regex = Parser.regex;
-  var letter = Parser.letter;
-  var digit = Parser.digit;
-  var any = Parser.any;
-  var optWhitespace = Parser.optWhitespace;
-  var eof = Parser.eof;
-  var succeed = Parser.succeed;
-  var all = Parser.all;
+/* global suite, test, assert */
 
-  test('Parser.string', function() {
-    var parser = string('x');
-    assert.equal(parser.parse('x'), 'x');
-    assert.throws(function() { parser.parse('y') })
-  });
+import { Parser } from 'services/parser.util';
 
-  test('Parser.regex', function() {
-    var parser = regex(/^[0-9]/);
+suite('parser', () => {
+	const string = Parser.string;
+	const regex = Parser.regex;
+	const letter = Parser.letter;
+	const digit = Parser.digit;
+	const any = Parser.any;
+	const optWhitespace = Parser.optWhitespace;
+	const eof = Parser.eof;
+	const all = Parser.all;
 
-    assert.equal(parser.parse('1'), '1');
-    assert.equal(parser.parse('4'), '4');
-    assert.throws(function() { parser.parse('x'); });
-    assert.throws(function() { regex(/./) }, 'must be anchored');
-  });
+	test('Parser.string', () => {
+		const parser = string('x');
+		assert.equal(parser.parse('x'), 'x');
+		assert.throws(() => parser.parse('y'));
+	});
 
-  suite('then', function() {
-    test('with a parser, uses the last return value', function() {
-      var parser = string('x').then(string('y'));
-      assert.equal(parser.parse('xy'), 'y');
-      assert.throws(function() { parser.parse('y'); });
-      assert.throws(function() { parser.parse('xz'); });
-    });
+	test('Parser.regex', () => {
+		const parser = regex(/^[0-9]/);
 
-    test('asserts that a parser is returned', function() {
-      var parser1 = letter.then(function() { return 'not a parser' });
-      assert.throws(function() { parser1.parse('x'); });
+		assert.equal(parser.parse('1'), '1');
+		assert.equal(parser.parse('4'), '4');
+		assert.throws(() => parser.parse('x'));
+		assert.throws(() => regex(/./), 'must be anchored');
+	});
 
-      var parser2 = letter.then('x');
-      assert.throws(function() { letter.parse('xx'); });
-    });
+	suite('then', () => {
+		test('with a parser, uses the last return value', () => {
+			const parser = string('x').then(string('y'));
+			assert.equal(parser.parse('xy'), 'y');
+			assert.throws(() => parser.parse('y'));
+			assert.throws(() => parser.parse('xz'));
+		});
 
-    test('with a function that returns a parser, continues with that parser', function() {
-      var piped;
-      var parser = string('x').then(function(x) {
-        piped = x;
-        return string('y');
-      });
+		test('asserts that a parser is returned', () => {
+			const parser1 = letter.then(() => 'not a parser');
+			assert.throws(() => parser1.parse('x'));
 
-      assert.equal(parser.parse('xy'), 'y');
-      assert.equal(piped, 'x');
-      assert.throws(function() { parser.parse('x'); });
-    });
-  });
+			const parser2 = letter.then('x');
+			assert.throws(() => parser2.parse('xx'));
+		});
 
-  suite('map', function() {
-    test('with a function, pipes the value in and uses that return value', function() {
-      var piped;
+		test('with a function that returns a parser, continues with that parser', () => {
+			let piped;
+			const parser = string('x').then((x) => {
+				piped = x;
+				return string('y');
+			});
 
-      var parser = string('x').map(function(x) {
-        piped = x;
-        return 'y';
-      });
+			assert.equal(parser.parse('xy'), 'y');
+			assert.equal(piped, 'x');
+			assert.throws(() => parser.parse('x'));
+		});
+	});
 
-      assert.equal(parser.parse('x'), 'y')
-      assert.equal(piped, 'x');
-    });
-  });
+	suite('map', () => {
+		test('with a function, pipes the value in and uses that return value', () => {
+			let piped;
 
-  suite('result', function() {
-    test('returns a constant result', function() {
-      var myResult = 1;
-      var oneParser = string('x').result(1);
+			const parser = string('x').map((x) => {
+				piped = x;
+				return 'y';
+			});
 
-      assert.equal(oneParser.parse('x'), 1);
+			assert.equal(parser.parse('x'), 'y');
+			assert.equal(piped, 'x');
+		});
+	});
 
-      var myFn = function() {};
-      var fnParser = string('x').result(myFn);
+	suite('result', () => {
+		test('returns a constant result', () => {
+			const oneParser = string('x').result(1);
 
-      assert.equal(fnParser.parse('x'), myFn);
-    });
-  });
+			assert.equal(oneParser.parse('x'), 1);
 
-  suite('skip', function() {
-    test('uses the previous return value', function() {
-      var parser = string('x').skip(string('y'));
+			const myFn = () => {};
+			const fnParser = string('x').result(myFn);
 
-      assert.equal(parser.parse('xy'), 'x');
-      assert.throws(function() { parser.parse('x'); });
-    });
-  });
+			assert.equal(fnParser.parse('x'), myFn);
+		});
+	});
 
-  suite('or', function() {
-    test('two parsers', function() {
-      var parser = string('x').or(string('y'));
+	suite('skip', () => {
+		test('uses the previous return value', () => {
+			const parser = string('x').skip(string('y'));
 
-      assert.equal(parser.parse('x'), 'x');
-      assert.equal(parser.parse('y'), 'y');
-      assert.throws(function() { parser.parse('z') });
-    });
+			assert.equal(parser.parse('xy'), 'x');
+			assert.throws(() => parser.parse('x'));
+		});
+	});
 
-    test('with then', function() {
-      var parser = string('\\')
-        .then(function() {
-          return string('y')
-        }).or(string('z'));
+	suite('or', () => {
+		test('two parsers', () => {
+			const parser = string('x').or(string('y'));
 
-      assert.equal(parser.parse('\\y'), 'y');
-      assert.equal(parser.parse('z'), 'z');
-      assert.throws(function() { parser.parse('\\z') });
-    });
-  });
+			assert.equal(parser.parse('x'), 'x');
+			assert.equal(parser.parse('y'), 'y');
+			assert.throws(() => parser.parse('z'));
+		});
 
-  function assertEqualArray(arr1, arr2) {
-    assert.equal(arr1.join(), arr2.join());
-  }
+		test('with then', () => {
+			const parser = string('\\').then(() => string('y')).or(string('z'));
 
-  suite('many', function() {
-    test('simple case', function() {
-      var letters = letter.many();
+			assert.equal(parser.parse('\\y'), 'y');
+			assert.equal(parser.parse('z'), 'z');
+			assert.throws(() => parser.parse('\\z'));
+		});
+	});
 
-      assertEqualArray(letters.parse('x'), ['x']);
-      assertEqualArray(letters.parse('xyz'), ['x','y','z']);
-      assertEqualArray(letters.parse(''), []);
-      assert.throws(function() { letters.parse('1'); });
-      assert.throws(function() { letters.parse('xyz1'); });
-    });
+	const assertEqualArray = (arr1, arr2) => assert.equal(arr1.join(), arr2.join());
 
-    test('followed by then', function() {
-      var parser = string('x').many().then(string('y'));
+	suite('many', () => {
+		test('simple case', () => {
+			const letters = letter.many();
 
-      assert.equal(parser.parse('y'), 'y');
-      assert.equal(parser.parse('xy'), 'y');
-      assert.equal(parser.parse('xxxxxy'), 'y');
-    });
-  });
+			assertEqualArray(letters.parse('x'), ['x']);
+			assertEqualArray(letters.parse('xyz'), ['x', 'y', 'z']);
+			assertEqualArray(letters.parse(''), []);
+			assert.throws(() => letters.parse('1'));
+			assert.throws(() => letters.parse('xyz1'));
+		});
 
-  suite('times', function() {
-    test('zero case', function() {
-      var zeroLetters = letter.times(0);
+		test('followed by then', () => {
+			const parser = string('x').many().then(string('y'));
 
-      assertEqualArray(zeroLetters.parse(''), []);
-      assert.throws(function() { zeroLetters.parse('x'); });
-    });
+			assert.equal(parser.parse('y'), 'y');
+			assert.equal(parser.parse('xy'), 'y');
+			assert.equal(parser.parse('xxxxxy'), 'y');
+		});
+	});
 
-    test('nonzero case', function() {
-      var threeLetters = letter.times(3);
+	suite('times', () => {
+		test('zero case', () => {
+			const zeroLetters = letter.times(0);
 
-      assertEqualArray(threeLetters.parse('xyz'), ['x', 'y', 'z']);
-      assert.throws(function() { threeLetters.parse('xy'); });
-      assert.throws(function() { threeLetters.parse('xyzw'); });
+			assertEqualArray(zeroLetters.parse(''), []);
+			assert.throws(() => zeroLetters.parse('x'));
+		});
 
-      var thenDigit = threeLetters.then(digit);
-      assert.equal(thenDigit.parse('xyz1'), '1');
-      assert.throws(function() { thenDigit.parse('xy1'); });
-      assert.throws(function() { thenDigit.parse('xyz'); });
-      assert.throws(function() { thenDigit.parse('xyzw'); });
-    });
+		test('nonzero case', () => {
+			const threeLetters = letter.times(3);
 
-    test('with a min and max', function() {
-      var someLetters = letter.times(2, 4);
+			assertEqualArray(threeLetters.parse('xyz'), ['x', 'y', 'z']);
+			assert.throws(() => threeLetters.parse('xy'));
+			assert.throws(() => threeLetters.parse('xyzw'));
 
-      assertEqualArray(someLetters.parse('xy'), ['x', 'y']);
-      assertEqualArray(someLetters.parse('xyz'), ['x', 'y', 'z']);
-      assertEqualArray(someLetters.parse('xyzw'), ['x', 'y', 'z', 'w']);
-      assert.throws(function() { someLetters.parse('xyzwv'); });
-      assert.throws(function() { someLetters.parse('x'); });
+			const thenDigit = threeLetters.then(digit);
+			assert.equal(thenDigit.parse('xyz1'), '1');
+			assert.throws(() => thenDigit.parse('xy1'));
+			assert.throws(() => thenDigit.parse('xyz'));
+			assert.throws(() => thenDigit.parse('xyzw'));
+		});
 
-      var thenDigit = someLetters.then(digit);
-      assert.equal(thenDigit.parse('xy1'), '1');
-      assert.equal(thenDigit.parse('xyz1'), '1');
-      assert.equal(thenDigit.parse('xyzw1'), '1');
-      assert.throws(function() { thenDigit.parse('xy'); });
-      assert.throws(function() { thenDigit.parse('xyzw'); });
-      assert.throws(function() { thenDigit.parse('xyzwv1'); });
-      assert.throws(function() { thenDigit.parse('x1'); });
-    });
+		test('with a min and max', () => {
+			const someLetters = letter.times(2, 4);
 
-    test('atLeast', function() {
-      var atLeastTwo = letter.atLeast(2);
+			assertEqualArray(someLetters.parse('xy'), ['x', 'y']);
+			assertEqualArray(someLetters.parse('xyz'), ['x', 'y', 'z']);
+			assertEqualArray(someLetters.parse('xyzw'), ['x', 'y', 'z', 'w']);
+			assert.throws(() => someLetters.parse('xyzwv'));
+			assert.throws(() => someLetters.parse('x'));
 
-      assertEqualArray(atLeastTwo.parse('xy'), ['x', 'y']);
-      assertEqualArray(atLeastTwo.parse('xyzw'), ['x', 'y', 'z', 'w']);
-      assert.throws(function() { atLeastTwo.parse('x'); });
-    });
-  });
+			const thenDigit = someLetters.then(digit);
+			assert.equal(thenDigit.parse('xy1'), '1');
+			assert.equal(thenDigit.parse('xyz1'), '1');
+			assert.equal(thenDigit.parse('xyzw1'), '1');
+			assert.throws(() => thenDigit.parse('xy'));
+			assert.throws(() => thenDigit.parse('xyzw'));
+			assert.throws(() => thenDigit.parse('xyzwv1'));
+			assert.throws(() => thenDigit.parse('x1'));
+		});
 
-  suite('fail', function() {
-    var fail = Parser.fail;
-    var succeed = Parser.succeed;
+		test('atLeast', () => {
+			const atLeastTwo = letter.atLeast(2);
 
-    test('use Parser.fail to fail dynamically', function() {
-      var parser = any.then(function(ch) {
-        return fail('character '+ch+' not allowed');
-      }).or(string('x'));
+			assertEqualArray(atLeastTwo.parse('xy'), ['x', 'y']);
+			assertEqualArray(atLeastTwo.parse('xyzw'), ['x', 'y', 'z', 'w']);
+			assert.throws(() => atLeastTwo.parse('x'));
+		});
+	});
 
-      assert.throws(function() { parser.parse('y'); });
-      assert.equal(parser.parse('x'), 'x');
-    });
+	suite('fail', () => {
+		const fail = Parser.fail;
+		const succeed = Parser.succeed;
 
-    test('use Parser.succeed or Parser.fail to branch conditionally', function() {
-      var allowedOperator;
+		test('use Parser.fail to fail dynamically', () => {
+			const parser = any.then((ch) => fail(`character ${ch} not allowed`)).or(string('x'));
 
-      var parser =
-        string('x')
-        .then(string('+').or(string('*')))
-        .then(function(operator) {
-          if (operator === allowedOperator) return succeed(operator);
-          else return fail('expected '+allowedOperator);
-        })
-        .skip(string('y'))
-      ;
+			assert.throws(() => parser.parse('y'));
+			assert.equal(parser.parse('x'), 'x');
+		});
 
-      allowedOperator = '+';
-      assert.equal(parser.parse('x+y'), '+');
-      assert.throws(function() { parser.parse('x*y'); });
+		test('use Parser.succeed or Parser.fail to branch conditionally', () => {
+			let allowedOperator;
 
-      allowedOperator = '*';
-      assert.equal(parser.parse('x*y'), '*');
-      assert.throws(function() { parser.parse('x+y'); });
-    });
-  });
+			const parser =
+				string('x')
+					.then(string('+').or(string('*')))
+					.then((operator) => {
+						if (operator === allowedOperator) return succeed(operator);
+						else return fail(`expected ${allowedOperator}`);
+					})
+					.skip(string('y'))
+			;
 
-  test('eof', function() {
-    var parser = optWhitespace.skip(eof).or(all.result('default'));
+			allowedOperator = '+';
+			assert.equal(parser.parse('x+y'), '+');
+			assert.throws(() => parser.parse('x*y'));
 
-    assert.equal(parser.parse('  '), '  ')
-    assert.equal(parser.parse('x'), 'default');
-  });
+			allowedOperator = '*';
+			assert.equal(parser.parse('x*y'), '*');
+			assert.throws(() => parser.parse('x+y'));
+		});
+	});
+
+	test('eof', () => {
+		const parser = optWhitespace.skip(eof).or(all.result('default'));
+
+		assert.equal(parser.parse('  '), '  ');
+		assert.equal(parser.parse('x'), 'default');
+	});
 });

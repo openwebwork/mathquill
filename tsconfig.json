@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"esModuleInterop": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"baseUrl": ".",
+		"resolveJsonModule": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "es6",
+		"paths": {
+			"src/*": ["src/*"],
+			"tree/*": ["src/tree/*"],
+			"services/*": ["src/services/*"],
+			"commands/*": ["src/commands/*"],
+			"css/*": ["src/css/*"],
+			"fonts/*": ["src/fonts/*"]
+		},
+		"lib": ["esnext", "dom", "dom.iterable"]
+	},
+	"include": ["src/**/*"],
+	"exclude": ["dist", "node_modules", "build"]
+}

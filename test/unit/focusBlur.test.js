@@ -1,98 +1,102 @@
-suite('focusBlur', function() {
-  function assertHasFocus(mq, name, invert) {
-    assert.ok(!!invert ^ ($(mq.el()).find('textarea')[0] === document.activeElement), name + (invert ? ' does not have focus' : ' has focus'));
-  }
+/* global suite, test, assert, setup, MQ */
 
-  suite('handlers can shift focus away', function() {
-    var mq, mq2, wasUpOutOfCalled;
-    setup(function() {
-      mq = MQ.MathField($('<span></span>').appendTo('#mock')[0], {
-        handlers: {
-          upOutOf: function() {
-            wasUpOutOfCalled = true;
-            mq2.focus();
-          }
-        }
-      });
-      mq2 = MQ.MathField($('<span></span>').appendTo('#mock')[0]);
-      wasUpOutOfCalled = false;
-    });
+import { jQuery } from 'src/constants';
 
-    function triggerUpOutOf(mq) {
-      $(mq.el()).find('textarea').trigger(jQuery.extend(jQuery.Event('keydown'), { which: 38 }));
-      assert.ok(wasUpOutOfCalled);
-    }
+suite('focusBlur', () => {
+	const assertHasFocus = (mq, name, invert) =>
+		assert.ok(!!invert ^ (jQuery(mq.el()).find('textarea')[0] === document.activeElement),
+			name + (invert ? ' does not have focus' : ' has focus'));
 
-    test('normally', function() {
-      mq.focus();
-      assertHasFocus(mq, 'mq');
+	suite('handlers can shift focus away', () => {
+		let mq, mq2, wasUpOutOfCalled;
+		setup(() => {
+			mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], {
+				handlers: {
+					upOutOf: () => {
+						wasUpOutOfCalled = true;
+						mq2.focus();
+					}
+				}
+			});
+			mq2 = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+			wasUpOutOfCalled = false;
+		});
 
-      triggerUpOutOf(mq);
-      assertHasFocus(mq2, 'mq2');
-    });
+		const triggerUpOutOf = (mq) => {
+			jQuery(mq.el()).find('textarea').trigger(jQuery.extend(jQuery.Event('keydown'), { which: 38 }));
+			assert.ok(wasUpOutOfCalled);
+		};
 
-    test('even if there\'s a selection', function(done) {
-      mq.focus();
-      assertHasFocus(mq, 'mq');
+		test('normally', () => {
+			mq.focus();
+			assertHasFocus(mq, 'mq');
 
-      mq.typedText('asdf');
-      assert.equal(mq.latex(), 'asdf');
+			triggerUpOutOf(mq);
+			assertHasFocus(mq2, 'mq2');
+		});
 
-      mq.keystroke('Shift-Left');
-      setTimeout(function() {
-        assert.equal($(mq.el()).find('textarea').val(), 'f');
+		test('even if there\'s a selection', (done) => {
+			mq.focus();
+			assertHasFocus(mq, 'mq');
 
-        triggerUpOutOf(mq);
-        assertHasFocus(mq2, 'mq2');
-        done();
-      });
-    });
-  });
+			mq.typedText('asdf');
+			assert.equal(mq.latex(), 'asdf');
 
-  test('select behaves normally after blurring and re-focusing', function(done) {
-    var mq = MQ.MathField($('<span></span>').appendTo('#mock')[0]);
+			mq.keystroke('Shift-Left');
+			setTimeout(() => {
+				assert.equal(jQuery(mq.el()).find('textarea').val(), 'f');
 
-    mq.focus();
-    assertHasFocus(mq, 'mq');
+				triggerUpOutOf(mq);
+				assertHasFocus(mq2, 'mq2');
+				done();
+			});
+		});
+	});
 
-    mq.typedText('asdf');
-    assert.equal(mq.latex(), 'asdf');
+	test('select behaves normally after blurring and re-focusing', (done) => {
+		const mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
 
-    mq.keystroke('Shift-Left');
-    setTimeout(function() {
-      assert.equal($(mq.el()).find('textarea').val(), 'f');
+		mq.focus();
+		assertHasFocus(mq, 'mq');
 
-      mq.blur();
-      assertHasFocus(mq, 'mq', 'not');
-      setTimeout(function() {
-        assert.equal($(mq.el()).find('textarea').val(), 'f');
+		mq.typedText('asdf');
+		assert.equal(mq.latex(), 'asdf');
 
-        mq.focus();
-        assertHasFocus(mq, 'mq');
+		mq.keystroke('Shift-Left');
+		setTimeout(() => {
+			assert.equal(jQuery(mq.el()).find('textarea').val(), 'f');
 
-        mq.keystroke('Shift-Left');
-        setTimeout(function() {
-          assert.equal($(mq.el()).find('textarea').val(), 'df');
-          done();
-        });
-      }, 100);
-    });
-  });
+			mq.blur();
+			assertHasFocus(mq, 'mq', 'not');
+			setTimeout(() => {
+				assert.equal(jQuery(mq.el()).find('textarea').val(), 'f');
 
-  test('blur event fired when math field loses focus', function(done) {
-    var mq = MQ.MathField($('<span></span>').appendTo('#mock')[0]);
+				mq.focus();
+				assertHasFocus(mq, 'mq');
 
-    mq.focus();
-    assertHasFocus(mq, 'math field');
+				mq.keystroke('Shift-Left');
+				setTimeout(() => {
+					assert.equal(jQuery(mq.el()).find('textarea').val(), 'df');
+					done();
+				});
+			}, 100);
+		});
+	});
 
-    var textarea = $('<textarea>').appendTo('#mock').focus();
-    assert.ok(textarea[0] === document.activeElement, 'textarea has focus');
+	test('blur event fired when math field loses focus', (done) => {
+		const mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
 
-    setTimeout(function() {
-      assert.ok(!$(mq.el()).hasClass('mq-focused'), 'math field is visibly blurred');
+		mq.focus();
+		assertHasFocus(mq, 'math field');
 
-      $('#mock').empty();
-      done();
-    });
-  });
+		const textarea = jQuery('<textarea>').appendTo('#mock').focus();
+		assert.ok(textarea[0] === document.activeElement, 'textarea has focus');
+
+		setTimeout(() => {
+			assert.ok(!jQuery(mq.el()).hasClass('mq-focused'), 'math field is visibly blurred');
+
+			jQuery('#mock').empty();
+			done();
+		});
+	});
 });

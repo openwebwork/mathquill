@@ -1,58 +1,53 @@
-window.assert = (function() {
-  function AssertionError(opts) {
-    if (!opts) opts = {};
+window.assert = (() => {
+	class noop extends Error {
+		constructor(...args) {
+			super(...args);
+			this.stack = [];
+		}
+	}
 
-    $.extend(this, opts);
-    this.message = this.explanation + ' ' + this.message;
+	class AssertionError extends noop {
+		constructor(opts) {
+			if (!opts) opts = {};
+			super(`${opts.explanation ?? ''} ${opts.message ?? ''}`);
+		}
+	}
 
-    Error.call(this, this.message);
-  }
+	const fail = (opts) => {
+		if (typeof opts === 'string') opts = { message: opts };
 
-  function noop() {}
-  noop.prototype = Error.prototype;
-  AssertionError.prototype = new noop();
+		throw new AssertionError(opts);
+	};
 
-  function fail(opts) {
-    if (typeof opts === 'string') opts = { message: opts };
+	return {
+		ok: (thing, message) => {
+			if (thing) return;
 
-    throw new AssertionError(opts);
-  }
+			fail({
+				message: message,
+				explanation: `expected ${thing} to be truthy`
+			});
+		},
+		equal: (thing1, thing2, message) => {
+			if (thing1 === thing2) return;
 
-  return {
-    ok: function(thing, message) {
-      if (thing) return;
+			fail({
+				message: message,
+				explanation: `expected (${thing1}) to equal (${thing2})`
+			});
+		},
+		throws: (fn, message) => {
+			try {
+				fn();
+			} catch(e) {
+				return;
+			}
 
-      fail({
-        message: message,
-        explanation: 'expected '+thing+' to be truthy'
-      });
-    },
-    equal: function(thing1, thing2, message) {
-      if (thing1 === thing2) return;
-
-      fail({
-        message: message,
-        explanation: 'expected ('+thing1+') to equal ('+thing2+')'
-      });
-    },
-    throws: function(fn, message) {
-      var error = false;
-
-      try {
-        fn();
-      } catch(e) {
-        error = true;
-      }
-
-      if (error) return;
-
-      fail({
-        message: message,
-        explanation: 'expected '+fn+' to throw an error'
-      });
-    },
-    fail: function(message) {
-      fail({ message: message, explanation: 'generic fail' });
-    }
-  }
+			fail({
+				message: message,
+				explanation: `expected ${fn} to throw an error`
+			});
+		},
+		fail: (message) => fail({ message: message, explanation: 'generic fail' })
+	};
 })();

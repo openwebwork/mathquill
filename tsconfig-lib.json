@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"esModuleInterop": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"baseUrl": ".",
+		"resolveJsonModule": true,
+		"sourceMap": true,
+		"strict": true,
+		"declaration": true,
+		"target": "es6",
+		"paths": {
+			"src/*": ["src/*"],
+			"tree/*": ["src/tree/*"],
+			"services/*": ["src/services/*"],
+			"commands/*": ["src/commands/*"],
+			"css/*": ["src/css/*"],
+			"fonts/*": ["src/fonts/*"]
+		},
+		"lib": ["esnext", "dom", "dom.iterable"],
+		"outDir": "./lib"
+	},
+	"include": ["src/publicapi.ts"],
+	"exclude": ["dist", "node_modules", "build"]
+}

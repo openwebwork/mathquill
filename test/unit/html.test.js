@@ -1,99 +1,97 @@
-suite('HTML', function() {
-  function renderHtml(numBlocks, htmlTemplate) {
-    var cmd = {
-      id: 1,
-      blocks: Array(numBlocks),
-      htmlTemplate: htmlTemplate
-    };
-    for (var i = 0; i < numBlocks; i += 1) {
-      cmd.blocks[i] = {
-        i: i,
-        id: 2 + i,
-        join: function() { return 'Block:' + this.i; }
-      };
-    }
-    return MathCommand.prototype.html.call(cmd);
-  }
+/* global suite, test, assert */
 
-  test('simple HTML templates', function() {
-    var htmlTemplate = '<span>A Symbol</span>';
-    var html = '<span mathquill-command-id=1>A Symbol</span>';
+import { MathCommand } from 'commands/mathElements';
 
-    assert.equal(html, renderHtml(0, htmlTemplate), 'a symbol');
+suite('HTML', () => {
+	const renderHtml = (numBlocks, htmlTemplate) => {
+		const cmd = {
+			id: 1,
+			blocks: Array(numBlocks),
+			htmlTemplate: htmlTemplate
+		};
+		for (let i = 0; i < numBlocks; ++i) {
+			cmd.blocks[i] = {
+				i: i,
+				id: 2 + i,
+				join: function() { return `Block:${this.i}`; }
+			};
+		}
+		return MathCommand.prototype.html.call(cmd);
+	};
 
-    htmlTemplate = '<span>&0</span>';
-    html = '<span mathquill-command-id=1 mathquill-block-id=2>Block:0</span>';
+	test('simple HTML templates', () => {
+		let htmlTemplate = '<span>A Symbol</span>';
+		let html = '<span mathquill-command-id=1>A Symbol</span>';
 
-    assert.equal(html, renderHtml(1, htmlTemplate), 'same span is cmd and block');
+		assert.equal(html, renderHtml(0, htmlTemplate), 'a symbol');
 
-    htmlTemplate =
-        '<span>'
-      +   '<span>&0</span>'
-      +   '<span>&1</span>'
-      + '</span>'
-    ;
-    html =
-        '<span mathquill-command-id=1>'
-      +   '<span mathquill-block-id=2>Block:0</span>'
-      +   '<span mathquill-block-id=3>Block:1</span>'
-      + '</span>'
-    ;
+		htmlTemplate = '<span>&0</span>';
+		html = '<span mathquill-command-id=1 mathquill-block-id=2>Block:0</span>';
 
-    assert.equal(html, renderHtml(2, htmlTemplate), 'container span with two block spans');
-  });
+		assert.equal(html, renderHtml(1, htmlTemplate), 'same span is cmd and block');
 
-  test('context-free HTML templates', function() {
-    var htmlTemplate = '<br/>';
-    var html = '<br mathquill-command-id=1/>';
+		htmlTemplate =
+			'<span>'
+			+   '<span>&0</span>'
+			+   '<span>&1</span>'
+			+ '</span>';
+		html =
+			'<span mathquill-command-id=1>'
+			+   '<span mathquill-block-id=2>Block:0</span>'
+			+   '<span mathquill-block-id=3>Block:1</span>'
+			+ '</span>';
 
-    assert.equal(html, renderHtml(0, htmlTemplate), 'self-closing tag');
+		assert.equal(html, renderHtml(2, htmlTemplate), 'container span with two block spans');
+	});
 
-    htmlTemplate =
-        '<span>'
-      +   '<span>&0</span>'
-      + '</span>'
-      + '<span>'
-      +   '<span>&1</span>'
-      + '</span>'
-    ;
-    html =
-        '<span mathquill-command-id=1>'
-      +   '<span mathquill-block-id=2>Block:0</span>'
-      + '</span>'
-      + '<span mathquill-command-id=1>'
-      +   '<span mathquill-block-id=3>Block:1</span>'
-      + '</span>'
-    ;
+	test('context-free HTML templates', () => {
+		let htmlTemplate = '<br/>';
+		let html = '<br mathquill-command-id=1/>';
 
-    assert.equal(html, renderHtml(2, htmlTemplate), 'two cmd spans');
+		assert.equal(html, renderHtml(0, htmlTemplate), 'self-closing tag');
 
-    htmlTemplate =
-        '<span></span>'
-      + '<span/>'
-      + '<span>'
-      +   '<span>'
-      +     '<span/>'
-      +   '</span>'
-      +   '<span>&1</span>'
-      +   '<span/>'
-      +   '<span></span>'
-      + '</span>'
-      + '<span>&0</span>'
-    ;
-    html =
-        '<span mathquill-command-id=1></span>'
-      + '<span mathquill-command-id=1/>'
-      + '<span mathquill-command-id=1>'
-      +   '<span>'
-      +     '<span/>'
-      +   '</span>'
-      +   '<span mathquill-block-id=3>Block:1</span>'
-      +   '<span/>'
-      +   '<span></span>'
-      + '</span>'
-      + '<span mathquill-command-id=1 mathquill-block-id=2>Block:0</span>'
-    ;
+		htmlTemplate =
+			'<span>'
+			+   '<span>&0</span>'
+			+ '</span>'
+			+ '<span>'
+			+   '<span>&1</span>'
+			+ '</span>';
+		html =
+			'<span mathquill-command-id=1>'
+			+   '<span mathquill-block-id=2>Block:0</span>'
+			+ '</span>'
+			+ '<span mathquill-command-id=1>'
+			+   '<span mathquill-block-id=3>Block:1</span>'
+			+ '</span>';
 
-    assert.equal(html, renderHtml(2, htmlTemplate), 'multiple nested cmd and block spans');
-  });
+		assert.equal(html, renderHtml(2, htmlTemplate), 'two cmd spans');
+
+		htmlTemplate =
+			'<span></span>'
+			+ '<span/>'
+			+ '<span>'
+			+   '<span>'
+			+     '<span/>'
+			+   '</span>'
+			+   '<span>&1</span>'
+			+   '<span/>'
+			+   '<span></span>'
+			+ '</span>'
+			+ '<span>&0</span>';
+		html =
+			'<span mathquill-command-id=1></span>'
+			+ '<span mathquill-command-id=1/>'
+			+ '<span mathquill-command-id=1>'
+			+   '<span>'
+			+     '<span/>'
+			+   '</span>'
+			+   '<span mathquill-block-id=3>Block:1</span>'
+			+   '<span/>'
+			+   '<span></span>'
+			+ '</span>'
+			+ '<span mathquill-command-id=1 mathquill-block-id=2>Block:0</span>';
+
+		assert.equal(html, renderHtml(2, htmlTemplate), 'multiple nested cmd and block spans');
+	});
 });
