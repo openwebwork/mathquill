@@ -1,7 +1,8 @@
-// requires
+/* eslint-env node */
+/* eslint-disable no-console */
+
 const http = require('http');
 const path = require('path');
-const url = require('url');
 const fs = require('fs');
 const child_process = require('child_process');
 
@@ -13,7 +14,7 @@ let q = null;
 const run_make_test = () => {
 	if (q) return;
 	q = [];
-	console.log('[%s]\nnpm run devbuild', (new Date).toISOString());
+	console.log('[%s]\nnpm run devbuild', new Date().toISOString());
 	const make_test = child_process.exec('npm run devbuild', { env: process.env });
 	make_test.stdout.pipe(process.stdout, { end: false });
 	make_test.stderr.pipe(process.stderr, { end: false });
@@ -21,13 +22,13 @@ const run_make_test = () => {
 		if (code) {
 			console.error('Exit Code ' + code);
 		} else {
-			console.log('\nMathQuill is now running on localhost:9292');
-			console.log('Open http://localhost:9292/test/demo.html\n');
+			console.log(`\nMathQuill is now running on ${HOST}:${PORT}`);
+			console.log(`Open http://${HOST}:${PORT}/test/demo.html\n`);
 		}
 		for (const qi of q) qi();
 		q = null;
 	});
-}
+};
 
 const enqueueOrDo = (cb) => q ? q.push(cb) : cb();
 
@@ -35,7 +36,7 @@ const enqueueOrDo = (cb) => q ? q.push(cb) : cb();
 const serveRequest = (req, res) => {
 	const reqTime = new Date;
 	enqueueOrDo(() => {
-		const filepath = path.normalize(url.parse(req.url).pathname).slice(1);
+		const filepath = path.normalize(req.url).slice(1);
 		fs.readFile(filepath, (err, data) => {
 			if (err) {
 				if (err.code === 'ENOENT' || err.code === 'EISDIR') {
@@ -59,8 +60,7 @@ const serveRequest = (req, res) => {
 				(data ? (data.length >> 10) + 'kb, ' : ''), Date.now() - reqTime);
 		});
 	});
-}
-
+};
 
 const recursivelyWatch = (watchee, cb) => {
 	fs.readdir(watchee, (err, files) => {
@@ -82,7 +82,7 @@ const recursivelyWatch = (watchee, cb) => {
 			});
 		}
 	});
-}
+};
 
 // main
 http.createServer(serveRequest).listen(PORT, HOST);

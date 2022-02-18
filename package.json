@@ -21,7 +21,9 @@
 		"build": "webpack --mode production",
 		"build-all-js": "BUILD_BASIC=true webpack --mode production",
 		"serve": "node script/test_server.js",
-		"lint": "eslint --ext .js,.ts ./src ./test --fix && stylelint \"./src/**/*.less\" \"./test/**/*.less\" --fix"
+		"jslint": "eslint --ext .js,.ts ./src ./test ./script --fix",
+		"csslint": "stylelint \"./src/**/*.less\" \"./test/**/*.less\" --fix",
+		"lint": "npm run jslint && npm run csslint"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.15.7",
