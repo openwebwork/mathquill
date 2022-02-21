@@ -358,7 +358,7 @@ suite('Public API', () => {
 					assert.ok(mqEl.getBoundingClientRect().right > cursor.jQ[0].getBoundingClientRect().right,
 						'cursor right end is inside the field');
 				}
-				catch(error) {
+				catch (error) {
 					done(error);
 					return;
 				}

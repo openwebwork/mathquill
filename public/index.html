@@ -1,31 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 	<title>MathQuill Quickstart</title>
-	<meta charset='utf-8'>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link rel="icon" href="data:;base64,iVBORw0KGgo=" />
 
 	<!-- Load the MathQuill css -->
-	<link href="build/mathquill.css" rel="stylesheet" />
+	<link href="mathquill.css" rel="stylesheet" />
 
 	<!-- Load jQuery javascript -->
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 	<!-- Load MathQuill javascript -->
-	<script src="build/mathquill.js"></script>
+	<script src="mathquill.js"></script>
 </head>
 
 <body>
 	<p>Static math span: <span id="static-math">x = \frac{ -b \pm \sqrt{b^2-4ac} }{ 2a }</span></p>
 	<p>Editable math field: <span id="math-field">x^2</span></p>
 	<p>LaTeX of what you typed: <code id="latex">x^2</code></p>
-	<p><a href="http://docs.mathquill.com/en/latest/Getting_Started/">MathQuill&rsquo;s Getting Started Guide</a></p>
+	<p>Text of what you typed: <code id="text">x^2</code></p>
+	<p>
+		<a href="http://docs.mathquill.com/en/latest/Getting_Started/">MathQuill&rsquo;s Getting Started Guide</a>
+	</p>
 
 	<script>
 		const staticMathSpan = document.getElementById('static-math');
 		const mathFieldSpan = document.getElementById('math-field');
 		const latexSpan = document.getElementById('latex');
+		const textSpan = document.getElementById('text');
 
 		const MQ = MathQuill.getInterface();
 
@@ -34,7 +39,8 @@
 		MQ.StaticMath(staticMathSpan);
 
 		// You may pass in an options object:
-		const mathField = MQ.MathField(mathFieldSpan,
+		const mathField = MQ.MathField(
+			mathFieldSpan,
 			// An example config option, for more see: http://docs.mathquill.com/en/latest/Config/
 			{
 				spaceBehavesLikeTab: true,
@@ -42,8 +48,10 @@
 					edit: () => {
 						// Retrieve the math that was typed in LaTeX format.
 						latexSpan.textContent = mathField.latex();
-					}
-				}
+						// Retrieve the text output of the math that was typed.
+						textSpan.textContent = mathField.text();
+					},
+				},
 			}
 		);
 	</script>

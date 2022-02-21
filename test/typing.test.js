@@ -862,7 +862,7 @@ suite('typing with auto-replaces', () => {
 			});
 		});
 
-		test('individual commands', () =>{
+		test('individual commands', () => {
 			mq.typedText('sum' + 'n=0');
 			mq.keystroke('Up').typedText('100').keystroke('Right');
 			assertLatex('\\sum_{n=0}^{100}');

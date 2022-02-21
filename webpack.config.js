@@ -9,12 +9,12 @@ const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const VERSION = require('./package.json').version;
 
-module.exports = (env, argv) => {
-	process.env.NODE_ENV = argv.mode;
+module.exports = (_env, argv) => {
+	process.env.NODE_ENV = argv.mode ?? 'development';
 
 	const config = (entry, basic) => {
 		return {
-			mode: argv.mode,
+			mode: process.env.NODE_ENV,
 			entry,
 			output: {
 				path: path.resolve(__dirname, 'build'),
@@ -90,7 +90,7 @@ module.exports = (env, argv) => {
 				})
 			],
 			optimization: {
-				minimize: argv.mode == 'production',
+				minimize: process.env.NODE_ENV == 'production',
 				minimizer: [
 					new TerserPlugin({
 						terserOptions: { format: { comments: /@license/i } },
@@ -112,7 +112,7 @@ module.exports = (env, argv) => {
 
 	const builds = [fullConfig];
 
-	if (argv.mode == 'development') {
+	if (process.env.NODE_ENV == 'development') {
 		// eslint-disable-next-line no-console
 		console.log('Using development mode.');
 
@@ -120,6 +120,17 @@ module.exports = (env, argv) => {
 		basicConfig.devtool = 'source-map';
 		fullConfig.entry['mathquill.test'] = './test/index.js';
 		fullConfig.resolve.alias.test = path.resolve(__dirname, 'test');
+		fullConfig.devServer = {
+			https: false,
+			port: 9292,
+			static: [
+				path.join(__dirname, 'public'),
+				{
+					directory: path.join(__dirname, 'node_modules/mocha'),
+					publicPath: '/mocha'
+				}
+			]
+		};
 
 		builds.push(basicConfig);
 	} else {

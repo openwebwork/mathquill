@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>MathQuill Inputs Test</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+
+	<link rel="stylesheet" href="mathquill.css" />
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="mathquill.js"></script>
+
+	<style>
+		.rule-container {
+			display: flex;
+			gap: 0.25rem;
+			align-items: center;
+			margin: 20px;
+			margin-bottom: 0.5rem;
+		}
+
+		span[id^="mq-answer"] {
+			direction: ltr;
+			padding: 4px 5px 2px 5px;
+			border-radius: 4px !important;
+			background-color: white;
+			margin-right: 0;
+			margin-left: 0;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="rule-container">
+		<input id="AnSwEr0001" type="text" />
+		<span id="mq-answer-AnSwEr0001"></span>
+		<input id="MaThQuIlL_AnSwEr0001" type="text" value="" />
+	</div>
+	<script>
+		(() => {
+			const MQ = MathQuill.getInterface();
+			const mq_answer_AnSwEr0001 = document.getElementById('mq-answer-AnSwEr0001');
+
+			const mathField = MQ.MathField(mq_answer_AnSwEr0001, {
+				spaceBehavesLikeTab: true,
+				leftRightIntoCmdGoes: 'up',
+				restrictMismatchedBrackets: true,
+				sumStartsWithNEquals: true,
+				supSubsRequireOperand: true,
+				autoCommands: 'pi sqrt root vert inf union abs',
+				rootsAreExponents: true,
+				maxDepth: 10,
+				handlers: {
+					edit: (mq) => {
+						if (mq.text() !== '') {
+							AnSwEr0001.value = mq.text();
+							MaThQuIlL_AnSwEr0001.value = mq.latex();
+						} else {
+							AnSwEr0001.value = '';
+							MaThQuIlL_AnSwEr0001.value = '';
+						}
+					},
+				},
+			});
+			mathField.latex(MaThQuIlL_AnSwEr0001.value);
+			mathField.moveToLeftEnd();
+			mathField.blur();
+		})();
+	</script>
+</body>
+
+</html>
