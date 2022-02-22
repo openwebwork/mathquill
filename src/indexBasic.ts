@@ -1,6 +1,6 @@
 import MathQuill from 'src/publicapiBasic';
 import { MQ_VERSION } from 'src/version';
-import 'css/main.less';
+import 'css/mainBasic.less';
 
 MathQuill.VERSION = MQ_VERSION;
 
