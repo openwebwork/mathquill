@@ -76,9 +76,9 @@ export class EditableField extends AbstractMathQuill {
 		return this;
 	}
 
-	focus() { this.__controller.textarea?.focus(); return this; }
+	focus() { this.__controller.textarea?.trigger('focus'); return this; }
 
-	blur() { this.__controller.textarea?.blur(); return this; }
+	blur() { this.__controller.textarea?.trigger('blur'); return this; }
 
 	write(latex: string) {
 		this.__controller.writeLatex(latex);
@@ -140,7 +140,7 @@ export class EditableField extends AbstractMathQuill {
 		for (const key of keyList) {
 			const noPreventDefaultEvent = new Event('noop');
 			noPreventDefaultEvent.preventDefault = noop;
-			this.__controller.keystroke(key, noPreventDefaultEvent);
+			this.__controller.keystroke(key, noPreventDefaultEvent as unknown as JQuery.KeyboardEventBase);
 		}
 		return this;
 	}
@@ -156,10 +156,7 @@ export class EditableField extends AbstractMathQuill {
 		pageX: number, pageY: number,
 		options: { text?: () => string, htmlTemplate?: string, latex?: () => string }
 	) {
-		const el = document.elementFromPoint(
-			pageX - (jQuery(window).scrollLeft() ?? 0),
-			pageY - (jQuery(window).scrollTop() ?? 0)
-		) as HTMLElement;
+		const el = document.elementFromPoint(pageX - window.pageXOffset, pageY - window.pageYOffset) as HTMLElement;
 		this.__controller.seek(jQuery(el), pageX);
 		const cmd = new LatexCmds.embed().setOptions(options);
 		cmd.createLeftOf(this.__controller.cursor);
@@ -169,7 +166,7 @@ export class EditableField extends AbstractMathQuill {
 		target = target || (document.elementFromPoint(clientX, clientY) as HTMLElement);
 
 		const ctrlr = this.__controller, root = ctrlr.root;
-		if (!jQuery.contains(root.jQ[0], target)) target = root.jQ[0];
+		if (!root.jQ[0].contains(target)) target = root.jQ[0];
 		ctrlr.seek(jQuery(target), clientX + window.pageXOffset);
 		if (ctrlr.blurred) this.focus();
 		return this;

@@ -63,14 +63,14 @@ export const MouseEventController =
 
 				if (ctrlr.blurred) {
 					if (!ctrlr.editable) rootjQ.prepend(textareaSpan as JQuery);
-					textarea?.focus();
+					textarea?.trigger('focus');
 				}
 
 				cursor.blink = noop;
 				ctrlr.seek(jQuery(e.target), e.pageX ?? 0).cursor.startSelection();
 
-				rootjQ.mousemove(mousemove);
-				ownerDocument.mousemove(docmousemove).mouseup(mouseup);
+				rootjQ.on('mousemove', mousemove);
+				ownerDocument.on('mousemove', docmousemove).on('mouseup', mouseup);
 				// listen on document not just body to not only hear about mousemove and
 				// mouseup on page outside field, but even outside page, except iframes:
 				// https://github.com/mathquill/mathquill/commit/8c50028afcffcace655d8ae2049f6e02482346c5#commitcomment-6175800

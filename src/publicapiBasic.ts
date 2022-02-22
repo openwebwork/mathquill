@@ -45,7 +45,7 @@ export default class MathQuill {
 		//   assert(MQ(mathFieldSpan).id === MQ(mathFieldSpan).id);
 		const MQ = (el: unknown) => {
 			if (!(el instanceof HTMLElement)) return;
-			const blockId = jQuery(el).children('.mq-root-block').attr(mqBlockId);
+			const blockId = el.querySelector('.mq-root-block')?.getAttribute(mqBlockId) ?? false;
 			const ctrlr = blockId ? Node.byId[parseInt(blockId)].controller : undefined;
 			return ctrlr?.apiClass;
 		};

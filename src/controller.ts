@@ -79,8 +79,8 @@ export class Controller extends
 
 	// Methods that deal with the browser DOM events from interaction with the typist.
 
-	keystroke(key: string, evt: Event) {
-		this.cursor.parent?.keystroke(key, evt, this);
+	keystroke(key: string, evt: JQuery.KeyboardEventBase) {
+		this.cursor.parent?.keystroke(key, evt as unknown as KeyboardEvent, this);
 	}
 
 	escapeDir(dir: Direction, key: string, e: Event) {

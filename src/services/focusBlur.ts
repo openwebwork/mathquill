@@ -6,7 +6,7 @@ import type { Node } from 'tree/node';
 
 export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base: TBase) => class extends Base {
 	focusBlurEvents() {
-		this.textarea?.focus(() => {
+		this.textarea?.on('focus', () => {
 			this.blurred = false;
 			this.container.addClass('mq-focused');
 			if (!this.cursor.parent)
@@ -17,7 +17,7 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 			}
 			else
 				this.cursor.show();
-		}).blur(() => {
+		}).on('blur', () => {
 			this.blurred = true;
 			this.container.removeClass('mq-focused');
 			this.cursor.hide().parent?.blur();

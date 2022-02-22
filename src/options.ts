@@ -1,7 +1,7 @@
 // Options for the API objects
 
 import type { Direction } from 'src/constants';
-import { jQuery, BuiltInOpNames } from 'src/constants';
+import { BuiltInOpNames } from 'src/constants';
 import type { AbstractMathQuill } from 'src/abstractFields';
 import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
@@ -225,7 +225,12 @@ export class Options {
 	handlers?: Handlers;
 
 	substituteTextarea() {
-		return jQuery('<textarea autocapitalize=off autocomplete=off autocorrect=off spellcheck=false />')[0];
+		const textarea = document.createElement('textarea');
+		textarea.setAttribute('autocapitalize', 'off');
+		textarea.setAttribute('autocomplete', 'off');
+		textarea.setAttribute('autocorrext', 'off');
+		textarea.setAttribute('spellcheck', 'false');
+		return textarea;
 	}
 
 	substituteKeyboardEvents(el: HTMLTextAreaElement | JQuery<HTMLTextAreaElement>, handlers: TextAreaHandlers) {

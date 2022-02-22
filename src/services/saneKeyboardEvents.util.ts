@@ -23,7 +23,7 @@ import { jQuery, noop } from 'src/constants';
 
 export interface TextAreaHandlers {
 	container: HTMLElement | JQuery<HTMLElement>;
-	keystroke?: (key: string, event: JQueryKeyEventObject) => void;
+	keystroke?: (key: string, event: JQuery.KeyboardEventBase) => void;
 	typedText: (text: string) => void;
 	paste: (text: string) => void;
 	cut: () => void;
@@ -76,14 +76,13 @@ export const saneKeyboardEvents = (() => {
 
 	// To the extent possible, create a normalized string representation
 	// of the key combo (i.e., key code and modifier keys).
-	const stringify = (evt: JQueryKeyEventObject) => {
+	const stringify = (evt: JQuery.KeyboardEventBase) => {
 		const which = evt.which || evt.keyCode;
 		const keyVal = KEY_VALUES[which];
 		const modifiers = [];
 
 		if (evt.ctrlKey) modifiers.push('Ctrl');
-		if (evt.originalEvent && evt.originalEvent instanceof KeyboardEvent && evt.originalEvent.metaKey)
-			modifiers.push('Meta');
+		if (evt.metaKey) modifiers.push('Meta');
 		if (evt.altKey) modifiers.push('Alt');
 		if (evt.shiftKey) modifiers.push('Shift');
 
@@ -98,8 +97,8 @@ export const saneKeyboardEvents = (() => {
 	// create a keyboard events shim that calls callbacks at useful times
 	// and exports useful public methods
 	return (el: HTMLTextAreaElement | JQuery<HTMLTextAreaElement>, handlers: TextAreaHandlers) => {
-		let keydown: JQueryKeyEventObject | null = null;
-		let keypress: JQueryKeyEventObject | null = null;
+		let keydown: JQuery.KeyboardEventBase | null = null;
+		let keypress: JQuery.KeyboardEventBase | null = null;
 
 		const textarea = jQuery(el);
 		const target = jQuery(handlers.container || textarea);
@@ -158,11 +157,11 @@ export const saneKeyboardEvents = (() => {
 			return dom.selectionStart !== dom.selectionEnd;
 		};
 
-		const handleKey =
-			() => handlers.keystroke?.(stringify(keydown as JQueryKeyEventObject), keydown as JQueryKeyEventObject);
+		const handleKey = () =>
+			handlers.keystroke?.(stringify(keydown as JQuery.KeyboardEventBase), keydown as JQuery.KeyboardEventBase);
 
 		// -*- event handlers -*- //
-		const onKeydown = (e: JQueryKeyEventObject) => {
+		const onKeydown = (e: JQuery.KeyboardEventBase) => {
 			if (e.target !== textarea[0]) return;
 
 			keydown = e;
@@ -179,7 +178,7 @@ export const saneKeyboardEvents = (() => {
 			handleKey();
 		};
 
-		const onKeypress = (e: JQueryKeyEventObject) => {
+		const onKeypress = (e: JQuery.KeyboardEventBase) => {
 			if (e.target !== textarea[0]) return;
 
 			// call the key handler for repeated keypresses.
@@ -193,7 +192,7 @@ export const saneKeyboardEvents = (() => {
 			checkTextareaFor(typedText);
 		};
 
-		const onKeyup = (e: JQueryKeyEventObject) => {
+		const onKeyup = (e: JQuery.KeyboardEventBase) => {
 			if (e.target !== textarea[0]) return;
 
 			// Handle case of no keypress event being sent
@@ -232,7 +231,7 @@ export const saneKeyboardEvents = (() => {
 
 		const onBlur = () => { keydown = keypress = null; };
 
-		const onPaste = (e: JQueryKeyEventObject) => {
+		const onPaste = (e: JQuery.KeyboardEventBase) => {
 			if (e.target !== textarea[0]) return;
 
 			// In Linux, middle-click pasting causes onPaste to be called,
@@ -243,7 +242,7 @@ export const saneKeyboardEvents = (() => {
 			// It's pretty nifty that by changing focus in this handler,
 			// we can change the target of the default action.  (This works
 			// on keydown too, FWIW).
-			textarea.focus();
+			textarea.trigger('focus');
 
 			checkTextareaFor(pastedText);
 		};

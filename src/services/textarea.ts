@@ -22,7 +22,7 @@ export const TextAreaController =
 			if (!textarea.nodeType) {
 				throw 'substituteTextarea() must return a DOM element, got ' + textarea.toString();
 			}
-			this.textarea = jQuery(textarea).appendTo(this.textareaSpan) as JQuery<HTMLTextAreaElement>;
+			this.textarea = jQuery(textarea).appendTo(this.textareaSpan);
 
 			this.cursor.selectionChanged = () => this.selectionChanged();
 		}
@@ -61,15 +61,15 @@ export const TextAreaController =
 
 			this.textarea?.on('cut paste', false)
 				.on('copy', () => this.setTextareaSelection())
-				.focus(() => this.blurred = false)
-				.blur(() => {
+				.on('focus', () => this.blurred = false)
+				.on('blur', () => {
 					if (this.cursor.selection) this.cursor.selection.clear();
 					setTimeout(detach); //detaching during blur explodes in WebKit
 				});
 
 			this.selectFn = (text) => {
 				this.textarea?.val(text);
-				if (text) this.textarea?.select();
+				if (text) this.textarea?.trigger('select');
 			};
 		}
 
@@ -84,7 +84,7 @@ export const TextAreaController =
 		unbindEditablesEvents() {
 			this.selectFn = (text) => {
 				this.textarea?.val(text);
-				if (text) this.textarea?.select();
+				if (text) this.textarea?.trigger('select');
 			};
 			this.textareaSpan?.remove();
 
@@ -131,5 +131,5 @@ export const TextAreaController =
 			this.writeLatex(text).cursor.show();
 		}
 
-		keystroke(_ignore_key: string, _ignore_event: JQueryKeyEventObject) { /* do nothing */ };
+		keystroke(_ignore_key: string, _ignore_event: JQuery.KeyboardEventBase) { /* do nothing */ };
 	};
