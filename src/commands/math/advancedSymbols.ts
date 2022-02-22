@@ -117,20 +117,20 @@ LatexCmds.C =
 LatexCmds.H = LatexCmds.Hamiltonian = LatexCmds.quaternions = LatexCmds.Quaternions =
 	bindMixin(VanillaSymbol, '\\mathbb{H}', '&#8461;');
 
-//spacing
+// spacing
 LatexCmds.quad = LatexCmds.emsp = bindMixin(VanillaSymbol, '\\quad ', '    ');
 LatexCmds.qquad = bindMixin(VanillaSymbol, '\\qquad ', '        ');
 // spacing special characters, gonna have to implement this in LatexCommandInput::onText somehow
-//case ',':
+// case ',':
 //  return VanillaSymbol('\\, ',' ');
-//case ':':
+// case ':':
 //  return VanillaSymbol('\\: ','  ');
-//case ';':
+// case ';':
 //  return VanillaSymbol('\\; ','   ');
-//case '!':
+// case '!':
 //  return Symbol('\\! ', '<span style="margin-right:-.2em"></span>');
 
-//binary operators
+// binary operators
 LatexCmds.diamond = bindMixin(VanillaSymbol, '\\diamond ', '&#9671;');
 LatexCmds.bigtriangleup = bindMixin(VanillaSymbol, '\\bigtriangleup ', '&#9651;');
 LatexCmds.ominus = bindMixin(VanillaSymbol, '\\ominus ', '&#8854;');
@@ -140,7 +140,7 @@ LatexCmds.sqcap = bindMixin(VanillaSymbol, '\\sqcap ', '&#8851;');
 LatexCmds.triangleleft = bindMixin(VanillaSymbol, '\\triangleleft ', '&#8882;');
 LatexCmds.sqcup = bindMixin(VanillaSymbol, '\\sqcup ', '&#8852;');
 LatexCmds.triangleright = bindMixin(VanillaSymbol, '\\triangleright ', '&#8883;');
-//circledot is not a not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
+// circledot is not a not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
 LatexCmds.odot = LatexCmds.circledot = bindMixin(VanillaSymbol, '\\odot ', '&#8857;');
 LatexCmds.bigcirc = bindMixin(VanillaSymbol, '\\bigcirc ', '&#9711;');
 LatexCmds.dagger = bindMixin(VanillaSymbol, '\\dagger ', '&#0134;');
@@ -148,7 +148,7 @@ LatexCmds.ddagger = bindMixin(VanillaSymbol, '\\ddagger ', '&#135;');
 LatexCmds.wr = bindMixin(VanillaSymbol, '\\wr ', '&#8768;');
 LatexCmds.amalg = bindMixin(VanillaSymbol, '\\amalg ', '&#8720;');
 
-//relationship symbols
+// relationship symbols
 LatexCmds.models = bindMixin(VanillaSymbol, '\\models ', '&#8872;');
 LatexCmds.prec = bindMixin(VanillaSymbol, '\\prec ', '&#8826;');
 LatexCmds.succ = bindMixin(VanillaSymbol, '\\succ ', '&#8827;');
@@ -173,7 +173,7 @@ LatexCmds.dashv = bindMixin(VanillaSymbol, '\\dashv ', '&#8867;');
 LatexCmds.nless = bindMixin(VanillaSymbol, '\\nless ', '&#8814;');
 LatexCmds.ngtr = bindMixin(VanillaSymbol, '\\ngtr ', '&#8815;');
 
-//arrows
+// arrows
 LatexCmds.longleftarrow = bindMixin(VanillaSymbol, '\\longleftarrow ', '&#8592;');
 LatexCmds.longrightarrow = bindMixin(VanillaSymbol, '\\longrightarrow ', '&#8594;');
 LatexCmds.Longleftarrow = bindMixin(VanillaSymbol, '\\Longleftarrow ', '&#8656;');
@@ -194,7 +194,7 @@ LatexCmds.leftharpoondown = bindMixin(VanillaSymbol, '\\leftharpoondown ', '&#86
 LatexCmds.rightharpoondown = bindMixin(VanillaSymbol, '\\rightharpoondown ', '&#8641;');
 LatexCmds.nwarrow = bindMixin(VanillaSymbol, '\\nwarrow ', '&#8598;');
 
-//Misc
+// Misc
 LatexCmds.ldots = bindMixin(VanillaSymbol, '\\ldots ', '&#8230;');
 LatexCmds.cdots = bindMixin(VanillaSymbol, '\\cdots ', '&#8943;');
 LatexCmds.vdots = bindMixin(VanillaSymbol, '\\vdots ', '&#8942;');
@@ -212,11 +212,11 @@ LatexCmds.clubsuit = bindMixin(VanillaSymbol, '\\clubsuit ', '&#9827;');
 LatexCmds.diamondsuit = bindMixin(VanillaSymbol, '\\diamondsuit ', '&#9826;');
 LatexCmds.heartsuit = bindMixin(VanillaSymbol, '\\heartsuit ', '&#9825;');
 LatexCmds.spadesuit = bindMixin(VanillaSymbol, '\\spadesuit ', '&#9824;');
-//not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
+// not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
 LatexCmds.parallelogram = bindMixin(VanillaSymbol, '\\parallelogram ', '&#9649;');
 LatexCmds.square = bindMixin(VanillaSymbol, '\\square ', '&#11036;');
 
-//variable-sized
+// variable-sized
 LatexCmds.oint = bindMixin(VanillaSymbol, '\\oint ', '&#8750;');
 LatexCmds.bigcap = bindMixin(VanillaSymbol, '\\bigcap ', '&#8745;');
 LatexCmds.bigcup = bindMixin(VanillaSymbol, '\\bigcup ', '&#8746;');
@@ -228,7 +228,7 @@ LatexCmds.bigotimes = bindMixin(VanillaSymbol, '\\bigotimes ', '&#8855;');
 LatexCmds.bigoplus = bindMixin(VanillaSymbol, '\\bigoplus ', '&#8853;');
 LatexCmds.biguplus = bindMixin(VanillaSymbol, '\\biguplus ', '&#8846;');
 
-//delimiters
+// delimiters
 LatexCmds.lfloor = bindMixin(VanillaSymbol, '\\lfloor ', '&#8970;');
 LatexCmds.rfloor = bindMixin(VanillaSymbol, '\\rfloor ', '&#8971;');
 LatexCmds.lceil = bindMixin(VanillaSymbol, '\\lceil ', '&#8968;');
@@ -238,7 +238,7 @@ LatexCmds.closecurlybrace = LatexCmds.rbrace = bindMixin(VanillaSymbol, '\\rbrac
 LatexCmds.lbrack = bindMixin(VanillaSymbol, '[');
 LatexCmds.rbrack = bindMixin(VanillaSymbol, ']');
 
-//various symbols
+// various symbols
 LatexCmds.slash = bindMixin(VanillaSymbol, '/');
 LatexCmds.vert = bindMixin(VanillaSymbol, '|');
 LatexCmds.perp = LatexCmds.perpendicular = bindMixin(VanillaSymbol, '\\perp ', '&perp;');
@@ -314,7 +314,7 @@ LatexCmds.pounds = bindMixin(VanillaSymbol, '\\pounds ', '&pound;');
 LatexCmds.alef = LatexCmds.alefsym = LatexCmds.aleph = LatexCmds.alephsym =
 	bindMixin(VanillaSymbol, '\\aleph ', '&alefsym;');
 
-LatexCmds.xist = //LOL
+LatexCmds.xist =
 	LatexCmds.xists = LatexCmds.exist = LatexCmds.exists =
 	bindMixin(VanillaSymbol, '\\exists ', '&exist;');
 

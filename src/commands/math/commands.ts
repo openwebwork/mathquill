@@ -7,7 +7,7 @@ import { Controller } from 'src/controller';
 import { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
 import { RootBlockMixin, scale, DelimsMixin } from 'src/mixins';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import type { InnerMathFieldStore } from 'commands/math';
 import { InnerMathField } from 'commands/math';
@@ -24,13 +24,13 @@ class Style extends MathCommand {
 	}
 }
 
-//fonts
+// fonts
 LatexCmds.mathrm = bindMixin(Style, '\\mathrm', 'span', 'class="mq-roman mq-font"');
 LatexCmds.mathit = bindMixin(Style, '\\mathit', 'i', 'class="mq-font"');
 LatexCmds.mathbf = bindMixin(Style, '\\mathbf', 'b', 'class="mq-font"');
 LatexCmds.mathsf = bindMixin(Style, '\\mathsf', 'span', 'class="mq-sans-serif mq-font"');
 LatexCmds.mathtt = bindMixin(Style, '\\mathtt', 'span', 'class="mq-monospace mq-font"');
-//text-decoration
+// text-decoration
 LatexCmds.underline = bindMixin(Style, '\\underline', 'span', 'class="mq-non-leaf mq-underline"');
 LatexCmds.overline = LatexCmds.bar = bindMixin(Style, '\\overline', 'span', 'class="mq-non-leaf mq-overline"');
 LatexCmds.overrightarrow =
@@ -127,7 +127,7 @@ LatexCmds.subscript = LatexCmds._ = class extends SupSub {
 
 	finalizeTree() {
 		this.downInto = this.sub = this.ends[L];
-		(this.sub as Node).upOutOf = insLeftOfMeUnlessAtEnd;
+		(this.sub as TNode).upOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
 };
@@ -145,7 +145,7 @@ LatexCmds.superscript = LatexCmds.supscript = LatexCmds['^'] = class extends Sup
 
 	finalizeTree() {
 		this.upInto = this.sup = this.ends[R];
-		(this.sup as Node).downOutOf = insLeftOfMeUnlessAtEnd;
+		(this.sup as TNode).downOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
 };
@@ -193,7 +193,7 @@ LatexCmds.frac = LatexCmds.dfrac = LatexCmds.cfrac = LatexCmds.fraction = Fracti
 const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends (Base) {
 	createLeftOf(cursor: Cursor) {
 		if (!this.replacedFragment) {
-			let leftward: Node | undefined = cursor[L];
+			let leftward: TNode | undefined = cursor[L];
 			while (leftward &&
 				!(
 					leftward instanceof BinaryOperator ||
@@ -201,7 +201,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 					leftward instanceof UpperLowerLimitCommand ||
 					leftward.ctrlSeq === '\\ ' ||
 					/^[,;:]$/.test(leftward.ctrlSeq)
-				) //lookbehind for operator
+				) // lookbehind for operator
 			) leftward = leftward[L];
 
 			if (leftward instanceof UpperLowerLimitCommand && leftward[R] instanceof SupSub) {
@@ -210,7 +210,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 					leftward = leftward[R];
 			}
 
-			if (leftward !== cursor[L] && !cursor.isTooDeep(1) && !cursor[L]?.jQ.hasClass('mq-operator-name')) {
+			if (leftward !== cursor[L] && !cursor.isTooDeep(1) && !cursor[L]?.elements.hasClass('mq-operator-name')) {
 				this.replaces(new Fragment(leftward?.[R] || cursor.parent?.ends[L], cursor[L]));
 				cursor[L] = leftward;
 			}
@@ -234,9 +234,11 @@ class SquareRoot extends MathCommand {
 		this.textTemplate = ['sqrt(', ')'];
 
 		this.reflow = () => {
-			const block = this.ends[R]?.jQ;
-			if (block)
-				scale(block.prev(), 1, (block.innerHeight() ?? 0) / +block.css('fontSize').slice(0, -2) - .1);
+			const block = this.ends[R]?.elements.firstElement;
+			if (block) {
+				scale([block.previousElementSibling as HTMLElement], 1,
+					block.getBoundingClientRect().height / parseFloat(getComputedStyle(block).fontSize) - .1);
+			}
 		};
 	}
 
@@ -288,8 +290,8 @@ class NthRoot extends SquareRoot {
 
 		// Navigate up the tree to find the controller which has the options to determine if the rootsAreExponents
 		// option is enabled.
-		const ctrlr = (function getCursor(node: Node): Controller {
-			return !node.controller ? getCursor(node.parent as Node) : node.controller;
+		const ctrlr = (function getCursor(node: TNode): Controller {
+			return !node.controller ? getCursor(node.parent as TNode) : node.controller;
 		})(this);
 		if (ctrlr.options.rootsAreExponents) {
 			const isSupR = this[R] instanceof SupSub && (this[R] as SupSub).supsub === 'sup';
@@ -400,7 +402,7 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	}
 
 	finalizeTree(options: Options) {
-		const ctrlr = new Controller(this.ends[L] as Node, this.jQ, options);
+		const ctrlr = new Controller(this.ends[L] as TNode, this.elements.firstElement, options);
 		ctrlr.KIND_OF_MQ = 'MathField';
 		this.field = new InnerMathField(ctrlr);
 		this.field.name = this.name;

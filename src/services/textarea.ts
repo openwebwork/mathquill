@@ -1,7 +1,6 @@
 // Manage the MathQuill instance's textarea (as owned by the Controller)
 
 import type { Constructor } from 'src/constants';
-import { jQuery } from 'src/constants';
 import type { ControllerBase } from 'src/controller';
 import type { LatexControllerExtension } from 'services/latex';
 import type { HorizontalScroll } from 'services/scrollHoriz';
@@ -17,12 +16,14 @@ export const TextAreaController =
 		selectFn?: (text: string) => void;
 
 		createTextarea() {
-			this.textareaSpan = jQuery('<span class="mq-textarea"></span>');
+			this.textareaSpan = document.createElement('span');
+			this.textareaSpan.classList.add('mq-textarea');
 			const textarea = this.options.substituteTextarea();
 			if (!textarea.nodeType) {
 				throw 'substituteTextarea() must return a DOM element, got ' + textarea.toString();
 			}
-			this.textarea = jQuery(textarea).appendTo(this.textareaSpan);
+			this.textareaSpan.append(textarea);
+			this.textarea = textarea;
 
 			this.cursor.selectionChanged = () => this.selectionChanged();
 		}
@@ -50,48 +51,53 @@ export const TextAreaController =
 		}
 
 		staticMathTextareaEvents() {
-			this.container.prepend(jQuery('<span class="mq-selectable">')
-				.text(`$${this.exportLatex()}$`));
+			const innerSpan = document.createElement('span');
+			innerSpan.classList.add('mq-selectable');
+			innerSpan.textContent = `$${this.exportLatex()}$`;
+			this.container.prepend(innerSpan);
 			this.blurred = true;
 
-			const detach = () => {
-				this.textareaSpan?.detach();
-				this.blurred = true;
-			};
+			this.textarea?.addEventListener('cut', (e) => { e.stopPropagation(); e.preventDefault(); });
+			this.textarea?.addEventListener('paste', (e) => { e.stopPropagation(); e.preventDefault(); });
+			this.textarea?.addEventListener('copy', () => this.setTextareaSelection());
+			this.textarea?.addEventListener('focus', () => this.blurred = false);
+			this.textarea?.addEventListener('blur', () => {
+				if (this.cursor.selection) this.cursor.selection.clear();
 
-			this.textarea?.on('cut paste', false)
-				.on('copy', () => this.setTextareaSelection())
-				.on('focus', () => this.blurred = false)
-				.on('blur', () => {
-					if (this.cursor.selection) this.cursor.selection.clear();
-					setTimeout(detach); //detaching during blur explodes in WebKit
+				// Detaching during blur explodes in WebKit
+				setTimeout(() => {
+					this.textareaSpan?.remove();
+					this.blurred = true;
 				});
+			});
 
 			this.selectFn = (text) => {
-				this.textarea?.val(text);
-				if (text) this.textarea?.trigger('select');
+				if (this.textarea) this.textarea.value = text;
+				if (text) this.textarea?.select();
 			};
 		}
 
 		editablesTextareaEvents() {
 			const keyboardEventsShim =
-				this.options.substituteKeyboardEvents(this.textarea as JQuery<HTMLTextAreaElement>, this);
+				this.options.substituteKeyboardEvents(this.textarea as HTMLTextAreaElement, this);
 			this.selectFn = (text) => keyboardEventsShim.select(text);
-			this.container.prepend(this.textareaSpan as JQuery);
+			this.container.prepend(this.textareaSpan as HTMLElement);
 			this.focusBlurEvents();
 		}
 
 		unbindEditablesEvents() {
 			this.selectFn = (text) => {
-				this.textarea?.val(text);
-				if (text) this.textarea?.trigger('select');
+				if (this.textarea) this.textarea.value = text;
+				if (text) this.textarea?.select();
 			};
 			this.textareaSpan?.remove();
 
 			this.unbindFocusBlurEvents();
 
 			this.blurred = true;
-			this.textarea?.on('cut paste', false);
+
+			this.textarea?.addEventListener('cut', (e) => { e.stopPropagation(); e.preventDefault(); });
+			this.textarea?.addEventListener('paste', (e) => { e.stopPropagation(); e.preventDefault(); });
 		}
 
 		typedText(ch: string) {
@@ -131,5 +137,5 @@ export const TextAreaController =
 			this.writeLatex(text).cursor.show();
 		}
 
-		keystroke(_ignore_key: string, _ignore_event: JQuery.KeyboardEventBase) { /* do nothing */ };
+		keystroke(_ignore_key: string, _ignore_event: KeyboardEvent) { /* do nothing */ };
 	};

@@ -3,7 +3,7 @@
 import { L, R, noop } from 'src/constants';
 import { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
-import { Node } from 'tree/node';
+import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 
 suite('Cursor::select()', () => {
@@ -20,7 +20,7 @@ suite('Cursor::select()', () => {
 				count += 1;
 				assert.equal(frag.ends[L], leftEnd);
 				assert.equal(frag.ends[R], rightEnd);
-				return Node.prototype.selectChildren.apply(this, arguments);
+				return TNode.prototype.selectChildren.apply(this, arguments);
 			};
 
 			cursor.parent = A.parent;
@@ -35,10 +35,10 @@ suite('Cursor::select()', () => {
 		})(A, B)(B, A);
 	};
 
-	const parent = new Node();
-	const child1 = new Node().adopt(parent, parent.ends[R]);
-	const child2 = new Node().adopt(parent, parent.ends[R]);
-	const child3 = new Node().adopt(parent, parent.ends[R]);
+	const parent = new TNode();
+	const child1 = new TNode().adopt(parent, parent.ends[R]);
+	const child2 = new TNode().adopt(parent, parent.ends[R]);
+	const child3 = new TNode().adopt(parent, parent.ends[R]);
 	const A = new Point(parent, undefined, child1);
 	const B = new Point(parent, child1, child2);
 	const C = new Point(parent, child2, child3);
@@ -47,7 +47,7 @@ suite('Cursor::select()', () => {
 	const pt2 = new Point(child2);
 	const pt3 = new Point(child3);
 
-	test('same parent, one Node', () => {
+	test('same parent, one TNode', () => {
 		assertSelection(A, B, child1);
 		assertSelection(B, C, child2);
 		assertSelection(C, D, child3);
@@ -92,7 +92,7 @@ suite('Cursor::select()', () => {
 	});
 
 	test('different trees', () => {
-		const anotherTree = new Node();
+		const anotherTree = new TNode();
 
 		cursor.parent = A.parent;
 		cursor[L] = A[L]; cursor[R] = A[R];

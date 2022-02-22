@@ -11,47 +11,19 @@
  * one at http://mozilla.org/MPL/2.0/.
  */
 
-import type JQueryStatic from 'jquery';
-import type JQuery from 'jquery';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
 import type { MathCommand } from 'commands/mathElements';
-
-declare global {
-	interface JQuery {
-		insDirOf(dir: Direction, el: JQuery): JQuery;
-		insAtDirEnd(dir: Direction, el: JQuery): JQuery;
-	}
-
-	interface Window {
-		jQuery: JQueryStatic;
-	}
-}
 
 export const enum Direction {
 	L = -1,
 	R = 1
 }
 
-export const jQuery = window.jQuery,
-	mqCmdId = 'mathquill-command-id',
-	mqBlockId = 'mathquill-block-id',
-
+export const mqCmdId = 'data-mathquill-command-id',
+	mqBlockId = 'data-mathquill-block-id',
 	// L = 'left', R = 'right'
 	// The contract is that they can be used as object properties and -L === R, and -R === L.
 	L = Direction.L, R = Direction.R;
-
-if (!jQuery) throw 'MathQuill requires jQuery 1.9+ to be loaded first';
-
-// Tiny extension of jQuery adding directionalized DOM manipulation methods.
-jQuery.fn.extend({
-	insDirOf: function(this: JQuery, dir: Direction, el: JQuery) {
-		return dir === L ?
-			this.insertBefore(el.first()) : this.insertAfter(el.last());
-	},
-	insAtDirEnd: function(this: JQuery, dir: Direction, el: JQuery) {
-		return dir === L ? this.prependTo(el) : this.appendTo(el);
-	}
-});
 
 export const noop = () => { /* do nothing */ };
 
@@ -109,7 +81,7 @@ export const pray = (message: string, cond = false) => {
 
 export const prayDirection = (dir: Direction) => { pray('a direction was passed', dir === L || dir === R); };
 
-export const prayWellFormed = (parent?: Node, leftward?: Node, rightward?: Node) => {
+export const prayWellFormed = (parent?: TNode, leftward?: TNode, rightward?: TNode) => {
 	pray('a parent is always present', !!parent);
 	pray('leftward is properly set up', (() => {
 		// either it's empty and `rightward` is the left end child (possibly empty)
@@ -129,9 +101,9 @@ export const prayWellFormed = (parent?: Node, leftward?: Node, rightward?: Node)
 };
 
 // Registry of LaTeX commands and commands created when typing a single character.
-// (Commands are all subclasses of tree/Node.)
-export const LatexCmds: { [key: string]: Constructor<Node> } = {},
-	CharCmds: { [key: string]: Constructor<Node> } = {};
+// (Commands are all subclasses of tree/TNode.)
+export const LatexCmds: { [key: string]: Constructor<TNode> } = {},
+	CharCmds: { [key: string]: Constructor<TNode> } = {};
 
 export const OPP_BRACKS: { readonly [key: string]: string } = {
 	'(': ')',

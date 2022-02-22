@@ -2,7 +2,7 @@
 
 import type { Direction } from 'src/constants';
 import {
-	jQuery, noop, L, R, mqCmdId, pray, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames
+	noop, L, R, mqCmdId, pray, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames
 } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { Selection } from 'src/selection';
@@ -10,14 +10,15 @@ import { deleteSelectTowardsMixin, DelimsMixin } from 'src/mixins';
 import type { Options } from 'src/options';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
-import { Node } from 'tree/node';
+import { VNode } from 'tree/vNode';
+import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { MathBlock } from 'commands/mathBlock';
 
 // Math tree node base class.
-// Some math-tree-specific extensions to Node.
+// Some math-tree-specific extensions to TNode.
 // Both MathBlock's and MathCommand's descend from it.
-export class MathElement extends Node {
+export class MathElement extends TNode {
 	finalizeInsert(options: Options, cursor: Cursor) {
 		// `cursor` param is only for SupSub::contactWeld,
 		// and is deliberately only passed in by writeLatex,
@@ -56,13 +57,13 @@ export class MathElement extends Node {
 	// blocks deep from this node.
 	removeNodesDeeperThan(cutoff: number) {
 		let depth = 0;
-		const queue: Array<[Node, number]> = [[this, depth]];
+		const queue: Array<[TNode, number]> = [[this, depth]];
 
 		// Do a breadth-first search of this node's descendants
 		// down to cutoff, removing anything deeper.
 		while (queue.length) {
 			const current = queue.shift();
-			current?.[0].children()?.each((child: Node) => {
+			current?.[0].children()?.each((child: TNode) => {
 				const i = (child instanceof MathBlock) ? 1 : 0;
 				depth = current[1] + i;
 
@@ -122,8 +123,8 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		this.createBlocks();
 		super.createLeftOf(cursor);
 		if (replacedFragment) {
-			replacedFragment.adopt(this.ends[L] as Node);
-			replacedFragment.jQ.appendTo(this.ends[L]?.jQ as JQuery<HTMLElement>);
+			replacedFragment.adopt(this.ends[L] as TNode);
+			this.ends[L]?.elements.firstElement.append(...replacedFragment.elements.contents);
 			this.placeCursor(cursor);
 			this.prepareInsertionAt(cursor);
 		}
@@ -142,10 +143,10 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 	}
 
 	placeCursor(cursor: Cursor) {
-		//insert the cursor at the right end of the first empty child, searching
-		//left-to-right, or if none empty, the right end child
+		// Insert the cursor at the right end of the first empty child, searching from
+		// left to right, or if not empty, then to the right end of the child.
 		cursor.insAtRightEnd(
-			this.foldChildren(this.ends[L] as Node, (leftward, child) => leftward.isEmpty() ? leftward : child)
+			this.foldChildren(this.ends[L] as TNode, (leftward, child) => leftward.isEmpty() ? leftward : child)
 		);
 	}
 
@@ -154,15 +155,13 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 	}
 
 	unselectInto(dir: Direction, cursor: Cursor) {
-		cursor.insAtDirEnd(dir === L ? R : L, cursor.anticursor?.ancestors?.[this.id] as Node);
+		cursor.insAtDirEnd(dir === L ? R : L, cursor.anticursor?.ancestors?.[this.id] as TNode);
 	}
 
 	seek(pageX: number, cursor: Cursor) {
-		const getBounds = (node: Node) => {
-			const bounds: { [L]: number, [R]: number } = { [L]: 0, [R]: 0 };
-			bounds[L] = node.jQ.offset()?.left ?? 0;
-			bounds[R] = (bounds[L] ?? 0) + (node.jQ.outerWidth() ?? 0);
-			return bounds;
+		const getBounds = (node: TNode) => {
+			const rect = node.elements.firstElement.getBoundingClientRect();
+			return { [L]: rect.left, [R]: rect.left + rect.width };
 		};
 
 		const cmdBounds = getBounds(this);
@@ -177,12 +176,12 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		}
 
 		let leftLeftBound = cmdBounds[L];
-		this.eachChild((block: Node) => {
+		this.eachChild((block: TNode) => {
 			const blockBounds = getBounds(block);
 			if (pageX < blockBounds[L]) {
 				// closer to this block's left bound, or the bound left of that?
 				if (pageX - leftLeftBound < blockBounds[L] - pageX) {
-					if (block[L]) cursor.insAtRightEnd(block[L] as Node);
+					if (block[L]) cursor.insAtRightEnd(block[L] as TNode);
 					else cursor.insLeftOf(this);
 				}
 				else cursor.insAtLeftEnd(block);
@@ -243,7 +242,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		//
 		// Given an .htmlTemplate as described above,
 		// - insert the mathquill-command-id attribute into all top-level tags,
-		//   which will be used to set this.jQ in .jQize().
+		//   which will be used to set this.elements in .domify().
 		//   This is straightforward:
 		//     * tokenize into tags and non-tags
 		//     * loop through top-level tokens:
@@ -309,7 +308,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 				($0, $1: number) => ` ${mqBlockId}=${blocks[$1]?.id ?? ''}>${blocks[$1]?.join('html') ?? ''}`);
 	}
 
-	// methods to export a string representation of the math tree
+	// Methods to export a string representation of the math tree
 	latex() {
 		return this.foldChildren(this.ctrlSeq, (latex, child) => `${latex}{${child.latex() || ' '}}`);
 	}
@@ -346,7 +345,9 @@ export class Symbol extends MathCommand {
 	}
 
 	moveTowards(dir: Direction, cursor: Cursor) {
-		cursor.jQ.insDirOf(dir, this.jQ);
+		if (dir === L) this.elements.first.before(cursor.element);
+		else this.elements.last.after(cursor.element);
+
 		cursor[dir === L ? R : L] = this;
 		cursor[dir] = this[dir];
 	}
@@ -356,11 +357,10 @@ export class Symbol extends MathCommand {
 	}
 
 	seek(pageX: number, cursor: Cursor) {
-		// insert at whichever side the click was closer to
-		if (pageX - (this.jQ.offset()?.left ?? 0) < (this.jQ.outerWidth() ?? 0) / 2)
-			cursor.insLeftOf(this);
-		else
-			cursor.insRightOf(this);
+		// Insert at whichever side the click was closer to.
+		const rect = this.elements.firstElement.getBoundingClientRect();
+		if (pageX - rect.left < rect.width / 2) cursor.insLeftOf(this);
+		else cursor.insRightOf(this);
 	}
 
 	latex() { return this.ctrlSeq; };
@@ -408,7 +408,7 @@ export class Inequality extends BinaryOperator {
 		this.strict = strict;
 		const strictness = strict ? 'Strict' : '';
 		this.ctrlSeq = this.data[`ctrlSeq${strictness}`];
-		this.jQ.html(this.data[`html${strictness}`]);
+		this.elements.html(this.data[`html${strictness}`]);
 		this.textTemplate = [ this.data[`text${strictness}`] ];
 	}
 
@@ -447,7 +447,7 @@ export class Digit extends VanillaSymbol {
 					&& (cursor[L]?.[L] as Variable).isItalic !== false))) {
 			new LatexCmds._().createLeftOf(cursor);
 			super.createLeftOf(cursor);
-			cursor.insRightOf(cursor.parent?.parent as Node);
+			cursor.insRightOf(cursor.parent?.parent as TNode);
 		}
 		else super.createLeftOf(cursor);
 	}
@@ -494,7 +494,7 @@ export class Letter extends Variable {
 			// want longest possible autocommand, so join together longest
 			// sequence of letters
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
-			let str = '', l: Node | undefined = this, i = 0;
+			let str = '', l: TNode | undefined = this, i = 0;
 			// FIXME: l.ctrlSeq === l.letter checks if first or last in an operator name
 			while (l instanceof Letter && l?.ctrlSeq === l?.letter && i < maxLength) {
 				str = l.letter + str, l = l[L], ++i;
@@ -516,7 +516,7 @@ export class Letter extends Variable {
 	italicize(bool: boolean) {
 		this.isItalic = bool;
 		this.isPartOfOperator = !bool;
-		this.jQ.toggleClass('mq-operator-name', !bool);
+		this.elements.toggleClass('mq-operator-name', !bool);
 		return this;
 	}
 
@@ -538,8 +538,8 @@ export class Letter extends Variable {
 
 		// removeClass and delete flags from all letters before figuring out
 		// which, if any, are part of an operator name
-		new Fragment(l?.[R] || this.parent?.ends[L], r?.[L] || this.parent?.ends[R]).each((el: Node) => {
-			(el as Letter).italicize(true).jQ.removeClass('mq-first mq-last mq-followed-by-supsub');
+		new Fragment(l?.[R] || this.parent?.ends[L], r?.[L] || this.parent?.ends[R]).each((el: TNode) => {
+			(el as Letter).italicize(true).elements.removeClass('mq-first', 'mq-last', 'mq-followed-by-supsub');
 			el.ctrlSeq = (el as Letter).letter;
 		});
 
@@ -558,8 +558,8 @@ export class Letter extends Variable {
 					const isBuiltIn = BuiltInOpNames[word];
 					(first as Letter).ctrlSeq = (isBuiltIn ? '\\' : '\\operatorname{') + (first?.ctrlSeq ?? '');
 					(last as Letter).ctrlSeq += isBuiltIn ? ' ' : '}';
-					if (word in TwoWordOpNames) last?.[L]?.[L]?.[L]?.jQ.addClass('mq-last');
-					if (!this.shouldOmitPadding(first?.[L])) first?.jQ.addClass('mq-first');
+					if (word in TwoWordOpNames) last?.[L]?.[L]?.[L]?.elements.addClass('mq-last');
+					if (!this.shouldOmitPadding(first?.[L])) first?.elements.addClass('mq-first');
 					if (!this.shouldOmitPadding(last?.[R])) {
 						if (last?.[R] instanceof SupSub) {
 							// XXX monkey-patching, but what's the right thing here?
@@ -567,12 +567,12 @@ export class Letter extends Variable {
 							// Have operatorname-specific code in SupSub? A CSS-like language to style the
 							// math tree, but which ignores cursor and selection (which CSS can't)?
 							supsub.siblingCreated = supsub.siblingDeleted = () => {
-								supsub.jQ.toggleClass('mq-after-operator-name', !(supsub[R] instanceof Bracket));
+								supsub.elements.toggleClass('mq-after-operator-name', !(supsub[R] instanceof Bracket));
 							};
 							supsub.siblingCreated(opts);
 						}
 						else {
-							last?.jQ.toggleClass('mq-last', !(last?.[R] instanceof Bracket));
+							last?.elements.toggleClass('mq-last', !(last?.[R] instanceof Bracket));
 						}
 					}
 
@@ -584,7 +584,7 @@ export class Letter extends Variable {
 		}
 	}
 
-	shouldOmitPadding(node?: Node) {
+	shouldOmitPadding(node?: TNode) {
 		// omit padding if no node, or if node already has padding (to avoid double-padding)
 		return !node || (node instanceof BinaryOperator) || (node instanceof UpperLowerLimitCommand);
 	}
@@ -593,8 +593,8 @@ export class Letter extends Variable {
 export function insLeftOfMeUnlessAtEnd(this: SupSub, cursor: Cursor) {
 	// cursor.insLeftOf(cmd), unless cursor at the end of block, and every
 	// ancestor cmd is at the end of every ancestor block
-	const cmd = this.parent as Node;
-	let ancestorCmd: Node | Point | undefined = cursor;
+	const cmd = this.parent as TNode;
+	let ancestorCmd: TNode | Point | undefined = cursor;
 	do {
 		if (ancestorCmd?.[R]) return cursor.insLeftOf(cmd);
 		ancestorCmd = ancestorCmd?.parent?.parent;
@@ -624,7 +624,7 @@ export class Fraction extends MathCommand {
 			let needParens = false;
 			let numBlocks = 0;
 			let haveDigits = false;
-			this.ends[dir]?.eachChild((child: Node) => {
+			this.ends[dir]?.eachChild((child: TNode) => {
 				if (child instanceof Digit) haveDigits = true;
 
 				if (!(child instanceof Digit ||
@@ -648,44 +648,46 @@ export class Fraction extends MathCommand {
 			const l = this.ends[dir]?.text() !== ' ' && this.ends[dir]?.text();
 			return l ? (needParens ? `(${l})` : l) : blankDefault;
 		};
-		return (leftward instanceof BinaryOperator && leftward.isUnary) || leftward?.jQ.hasClass('mq-operator-name') ||
-			(leftward instanceof SupSub && leftward[L]?.jQ.hasClass('mq-operator-name'))
+		return (leftward instanceof BinaryOperator && leftward.isUnary)
+			|| leftward?.elements.hasClass('mq-operator-name')
+			|| (leftward instanceof SupSub && leftward[L]?.elements.hasClass('mq-operator-name'))
 			? `(${text(L)}/${text(R)})` : ` ${text(L)}/${text(R)} `;
 	}
 
 	finalizeTree() {
-		this.upInto = (this.ends[R] as Node).upOutOf = this.ends[L];
-		this.downInto = (this.ends[L] as Node).downOutOf = this.ends[R];
+		this.upInto = (this.ends[R] as TNode).upOutOf = this.ends[L];
+		this.downInto = (this.ends[L] as TNode).downOutOf = this.ends[R];
 	}
 };
 
 export class SupSub extends MathCommand {
-	sup?: Node;
-	sub?: Node;
+	sup?: TNode;
+	sub?: TNode;
 	supsub = 'sup';
 
 	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: Array<string>) {
 		super('_{...}^{...}', htmlTemplate, textTemplate);
 
 		this.reflow = () => {
-			const $block = this.jQ ;//mq-supsub
-			const $prev = $block.prev() ;
+			const block = this.elements; // mq-supsub
+			const prev = block.first.previousElementSibling as HTMLElement;
 
-			if (!$prev.length) {
-				//we cant normalize it without having prev. element (which is base)
-				return ;
-			}
+			// We can't normalize the superscript without having a previous element (which is the base).
+			if (!prev) return;
 
-			const $sup = $block.children('.mq-sup');//mq-supsub -> mq-sup
-			if ($sup.length) {
-				const sup_fontsize = parseInt($sup.css('font-size')) ;
-				const sup_bottom = ($sup?.offset()?.top ?? 0) + ($sup?.height() ?? 0);
-				//we want that superscript overlaps top of base on 0.7 of its font-size
-				//this way small superscripts like x^2 look ok, but big ones like x^(1/2/3) too
-				const needed = sup_bottom - ($prev.offset()?.top ?? 0)  - 0.7 * sup_fontsize ;
-				const cur_margin = parseInt($sup.css('margin-bottom')) ;
-				//we lift it up with margin-bottom
-				$sup.css('margin-bottom', cur_margin + needed) ;
+			const sup = block.children('.mq-sup').firstElement; // mq-supsub -> mq-sup
+			if (sup) {
+				const supStyle = getComputedStyle(sup);
+				const supRect = sup.getBoundingClientRect();
+				const sup_fontsize = parseInt(supStyle.fontSize);
+				const sup_bottom = supRect.top + supRect.height
+					- parseFloat(supStyle.paddingTop) - parseFloat(supStyle.paddingBottom);
+				// We want the superscript to overlap the top of the base by 0.7 of its font-size.
+				// Then small superscripts like x^2 look ok, but big ones like x^(1/2/3) do too.
+				const needed = sup_bottom - prev.getBoundingClientRect().top  - 0.7 * sup_fontsize;
+				const cur_margin = parseInt(supStyle.marginBottom);
+				// Lift the superscript up with margin-bottom.
+				sup.style.marginBottom = `${cur_margin + needed}px`;
 			}
 		};
 	}
@@ -704,7 +706,7 @@ export class SupSub extends MathCommand {
 			// If this SupSub is being placed on a fraction, then add parentheses around the fraction.
 			if (cursor[L] instanceof Fraction) {
 				const brack = new Bracket(R, '(', ')', '(', ')');
-				cursor.selection = (cursor[L] as Node).selectChildren();
+				cursor.selection = (cursor[L] as TNode).selectChildren();
 				brack.replaces(cursor.replaceSelection());
 				brack.createLeftOf(cursor);
 			}
@@ -714,10 +716,9 @@ export class SupSub extends MathCommand {
 		}
 
 		if (this.replacedFragment) {
-			this.replacedFragment.adopt(cursor.parent as Node, cursor[L], cursor[R]);
+			this.replacedFragment.adopt(cursor.parent as TNode, cursor[L], cursor[R]);
 			cursor[L] = this.replacedFragment.ends[R];
 		}
-		return;
 	}
 
 	contactWeld(cursor: Cursor) {
@@ -734,7 +735,7 @@ export class SupSub extends MathCommand {
 					if (!src) continue;
 					if (!dest) (this[dir] as SupSub).addBlock(src.disown());
 					else if (!src.isEmpty()) { // Insert src children at -dir end of dest
-						src.jQ.children().insAtDirEnd(dir === L ? R : L, dest.jQ);
+						src.elements.children().insAtDirEnd(dir === L ? R : L, dest.elements);
 						const children = src.children().disown();
 						pt = new Point(dest, children.ends[R], dest.ends[L]);
 						if (dir === L) children.adopt(dest, dest.ends[R]);
@@ -746,10 +747,10 @@ export class SupSub extends MathCommand {
 				if (cursor) {
 					if (cursor[L] === this) {
 						if (dir === R && pt)
-							pt[L] ? cursor.insRightOf(pt[L] as Node) : cursor.insAtLeftEnd(pt.parent as Node);
-						else cursor.insRightOf(this[dir] as Node);
+							pt[L] ? cursor.insRightOf(pt[L] as TNode) : cursor.insAtLeftEnd(pt.parent as TNode);
+						else cursor.insRightOf(this[dir] as TNode);
 					} else {
-						if (pt?.[R]) cursor.insRightOf(pt[R] as Node);
+						if (pt?.[R]) cursor.insRightOf(pt[R] as TNode);
 					}
 				}
 				return;
@@ -763,23 +764,21 @@ export class SupSub extends MathCommand {
 				const src = this[supsub];
 				if (!src) continue;
 				src.children().disown()
-					.adopt(cursor.parent as Node, cursor[L], cursor[R])
-					.jQ.insDirOf(R, cursor.jQ);
-				if (cursor[L]?.[R]) cursor.insLeftOf(cursor[L]?.[R] as Node);
-				else cursor.insAtDirEnd(L, cursor.parent as Node);
+					.adopt(cursor.parent as TNode, cursor[L], cursor[R])
+					.elements.insDirOf(R, cursor.element);
+				if (cursor[L]?.[R]) cursor.insLeftOf(cursor[L]?.[R] as TNode);
+				else cursor.insAtDirEnd(L, cursor.parent as TNode);
 			}
 			this.remove();
 		}
 	}
 
 	finalizeTree() {
-		(this.ends[L] as Node).isSupSubLeft = true;
+		(this.ends[L] as TNode).isSupSubLeft = true;
 	}
 
 	moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
-		if (cursor.options.autoSubscriptNumerals && !this.sup) {
-			cursor.insDirOf(dir, this);
-		}
+		if (cursor.options.autoSubscriptNumerals && !this.sup) cursor.insDirOf(dir, this);
 		else super.moveTowards(dir, cursor, updown);
 	}
 
@@ -802,7 +801,7 @@ export class SupSub extends MathCommand {
 	}
 
 	latex() {
-		const latex = (prefix: string, block?: Node) => {
+		const latex = (prefix: string, block?: TNode) => {
 			const l = block && block.latex();
 			return block ? prefix + (l?.length === 1 ? l : `{${l || ' '}}`) : '';
 		};
@@ -810,11 +809,11 @@ export class SupSub extends MathCommand {
 	}
 
 	text() {
-		const text = (prefix: string, block?: Node) => {
+		const text = (prefix: string, block?: TNode) => {
 			let needParens = false;
 			let numBlocks = 0;
 			let haveDigits = false;
-			block?.eachChild((child: Node) => {
+			block?.eachChild((child: TNode) => {
 				if (child instanceof Digit) haveDigits = true;
 				if (!(child instanceof Digit || (child instanceof BinaryOperator && child.isUnary))) ++numBlocks;
 				if ((haveDigits && numBlocks) || numBlocks > 1 ||
@@ -836,19 +835,34 @@ export class SupSub extends MathCommand {
 		return mainText + (mainText && this[R] instanceof Digit ? ' ' : '');
 	}
 
-	addBlock(block: Node) {
+	addBlock(block: TNode) {
 		if (this.supsub === 'sub') {
-			this.sup = this.upInto = (this.sub as Node).upOutOf = block;
+			this.sup = this.upInto = (this.sub as TNode).upOutOf = block;
 			block.adopt(this, this.sub).downOutOf = this.sub;
-			block.jQ = jQuery('<span class="mq-sup"/>').append(block.jQ.children())
-				.attr(mqBlockId, block.id).prependTo(this.jQ);
-		}
-		else {
-			this.sub = this.downInto = (this.sup as Node).downOutOf = block;
+
+			const blockEl = document.createElement('span');
+			blockEl.classList.add('mq-sup');
+			blockEl.append(...block.elements.children().contents);
+			blockEl.setAttribute(mqBlockId, block.id.toString());
+			this.elements.firstElement.prepend(blockEl);
+			block.elements = new VNode(blockEl);
+		} else {
+			this.sub = this.downInto = (this.sup as TNode).downOutOf = block;
 			block.adopt(this, undefined, this.sup).upOutOf = this.sup;
-			block.jQ = jQuery('<span class="mq-sub"></span>').append(block.jQ.children())
-				.attr(mqBlockId, block.id).appendTo(this.jQ.removeClass('mq-sup-only'));
-			this.jQ.append('<span style="display:inline-block;width:0">&#8203;</span>');
+
+			const blockEl = document.createElement('span');
+			blockEl.classList.add('mq-sub');
+			blockEl.append(...block.elements.children().contents);
+			blockEl.setAttribute(mqBlockId, block.id.toString());
+			this.elements.removeClass('mq-sup-only');
+			this.elements.firstElement.append(blockEl);
+			block.elements = new VNode(blockEl);
+
+			const span = document.createElement('span');
+			span.style.display = 'inline-block';
+			span.style.width = '0';
+			span.textContent = '\u200B';
+			this.elements.firstElement.append(span);
 		}
 		// like 'sub sup'.split(' ').forEach((supsub) => { ... });
 		for (const supsub of ['sub', 'sup'] as Array<keyof Pick<SupSub, 'sub' | 'sup'>>) {
@@ -856,20 +870,23 @@ export class SupSub extends MathCommand {
 			const updown = supsub === 'sub' ? 'down' : 'up';
 			const thisSupsub = this[supsub] as MathElement;
 			thisSupsub.deleteOutOf = (dir: Direction, cursor: Cursor) => {
-				cursor.insDirOf((thisSupsub[dir] ? (dir === L ? R : L) : dir), thisSupsub.parent as Node);
+				cursor.insDirOf((thisSupsub[dir] ? (dir === L ? R : L) : dir), thisSupsub.parent as TNode);
 				if (!thisSupsub.isEmpty()) {
 					const end = thisSupsub.ends[dir];
 					thisSupsub.children().disown()
-						.withDirAdopt(dir, cursor.parent as Node, cursor[dir], cursor[dir === L ? R : L])
-						.jQ.insDirOf(dir === L ? R : L, cursor.jQ);
+						.withDirAdopt(dir, cursor.parent as TNode, cursor[dir], cursor[dir === L ? R : L])
+						.elements.insDirOf(dir === L ? R : L, cursor.element);
 					cursor[dir === L ? R : L] = end;
 				}
 				this.supsub = oppositeSupsub;
 				delete this[supsub];
 				delete this[`${updown}Into`];
-				(this[oppositeSupsub] as Node)[`${updown}OutOf`] = insLeftOfMeUnlessAtEnd;
+				(this[oppositeSupsub] as TNode)[`${updown}OutOf`] = insLeftOfMeUnlessAtEnd;
 				delete (this[oppositeSupsub] as Partial<MathElement>).deleteOutOf;
-				if (supsub === 'sub') jQuery(this.jQ.addClass('mq-sup-only')[0].lastChild as ChildNode).remove();
+				if (supsub === 'sub') {
+					this.elements.addClass('mq-sup-only');
+					this.elements.first.lastChild?.remove();
+				}
 				thisSupsub.remove();
 			};
 		}
@@ -896,7 +913,7 @@ export class UpperLowerLimitCommand extends MathCommand {
 
 		return Parser.optWhitespace.then(Parser.string('_').or(Parser.string('^'))).then((supOrSub) => {
 			const child = blocks[supOrSub === '_' ? 0 : 1];
-			return latexMathParser.block.then((block: Node) => {
+			return latexMathParser.block.then((block: TNode) => {
 				block.children().adopt(child, child.ends[R]);
 				return Parser.succeed(this);
 			});
@@ -906,14 +923,14 @@ export class UpperLowerLimitCommand extends MathCommand {
 	finalizeTree() {
 		this.downInto = this.ends[L];
 		this.upInto = this.ends[R];
-		(this.ends[L] as Node).upOutOf = this.ends[R];
-		(this.ends[R] as Node).downOutOf = this.ends[L];
+		(this.ends[L] as TNode).upOutOf = this.ends[R];
+		(this.ends[R] as TNode).downOutOf = this.ends[L];
 	}
 };
 
 // Round/Square/Curly/Angle Brackets (aka Parens/Brackets/Braces)
-//   first typed as one-sided bracket with matching "ghost" bracket at
-//   far end of current block, until you type an opposing one
+// First typed as one-sided bracket with matching "ghost" bracket at
+// far end of current block, until you type an opposing one.
 export class Bracket extends DelimsMixin(MathCommand) {
 	side: Direction;
 	sides: {
@@ -961,7 +978,7 @@ export class Bracket extends DelimsMixin(MathCommand) {
 		return `${this.sides[L]?.ch ?? ''}${this.ends[L]?.text() ?? ''}${this.sides[R]?.ch ?? ''}`;
 	}
 
-	matchBrack(opts: Options, expectedSide?: Direction, node?: Node) {
+	matchBrack(opts: Options, expectedSide?: Direction, node?: TNode) {
 		// return node iff it's a matching 1-sided bracket of expected side (if any)
 		return node instanceof Bracket && node.side &&
 			node.side !== (expectedSide === L ? R : expectedSide === R ? L : undefined)
@@ -973,8 +990,11 @@ export class Bracket extends DelimsMixin(MathCommand) {
 	closeOpposing(brack: Bracket) {
 		brack.side = 0;
 		brack.sides[this.side] = this.sides[this.side]; // copy over my info (may be
-		brack.delimjQs?.eq(this.side === L ? 0 : 1) // mismatched, like [a, b))
-			.removeClass('mq-ghost').html(this.sides[this.side].ch);
+		const delim = brack.delims?.[this.side === L ? 0 : 1]; // mismatched, like [a, b))
+		if (delim) {
+			delim.classList.remove('mq-ghost');
+			delim.innerHTML = this.sides[this.side].ch;
+		}
 	}
 
 	createLeftOf(cursor: Cursor) {
@@ -998,8 +1018,8 @@ export class Bracket extends DelimsMixin(MathCommand) {
 			this.closeOpposing(brack);
 			if (brack === cursor.parent?.parent && cursor[side]) { // move the stuff between
 				new Fragment(cursor[side], cursor.parent?.ends[side], side === L ? R : L) // me and ghost outside
-					.disown().withDirAdopt(side === L ? R : L, brack.parent as Node, brack, brack[side])
-					.jQ.insDirOf(side, brack.jQ);
+					.disown().withDirAdopt(side === L ? R : L, brack.parent as TNode, brack, brack[side])
+					.elements.insDirOf(side, brack.elements);
 			}
 			brack.bubble('reflow');
 		} else {
@@ -1011,18 +1031,18 @@ export class Bracket extends DelimsMixin(MathCommand) {
 			}
 			super.createLeftOf(cursor);
 		}
-		if (side === L) cursor.insAtLeftEnd(brack.ends[L] as Node);
+		if (side === L) cursor.insAtLeftEnd(brack.ends[L] as TNode);
 		else cursor.insRightOf(brack);
 	}
 
 	unwrap() {
-		this.ends[L]?.children().disown().adopt(this.parent as Node, this, this[R])
-			.jQ.insertAfter(this.jQ);
+		const node = this.ends[L]?.children().disown().adopt(this.parent as TNode, this, this[R]);
+		if (node) this.elements.last.after(...node.elements.contents);
 		this.remove();
 	}
 
 	deleteSide(side: Direction, outward: boolean, cursor: Cursor) {
-		const parent = this.parent as Node, sib = this[side], farEnd = parent.ends[side];
+		const parent = this.parent as TNode, sib = this[side], farEnd = parent.ends[side];
 
 		if (side === this.side) { // deleting non-ghost of one-sided bracket, unwrap
 			this.unwrap();
@@ -1051,21 +1071,29 @@ export class Bracket extends DelimsMixin(MathCommand) {
 				return;
 			}
 			else { // else deleting just one of a pair of brackets, become one-sided
-				this.sides[side] = { ch: OPP_BRACKS[this.sides[this.side].ch],
-					ctrlSeq: OPP_BRACKS[this.sides[this.side].ctrlSeq] };
-				this.delimjQs?.removeClass('mq-ghost')
-					.eq(side === L ? 0 : 1).addClass('mq-ghost').html(this.sides[side].ch);
+				this.sides[side] = {
+					ch: OPP_BRACKS[this.sides[this.side].ch],
+					ctrlSeq: OPP_BRACKS[this.sides[this.side].ctrlSeq]
+				};
+				this.delims?.forEach((delim, index) => {
+					delim.classList.remove('mq-ghost');
+					if (index === (side === L ? 0 : 1)) {
+						delim.classList.add('mq-ghost');
+						delim.innerHTML = this.sides[side].ch;
+					}
+				});
 			}
 			if (sib) { // auto-expand so ghost is at far end
 				const origEnd = this.ends[L]?.ends[side];
+				this.ends[L]?.elements.removeClass('mq-empty');
 				new Fragment(sib, farEnd, side === L ? R : L).disown()
-					.withDirAdopt(side === L ? R : L, this.ends[L] as Node, origEnd)
-					.jQ.insAtDirEnd(side, this.ends[L]?.jQ.removeClass('mq-empty') as JQuery<HTMLElement>);
+					.withDirAdopt(side === L ? R : L, this.ends[L] as TNode, origEnd)
+					.elements.insAtDirEnd(side, this.ends[L]?.elements as VNode);
 				origEnd?.siblingCreated?.(cursor.options, side);
 				cursor.insDirOf(side === L ? R : L, sib);
 			} // didn't auto-expand, cursor goes just outside or just inside parens
 			else (outward ? cursor.insDirOf(side, this)
-				: cursor.insAtDirEnd(side, this.ends[L] as Node));
+				: cursor.insAtDirEnd(side, this.ends[L] as TNode));
 		}
 	}
 
@@ -1079,7 +1107,7 @@ export class Bracket extends DelimsMixin(MathCommand) {
 		// FIXME HACK: after initial creation/insertion, finalizeTree would only be
 		// called if the paren is selected and replaced, e.g. by LiveFraction
 		this.finalizeTree = () => {
-			this.delimjQs?.eq(this.side === L ? 1 : 0).removeClass('mq-ghost');
+			this.delims?.[this.side === L ? 1 : 0].classList.remove('mq-ghost');
 			this.side = 0;
 		};
 	}
@@ -1091,7 +1119,7 @@ interface LatexMathParser extends Parser {
 }
 
 export const latexMathParser = (() => {
-	const commandToBlock = (cmd: Node | Fragment) => { // can also take in a Fragment
+	const commandToBlock = (cmd: TNode | Fragment) => { // can also take in a Fragment
 		const block = new MathBlock();
 		cmd.adopt(block);
 		return block;

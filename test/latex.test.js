@@ -228,7 +228,7 @@ suite('latex', () => {
 
 			test('overflow triggers automatic horizontal scroll', (done) => {
 				const mqEl = mq.el();
-				const rootEl = mq.__controller.root.jQ[0];
+				const rootEl = mq.__controller.root.elements.first;
 				const cursor = mq.__controller.cursor;
 
 				mqEl.style.width = '10px';
@@ -241,10 +241,9 @@ suite('latex', () => {
 
 					try {
 						assert.ok(rootEl.scrollLeft > previousScrollLeft, 'scrolls on write');
-						assert.ok(mqEl.getBoundingClientRect().right > cursor.jQ[0].getBoundingClientRect().right,
+						assert.ok(mqEl.getBoundingClientRect().right > cursor.element.getBoundingClientRect().right,
 							'cursor right end is inside the field');
-					}
-					catch (error) {
+					} catch (error) {
 						done(error);
 						return;
 					}
@@ -337,24 +336,28 @@ suite('latex', () => {
 
 			outer.innerFields.get('m').makeStatic();
 			assert.equal(outer.innerFields.get('m').__controller.editable, false);
-			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), false);
+			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				false);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			//ensure no errors in making static field static
 			outer.innerFields.get('m').makeStatic();
 			assert.equal(outer.innerFields.get('m').__controller.editable, false);
-			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), false);
+			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				false);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			outer.innerFields.get('m').makeEditable();
 			assert.equal(outer.innerFields.get('m').__controller.editable, true);
-			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), true);
+			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				true);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			//ensure no errors with making editable field editable
 			outer.innerFields.get('m').makeEditable();
 			assert.equal(outer.innerFields.get('m').__controller.editable, true);
-			assert.equal(outer.innerFields.get('m').__controller.container.hasClass('mq-editable-field'), true);
+			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				true);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 		});
 

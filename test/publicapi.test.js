@@ -80,7 +80,7 @@ suite('Public API', () => {
 			const el = document.createElement('span');
 			el.innerHTML = 'some <code>HTML</code>';
 			const mq = MQ.MathField(el);
-			assert.equal(mq.revert().html(), 'some <code>HTML</code>');
+			assert.equal(mq.revert().innerHTML, 'some <code>HTML</code>');
 		});
 
 		test('select, clearSelection', () => {
@@ -384,7 +384,7 @@ suite('Public API', () => {
 
 		test('overflow triggers automatic horizontal scroll', (done) => {
 			const mqEl = mq.el();
-			const rootEl = mq.__controller.root.jQ[0];
+			const rootEl = mq.__controller.root.elements.first;
 			const cursor = mq.__controller.cursor;
 
 			mqEl.style.width = '10px';
@@ -397,10 +397,9 @@ suite('Public API', () => {
 
 				try {
 					assert.ok(rootEl.scrollLeft > previousScrollLeft, 'scrolls on cmd');
-					assert.ok(mqEl.getBoundingClientRect().right > cursor.jQ[0].getBoundingClientRect().right,
+					assert.ok(mqEl.getBoundingClientRect().right > cursor.element.getBoundingClientRect().right,
 						'cursor right end is inside the field');
-				}
-				catch (error) {
+				} catch (error) {
 					done(error);
 					return;
 				}

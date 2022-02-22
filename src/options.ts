@@ -233,9 +233,9 @@ export class Options {
 		return textarea;
 	}
 
-	substituteKeyboardEvents(el: HTMLTextAreaElement | JQuery<HTMLTextAreaElement>, handlers: TextAreaHandlers) {
+	substituteKeyboardEvents(el: HTMLTextAreaElement, handlers: TextAreaHandlers) {
 		return saneKeyboardEvents(el, handlers);
 	}
 
-	ignoreNextMousedown: (e?: JQuery.TriggeredEvent) => boolean = () =>  { return false; }
+	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => { return false; }
 }

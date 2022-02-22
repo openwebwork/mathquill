@@ -67,7 +67,7 @@ export class MathField extends EditableField {
 		const reflowSave = this.__controller.root.reflow;
 		this.__controller.root.reflow = noop;
 
-		super.__mathquillify('mq-editable-field mq-math-mode');
+		super.__mathquillify('mq-editable-field', 'mq-math-mode');
 
 		if (reflowSave) this.__controller.root.reflow = reflowSave;
 		else delete this.__controller.root.reflow;
@@ -83,13 +83,13 @@ export class InnerMathField extends MathField {
 		this.__controller.editable = false;
 		this.__controller.root.blur();
 		this.__controller.unbindEditablesEvents();
-		this.__controller.container.removeClass('mq-editable-field');
+		this.__controller.container.classList.remove('mq-editable-field');
 	}
 
 	makeEditable() {
 		this.__controller.editable = true;
 		this.__controller.editablesTextareaEvents();
 		this.__controller.cursor.insAtRightEnd(this.__controller.root);
-		this.__controller.container.addClass('mq-editable-field');
+		this.__controller.container.classList.add('mq-editable-field');
 	}
 }

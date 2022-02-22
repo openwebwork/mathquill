@@ -30,7 +30,7 @@ export class Parser {
 		);
 	}
 
-	// -*- primitive combinators -*- //
+	// Primitive combinators
 	or(alternative: Parser) {
 		pray('or is passed a parser', alternative instanceof Parser);
 
@@ -52,7 +52,7 @@ export class Parser {
 		);
 	}
 
-	// -*- optimized iterative combinators -*- //
+	// Optimized iterative combinators
 	many<T>() {
 		return new Parser((stream, onSuccess) => {
 			const xs: Array<T> = [];
@@ -95,7 +95,7 @@ export class Parser {
 		});
 	}
 
-	// -*- higher-level combinators -*- //
+	// Higher-level combinators
 	result<T>(res: T) { return this.then(Parser.succeed(res)); }
 	atMost(n: number) { return this.times(0, n); }
 	atLeast(n: number) {
@@ -117,7 +117,7 @@ export class Parser {
 		return this.then((result) => two.result(result));
 	}
 
-	// -*- primitive parsers -*- //
+	// Primitive parsers
 	static string(str: string) {
 		return new Parser((stream, onSuccess, onFailure) => {
 			const head = stream.slice(0, str.length);

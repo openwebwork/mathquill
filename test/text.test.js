@@ -27,14 +27,12 @@ suite('text', () => {
 
 	const fromLatex = (latex) => {
 		const block = latexMathParser.parse(latex);
-		block.jQize();
+		block.domify();
 
 		return block;
 	};
 
-	const assertSplit = (jQ, prev, next) => {
-		const dom = jQ[0];
-
+	const assertSplit = (dom, prev, next) => {
 		if (prev) {
 			assert.ok(dom.previousSibling instanceof Text);
 			assert.equal(prev, dom.previousSibling.data, 'assertSplit failed');
@@ -58,25 +56,25 @@ suite('text', () => {
 		const cursor = ctrlr.cursor.insAtRightEnd(block);
 
 		ctrlr.moveLeft();
-		assertSplit(cursor.jQ, 'abc', null);
+		assertSplit(cursor.element, 'abc', null);
 
 		ctrlr.moveLeft();
-		assertSplit(cursor.jQ, 'ab', 'c');
+		assertSplit(cursor.element, 'ab', 'c');
 
 		ctrlr.moveLeft();
-		assertSplit(cursor.jQ, 'a', 'bc');
+		assertSplit(cursor.element, 'a', 'bc');
 
 		ctrlr.moveLeft();
-		assertSplit(cursor.jQ, null, 'abc');
+		assertSplit(cursor.element, null, 'abc');
 
 		ctrlr.moveRight();
-		assertSplit(cursor.jQ, 'a', 'bc');
+		assertSplit(cursor.element, 'a', 'bc');
 
 		ctrlr.moveRight();
-		assertSplit(cursor.jQ, 'ab', 'c');
+		assertSplit(cursor.element, 'ab', 'c');
 
 		ctrlr.moveRight();
-		assertSplit(cursor.jQ, 'abc', null);
+		assertSplit(cursor.element, 'abc', null);
 	});
 
 	test('does not change latex as the cursor moves around', () => {
@@ -100,15 +98,15 @@ suite('text', () => {
 			assertLatex('\\text{x}');
 
 			mq.keystroke('Left');
-			assertSplit(cursor.jQ, 'x');
+			assertSplit(cursor.element, 'x');
 			assertLatex('\\text{x}');
 
 			mq.keystroke('Backspace');
-			assertSplit(cursor.jQ);
+			assertSplit(cursor.element);
 			assertLatex('');
 
 			mq.keystroke('Right');
-			assertSplit(cursor.jQ);
+			assertSplit(cursor.element);
 			assert.equal(cursor[L], undefined);
 			assertLatex('');
 		});
@@ -121,7 +119,7 @@ suite('text', () => {
 			assertLatex('\\text{asdf}');
 
 			mq.keystroke('Left Left Left');
-			assertSplit(cursor.jQ, 'as', 'df');
+			assertSplit(cursor.element, 'as', 'df');
 			assertLatex('\\text{asdf}');
 
 			mq.typedText('$');
@@ -136,11 +134,11 @@ suite('text', () => {
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');
-			assertSplit(cursor.jQ, 'as', 'df');
+			assertSplit(cursor.element, 'as', 'df');
 
 			controller.paste('foo');
 
-			assertSplit(cursor.jQ, 'asfoo', 'df');
+			assertSplit(cursor.element, 'asfoo', 'df');
 			assertLatex('\\text{asfoodf}');
 			prayWellFormedPoint(cursor);
 
@@ -152,11 +150,11 @@ suite('text', () => {
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');
-			assertSplit(cursor.jQ, 'as', 'df');
+			assertSplit(cursor.element, 'as', 'df');
 
 			controller.paste('$foo');
 
-			assertSplit(cursor.jQ, 'as$foo', 'df');
+			assertSplit(cursor.element, 'as$foo', 'df');
 			assertLatex('\\text{as$foodf}');
 			prayWellFormedPoint(cursor);
 		});
@@ -167,11 +165,11 @@ suite('text', () => {
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');
-			assertSplit(cursor.jQ, 'as', 'df');
+			assertSplit(cursor.element, 'as', 'df');
 
 			controller.paste('\\pi');
 
-			assertSplit(cursor.jQ, 'as\\pi', 'df');
+			assertSplit(cursor.element, 'as\\pi', 'df');
 			assertLatex('\\text{as\\pidf}');
 			prayWellFormedPoint(cursor);
 		});
@@ -182,11 +180,11 @@ suite('text', () => {
 
 			mq.latex('\\text{asdf}');
 			mq.keystroke('Left Left Left');
-			assertSplit(cursor.jQ, 'as', 'df');
+			assertSplit(cursor.element, 'as', 'df');
 
 			controller.paste('{');
 
-			assertSplit(cursor.jQ, 'as{', 'df');
+			assertSplit(cursor.element, 'as{', 'df');
 			assertLatex('\\text{as\\{df}');
 			prayWellFormedPoint(cursor);
 		});

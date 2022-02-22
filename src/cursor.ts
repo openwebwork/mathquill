@@ -5,44 +5,47 @@
 // A fake cursor in the fake textbox that the math is rendered in.
 
 import type { Direction } from 'src/constants';
-import { jQuery, L, R, pray, prayDirection } from 'src/constants';
+import { L, R, pray, prayDirection } from 'src/constants';
 import type { Options } from 'src/options';
 import { Point } from 'tree/point';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
 import type { Selection } from 'src/selection';
 import { MathBlock } from 'commands/mathBlock';
 
 export class Cursor extends Point {
 	options: Options;
-	jQ: JQuery;
+	element: HTMLElement = document.createElement('span');
 	upDownCache: { [key: number]: Point } = {};
 	intervalId?: ReturnType<typeof setInterval>;
 	selection?: Selection;
 	anticursor?: Point;
 	selectionChanged?: () => void;
 
-	//closured for setInterval
-	blink: () => JQuery | void = () => this.jQ.toggleClass('mq-blink');
+	// Closured for setInterval
+	blink: () => void = () => this.element.classList.toggle('mq-blink');
 
-	constructor(initParent: Node, options: Options) {
+	constructor(initParent: TNode, options: Options) {
 		super(initParent);
 		this.options = options;
-		this.jQ = jQuery('<span class="mq-cursor">&#8203;</span>');
+		this.element.classList.add('mq-cursor');
+		this.element.textContent = '\u200B';
 	}
 
 	show() {
-		this.jQ.removeClass('mq-blink');
-		this.jQ.show();
-		if (this.intervalId) //already was shown, just restart interval
+		this.element.classList.remove('mq-blink');
+		this.element.style.display = '';
+		if (this.intervalId) {
+			// The cursor is already shown, just restart the interval.
 			clearInterval(this.intervalId);
-		else { //was hidden and detached, insert this.jQ back into HTML DOM
+		} else {
+			// The cursor was hidden and removed, so insert this.element back into the DOM.
 			if (this[R]) {
 				if (this.selection && this.selection.ends[L]?.[L] === this[L])
-					this.jQ.insertBefore(this.selection.jQ);
+					this.selection.elements.first.before(this.element);
 				else
-					this.jQ.insertBefore((this[R] as Node).jQ.first());
+					(this[R] as TNode).elements.first.before(this.element);
 			} else
-				this.jQ.appendTo((this.parent as Node).jQ);
+				(this.parent as TNode).elements.firstElement.append(this.element);
 			this.parent?.focus();
 		}
 		this.intervalId = setInterval(this.blink, 500);
@@ -53,91 +56,87 @@ export class Cursor extends Point {
 		if (this.intervalId)
 			clearInterval(this.intervalId);
 		delete this.intervalId;
-		this.jQ.detach();
-		this.jQ.hide();
+		this.element.style.display = 'none';
+		this.element.remove();
 		return this;
 	}
 
-	withDirInsertAt(dir: Direction, parent: Node, withDir?: Node, oppDir?: Node) {
-		const oldParent = this.parent as Node;
+	withDirInsertAt(dir: Direction, parent: TNode, withDir?: TNode, oppDir?: TNode) {
+		const oldParent = this.parent as TNode;
 		this.parent = parent;
 		this[dir] = withDir;
 		this[dir === L ? R : L] = oppDir;
-		// by contract, .blur() is called after all has been said and done
-		// and the cursor has actually been moved
+		// By contract blur is called after all has been said and done and the cursor has actually been moved.
 		if (oldParent !== parent && oldParent.blur) oldParent.blur(this);
 	}
 
-	insDirOf(dir: Direction, el: Node) {
+	insDirOf(dir: Direction, el: TNode) {
 		prayDirection(dir);
-		this.jQ.insDirOf(dir, el.jQ);
-		this.withDirInsertAt(dir, el.parent as Node, el[dir], el);
-		this.parent?.jQ.addClass('mq-hasCursor');
+
+		if (dir === L) el.elements.first.before(this.element);
+		else el.elements.last.after(this.element);
+
+		this.withDirInsertAt(dir, el.parent as TNode, el[dir], el);
+		this.parent?.elements.addClass('mq-hasCursor');
 		return this;
 	}
 
-	insLeftOf(el: Node) { return this.insDirOf(L, el); }
+	insLeftOf(el: TNode) { return this.insDirOf(L, el); }
 
-	insRightOf(el: Node) { return this.insDirOf(R, el); }
+	insRightOf(el: TNode) { return this.insDirOf(R, el); }
 
-	insAtDirEnd(dir: Direction, el: Node) {
+	insAtDirEnd(dir: Direction, el: TNode) {
 		prayDirection(dir);
-		this.jQ.insAtDirEnd(dir, el.jQ);
+
+		if (dir === L) el.elements.firstElement.prepend(this.element);
+		else el.elements.lastElement.append(this.element);
+
 		this.withDirInsertAt(dir, el, undefined, el.ends[dir]);
 		el.focus();
 		return this;
 	}
 
-	insAtLeftEnd(el: Node) { return this.insAtDirEnd(L, el); }
+	insAtLeftEnd(el: TNode) { return this.insAtDirEnd(L, el); }
 
-	insAtRightEnd(el: Node) { return this.insAtDirEnd(R, el); }
+	insAtRightEnd(el: TNode) { return this.insAtDirEnd(R, el); }
 
-	// jump up or down from one block Node to another:
-	// - cache the current Point in the node we're jumping from
-	// - check if there's a Point in it cached for the node we're jumping to
+	// Jump up or down from one block TNode to another:
+	// - cache the current Point in the TNode we are jumping from
+	// - check if there is a Point in it cached for the node we are jumping to
 	//   + if so put the cursor there,
-	//   + if not seek a position in the node that is horizontally closest to
-	//     the cursor's current position
-	jumpUpDown(from: Node, to: Node) {
+	//   + if not seek a position in the node that is horizontally closest to the cursor's current position
+	jumpUpDown(from: TNode, to: TNode) {
 		this.upDownCache[from.id] = Point.copy(this);
 		const cached = this.upDownCache[to.id];
 		if (cached) {
-			cached[R] ? this.insLeftOf(cached[R] as Node) : this.insAtRightEnd(cached.parent as Node);
+			cached[R] ? this.insLeftOf(cached[R] as TNode) : this.insAtRightEnd(cached.parent as TNode);
 		} else {
-			to.seek(this.offset()?.left ?? 0, this);
+			to.seek(this.offset().left, this);
 		}
 	}
 
 	offset() {
-		//in Opera 11.62, .getBoundingClientRect() and hence jQuery::offset()
-		//returns all 0's on inline elements with negative margin-right (like
-		//the cursor) at the end of their parent, so temporarily remove the
-		//negative margin-right when calling jQuery::offset()
-		//Opera bug DSK-360043
-		//http://bugs.jquery.com/ticket/11523
-		//https://github.com/jquery/jquery/pull/717
-		const offset = this.jQ.removeClass('mq-cursor').offset();
-		this.jQ.addClass('mq-cursor');
-		return offset;
+		return this.element.getBoundingClientRect();
 	}
 
 	unwrapGramp() {
-		const gramp = this.parent?.parent as Node;
-		const greatgramp = gramp.parent as Node;
+		const gramp = this.parent?.parent as TNode;
+		const greatgramp = gramp.parent as TNode;
 		const rightward = gramp[R];
 
 		let leftward = gramp[L];
-		gramp.disown().eachChild((uncle: Node) => {
+		gramp.disown().eachChild((uncle: TNode) => {
 			if (uncle.isEmpty()) return;
 
 			uncle.children()
 				.adopt(greatgramp, leftward, rightward)
-				.each((cousin: Node) => { cousin.jQ.insertBefore(gramp.jQ.first()); });
+				.each((cousin: TNode) => { gramp.elements.first.before(...cousin.elements.contents); });
 
 			leftward = uncle.ends[R];
 		});
 
-		if (!this[R]) { //then find something to be rightward to insLeftOf
+		if (!this[R]) {
+			// Find something rightward to insert left of.
 			if (this[L])
 				this[R] = this[L]?.[R];
 			else {
@@ -154,11 +153,11 @@ export class Cursor extends Point {
 			}
 		}
 		if (this[R])
-			this.insLeftOf(this[R] as Node);
+			this.insLeftOf(this[R] as TNode);
 		else
 			this.insAtRightEnd(greatgramp);
 
-		gramp.jQ.remove();
+		gramp.elements.remove();
 
 		if (gramp[L]?.siblingDeleted) gramp[L]?.siblingDeleted?.(this.options, R);
 		if (gramp[R]?.siblingDeleted) gramp[R]?.siblingDeleted?.(this.options, L);
@@ -169,7 +168,7 @@ export class Cursor extends Point {
 		// Create a map from each ancestor of the anticursor to its child that is also an ancestor.
 		// In other words, the anticursor's ancestor chain in reverse order.
 		this.anticursor.ancestors = {};
-		for (let ancestor: Point | Node = this.anticursor; ancestor.parent; ancestor = ancestor.parent) {
+		for (let ancestor: Point | TNode = this.anticursor; ancestor.parent; ancestor = ancestor.parent) {
 			this.anticursor.ancestors[ancestor.parent.id] = ancestor;
 		}
 	}
@@ -185,9 +184,9 @@ export class Cursor extends Point {
 		if (!this.anticursor || !this.anticursor.ancestors) return false;
 
 		// Find the lowest common ancestor (`lca`), and the ancestor of the cursor
-		// whose parent is the LCA (which'll be an end of the selection fragment).
+		// whose parent is the LCA (which will be an end of the selection fragment).
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		let ancestor: Point | Node = this, lca: Node | null = null;
+		let ancestor: Point | TNode = this, lca: TNode | null = null;
 		for (; ancestor.parent; ancestor = ancestor.parent) {
 			if (ancestor.parent.id in this.anticursor.ancestors) {
 				lca = ancestor.parent;
@@ -212,17 +211,17 @@ export class Cursor extends Point {
 		let leftEnd, rightEnd, dir = R;
 
 		// This is an extremely subtle algorithm.
-		// As a special case, `ancestor` could be a Point and `antiAncestor` a Node
+		// As a special case, `ancestor` could be a Point and `antiAncestor` a TNode
 		// immediately to `ancestor`'s left.
 		// In all other cases,
 		// - both Nodes
-		// - `ancestor` a Point and `antiAncestor` a Node
-		// - `ancestor` a Node and `antiAncestor` a Point
+		// - `ancestor` a Point and `antiAncestor` a TNode
+		// - `ancestor` a TNode and `antiAncestor` a Point
 		// `antiAncestor[R] === rightward[R]` for some `rightward` that is
 		// `ancestor` or to its right, if and only if `antiAncestor` is to
 		// the right of `ancestor`.
 		if (ancestor[L] !== antiAncestor) {
-			for (let rightward: Point | Node | undefined = ancestor; rightward; rightward = rightward[R]) {
+			for (let rightward: Point | TNode | undefined = ancestor; rightward; rightward = rightward[R]) {
 				if (rightward[R] === antiAncestor[R]) {
 					dir = L;
 					leftEnd = ancestor;
@@ -241,7 +240,7 @@ export class Cursor extends Point {
 		if (rightEnd instanceof Point) rightEnd = rightEnd[L];
 
 		this.hide().selection = lca?.selectChildren(leftEnd, rightEnd);
-		this.insDirOf(dir, this.selection?.ends[dir] as Node);
+		this.insDirOf(dir, this.selection?.ends[dir] as TNode);
 		this.selectionChanged?.();
 		return true;
 	}
