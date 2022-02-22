@@ -1,6 +1,6 @@
 /* global suite, test, assert, setup, MQ */
 
-import { jQuery, L, R, prayWellFormed } from 'src/constants';
+import { L, R, prayWellFormed } from 'src/constants';
 import { Controller } from 'src/controller';
 import { latexMathParser } from 'commands/mathElements';
 
@@ -9,7 +9,9 @@ suite('text', () => {
 	let mq, mostRecentlyReportedLatex;
 	setup(() => {
 		mostRecentlyReportedLatex = NaN; // != to everything
-		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], {
+		const el = document.createElement('span');
+		document.getElementById('mock')?.append(el);
+		mq = MQ.MathField(el, {
 			handlers: {
 				edit: () => mostRecentlyReportedLatex = mq.latex()
 			}

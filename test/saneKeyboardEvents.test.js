@@ -1,15 +1,17 @@
 /* global suite, test, assert, setup */
 
-import { jQuery, noop } from 'src/constants';
+import { noop } from 'src/constants';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 
 suite('saneKeyboardEvents', () => {
 	let el;
-	const Event = (type, props) => jQuery.extend(jQuery.Event(type), props);
 
-	const supportsSelectionAPI = () => 'selectionStart' in el[0];
+	const supportsSelectionAPI = () => 'selectionStart' in el;
 
-	setup(() => el = jQuery('<textarea>').appendTo('#mock'));
+	setup(() => {
+		el = document.createElement('textarea');
+		document.getElementById('mock')?.append(el);
+	});
 
 	test('normal keys', (done) => {
 		let counter = 0;
@@ -19,15 +21,15 @@ suite('saneKeyboardEvents', () => {
 				counter += 1;
 				assert.ok(counter <= 1, 'callback is only called once');
 				assert.equal(text, 'a', 'text comes back as a');
-				assert.equal(el.val(), '', 'the textarea remains empty');
+				assert.equal(el.value, '', 'the textarea remains empty');
 
 				done();
 			}
 		});
 
-		el.trigger(Event('keydown', { which: 97 }));
-		el.trigger(Event('keypress', { which: 97 }));
-		el.val('a');
+		el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress', { which: 97, keyCode: 97, bubbles: true }));
+		el.value = 'a';
 	});
 
 	test('normal keys without keypress', (done) => {
@@ -38,15 +40,15 @@ suite('saneKeyboardEvents', () => {
 				counter += 1;
 				assert.ok(counter <= 1, 'callback is only called once');
 				assert.equal(text, 'a', 'text comes back as a');
-				assert.equal(el.val(), '', 'the textarea remains empty');
+				assert.equal(el.value, '', 'the textarea remains empty');
 
 				done();
 			}
 		});
 
-		el.trigger(Event('keydown', { which: 97 }));
-		el.trigger(Event('keyup', { which: 97 }));
-		el.val('a');
+		el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keyup', { which: 97, keyCode: 97, bubbles: true }));
+		el.value = 'a';
 	});
 
 	test('one keydown only', (done) => {
@@ -62,7 +64,7 @@ suite('saneKeyboardEvents', () => {
 			}
 		});
 
-		el.trigger(Event('keydown', { which: 8 }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { which: 8, keyCode: 8, bubbles: true }));
 	});
 
 	test('a series of keydowns only', (done) => {
@@ -80,9 +82,9 @@ suite('saneKeyboardEvents', () => {
 			}
 		});
 
-		el.trigger(Event('keydown', { which: 37 }));
-		el.trigger(Event('keydown', { which: 37 }));
-		el.trigger(Event('keydown', { which: 37 }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
 	});
 
 	test('one keydown and a series of keypresses', (done) => {
@@ -100,10 +102,10 @@ suite('saneKeyboardEvents', () => {
 			}
 		});
 
-		el.trigger(Event('keydown', { which: 8 }));
-		el.trigger(Event('keypress', { which: 8 }));
-		el.trigger(Event('keypress', { which: 8 }));
-		el.trigger(Event('keypress', { which: 8 }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress', { which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress', { which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress', { which: 8, keyCode: 8, bubbles: true }));
 	});
 
 	suite('select', () => {
@@ -112,15 +114,15 @@ suite('saneKeyboardEvents', () => {
 
 			shim.select('foobar');
 
-			assert.equal(el.val(), 'foobar');
-			el.trigger('keydown');
-			assert.equal(el.val(), 'foobar', 'value remains after keydown');
+			assert.equal(el.value, 'foobar');
+			el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+			assert.equal(el.value, 'foobar', 'value remains after keydown');
 
 			if (supportsSelectionAPI()) {
-				el.trigger('keypress');
-				assert.equal(el.val(), 'foobar', 'value remains after keypress');
-				el.trigger('input');
-				assert.equal(el.val(), 'foobar', 'value remains after flush after keypress');
+				el.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true }));
+				assert.equal(el.value, 'foobar', 'value remains after keypress');
+				el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+				assert.equal(el.value, 'foobar', 'value remains after flush after keypress');
 			}
 		});
 
@@ -132,26 +134,26 @@ suite('saneKeyboardEvents', () => {
 			shim.select('foobar');
 			// monkey-patch the dom-level selection so that hasSelection()
 			// returns false, as in IE < 9.
-			el[0].selectionStart = el[0].selectionEnd = 0;
+			el.selectionStart = el.selectionEnd = 0;
 
-			el.trigger('keydown');
-			assert.equal(el.val(), 'foobar', 'value remains after keydown');
+			el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+			assert.equal(el.value, 'foobar', 'value remains after keydown');
 		});
 
 		test('blurring', () => {
 			const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 			shim.select('foobar');
-			el.trigger('blur');
+			el.blur();
 			el.focus();
 
 			// IE < 9 doesn't support selection{Start,End}
 			if (supportsSelectionAPI()) {
-				assert.equal(el[0].selectionStart, 0, 'it\'s selected from the start');
-				assert.equal(el[0].selectionEnd, 6, 'it\'s selected to the end');
+				assert.equal(el.selectionStart, 0, 'it\'s selected from the start');
+				assert.equal(el.selectionEnd, 6, 'it\'s selected to the end');
 			}
 
-			assert.equal(el.val(), 'foobar', 'it still has content');
+			assert.equal(el.value, 'foobar', 'it still has content');
 		});
 
 		test('blur then empty selection', () => {
@@ -159,7 +161,7 @@ suite('saneKeyboardEvents', () => {
 			shim.select('foobar');
 			el.blur();
 			shim.select('');
-			assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
+			assert.ok(document.activeElement !== el, 'textarea remains blurred');
 		});
 
 		test('blur in keystroke handler', function(done) {
@@ -177,25 +179,27 @@ suite('saneKeyboardEvents', () => {
 					'clicked on something in the Developer Tools or on the page itself. ' +
 					'Click the page, or close the Developer Tools, and Refresh.'
 				);
-				jQuery('#mock').empty(); // LOL next line skips teardown https://git.io/vaUWq
+				const mock = document.getElementById('mock');
+				// The next line skips teardown, so the mock element needs to be manually emptied.
+				while (mock.firstChild) mock.firstChild.remove();
 				this.skip();
 			}
 
 			const shim = saneKeyboardEvents(el, {
 				keystroke: (key) => {
 					assert.equal(key, 'Left');
-					el[0].blur();
+					el.blur();
 				}
 			});
 
 			shim.select('foobar');
-			assert.ok(document.activeElement === el[0], 'textarea focused');
+			assert.ok(document.activeElement === el, 'textarea focused');
 
-			el.trigger(Event('keydown', { which: 37 }));
-			assert.ok(document.activeElement !== el[0], 'textarea blurred');
+			el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
+			assert.ok(document.activeElement !== el, 'textarea blurred');
 
 			setTimeout(() => {
-				assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
+				assert.ok(document.activeElement !== el, 'textarea remains blurred');
 				done();
 			});
 		});
@@ -207,16 +211,17 @@ suite('saneKeyboardEvents', () => {
 				let onPaste = (text) => pastedText = text;
 				const shim = saneKeyboardEvents(el, { paste: (text) => onPaste(text) });
 
-				el.trigger('paste').val('$x^2+1$');
+				el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+				el.value = '$x^2+1$';
 
 				shim.select('$\\frac{x^2+1}{2}$');
 				assert.equal(pastedText, '$x^2+1$');
-				assert.equal(el.val(), '$\\frac{x^2+1}{2}$');
+				assert.equal(el.value, '$\\frac{x^2+1}{2}$');
 
 				onPaste = null;
 
 				shim.select('$2$');
-				assert.equal(el.val(), '$2$');
+				assert.equal(el.value, '$2$');
 			});
 
 			test('select() after paste/input', () => {
@@ -224,19 +229,20 @@ suite('saneKeyboardEvents', () => {
 				let onPaste = (text) => pastedText = text;
 				const shim = saneKeyboardEvents(el, { paste: (text) => onPaste(text) });
 
-				el.trigger('paste').val('$x^2+1$');
+				el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+				el.value = '$x^2+1$';
 
-				el.trigger('input');
+				el.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(pastedText, '$x^2+1$');
-				assert.equal(el.val(), '');
+				assert.equal(el.value, '');
 
 				onPaste = null;
 
 				shim.select('$\\frac{x^2+1}{2}$');
-				assert.equal(el.val(), '$\\frac{x^2+1}{2}$');
+				assert.equal(el.value, '$\\frac{x^2+1}{2}$');
 
 				shim.select('$2$');
-				assert.equal(el.val(), '$2$');
+				assert.equal(el.value, '$2$');
 			});
 
 			test('select() immediately after keydown/keypress', () => {
@@ -247,18 +253,18 @@ suite('saneKeyboardEvents', () => {
 					typedText: (text) => onText(text)
 				});
 
-				el.trigger(Event('keydown', { which: 97 }));
-				el.trigger(Event('keypress', { which: 97 }));
-				el.val('a');
+				el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
+				el.dispatchEvent(new KeyboardEvent('keypress', { which: 97, keyCode: 97, bubbles: true }));
+				el.value = 'a';
 
 				shim.select('$\\frac{a}{2}$');
 				assert.equal(typedText, 'a');
-				assert.equal(el.val(), '$\\frac{a}{2}$');
+				assert.equal(el.value, '$\\frac{a}{2}$');
 
 				onText = null;
 
 				shim.select('$2$');
-				assert.equal(el.val(), '$2$');
+				assert.equal(el.value, '$2$');
 			});
 
 			test('select() after keydown/keypress/input', () => {
@@ -269,20 +275,20 @@ suite('saneKeyboardEvents', () => {
 					typedText: (text) => onText(text)
 				});
 
-				el.trigger(Event('keydown', { which: 97 }));
-				el.trigger(Event('keypress', { which: 97 }));
-				el.val('a');
+				el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
+				el.dispatchEvent(new KeyboardEvent('keypress', { which: 97, keyCode: 97, bubbles: true }));
+				el.value = 'a';
 
-				el.trigger('input');
+				el.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(typedText, 'a');
 
 				onText = null;
 
 				shim.select('$\\frac{a}{2}$');
-				assert.equal(el.val(), '$\\frac{a}{2}$');
+				assert.equal(el.value, '$\\frac{a}{2}$');
 
 				shim.select('$2$');
-				assert.equal(el.val(), '$2$');
+				assert.equal(el.value, '$2$');
 			});
 
 			suite('unrecognized keys that move cursor and clear selection', () => {
@@ -290,38 +296,42 @@ suite('saneKeyboardEvents', () => {
 					const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 					shim.select('a');
-					assert.equal(el.val(), 'a');
+					assert.equal(el.value, 'a');
 
 					if (!supportsSelectionAPI()) return;
 
-					el.trigger(Event('keydown', { which: 37, altKey: true }));
-					el[0].selectionEnd = 0;
-					el.trigger(Event('keyup', { which: 37, altKey: true }));
-					assert.ok(el[0].selectionStart !== el[0].selectionEnd);
+					el.dispatchEvent(new KeyboardEvent('keydown',
+						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+					el.selectionEnd = 0;
+					el.dispatchEvent(new KeyboardEvent('keyup',
+						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+					assert.ok(el.selectionStart !== el.selectionEnd);
 
 					el.blur();
 					shim.select('');
-					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
+					assert.ok(document.activeElement !== el, 'textarea remains blurred');
 				});
 
 				test('with keypress, many characters selected', () => {
 					const shim = saneKeyboardEvents(el, { keystroke: noop });
 
 					shim.select('many characters');
-					assert.equal(el.val(), 'many characters');
+					assert.equal(el.value, 'many characters');
 
 					if (!supportsSelectionAPI()) return;
 
-					el.trigger(Event('keydown', { which: 37, altKey: true }));
-					el.trigger(Event('keypress', { which: 37, altKey: true }));
-					el[0].selectionEnd = 0;
+					el.dispatchEvent(new KeyboardEvent('keydown',
+						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+					el.dispatchEvent(new KeyboardEvent('keypress',
+						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+					el.selectionEnd = 0;
 
-					el.trigger('keyup');
-					assert.ok(el[0].selectionStart !== el[0].selectionEnd);
+					el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+					assert.ok(el.selectionStart !== el.selectionEnd);
 
 					el.blur();
 					shim.select('');
-					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
+					assert.ok(document.activeElement !== el, 'textarea remains blurred');
 				});
 
 				test('with keypress, only 1 character selected', () => {
@@ -330,26 +340,28 @@ suite('saneKeyboardEvents', () => {
 						keystroke: noop,
 						typedText: (ch) => {
 							assert.equal(ch, 'a');
-							assert.equal(el.val(), '');
+							assert.equal(el.value, '');
 							count += 1;
 						}
 					});
 
 					shim.select('a');
-					assert.equal(el.val(), 'a');
+					assert.equal(el.value, 'a');
 
 					if (!supportsSelectionAPI()) return;
 
-					el.trigger(Event('keydown', { which: 37, altKey: true }));
-					el.trigger(Event('keypress', { which: 37, altKey: true }));
-					el[0].selectionEnd = 0;
+					el.dispatchEvent(new KeyboardEvent('keydown',
+						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+					el.dispatchEvent(new KeyboardEvent('keypress',
+						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+					el.selectionEnd = 0;
 
-					el.trigger('keyup');
+					el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 					assert.equal(count, 1);
 
 					el.blur();
 					shim.select('');
-					assert.ok(document.activeElement !== el[0], 'textarea remains blurred');
+					assert.ok(document.activeElement !== el, 'textarea remains blurred');
 				});
 			});
 		});
@@ -364,8 +376,8 @@ suite('saneKeyboardEvents', () => {
 				}
 			});
 
-			el.trigger('paste');
-			el.val('$x^2+1$');
+			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+			el.value = '$x^2+1$';
 		});
 
 		test('paste after keydown/keypress', (done) => {
@@ -379,10 +391,10 @@ suite('saneKeyboardEvents', () => {
 
 			// Ctrl-V in Firefox or Opera, according to unixpapa.com/js/key.html
 			// without an `input` event
-			el.trigger('keydown', { which: 86, ctrlKey: true });
-			el.trigger('keypress', { which: 118, ctrlKey: true });
-			el.trigger('paste');
-			el.val('foobar');
+			el.dispatchEvent(new KeyboardEvent('keydown', { which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keypress', { which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+			el.value = 'foobar';
 		});
 
 		test('paste after keydown/keypress/input', (done) => {
@@ -396,11 +408,11 @@ suite('saneKeyboardEvents', () => {
 
 			// Ctrl-V in Firefox or Opera, according to unixpapa.com/js/key.html
 			// with an `input` event
-			el.trigger('keydown', { which: 86, ctrlKey: true });
-			el.trigger('keypress', { which: 118, ctrlKey: true });
-			el.trigger('paste');
-			el.val('foobar');
-			el.trigger('input');
+			el.dispatchEvent(new KeyboardEvent('keydown', { which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keypress', { which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+			el.value = 'foobar';
+			el.dispatchEvent(new InputEvent('input', { bubbles: true }));
 		});
 
 		test('keypress timeout happening before paste timeout', (done) => {
@@ -412,14 +424,14 @@ suite('saneKeyboardEvents', () => {
 				}
 			});
 
-			el.trigger('keydown', { which: 86, ctrlKey: true });
-			el.trigger('keypress', { which: 118, ctrlKey: true });
-			el.trigger('paste');
-			el.val('foobar');
+			el.dispatchEvent(new KeyboardEvent('keydown', { which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keypress', { which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+			el.value = 'foobar';
 
 			// this synthesizes the keypress timeout calling handleText()
 			// before the paste timeout happens.
-			el.trigger('input');
+			el.dispatchEvent(new InputEvent('input', { bubbles: true }));
 		});
 	});
 
@@ -428,7 +440,7 @@ suite('saneKeyboardEvents', () => {
 			// ...which MathQuill does and resulted in a stack overflow: https://git.io/vosm0
 			const shim = saneKeyboardEvents(el, { copy: () => shim.select() });
 
-			el.trigger('copy');
+			el.dispatchEvent(new ClipboardEvent('copy', { bubbles: true }));
 		});
 	});
 });

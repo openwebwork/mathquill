@@ -1,11 +1,13 @@
 /* global suite, test, assert, setup, MQ */
 
-import { jQuery, L, R } from 'src/constants';
+import { L, R } from 'src/constants';
 
 suite('up/down', () => {
 	let mq, rootBlock, controller, cursor;
 	setup(() => {
-		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+		const el = document.createElement('span');
+		document.getElementById('mock')?.append(el);
+		mq = MQ.MathField(el);
 		rootBlock = mq.__controller.root;
 		controller = mq.__controller;
 		cursor = controller.cursor;
@@ -172,10 +174,12 @@ suite('up/down', () => {
 	});
 
 	test('\\MathQuillMathField{} in a fraction', () => {
-		const outer = MQ.StaticMath(
-			jQuery('<span>\\frac{\\MathQuillMathField{n}}{2}</span>').appendTo('#mock')[0]
-		);
-		const inner = MQ(jQuery(outer.el()).find('.mq-editable-field')[0]);
+		const el = document.createElement('span');
+		el.textContent = '\\frac{\\MathQuillMathField{n}}{2}';
+		document.getElementById('mock')?.append(el);
+
+		const outer = MQ.StaticMath(el);
+		const inner = MQ(outer.el().querySelector('.mq-editable-field'));
 
 		assert.equal(inner.__controller.cursor.parent, inner.__controller.root);
 		inner.keystroke('Down');

@@ -1,12 +1,14 @@
 /* global suite, test, assert, setup, MQ, MQBasic */
 
-import { jQuery, L, R, prayWellFormed } from 'src/constants';
+import { L, R, prayWellFormed } from 'src/constants';
 
 suite('typing with auto-replaces', () => {
 	let mq, mostRecentlyReportedLatex;
 	setup(() => {
 		mostRecentlyReportedLatex = NaN; // != to everything
-		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], {
+		const el = document.createElement('span');
+		document.getElementById('mock')?.append(el);
+		mq = MQ.MathField(el, {
 			handlers: {
 				edit: () => mostRecentlyReportedLatex = mq.latex()
 			}
@@ -31,7 +33,9 @@ suite('typing with auto-replaces', () => {
 		});
 
 		test('mathquill-basic', () => {
-			const mq_basic = MQBasic.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			const mq_basic = MQBasic.MathField(el);
 			mq_basic.typedText('1/2');
 			assert.equal(mq_basic.latex(), '\\frac{1}{2}');
 		});
@@ -309,9 +313,9 @@ suite('typing with auto-replaces', () => {
 			});
 
 			function assertParenBlockNonEmpty() {
-				const parenBlock = jQuery(mq.el()).find('.mq-paren+span');
+				const parenBlock = mq.el().querySelectorAll('.mq-paren+span');
 				assert.equal(parenBlock.length, 1, 'exactly 1 paren block');
-				assert.ok(!parenBlock.hasClass('mq-empty'),
+				assert.ok(!parenBlock[0].classList.contains('mq-empty'),
 					'paren block auto-expanded, should no longer be gray');
 			}
 
@@ -568,9 +572,9 @@ suite('typing with auto-replaces', () => {
 				});
 
 				function assertParenBlockNonEmpty() {
-					const parenBlock = jQuery(mq.el()).find('.mq-paren+span');
+					const parenBlock = mq.el().querySelectorAll('.mq-paren+span');
 					assert.equal(parenBlock.length, 1, 'exactly 1 paren block');
-					assert.ok(!parenBlock.hasClass('mq-empty'),
+					assert.ok(!parenBlock[0].classList.contains('mq-empty'),
 						'paren block auto-expanded, should no longer be gray');
 				}
 

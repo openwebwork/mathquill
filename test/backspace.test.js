@@ -1,11 +1,13 @@
 /* global suite, test, assert, setup, MQ */
 
-import { jQuery, L, R, prayWellFormed } from 'src/constants';
+import { L, R, prayWellFormed } from 'src/constants';
 
 suite('backspace', () => {
 	let mq, rootBlock, controller, cursor;
 	setup(() => {
-		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+		const field = document.createElement('span');
+		document.getElementById('mock')?.append(field);
+		mq = MQ.MathField(field);
 		rootBlock = mq.__controller.root;
 		controller = mq.__controller;
 		cursor = controller.cursor;

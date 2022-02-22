@@ -1,6 +1,6 @@
 /* global suite, test, assert, setup, MQ */
 
-import { jQuery, L } from 'src/constants';
+import { L } from 'src/constants';
 import { Options } from 'src/options';
 import { Bracket, latexMathParser } from 'commands/mathElements';
 
@@ -169,7 +169,11 @@ suite('latex', () => {
 
 	suite('public API', () => {
 		let mq;
-		setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+		setup(() => {
+			const field = document.createElement('span');
+			document.getElementById('mock')?.append(field);
+			mq = MQ.MathField(field);
+		});
 
 		suite('.latex(...)', () => {
 			const assertParsesLatex = (str, latex) => {
@@ -227,7 +231,7 @@ suite('latex', () => {
 				const rootEl = mq.__controller.root.jQ[0];
 				const cursor = mq.__controller.cursor;
 
-				jQuery(mqEl).width(10);
+				mqEl.style.width = '10px';
 				const previousScrollLeft = rootEl.scrollLeft;
 
 				mq.write('abc');
@@ -277,10 +281,10 @@ suite('latex', () => {
 	suite('\\MathQuillMathField', () => {
 		let outer, inner1, inner2;
 		setup(() => {
-			outer = MQ.StaticMath(
-				jQuery('<span>\\frac{\\MathQuillMathField{x_0 + x_1 + x_2}}{\\MathQuillMathField{3}}</span>')
-					.appendTo('#mock')[0]
-			);
+			const field = document.createElement('span');
+			field.textContent = '\\frac{\\MathQuillMathField{x_0 + x_1 + x_2}}{\\MathQuillMathField{3}}';
+			document.getElementById('mock')?.append(field);
+			outer = MQ.StaticMath(field);
 			inner1 = outer.innerFields[0];
 			inner2 = outer.innerFields[1];
 		});
@@ -364,7 +368,11 @@ suite('latex', () => {
 
 	suite('error handling', () => {
 		let mq;
-		setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+		setup(() => {
+			const field = document.createElement('span');
+			document.getElementById('mock')?.append(field);
+			mq = MQ.MathField(field);
+		});
 
 		const testCantParse = (title, ...args) => {
 			test(title, () => {
@@ -384,7 +392,12 @@ suite('latex', () => {
 	});
 
 	suite('selectable span', () => {
-		setup(() => MQ.StaticMath(jQuery('<span>2&lt;x</span>').appendTo('#mock')[0]));
+		setup(() => {
+			const field = document.createElement('span');
+			field.innerHTML = '2&lt;x';
+			document.getElementById('mock')?.append(field);
+			MQ.StaticMath(field);
+		});
 
 		const selectableContent = () => document.querySelector('#mock .mq-selectable').textContent;
 

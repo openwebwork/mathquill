@@ -1,11 +1,11 @@
 /* global suite, test, assert, setup, MQ */
 
-import { jQuery } from 'src/constants';
-
 suite('autoSubscript', () => {
 	let mq, rootBlock, controller, cursor;
 	setup(() => {
-		mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], { autoSubscriptNumerals: true });
+		const field = document.createElement('span');
+		document.getElementById('mock')?.append(field);
+		mq = MQ.MathField(field, { autoSubscriptNumerals: true });
 		rootBlock = mq.__controller.root;
 		controller = mq.__controller;
 		cursor = controller.cursor;

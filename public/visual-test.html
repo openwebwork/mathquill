@@ -588,7 +588,7 @@
 					textField.querySelectorAll('textarea').forEach((textarea) => {
 						textarea.focus();
 						textarea.dispatchEvent(new KeyboardEvent('keydown',
-							{ctrlKey: true, key: 'a', which: 65, bubbles: true}));
+							{ctrlKey: true, key: 'a', which: 65, keyCode: 65, bubbles: true}));
 					});
 					console.log(`Time taken to Select All (should be less than 50ms): ${new Date - start}ms`);
 				});

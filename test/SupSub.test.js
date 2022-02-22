@@ -1,10 +1,14 @@
 /* global suite, test, assert, setup, MQ */
 
-import { jQuery, L, R, noop, prayWellFormed } from 'src/constants';
+import { L, R, noop, prayWellFormed } from 'src/constants';
 
 suite('SupSub', () => {
 	let mq;
-	setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+	setup(() => {
+		const field = document.createElement('span');
+		document.getElementById('mock')?.append(field);
+		mq = MQ.MathField(field);
+	});
 
 	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
 

@@ -1,6 +1,6 @@
 /* global suite, test, assert, setup, teardown, MQ, MQBasic */
 
-import { jQuery, L, R } from 'src/constants';
+import { L, R } from 'src/constants';
 
 suite('Public API', () => {
 	suite('global functions', () => {
@@ -8,20 +8,21 @@ suite('Public API', () => {
 			assert.equal(MQ(), undefined);
 			assert.equal(MQ(0), undefined);
 			assert.equal(MQ('<span/>'), undefined);
-			assert.equal(MQ(jQuery('<span/>')[0]), undefined);
+			assert.equal(MQ(document.createElement('span')), undefined);
 			assert.equal(MQ.MathField(), undefined);
 			assert.equal(MQ.MathField(0), undefined);
 			assert.equal(MQ.MathField('<span/>'), undefined);
 		});
 
 		test('MQ.MathField()', () => {
-			const el = jQuery('<span>x^2</span>');
-			const mathField = MQ.MathField(el[0]);
+			const el = document.createElement('span');
+			el.textContent = 'x^2';
+			const mathField = MQ.MathField(el);
 			assert.ok(mathField instanceof MQ.MathField);
 		});
 
 		test('identity of API object returned by MQ()', () => {
-			const mathFieldSpan = jQuery('<span/>')[0];
+			const mathFieldSpan = document.createElement('span');
 			const mathField = MQ.MathField(mathFieldSpan);
 
 			assert.ok(MQ(mathFieldSpan) === mathField);
@@ -34,18 +35,22 @@ suite('Public API', () => {
 		});
 
 		test('blurred when created', () => {
-			const el = jQuery('<span/>');
-			MQ.MathField(el[0]);
-			const rootBlock = el.find('.mq-root-block');
-			assert.ok(rootBlock.hasClass('mq-empty'));
-			assert.ok(!rootBlock.hasClass('mq-hasCursor'));
+			const el = document.createElement('span');
+			MQ.MathField(el);
+			const rootBlock = el.querySelector('.mq-root-block');
+			assert.ok(rootBlock.classList.contains('mq-empty'));
+			assert.ok(!rootBlock.classList.contains('mq-hasCursor'));
 		});
 
 	});
 
 	suite('mathquill-basic', () => {
 		let mq;
-		setup(() => mq = MQBasic.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+		setup(() => {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			mq = MQBasic.MathField(el);
+		});
 
 		test('typing \\', () => {
 			mq.typedText('\\');
@@ -65,10 +70,16 @@ suite('Public API', () => {
 
 	suite('basic API methods', () => {
 		let mq;
-		setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+		setup(() => {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			mq = MQ.MathField(el);
+		});
 
 		test('.revert()', () => {
-			const mq = MQ.MathField(jQuery('<span>some <code>HTML</code></span>')[0]);
+			const el = document.createElement('span');
+			el.innerHTML = 'some <code>HTML</code>';
+			const mq = MQ.MathField(el);
 			assert.equal(mq.revert().html(), 'some <code>HTML</code>');
 		});
 
@@ -156,8 +167,9 @@ suite('Public API', () => {
 	test('edit handler interface versioning', () => {
 		let count = 0;
 
-		// interface version 2 (latest)
-		const mq2 = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], {
+		const el = document.createElement('span');
+		document.getElementById('mock')?.append(el);
+		const mq2 = MQ.MathField(el, {
 			handlers: {
 				edit: (_mq) => {
 					assert.equal(mq2.id, _mq.id);
@@ -252,36 +264,61 @@ suite('Public API', () => {
 				assert.equal(moveCounter, 4);
 				assert.equal(dir, L);
 
-				jQuery('#mock').empty();
+				const mock = document.getElementById('mock');
+				while (mock.firstChild) mock.firstChild.remove();
 			});
 		};
-		testHandlers('MQ.MathField() constructor', (options) =>
-			MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], options)
-		);
-		testHandlers('MQ.StaticMath() constructor', (options) =>
-			MQ.StaticMath(jQuery('<span>\\MathQuillMathField{}</span>').appendTo('#mock')[0], options).innerFields[0]
-		);
-		testHandlers('MQ.MathField::config()', (options) =>
-			MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]).config(options)
-		);
-		testHandlers('MQ.StaticMath::config() propagates down to \\MathQuillMathField{}', (options) =>
-			MQ.StaticMath(jQuery('<span>\\MathQuillMathField{}</span>')
-				.appendTo('#mock')[0]).config(options).innerFields[0]
-		);
+
+		testHandlers('MQ.MathField() constructor', (options) => {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			return MQ.MathField(el, options);
+		});
+
+		testHandlers('MQ.StaticMath() constructor', (options) => {
+			const el = document.createElement('span');
+			el.textContent = '\\MathQuillMathField{}';
+			document.getElementById('mock')?.append(el);
+			return MQ.StaticMath(el, options).innerFields[0];
+		});
+
+		testHandlers('MQ.MathField::config()', (options) => {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			return MQ.MathField(el).config(options);
+		});
+
+		testHandlers('MQ.StaticMath::config() propagates down to \\MathQuillMathField{}', (options) => {
+			const el = document.createElement('span');
+			el.textContent = '\\MathQuillMathField{}';
+			document.getElementById('mock')?.append(el);
+			return MQ.StaticMath(el).config(options).innerFields[0];
+		});
+
 		testHandlers('.config() directly on a \\MathQuillMathField{} in a MQ.StaticMath using .innerFields',
-			(options) =>
-				MQ.StaticMath(jQuery('<span>\\MathQuillMathField{}</span>')
-					.appendTo('#mock')[0]).innerFields[0].config(options)
-		);
+			(options) => {
+				const el = document.createElement('span');
+				el.textContent = '\\MathQuillMathField{}';
+				document.getElementById('mock')?.append(el);
+				return MQ.StaticMath(el).innerFields[0].config(options);
+			});
+
 		suite('global MQ.config()', () => {
 			testHandlers('a MQ.MathField', (options) => {
+				const el = document.createElement('span');
+				document.getElementById('mock')?.append(el);
 				MQ.config(options);
-				return MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+				return MQ.MathField(el);
 			});
+
 			testHandlers('\\MathQuillMathField{} in a MQ.StaticMath', (options) => {
+				const el = document.createElement('span');
+				el.textContent = '\\MathQuillMathField{}';
+				document.getElementById('mock')?.append(el);
 				MQ.config(options);
-				return MQ.StaticMath(jQuery('<span>\\MathQuillMathField{}</span>').appendTo('#mock')[0]).innerFields[0];
+				return MQ.StaticMath(el).innerFields[0];
 			});
+
 			teardown(() => MQ.config({ handlers: undefined }));
 		});
 	});
@@ -289,11 +326,11 @@ suite('Public API', () => {
 	suite('edit handler', () => {
 		test('fires when closing a bracket expression', () => {
 			let count = 0;
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0], {
-				handlers: {
-					edit: () => ++count
-				}
-			});
+
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+
+			const mq = MQ.MathField(el, { handlers: { edit: () => ++count } });
 			mq.typedText('(3, 4');
 			const countBeforeClosingBracket = count;
 			mq.typedText(']');
@@ -303,7 +340,12 @@ suite('Public API', () => {
 
 	suite('.cmd(...)', () => {
 		let mq;
-		setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+
+		setup(() => {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			mq = MQ.MathField(el);
+		});
 
 		test('basic', () => {
 			mq.cmd('x');
@@ -345,7 +387,7 @@ suite('Public API', () => {
 			const rootEl = mq.__controller.root.jQ[0];
 			const cursor = mq.__controller.cursor;
 
-			jQuery(mqEl).width(10);
+			mqEl.style.width = '10px';
 			const previousScrollLeft = rootEl.scrollLeft;
 
 			mq.cmd('\\alpha');
@@ -371,7 +413,9 @@ suite('Public API', () => {
 	suite('spaceBehavesLikeTab', () => {
 		let mq, rootBlock, cursor;
 		test('space behaves like tab with default opts', () => {
-			mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			mq = MQ.MathField(el);
 			rootBlock = mq.__controller.root;
 			cursor = mq.__controller.cursor;
 
@@ -390,7 +434,9 @@ suite('Public API', () => {
 			assert.equal(cursor[R], undefined, 'right of the cursor is ' + cursor[R]);
 		});
 		test('space behaves like tab when spaceBehavesLikeTab is true', () => {
-			mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], { 'spaceBehavesLikeTab': true });
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			mq = MQ.MathField(el, { 'spaceBehavesLikeTab': true });
 			rootBlock = mq.__controller.root;
 			cursor = mq.__controller.cursor;
 
@@ -409,7 +455,9 @@ suite('Public API', () => {
 		test('space behaves like tab when globally set to true', () => {
 			MQ.config({ spaceBehavesLikeTab: true });
 
-			mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			mq = MQ.MathField(el);
 			rootBlock = mq.__controller.root;
 			cursor = mq.__controller.cursor;
 
@@ -424,8 +472,12 @@ suite('Public API', () => {
 
 	suite('maxDepth option', () => {
 		let mq;
-		setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], { maxDepth: 1 }));
-		teardown(() => jQuery(mq.el()).remove());
+		setup(() => {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			mq = MQ.MathField(el, { maxDepth: 1 });
+		});
+		teardown(() => { mq.el().remove(); });
 
 		test('prevents nested math input via .write() method', () => {
 			mq.write('1\\frac{\\frac{3}{3}}{2}');
@@ -452,13 +504,17 @@ suite('Public API', () => {
 		suite('default', () => {
 			let mq, textarea;
 			setup(() => {
-				mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
-				textarea = jQuery(mq.el()).find('textarea');;
+				const el = document.createElement('span');
+				document.getElementById('mock')?.append(el);
+				mq = MQ.MathField(el);
+				textarea = mq.el().querySelector('textarea');
 			});
 			const assertPaste = (paste, latex) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
-				textarea.trigger('paste').val(paste).trigger('input');
+				textarea.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+				textarea.value = paste;
+				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(mq.latex(), latex);
 			};
 
@@ -482,7 +538,7 @@ suite('Public API', () => {
 			test('selection', (done) => {
 				mq.latex('x^2').select();
 				setTimeout(() => {
-					assert.equal(textarea.val(), 'x^2');
+					assert.equal(textarea.value, 'x^2');
 					done();
 				});
 			});
@@ -490,14 +546,17 @@ suite('Public API', () => {
 		suite('statelessClipboard set to true', () => {
 			let mq, textarea;
 			setup(() => {
-				mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0],
-					{ statelessClipboard: true });
-				textarea = jQuery(mq.el()).find('textarea');;
+				const el = document.createElement('span');
+				document.getElementById('mock')?.append(el);
+				mq = MQ.MathField(el, { statelessClipboard: true });
+				textarea = mq.el().querySelector('textarea');
 			});
 			const assertPaste = (paste, latex) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
-				textarea.trigger('paste').val(paste).trigger('input');
+				textarea.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
+				textarea.value = paste;
+				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(mq.latex(), latex);
 			};
 
@@ -522,7 +581,7 @@ suite('Public API', () => {
 			test('selection', (done) => {
 				mq.latex('x^2').select();
 				setTimeout(() => {
-					assert.equal(textarea.val(), '$x^2$');
+					assert.equal(textarea.value, '$x^2$');
 					done();
 				});
 			});
@@ -531,11 +590,19 @@ suite('Public API', () => {
 
 	suite('leftRightIntoCmdGoes: "up"/"down"', () => {
 		test('"up" or "down" required', () =>
-			assert.throws(() => MQ.MathField(jQuery('<span></span>')[0], { leftRightIntoCmdGoes: 1 }))
+			assert.throws(() => {
+				const el = document.createElement('span');
+				document.getElementById('mock')?.append(el);
+				MQ.MathField(el, { leftRightIntoCmdGoes: 1 });
+			})
 		);
 		suite('default', () => {
 			let mq;
-			setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+			setup(() => {
+				const el = document.createElement('span');
+				document.getElementById('mock')?.append(el);
+				mq = MQ.MathField(el);
+			});
 
 			test('fractions', () => {
 				mq.latex('\\frac{1}{x}+\\frac{\\frac{1}{2}}{\\frac{3}{4}}');
@@ -630,8 +697,11 @@ suite('Public API', () => {
 
 		suite('"up"', () => {
 			let mq;
-			setup(() =>
-				mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0], { leftRightIntoCmdGoes: 'up' }));
+			setup(() => {
+				const el = document.createElement('span');
+				document.getElementById('mock')?.append(el);
+				mq = MQ.MathField(el, { leftRightIntoCmdGoes: 'up' });
+			});
 
 			test('fractions', () => {
 				mq.latex('\\frac{1}{x}+\\frac{\\frac{1}{2}}{\\frac{3}{4}}');
@@ -706,7 +776,9 @@ suite('Public API', () => {
 
 	suite('sumStartsWithNEquals', () => {
 		test('sum defaults to empty limits', () => {
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0]);
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			const mq = MQ.MathField(el);
 			assert.equal(mq.latex(), '');
 
 			mq.cmd('\\sum');
@@ -716,7 +788,9 @@ suite('Public API', () => {
 			assert.equal(mq.latex(), '\\sum_n^{ }', 'cursor in lower limit');
 		});
 		test('sum starts with `n=`', () => {
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0], { sumStartsWithNEquals: true });
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			const mq = MQ.MathField(el, { sumStartsWithNEquals: true });
 			assert.equal(mq.latex(), '');
 
 			mq.cmd('\\sum');
@@ -726,7 +800,9 @@ suite('Public API', () => {
 			assert.equal(mq.latex(), '\\sum_{n=0}^{ }', 'cursor after the `n=`');
 		});
 		test('integral still has empty limits', () => {
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0], { sumStartsWithNEquals: true });
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			const mq = MQ.MathField(el, { sumStartsWithNEquals: true });
 			assert.equal(mq.latex(), '');
 
 			mq.cmd('\\int');
@@ -739,10 +815,16 @@ suite('Public API', () => {
 
 	suite('substituteTextarea', () => {
 		test('doesn\'t blow up on selection', () => {
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0], {
-				substituteTextarea: () =>
-					jQuery('<span tabindex=0 style="display:inline-block;width:1px;height:1px" />')[0]
-			});
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+
+			const substitutionTextarea = document.createElement('span');
+			substitutionTextarea.tabIndex = 0;
+			substitutionTextarea.style.display = 'inline-block';
+			substitutionTextarea.style.width = '1px';
+			substitutionTextarea.style.height = '1px';
+
+			const mq = MQ.MathField(el, { substituteTextarea: () => substitutionTextarea });
 
 			assert.equal(mq.latex(), '');
 			mq.write('asdf');
@@ -754,9 +836,12 @@ suite('Public API', () => {
 		test('can intercept key events', () => {
 			let key;
 
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0], {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			const mq = MQ.MathField(el, {
 				substituteKeyboardEvents: (textarea, handlers) => {
-					return MQ.saneKeyboardEvents(textarea, jQuery.extend({}, handlers, {
+					const options = Object.assign({}, handlers);
+					return MQ.saneKeyboardEvents(textarea, Object.assign(options, {
 						keystroke: (_key, ...args) => {
 							key = _key;
 							return handlers.keystroke.call(handlers, _key, ...args);
@@ -765,13 +850,17 @@ suite('Public API', () => {
 				}
 			});
 
-			jQuery(mq.el()).find('textarea').trigger({ type: 'keydown', which: '37' });
+			mq.el().querySelector('textarea')
+				?.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
 			assert.equal(key, 'Left');
 		});
 		test('cut is async', () => {
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0], {
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			const mq = MQ.MathField(el, {
 				substituteKeyboardEvents: (textarea, handlers) => {
-					return MQ.saneKeyboardEvents(textarea, jQuery.extend({}, handlers, {
+					const options = Object.assign({}, handlers);
+					return MQ.saneKeyboardEvents(textarea, Object.assign(options, {
 						cut: (...args) => {
 							count += 1;
 							return handlers.cut.apply(handlers, args);
@@ -781,26 +870,29 @@ suite('Public API', () => {
 			});
 			let count = 0;
 
-			jQuery(mq.el()).find('textarea').trigger('cut');
+			mq.el().querySelector('textarea')?.dispatchEvent(new ClipboardEvent('cut', { bubbles: true }));
 			assert.equal(count, 0);
 
-			jQuery(mq.el()).find('textarea').trigger('input');
+			mq.el().querySelector('textarea')?.dispatchEvent(new InputEvent('input', { bubbles: true }));
 			assert.equal(count, 1);
 
-			jQuery(mq.el()).find('textarea').trigger('keyup');
+			mq.el().querySelector('textarea')?.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 			assert.equal(count, 1);
 		});
 	});
 
 	suite('clickAt', () => {
 		test('inserts at coordinates', () => {
-			// Insert filler so that the page is taller than the window so this test is deterministic
-			// Test that we use clientY instead of pageY
-			const windowHeight = jQuery(window).height();
-			const filler = jQuery('<div>').height(windowHeight);
-			filler.prependTo('#mock');
+			// Insert filler to make the page taller than the window so that this test is deterministic.
+			const filler = document.createElement('div');
+			filler.style.height = `${window.offsetHeight}px`;
 
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0]);
+			const mock = document.getElementById('mock');
+			mock?.prepend(filler);
+
+			const el = document.createElement('span');
+			mock?.append(el);
+			const mq = MQ.MathField(el);
 			mq.typedText('mmmm/mmmm');
 			mq.el().scrollIntoView();
 
@@ -811,18 +903,22 @@ suite('Public API', () => {
 
 			assert.equal(document.activeElement, document.body);
 			mq.clickAt(clientX, clientY, target).write('x');
-			assert.equal(document.activeElement, jQuery(mq.el()).find('textarea')[0]);
+			assert.equal(document.activeElement, mq.el().querySelector('textarea'));
 
 			assert.equal(mq.latex(), '\\frac{mmmm}{mmxmm}');
 		});
-		test('target is optional', () => {
-			// Insert filler so that the page is taller than the window so this test is deterministic
-			// Test that we use clientY instead of pageY
-			const windowHeight = jQuery(window).height();
-			const filler = jQuery('<div>').height(windowHeight);
-			filler.prependTo('#mock');
 
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0]);
+		test('target is optional', () => {
+			// Insert filler to make the page taller than the window so that this test is deterministic.
+			const filler = document.createElement('div');
+			filler.style.height = `${window.offsetHeight}px`;
+
+			const mock = document.getElementById('mock');
+			mock?.prepend(filler);
+
+			const el = document.createElement('span');
+			mock?.append(el);
+			const mq = MQ.MathField(el);
 			mq.typedText('mmmm/mmmm');
 			mq.el().scrollIntoView();
 
@@ -832,7 +928,7 @@ suite('Public API', () => {
 
 			assert.equal(document.activeElement, document.body);
 			mq.clickAt(clientX, clientY).write('x');
-			assert.equal(document.activeElement, jQuery(mq.el()).find('textarea')[0]);
+			assert.equal(document.activeElement, mq.el().querySelector('textarea'));
 
 			assert.equal(mq.latex(), '\\frac{mmmm}{mmxmm}');
 		});
@@ -840,29 +936,36 @@ suite('Public API', () => {
 
 	suite('dropEmbedded', () => {
 		test('inserts into empty', () => {
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0]);
+			const el = document.createElement('span');
+			document.getElementById('mock')?.append(el);
+			const mq = MQ.MathField(el);
 			mq.dropEmbedded(0, 0, {
 				htmlString: '<span class="embedded-html"></span>',
 				text: () => 'embedded text',
 				latex: () => 'embedded latex'
 			});
 
-			assert.ok(jQuery('.embedded-html').length);
+			assert.ok(document.querySelector('.embedded-html'));
 			assert.equal(mq.text(), 'embedded text');
 			assert.equal(mq.latex(), 'embedded latex');
 		});
-		test('inserts at coordinates', () => {
-			// Insert filler so that the page is taller than the window so this test is deterministic
-			// Test that we use clientY instead of pageY
-			const windowHeight = jQuery(window).height();
-			const filler = jQuery('<div>').height(windowHeight);
-			filler.prependTo('#mock');
 
-			const mq = MQ.MathField(jQuery('<span>').appendTo('#mock')[0]);
+		test('inserts at coordinates', () => {
+			// Insert filler to make the page taller than the window so that this test is deterministic.
+			const filler = document.createElement('div');
+			filler.style.height = `${window.offsetHeight}px`;
+
+			const mock = document.getElementById('mock');
+			mock?.prepend(filler);
+
+			const el = document.createElement('span');
+			mock?.append(el);
+			const mq = MQ.MathField(el);
+
 			mq.typedText('mmmm/mmmm');
-			const pos = jQuery(mq.el()).offset();
-			const mqx = pos.left;
-			const mqy = pos.top;
+			const pos = mq.el().getBoundingClientRect();
+			const mqx = pos.left + window.pageXOffset;
+			const mqy = pos.top + window.pageYOffset;
 
 			mq.el().scrollIntoView();
 
@@ -872,7 +975,7 @@ suite('Public API', () => {
 				latex: () => 'embedded latex'
 			});
 
-			assert.ok(jQuery('.embedded-html').length);
+			assert.ok(document.querySelector('.embedded-html'));
 			assert.equal(mq.text(), ' (mmmm)/(mmembedded textmm) ');
 			assert.equal(mq.latex(), '\\frac{mmmm}{mmembedded latexmm}');
 		});
@@ -880,6 +983,7 @@ suite('Public API', () => {
 
 	test('.registerEmbed()', () => {
 		let calls = 0, data;
+
 		MQ.registerEmbed('thing', (data_) => {
 			calls += 1;
 			data = data_;
@@ -889,11 +993,16 @@ suite('Public API', () => {
 				latex: () => 'embedded latex'
 			};
 		});
-		const mq = MQ.MathField(jQuery('<span>\\sqrt{\\embed{thing}}</span>').appendTo('#mock')[0]);
+
+		const el = document.createElement('span');
+		el.textContent = '\\sqrt{\\embed{thing}}';
+		document.getElementById('mock')?.append(el);
+		const mq = MQ.MathField(el);
+
 		assert.equal(calls, 1);
 		assert.equal(data, undefined);
 
-		assert.ok(jQuery('.embedded-html').length);
+		assert.ok(document.querySelector('.embedded-html'));
 		assert.equal(mq.text(), 'sqrt(embedded text)');
 		assert.equal(mq.latex(), '\\sqrt{embedded latex}');
 
@@ -901,7 +1010,7 @@ suite('Public API', () => {
 		assert.equal(calls, 2);
 		assert.equal(data, 'data');
 
-		assert.ok(jQuery('.embedded-html').length);
+		assert.ok(document.querySelector('.embedded-html'));
 		assert.equal(mq.text(), 'sqrt(embedded text)');
 		assert.equal(mq.latex(), '\\sqrt{embedded latex}');
 	});

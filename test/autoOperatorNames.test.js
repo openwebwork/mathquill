@@ -1,11 +1,14 @@
 /* global suite, test, assert, setup, MQ */
 
-import { jQuery } from 'src/constants';
 import { Letter } from 'commands/mathElements';
 
 suite('autoOperatorNames', () => {
 	let mq;
-	setup(() => mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]));
+	setup(() => {
+		const field = document.createElement('span');
+		document.getElementById('mock')?.append(field);
+		mq = MQ.MathField(field);
+	});
 
 	const assertLatex = (input, expected) => {
 		const result = mq.latex();

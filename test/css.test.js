@@ -1,60 +1,78 @@
 /* global suite, test, assert, MQ */
 
-import { jQuery } from 'src/constants';
-
 suite('CSS', () => {
-	test('math field doesn\'t fuck up ancestor\'s .scrollWidth', () => {
-		const container = jQuery('<div>').css({
-			fontSize: '16px',
-			height: '25px', // must be greater than font-size * 115% + 2 * 2px (padding) + 2 * 1px (border)
-			width: '25px'
-		}).appendTo('#mock')[0];
+	test('math field doesn\'t affect ancestor\'s .scrollWidth', () => {
+		const container = document.createElement('div');
+		container.style.fontSize = '16px';
+		container.style.height = '25px'; // must be greater than font-size * 115% + 2 * 2px (padding) + 2 * 1px (border)
+		container.style.width = '25px';
+		document.getElementById('mock')?.append(container);
+
 		assert.equal(container.scrollHeight, 25);
 		assert.equal(container.scrollWidth, 25);
 
-		MQ.MathField(jQuery('<span style="box-sizing:border-box;height:100%;width:100%"></span>')
-			.appendTo(container)[0]);
+		const span = document.createElement('span');
+		span.style.boxSizing = 'border-box';
+		span.style.height = '100%';
+		span.style.width = '100%';
+		container.append(span);
+
 		assert.equal(container.scrollHeight, 25);
 		assert.equal(container.scrollWidth, 25);
 	});
 
-	test('empty root block does not collapse', () => {
-		const testEl = jQuery('<span></span>').appendTo('#mock');
-		MQ.MathField(testEl[0]);
-		const rootEl = testEl.find('.mq-root-block');
+	const getHeight = (el) => {
+		const computedStyle = getComputedStyle(el);
+		return el.clientHeight
+			- parseFloat(computedStyle.paddingTop ?? 0)
+			- parseFloat(computedStyle.paddingBottom ?? 0) > 0;
+	};
 
-		assert.ok(rootEl.hasClass('mq-empty'), 'Empty root block should have the mq-empty class name.');
-		assert.ok(rootEl.height() > 0, 'Empty root block height should be above 0.');
+	test('empty root block does not collapse', () => {
+		const testEl = document.createElement('span');
+		document.getElementById('mock')?.append(testEl);
+
+		MQ.MathField(testEl);
+		const rootEl = testEl.querySelector('.mq-root-block');
+
+		assert.ok(rootEl.classList.contains('mq-empty'), 'Empty root block should have the mq-empty class name.');
+		assert.ok(getHeight(rootEl) > 0, 'Empty root block height should be above 0.');
 	});
 
 	test('empty block does not collapse', () => {
-		const testEl = jQuery('<span>\\frac{}{}</span>').appendTo('#mock');
-		MQ.MathField(testEl[0]);
-		const numeratorEl = testEl.find('.mq-numerator');
+		const testEl = document.createElement('span');
+		testEl.textContent = '\\frac{}{}';
+		document.getElementById('mock')?.append(testEl);
+		MQ.MathField(testEl);
+		const numeratorEl = testEl.querySelector('.mq-numerator');
 
-		assert.ok(numeratorEl.hasClass('mq-empty'), 'Empty numerator should have the mq-empty class name.');
-		assert.ok(numeratorEl.height() > 0, 'Empty numerator height should be above 0.');
+		assert.ok(numeratorEl.classList.contains('mq-empty'), 'Empty numerator should have the mq-empty class name.');
+		assert.ok(getHeight(numeratorEl) > 0, 'Empty numerator height should be above 0.');
 	});
 
 	test('test florin spacing', () => {
-		let mq;
-		const mock = jQuery('#mock');
+		const span = document.createElement('span');
+		document.getElementById('mock')?.append(span);
 
-		mq = MQ.MathField(jQuery('<span></span>').appendTo(mock)[0]);
+		const mq = MQ.MathField(span);
 		mq.typedText("f'");
 
-		const mqF = jQuery(mq.el()).find('.mq-f');
-		const testVal = parseFloat(mqF.css('margin-right')) - parseFloat(mqF.css('margin-left'));
-		assert.ok(testVal > 0, 'this should be truthy') ;
+		const mqF = mq.el().querySelector('.mq-f');
+		const computedStyle = getComputedStyle(mqF);
+		assert.ok(parseFloat(computedStyle.marginRight ?? 0) > parseFloat(computedStyle.marginLeft ?? 0),
+			'florin right margin should be greater than left margin') ;
 	});
 
 	test('unary PlusMinus before separator', () => {
-		const mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+		const span = document.createElement('span');
+		document.getElementById('mock')?.append(span);
+		const mq = MQ.MathField(span);
+
 		mq.latex('(-1,-1-1)-1,(+1;+1+1)+1,(\\pm1,\\pm1\\pm1)\\pm1');
-		const spans = jQuery(mq.el()).find('.mq-root-block').find('span');
+		const spans = mq.el().querySelectorAll('.mq-root-block span');
 		assert.equal(spans.length, 35, 'PlusMinus expression parsed incorrectly');
 
-		const isBinaryOperator = (i) => jQuery(spans[i]).hasClass('mq-binary-operator');
+		const isBinaryOperator = (i) => spans[i].classList.contains('mq-binary-operator');
 		const assertBinaryOperator = (i, s) => assert.ok(isBinaryOperator(i), '"' + s + '" should be binary');
 		const assertUnaryOperator = (i, s) => assert.ok(!isBinaryOperator(i), '"' + s + '" should be unary');
 
@@ -73,12 +91,15 @@ suite('CSS', () => {
 	});
 
 	test('proper unary/binary within style block', () => {
-		const mq = MQ.MathField(jQuery('<span></span>').appendTo('#mock')[0]);
+		const span = document.createElement('span');
+		document.getElementById('mock')?.append(span);
+		const mq = MQ.MathField(span);
+
 		mq.latex('\\class{dummy}{-}2\\class{dummy}{+}4');
-		let spans = jQuery(mq.el()).find('.mq-root-block').find('span');
+		let spans = mq.el().querySelectorAll('.mq-root-block span');
 		assert.equal(spans.length, 6, 'PlusMinus expression parsed incorrectly');
 
-		const isBinaryOperator = (i) => jQuery(spans[i]).hasClass('mq-binary-operator');
+		const isBinaryOperator = (i) => spans[i].classList.contains('mq-binary-operator');
 		const assertBinaryOperator = (i, s) => assert.ok(isBinaryOperator(i), '"' + s + '" should be binary');
 		const assertUnaryOperator = (i, s) => assert.ok(!isBinaryOperator(i), '"' + s + '" should be unary');
 
@@ -86,7 +107,7 @@ suite('CSS', () => {
 		assertBinaryOperator(4, '\\class{dummy}{-}2\\class{dummy}{+}');
 
 		mq.latex('\\textcolor{red}{-}2\\textcolor{green}{+}4');
-		spans = jQuery(mq.el()).find('.mq-root-block').find('span');
+		spans = mq.el().querySelectorAll('.mq-root-block span');
 		assert.equal(spans.length, 6, 'PlusMinus expression parsed incorrectly');
 
 		assertUnaryOperator(1, '\\textcolor{red}{-}');
@@ -94,36 +115,40 @@ suite('CSS', () => {
 
 		//test recursive depths
 		mq.latex('\\textcolor{red}{\\class{dummy}{-}}2\\textcolor{green}{\\class{dummy}{+}}4');
-		spans = jQuery(mq.el()).find('.mq-root-block').find('span');
+		spans = mq.el().querySelectorAll('.mq-root-block span');
 		assert.equal(spans.length, 8, 'PlusMinus expression parsed incorrectly');
 
 		assertUnaryOperator(2, '\\textcolor{red}{\\class{dummy}{-}}');
 		assertBinaryOperator(6, '\\textcolor{red}{\\class{dummy}{-}}2\\textcolor{green}{\\class{dummy}{+}}');
 	});
 
-	test('operator name spacing e.g. sin x', () => {
-		const mock = jQuery('#mock');
-		const mq = MQ.MathField(jQuery('<span></span>').appendTo(mock)[0]);
+	test('operator name spacing, e.g., sin x', () => {
+		const span = document.createElement('span');
+		document.getElementById('mock')?.append(span);
+		const mq = MQ.MathField(span);
 
 		mq.typedText('sin');
-		const n = jQuery('#mock var.mq-operator-name:last');
-		assert.equal(n.text(), 'n');
-		assert.ok(!n.is('.mq-last'));
+		const operatorNameParts = mq.el().querySelectorAll('var.mq-operator-name');
+		const n = operatorNameParts[operatorNameParts.length - 1];
+		assert.equal(n.textContent, 'n');
+		assert.ok(!n.classList.contains('mq-last'));
 
 		mq.typedText('x');
-		assert.ok(n.is('.mq-last'));
+		assert.ok(n.classList.contains('mq-last'));
 
 		mq.keystroke('Left').typedText('(');
-		assert.ok(!n.is('.mq-last'));
+		assert.ok(!n.classList.contains('mq-last'));
 
 		mq.keystroke('Backspace').typedText('^');
-		assert.ok(!n.is('.mq-last'));
-		const supsub = jQuery('#mock .mq-supsub');
-		assert.ok(supsub.is('.mq-after-operator-name'));
+		assert.ok(!n.classList.contains('mq-last'));
+
+		const supsub = mq.el().querySelector('.mq-supsub');
+		assert.ok(supsub.classList.contains('mq-after-operator-name'));
 
 		mq.typedText('2').keystroke('Tab').typedText('(');
-		assert.ok(!supsub.is('.mq-after-operator-name'));
+		assert.ok(!supsub.classList.contains('mq-after-operator-name'));
 
-		jQuery(mq.el()).empty();
+		const mqEl = mq.el();
+		while (mqEl.firstChild) mqEl.firstChild.remove();
 	});
 });
