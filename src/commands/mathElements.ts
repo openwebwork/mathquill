@@ -690,41 +690,42 @@ export class SupSub extends MathCommand {
 		};
 	}
 
-	createLeftOf(cursor: Cursor) {
-		if (cursor.options.supSubsRequireOperand && (
+	hasValidBase(cursor: Cursor) {
+		return !(cursor.options.supSubsRequireOperand && (
 			!cursor[L] ||
 			cursor[L]?.ctrlSeq === '\\ ' ||
 			cursor[L] instanceof BinaryOperator ||
 			/^[,;:]$/.test(cursor[L]?.ctrlSeq ?? '')
-		)) {
-			if (this.replacedFragment) {
-				this.replacedFragment.adopt(cursor.parent as Node, cursor[L], cursor[R]);
-				cursor[L] = this.replacedFragment.ends[R];
+		));
+	}
+
+	createLeftOf(cursor: Cursor) {
+		if (this.hasValidBase(cursor)) {
+			// If this SupSub is being placed on a fraction, then add parentheses around the fraction.
+			if (cursor[L] instanceof Fraction) {
+				const brack = new Bracket(R, '(', ')', '(', ')');
+				cursor.selection = (cursor[L] as Node).selectChildren();
+				brack.replaces(cursor.replaceSelection());
+				brack.createLeftOf(cursor);
 			}
+
+			super.createLeftOf(cursor);
 			return;
 		}
 
-		// If this SupSub is being placed on a fraction, then add parentheses around the fraction.
-		if (cursor[L] instanceof Fraction) {
-			const brack = new Bracket(R, '(', ')', '(', ')');
-			cursor.selection = (cursor[L] as Node).selectChildren();
-			brack.replaces(cursor.replaceSelection());
-			brack.createLeftOf(cursor);
+		if (this.replacedFragment) {
+			this.replacedFragment.adopt(cursor.parent as Node, cursor[L], cursor[R]);
+			cursor[L] = this.replacedFragment.ends[R];
 		}
-
-		return super.createLeftOf(cursor);
+		return;
 	}
 
 	contactWeld(cursor: Cursor) {
-		// Look on either side for a SupSub, if one is found compare my
-		// .sub, .sup with its .sub, .sup. If I have one that it doesn't,
-		// then call .addBlock() on it with my block; if I have one that
-		// it also has, then insert my block's children into its block,
-		// unless my block has none, in which case insert the cursor into
-		// its block (and not mine, I'm about to remove myself) in the case
-		// I was just typed.
-		// TODO: simplify
-
+		// Look on either side for a SupSub.  If one is found compare this .sub, .sup with its .sub, .sup.  If this has
+		// one that it doesn't, then call .addBlock() on it with this block.  If this has one that it also has, then
+		// insert this block's children into its block, unless this block has none, in which case insert the cursor into
+		// its block (and not this one, since this one will be removed).  If something to the left has been deleted,
+		// then this SupSub will be merged with one to the left if it is left next to it after the deletion.
 		for (const dir of [L, R]) {
 			if (this[dir] instanceof SupSub) {
 				let pt;
@@ -732,8 +733,8 @@ export class SupSub extends MathCommand {
 					const src = this[supsub], dest = (this[dir] as SupSub)[supsub];
 					if (!src) continue;
 					if (!dest) (this[dir] as SupSub).addBlock(src.disown());
-					else if (!src.isEmpty()) { // ins src children at -dir end of dest
-						src?.jQ.children().insAtDirEnd(dir === L ? R : L, dest.jQ);
+					else if (!src.isEmpty()) { // Insert src children at -dir end of dest
+						src.jQ.children().insAtDirEnd(dir === L ? R : L, dest.jQ);
 						const children = src.children().disown();
 						pt = new Point(dest, children.ends[R], dest.ends[L]);
 						if (dir === L) children.adopt(dest, dest.ends[R]);
@@ -742,14 +743,32 @@ export class SupSub extends MathCommand {
 					this.placeCursor = (cursor) => cursor.insAtDirEnd(dir === L ? R : L, dest || src);
 				}
 				this.remove();
-				if (cursor && cursor[L] === this) {
-					if (dir === R && pt) {
-						pt[L] ? cursor.insRightOf(pt[L] as Node) : cursor.insAtLeftEnd(pt.parent as Node);
+				if (cursor) {
+					if (cursor[L] === this) {
+						if (dir === R && pt)
+							pt[L] ? cursor.insRightOf(pt[L] as Node) : cursor.insAtLeftEnd(pt.parent as Node);
+						else cursor.insRightOf(this[dir] as Node);
+					} else {
+						if (pt?.[R]) cursor.insRightOf(pt[R] as Node);
 					}
-					else cursor.insRightOf(this[dir] as Node);
 				}
-				break;
+				return;
 			}
+		}
+
+		// On deletion of something to the left check to see if this has been left with an invalid base.
+		// If so bring the children out, and remove this SupSub.
+		if (cursor && cursor[R] === this && (!this.hasValidBase(cursor) || cursor[L] instanceof Fraction)) {
+			for (const supsub of ['sub', 'sup'] as Array<keyof Pick<SupSub, 'sub' | 'sup'>>) {
+				const src = this[supsub];
+				if (!src) continue;
+				src.children().disown()
+					.adopt(cursor.parent as Node, cursor[L], cursor[R])
+					.jQ.insDirOf(R, cursor.jQ);
+				if (cursor[L]?.[R]) cursor.insLeftOf(cursor[L]?.[R] as Node);
+				else cursor.insAtDirEnd(L, cursor.parent as Node);
+			}
+			this.remove();
 		}
 	}
 

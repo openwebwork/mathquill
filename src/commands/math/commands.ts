@@ -283,14 +283,19 @@ class NthRoot extends SquareRoot {
 	}
 
 	text() {
-		if (this.ends[L]?.text() === '') return `sqrt(${this.ends[R]?.text() ?? ''})`;
 		const index = this.ends[L]?.text() ?? '';
-		// Navigate up the tree to find the controller which has the options.
+		if (index === '' || index === '2') return `sqrt(${this.ends[R]?.text() ?? ''})`;
+
+		// Navigate up the tree to find the controller which has the options to determine if the rootsAreExponents
+		// option is enabled.
 		const ctrlr = (function getCursor(node: Node): Controller {
 			return !node.controller ? getCursor(node.parent as Node) : node.controller;
 		})(this);
-		if (ctrlr.options.rootsAreExponents)
-			return `(${this.ends[R]?.text() ?? ''})^(1/${index})`;
+		if (ctrlr.options.rootsAreExponents) {
+			const isSupR = this[R] instanceof SupSub && (this[R] as SupSub).supsub === 'sup';
+			return `${isSupR ? '(' : ''}(${this.ends[R]?.text() ?? ''})^(1/${index})${isSupR ? ')' : ''}`;
+		}
+
 		return `root(${index},${this.ends[R]?.text() ?? ''})`;
 	}
 };

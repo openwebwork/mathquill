@@ -156,6 +156,9 @@ export class Controller extends
 			else cursor.parent?.deleteOutOf(dir, cursor);
 		}
 
+		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
+		cursor[R]?.postOrder('contactWeld', cursor);
+
 		cursor[L]?.siblingDeleted?.(cursor.options, R);
 		cursor[R]?.siblingDeleted?.(cursor.options, L);
 		cursor.parent?.bubble('reflow');
@@ -175,6 +178,9 @@ export class Controller extends
 			new Fragment(cursor[R], cursor.parent?.ends[R]).remove();
 		};
 		cursor.insAtDirEnd(dir, cursor.parent as Node);
+
+		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
+		cursor[R]?.postOrder('contactWeld', cursor);
 
 		cursor[L]?.siblingDeleted?.(cursor.options, R);
 		cursor[R]?.siblingDeleted?.(cursor.options, L);

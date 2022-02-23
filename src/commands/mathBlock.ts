@@ -36,6 +36,7 @@ export const writeMethodMixin = <TBase extends Constructor<Node>>(Base: TBase) =
 				if (cmd.isSymbol) cursor.deleteSelection();
 				else cursor.clearSelection().insRightOf(this.parent);
 				cmd.createLeftOf(cursor.show());
+				return;
 			}
 			if (cursor[L] && !cursor[R] && !cursor.selection
 				&& cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {

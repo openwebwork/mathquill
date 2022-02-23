@@ -68,11 +68,12 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		super.createLeftOf(cursor);
 
 		if (this._replacedFragment) {
+			const el = this.jQ[0];
 			//FIXME: is monkey-patching the mousedown and mousemove handlers the right way to do this?
 			this.jQ = this._replacedFragment.jQ.addClass('mq-blur').on(
 				'mousedown mousemove',
 				(e) => {
-					jQuery(e.target = this.jQ[0]).trigger(e);
+					jQuery(e.target = el).trigger(e);
 					return false;
 				}
 			).insertBefore(this.jQ).add(this.jQ);
@@ -86,13 +87,11 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	renderCommand(cursor: Cursor) {
 		this.jQ = this.jQ.last();
 		this.remove();
-		if (this[R]) {
-			cursor.insLeftOf(this[R] as Node);
-		} else {
-			cursor.insAtRightEnd(this.parent as Node);
-		}
 
-		const latex = this.ends[L]?.latex() ?? ' ';
+		if (this[R]) cursor.insLeftOf(this[R] as Node);
+		else cursor.insAtRightEnd(this.parent as Node);
+
+		const latex = this.ends[L]?.latex() || ' ';
 		if (latex in LatexCmds) {
 			const cmd = new LatexCmds[latex](latex);
 			if (this._replacedFragment) cmd.replaces(this._replacedFragment);
