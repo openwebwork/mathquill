@@ -19,6 +19,14 @@
 			margin-bottom: 0.5rem;
 		}
 
+		.options-container {
+			display: flex;
+			gap: 0.25rem;
+			flex-direction: column;
+			margin: 20px;
+			margin-bottom: 0.5rem;
+		}
+
 		input[type=text] {
 			padding: 4px 6px 2px;
 			border: 1px solid #ccc;
@@ -53,19 +61,27 @@
 		<span id="mq-answer-AnSwEr0001"></span>
 		<input id="MaThQuIlL_AnSwEr0001" type="text" value="" />
 	</div>
+
+	<div class="options-container"></div>
+
 	<script>
 		(() => {
 			const MQ = MathQuill.getInterface();
 			const mq_answer_AnSwEr0001 = document.getElementById('mq-answer-AnSwEr0001');
 
-			const mathField = MQ.MathField(mq_answer_AnSwEr0001, {
+			const cfg = {
 				spaceBehavesLikeTab: true,
 				leftRightIntoCmdGoes: 'up',
 				restrictMismatchedBrackets: true,
 				sumStartsWithNEquals: true,
 				supSubsRequireOperand: true,
+				autoSubscriptNumerals: false,
 				autoCommands: 'pi sqrt root vert inf union abs',
-				rootsAreExponents: true,
+				rootsAreExponents: true
+			};
+
+			const mathField = MQ.MathField(mq_answer_AnSwEr0001, {
+				...cfg,
 				maxDepth: 10,
 				handlers: {
 					edit: (mq) => {
@@ -77,11 +93,81 @@
 							MaThQuIlL_AnSwEr0001.value = '';
 						}
 					},
-				},
+				}
 			});
 			mathField.latex(MaThQuIlL_AnSwEr0001.value);
 			mathField.moveToLeftEnd();
 			mathField.blur();
+
+			const optionsContainer = document.querySelector('.options-container');
+
+			for (const option in cfg) {
+				const optionDiv = document.createElement('div');
+				if (typeof cfg[option] === 'boolean') {
+					const input = document.createElement('input');
+					input.type = 'checkbox';
+					input.id = option;
+					if (cfg[option]) input.checked = true;
+					const label = document.createElement('label');
+					label.setAttribute('for', option);
+					label.textContent = `Enable ${option}`;
+					optionDiv.append(input, label);
+					optionsContainer.append(optionDiv);
+					input.addEventListener('change', () => mathField.config({ [option]: input.checked }));
+				}
+			}
+
+			// Special case for leftRightIntoCmdGoes
+			{
+				const optionDiv = document.createElement('div');
+				const upInput = document.createElement('input');
+				upInput.type = 'radio';
+				upInput.name = 'leftRightIntoCmdGoes';
+				upInput.id = 'leftRightIntoCmdGoes_up';
+				upInput.checked = true;
+				const upLabel = document.createElement('label');
+				upLabel.setAttribute('for', 'leftRightIntoCmdGoes_up');
+				upLabel.textContent = 'up';
+				const downInput = document.createElement('input');
+				downInput.type = 'radio';
+				downInput.name = 'leftRightIntoCmdGoes';
+				downInput.id = 'leftRightIntoCmdGoes_down';
+				const downLabel = document.createElement('label');
+				downLabel.setAttribute('for', 'leftRightIntoCmdGoes_down');
+				downLabel.textContent = 'down';
+				optionDiv.append('leftRightIntoCmdGoes: ', upInput, upLabel, downInput, downLabel);
+				optionsContainer.append(optionDiv);
+				upInput.addEventListener('click', () => mathField.config({ leftRightIntoCmdGoes: 'up' }));
+				downInput.addEventListener('click', () => mathField.config({ leftRightIntoCmdGoes: 'down' }));
+			}
+
+			// Special case for autoCommands
+			{
+				const optionDiv = document.createElement('div');
+				const autoCommands_checks = [];
+				optionDiv.append('autoCommands: ');
+				for (const cmd of ['pi', 'sqrt', 'root', 'vert', 'inf', 'union', 'abs']) {
+					const check = document.createElement('input');
+					check.type = 'checkbox';
+					check.name = 'autoCommands';
+					check.id = `autoCommands_${cmd}`;
+					check.value = cmd;
+					check.checked = true;
+					autoCommands_checks.push(check);
+					const label = document.createElement('label');
+					label.setAttribute('for', `autoCommands_${cmd}`);
+					label.textContent = cmd;
+					label.style.marginRight = '1rem';
+					check.addEventListener('change', () => {
+						mathField.config({
+							autoCommands:
+							autoCommands_checks.filter((check) => check.checked).map((check) => check.value).join(' ')
+						});
+					});
+					optionDiv.append(check, label);
+				}
+				optionsContainer.append(optionDiv);
+			}
 		})();
 	</script>
 </body>
