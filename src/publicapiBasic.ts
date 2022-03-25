@@ -1,10 +1,10 @@
 // The publicly exposed MathQuill API.
 
 import type { EmbedOptions } from 'src/constants';
-import { jQuery, mqBlockId, EMBEDS } from 'src/constants';
+import { mqBlockId, EMBEDS } from 'src/constants';
 import type { InputOptions } from 'src/options';
 import { Options } from 'src/options';
-import { Node } from 'tree/node';
+import { TNode } from 'tree/node';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 import { Controller } from 'src/controller';
 import type { AbstractMathQuillConstructor, AbstractMathQuill } from 'src/abstractFields';
@@ -45,8 +45,8 @@ export default class MathQuill {
 		//   assert(MQ(mathFieldSpan).id === MQ(mathFieldSpan).id);
 		const MQ = (el: unknown) => {
 			if (!(el instanceof HTMLElement)) return;
-			const blockId = jQuery(el).children('.mq-root-block').attr(mqBlockId);
-			const ctrlr = blockId ? Node.byId[parseInt(blockId)].controller : undefined;
+			const blockId = el.querySelector('.mq-root-block')?.getAttribute(mqBlockId) ?? false;
+			const ctrlr = blockId ? TNode.byId[parseInt(blockId)].controller : undefined;
 			return ctrlr?.apiClass;
 		};
 
@@ -70,7 +70,7 @@ export default class MathQuill {
 				(el: unknown, opts: InputOptions) => {
 					const mq = MQ(el);
 					if (mq instanceof APIClasses[kind] || !(el instanceof HTMLElement)) return mq;
-					const ctrlr = new Controller(new APIClasses[kind].RootBlock, jQuery(el), new Options);
+					const ctrlr = new Controller(new APIClasses[kind].RootBlock, el, new Options);
 					ctrlr.KIND_OF_MQ = kind;
 					return new APIClasses[kind](ctrlr).config(opts).__mathquillify();
 				};

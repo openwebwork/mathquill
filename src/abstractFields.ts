@@ -1,13 +1,13 @@
 import type { Direction, Constructor } from 'src/constants';
-import { jQuery, L, R, noop, mqBlockId, LatexCmds } from 'src/constants';
+import { L, R, noop, mqBlockId, mqCmdId, LatexCmds } from 'src/constants';
 import type { InputOptions } from 'src/options';
 import { Options } from 'src/options';
 import type { Controller } from 'src/controller';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
 
 export interface AbstractMathQuillConstructor {
 	new (ctrlr: Controller): AbstractMathQuill;
-	RootBlock: Constructor<Node>;
+	RootBlock: Constructor<TNode>;
 }
 
 export class AbstractMathQuill {
@@ -15,7 +15,7 @@ export class AbstractMathQuill {
 	__options: Options;
 	id: number;
 	revert?: () => void;
-	static RootBlock?: Constructor<Node>;
+	static RootBlock?: Constructor<TNode>;
 
 	constructor(ctrlr: Controller) {
 		this.__controller = ctrlr;
@@ -24,23 +24,35 @@ export class AbstractMathQuill {
 		this.id = ctrlr.id;
 	}
 
-	__mathquillify(classNames?: string) {
+	__mathquillify(...classNames: Array<string>) {
 		const root = this.__controller.root, el = this.__controller.container;
 		this.__controller.createTextarea();
 
-		const contents = el.addClass(classNames ?? '').contents().detach();
-		root.jQ =
-			jQuery('<span class="mq-root-block"/>').attr(mqBlockId, root.id).appendTo(el);
-		this.latex(contents.text());
+		el.classList.add(...classNames);
+		const contents = Array.from(el.childNodes).map((child) => el.removeChild(child));
 
-		this.revert = () => el.empty().off()
-			.removeClass('mq-editable-field mq-math-mode mq-text-mode')
-			.append(contents);
+		const rootEl = document.createElement('span');
+		rootEl.classList.add('mq-root-block');
+		rootEl.setAttribute(mqBlockId, root.id.toString());
+		root.elements.add(rootEl);
+		el.append(rootEl);
+
+		this.latex(contents.reduce(
+			(ret: string, child) => child.nodeType === 8 ? ret : `${ret}${child.textContent ?? ''}`, ''));
+
+		this.revert = () => {
+			while (el.firstChild) el.firstChild.remove();
+			el.classList.remove('mq-editable-field', 'mq-math-mode', 'mq-text-mode');
+			if (this.__controller.mouseDownHandler)
+				el.removeEventListener('mousedown', this.__controller.mouseDownHandler);
+			el.append(...contents);
+			return el;
+		};
 	}
 
 	config(opts: InputOptions) { Options.config(this.__options, opts); return this; }
 
-	el() { return this.__controller.container[0]; }
+	el() { return this.__controller.container; }
 
 	text() { return this.__controller.exportText(); }
 
@@ -54,8 +66,8 @@ export class AbstractMathQuill {
 	}
 
 	html() {
-		return this.__controller.root.jQ.html()
-			.replace(/ mathquill-(?:command|block)-id="?\d+"?/g, '')
+		return this.__controller.root.elements.html()
+			.replace(new RegExp(` (?:${mqBlockId}|${mqCmdId})="?\\d+"?`, 'g'), '')
 			.replace(/<span class="?mq-cursor( mq-blink)?"?>.?<\/span>/i, '')
 			.replace(/ mq-hasCursor|mq-hasCursor ?/, '')
 			.replace(/ class=(""|(?= |>))/g, '');
@@ -68,17 +80,29 @@ export class AbstractMathQuill {
 }
 
 export class EditableField extends AbstractMathQuill {
-	__mathquillify(classNames: string) {
-		super.__mathquillify(classNames);
+	__mathquillify(...classNames: Array<string>) {
+		super.__mathquillify(...classNames);
 		this.__controller.editable = true;
 		this.__controller.delegateMouseEvents();
 		this.__controller.editablesTextareaEvents();
 		return this;
 	}
 
-	focus() { this.__controller.textarea?.focus(); return this; }
+	focus() {
+		if (document.activeElement === this.__controller.textarea)
+			this.__controller.textarea?.dispatchEvent(new FocusEvent('focus'));
+		else
+			this.__controller.textarea?.focus();
+		return this;
+	}
 
-	blur() { this.__controller.textarea?.blur(); return this; }
+	blur() {
+		if (document.activeElement !== this.__controller.textarea)
+			this.__controller.textarea?.dispatchEvent(new FocusEvent('blur'));
+		else
+			this.__controller.textarea?.blur();
+		return this;
+	}
 
 	write(latex: string) {
 		this.__controller.writeLatex(latex);
@@ -92,7 +116,7 @@ export class EditableField extends AbstractMathQuill {
 		root.eachChild('postOrder', 'dispose');
 		delete root.ends[L];
 		delete root.ends[R];
-		root.jQ.empty();
+		root.elements.empty();
 		delete cursor.selection;
 		cursor.insAtRightEnd(root);
 		return this;
@@ -138,7 +162,7 @@ export class EditableField extends AbstractMathQuill {
 	keystroke(keys: string) {
 		const keyList = keys.replace(/^\s+|\s+$/g, '').split(/\s+/);
 		for (const key of keyList) {
-			const noPreventDefaultEvent = new Event('noop');
+			const noPreventDefaultEvent = new KeyboardEvent('noop');
 			noPreventDefaultEvent.preventDefault = noop;
 			this.__controller.keystroke(key, noPreventDefaultEvent);
 		}
@@ -156,11 +180,8 @@ export class EditableField extends AbstractMathQuill {
 		pageX: number, pageY: number,
 		options: { text?: () => string, htmlTemplate?: string, latex?: () => string }
 	) {
-		const el = document.elementFromPoint(
-			pageX - (jQuery(window).scrollLeft() ?? 0),
-			pageY - (jQuery(window).scrollTop() ?? 0)
-		) as HTMLElement;
-		this.__controller.seek(jQuery(el), pageX);
+		const el = document.elementFromPoint(pageX - window.pageXOffset, pageY - window.pageYOffset) as HTMLElement;
+		this.__controller.seek(el, pageX);
 		const cmd = new LatexCmds.embed().setOptions(options);
 		cmd.createLeftOf(this.__controller.cursor);
 	}
@@ -169,13 +190,13 @@ export class EditableField extends AbstractMathQuill {
 		target = target || (document.elementFromPoint(clientX, clientY) as HTMLElement);
 
 		const ctrlr = this.__controller, root = ctrlr.root;
-		if (!jQuery.contains(root.jQ[0], target)) target = root.jQ[0];
-		ctrlr.seek(jQuery(target), clientX + window.pageXOffset);
+		if (!root.elements.firstElement.contains(target)) target = root.elements.firstElement;
+		ctrlr.seek(target, clientX + window.pageXOffset);
 		if (ctrlr.blurred) this.focus();
 		return this;
 	}
 
-	ignoreNextMousedown(fn: (e?: JQuery.TriggeredEvent) => boolean) {
+	ignoreNextMousedown(fn: (e?: MouseEvent) => boolean) {
 		this.__controller.cursor.options.ignoreNextMousedown = fn;
 		return this;
 	}

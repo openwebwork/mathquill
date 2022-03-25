@@ -2,7 +2,7 @@
 
 import type { Constructor } from 'src/constants';
 import { L, R } from 'src/constants';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
 import { RootMathCommand } from 'commands/mathBlock';
@@ -31,12 +31,12 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 		if (block && block.prepareInsertionAt(this.cursor)) {
 			block.children().adopt(this.root);
 			const html = block.join('html');
-			this.root.jQ.html(html);
-			this.root.jQize(this.root.jQ.children());
+			this.root.elements.html(html);
+			this.root.domify(this.root.elements.children());
 			this.root.finalizeInsert(this.cursor.options);
 		}
 		else {
-			this.root.jQ.empty();
+			this.root.elements.empty();
 		}
 
 		delete this.cursor.selection;
@@ -44,7 +44,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 	}
 
 	renderLatexText(latex: string) {
-		this.root.jQ.children().slice(1).remove();
+		this.root.elements.children().contents.slice(1).forEach((el) => (el as HTMLElement).remove());
 		this.root.eachChild('postOrder', 'dispose');
 		delete this.root.ends[L];
 		delete this.root.ends[R];
@@ -58,7 +58,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			// continues to the end of the stream.
 			.skip(Parser.string('$').or(Parser.eof))
 			.map((block: MathBlock) => {
-				// HACK FIXME: this shouldn't have to have access to cursor
+				// HACK FIXME: This shouldn't have to have access to cursor
 				const rootMathCommand = new RootMathCommand(this.cursor);
 
 				rootMathCommand.createBlocks();
@@ -71,14 +71,14 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 		const escapedDollar = Parser.string('\\$').result('$');
 		const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);
 		const latexText = mathMode.or(textChar).many();
-		const commands: Array<Node> = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+		const commands: Array<TNode> = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
 
 		if (commands) {
 			for (const command of commands) {
 				command.adopt(this.root, this.root.ends[R]);
 			}
 
-			this.root.jQize().appendTo(this.root.jQ);
+			this.root.elements.lastElement.append(...this.root.domify().contents);
 
 			this.root.finalizeInsert(this.cursor.options);
 		}

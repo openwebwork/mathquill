@@ -1,5 +1,6 @@
 /* global suite, test, assert */
 
+import { mqCmdId, mqBlockId } from 'src/constants';
 import { MathCommand } from 'commands/mathElements';
 
 suite('HTML', () => {
@@ -21,12 +22,12 @@ suite('HTML', () => {
 
 	test('simple HTML templates', () => {
 		let htmlTemplate = '<span>A Symbol</span>';
-		let html = '<span mathquill-command-id=1>A Symbol</span>';
+		let html = `<span ${mqCmdId}=1>A Symbol</span>`;
 
 		assert.equal(html, renderHtml(0, htmlTemplate), 'a symbol');
 
 		htmlTemplate = '<span>&0</span>';
-		html = '<span mathquill-command-id=1 mathquill-block-id=2>Block:0</span>';
+		html = `<span ${mqCmdId}=1 ${mqBlockId}=2>Block:0</span>`;
 
 		assert.equal(html, renderHtml(1, htmlTemplate), 'same span is cmd and block');
 
@@ -36,9 +37,9 @@ suite('HTML', () => {
 			+   '<span>&1</span>'
 			+ '</span>';
 		html =
-			'<span mathquill-command-id=1>'
-			+   '<span mathquill-block-id=2>Block:0</span>'
-			+   '<span mathquill-block-id=3>Block:1</span>'
+			`<span ${mqCmdId}=1>`
+			+   `<span ${mqBlockId}=2>Block:0</span>`
+			+   `<span ${mqBlockId}=3>Block:1</span>`
 			+ '</span>';
 
 		assert.equal(html, renderHtml(2, htmlTemplate), 'container span with two block spans');
@@ -46,7 +47,7 @@ suite('HTML', () => {
 
 	test('context-free HTML templates', () => {
 		let htmlTemplate = '<br/>';
-		let html = '<br mathquill-command-id=1/>';
+		let html = `<br ${mqCmdId}=1/>`;
 
 		assert.equal(html, renderHtml(0, htmlTemplate), 'self-closing tag');
 
@@ -58,11 +59,11 @@ suite('HTML', () => {
 			+   '<span>&1</span>'
 			+ '</span>';
 		html =
-			'<span mathquill-command-id=1>'
-			+   '<span mathquill-block-id=2>Block:0</span>'
+			`<span ${mqCmdId}=1>`
+			+   `<span ${mqBlockId}=2>Block:0</span>`
 			+ '</span>'
-			+ '<span mathquill-command-id=1>'
-			+   '<span mathquill-block-id=3>Block:1</span>'
+			+ `<span ${mqCmdId}=1>`
+			+   `<span ${mqBlockId}=3>Block:1</span>`
 			+ '</span>';
 
 		assert.equal(html, renderHtml(2, htmlTemplate), 'two cmd spans');
@@ -80,17 +81,17 @@ suite('HTML', () => {
 			+ '</span>'
 			+ '<span>&0</span>';
 		html =
-			'<span mathquill-command-id=1></span>'
-			+ '<span mathquill-command-id=1/>'
-			+ '<span mathquill-command-id=1>'
+			`<span ${mqCmdId}=1></span>`
+			+ `<span ${mqCmdId}=1/>`
+			+ `<span ${mqCmdId}=1>`
 			+   '<span>'
 			+     '<span/>'
 			+   '</span>'
-			+   '<span mathquill-block-id=3>Block:1</span>'
+			+   `<span ${mqBlockId}=3>Block:1</span>`
 			+   '<span/>'
 			+   '<span></span>'
 			+ '</span>'
-			+ '<span mathquill-command-id=1 mathquill-block-id=2>Block:0</span>';
+			+ `<span ${mqCmdId}=1 ${mqBlockId}=2>Block:0</span>`;
 
 		assert.equal(html, renderHtml(2, htmlTemplate), 'multiple nested cmd and block spans');
 	});

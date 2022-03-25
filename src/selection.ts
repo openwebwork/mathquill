@@ -3,30 +3,34 @@
 // many such textboxes, so any one JS environment could actually contain many instances.
 
 import type { Direction } from 'src/constants';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
+import { VNode } from 'tree/vNode';
 import { L } from 'src/constants';
 import { Fragment } from 'tree/fragment';
 
 export class Selection extends Fragment {
-	constructor(withDir?: Node, oppDir?: Node, dir: Direction = L) {
+	constructor(withDir?: TNode, oppDir?: TNode, dir: Direction = L) {
 		super(withDir, oppDir, dir);
-		this.jQ = this.jQ.wrapAll('<span class="mq-selection"></span>').parent();
-		//can't do wrapAll(this.jQ = $(...)) because wrapAll will clone it
+		const wrapper = document.createElement('span');
+		wrapper.classList.add('mq-selection');
+		this.elements.first.before(wrapper);
+		wrapper.append(...this.elements.contents);
+		this.elements = new VNode(wrapper);
 	}
 
-	adopt(parent: Node, leftward?: Node, rightward?: Node) {
-		this.jQ.replaceWith(this.jQ = this.jQ.children());
+	adopt(parent: TNode, leftward?: TNode, rightward?: TNode) {
+		const children = this.elements.children();
+		this.elements.first.replaceWith(...children.contents);
+		this.elements = children;
 		return super.adopt(parent, leftward, rightward);
 	}
 
 	clear() {
-		// using the browser's native .childNodes property so that we
-		// don't discard text nodes.
-		this.jQ.replaceWith(this.jQ[0].childNodes as unknown as Element[]);
+		this.elements.first.replaceWith(...this.elements.first.childNodes);
 		return this;
 	}
 
-	join(methodName: keyof Pick<Node, 'text' | 'latex' | 'html'>) {
+	join(methodName: keyof Pick<TNode, 'text' | 'latex' | 'html'>) {
 		return this.fold('', (fold, child) => fold + child[methodName]());
 	}
 }

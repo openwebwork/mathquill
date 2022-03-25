@@ -1,7 +1,7 @@
 // Options for the API objects
 
 import type { Direction } from 'src/constants';
-import { jQuery, BuiltInOpNames } from 'src/constants';
+import { BuiltInOpNames } from 'src/constants';
 import type { AbstractMathQuill } from 'src/abstractFields';
 import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
@@ -35,7 +35,6 @@ export interface InputOptions {
 	sumStartsWithNEquals?: boolean;
 	supSubsRequireOperand?: boolean;
 	rootsAreExponents?: boolean;
-	noExtraFractionParens?: boolean;
 	maxDepth?: number;
 	autoSubscriptNumerals?: boolean;
 	typingSlashWritesDivisionSymbol?: boolean;
@@ -184,12 +183,6 @@ export class Options {
 	get rootsAreExponents() { return this._rootsAreExponents ?? Options.rootsAreExponents; }
 	set rootsAreExponents(rootsAreExponents) { this._rootsAreExponents = rootsAreExponents; }
 
-	// If true then the text output for a fraction will not be wrapped in extra parentheses.
-	static noExtraFractionParens = false;
-	_noExtraFractionParens?: boolean;
-	get noExtraFractionParens() { return this._noExtraFractionParens ?? Options.noExtraFractionParens; }
-	set noExtraFractionParens(noExtraFractionParens) { this._noExtraFractionParens = noExtraFractionParens; }
-
 	// Specifies the maximum number of nested MathBlocks allowed.
 	static maxDepth = undefined;
 	_maxDepth?: number;
@@ -225,12 +218,17 @@ export class Options {
 	handlers?: Handlers;
 
 	substituteTextarea() {
-		return jQuery('<textarea autocapitalize=off autocomplete=off autocorrect=off spellcheck=false />')[0];
+		const textarea = document.createElement('textarea');
+		textarea.setAttribute('autocapitalize', 'off');
+		textarea.setAttribute('autocomplete', 'off');
+		textarea.setAttribute('autocorrext', 'off');
+		textarea.setAttribute('spellcheck', 'false');
+		return textarea;
 	}
 
-	substituteKeyboardEvents(el: HTMLTextAreaElement | JQuery<HTMLTextAreaElement>, handlers: TextAreaHandlers) {
+	substituteKeyboardEvents(el: HTMLTextAreaElement, handlers: TextAreaHandlers) {
 		return saneKeyboardEvents(el, handlers);
 	}
 
-	ignoreNextMousedown: (e?: JQuery.TriggeredEvent) => boolean = () =>  { return false; }
+	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => { return false; }
 }

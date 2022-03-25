@@ -6,17 +6,16 @@ import type { ControllerBase } from 'src/controller';
 
 export const HorizontalScroll = <TBase extends Constructor<ControllerBase>>(Base: TBase) => class extends Base {
 	scrollHoriz() {
-		const rootRect = this.root.jQ[0].getBoundingClientRect();
+		const rootRect = this.root.elements.firstElement.getBoundingClientRect();
 		let scrollBy = 0;
 		if (!this.cursor.selection) {
-			if (!this.cursor.jQ.length) return;
-			const x = this.cursor.jQ[0].getBoundingClientRect().left;
+			const x = this.cursor.element.getBoundingClientRect().left;
 			if (x > rootRect.right - 20) scrollBy = x - (rootRect.right - 20);
 			else if (x < rootRect.left + 20) scrollBy = x - (rootRect.left + 20);
 			else return;
 		}
 		else {
-			const rect = this.cursor.selection.jQ[0].getBoundingClientRect();
+			const rect = this.cursor.selection.elements.firstElement.getBoundingClientRect();
 			const overLeft = rect.left - (rootRect.left + 20);
 			const overRight = rect.right - (rootRect.right - 20);
 			if (this.cursor.selection.ends[L] === this.cursor[R]) {
@@ -36,6 +35,6 @@ export const HorizontalScroll = <TBase extends Constructor<ControllerBase>>(Base
 				else return;
 			}
 		}
-		this.root.jQ.stop().animate({ scrollLeft: `+=${scrollBy}` }, 100);
+		setTimeout(() => this.root.elements.firstElement.scrollLeft += scrollBy, 100);
 	}
 };

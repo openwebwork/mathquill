@@ -82,14 +82,18 @@ module.exports = (env, argv) => {
 				'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
 			}),
 			new MiniCssExtractPlugin(),
-			new ESLintPlugin({ extensions: ['js', 'ts'] }),
+			new ESLintPlugin({
+				extensions: ['js', 'ts'],
+				emitError: process.env.NODE_ENV === 'production'
+			}),
 			new StyleLintPlugin({
+				emitError: process.env.NODE_ENV === 'production',
 				extensions: ['html', 'css', 'scss', 'sass', 'less'],
 				files: ['**/*.{html,css,scss,sass,less}']
 			})
 		],
 		optimization: {
-			minimize: process.env.NODE_ENV == 'production',
+			minimize: process.env.NODE_ENV === 'production',
 			minimizer: [
 				new TerserPlugin({
 					terserOptions: { format: { comments: /@license/i } },
@@ -105,7 +109,7 @@ module.exports = (env, argv) => {
 		}
 	};
 
-	if (process.env.NODE_ENV == 'development') {
+	if (process.env.NODE_ENV === 'development') {
 		// eslint-disable-next-line no-console
 		console.log('Using development mode.');
 
@@ -122,7 +126,8 @@ module.exports = (env, argv) => {
 					directory: path.join(__dirname, 'node_modules/mocha'),
 					publicPath: '/mocha'
 				}
-			]
+			],
+			watchFiles: ['public/**/*']
 		};
 	} else {
 		// eslint-disable-next-line no-console

@@ -1,12 +1,13 @@
 // Elements for abstract classes of text blocks
 
 import type { Direction } from 'src/constants';
-import { jQuery, mqCmdId, L, R, pray, prayDirection, LatexCmds, CharCmds } from 'src/constants';
+import { mqCmdId, L, R, pray, prayDirection, LatexCmds, CharCmds } from 'src/constants';
 import type { Controller } from 'src/controller';
 import { Parser } from 'services/parser.util';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
-import { Node } from 'tree/node';
+import { VNode } from 'tree/vNode';
+import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { VanillaSymbol } from 'commands/mathElements';
 import { deleteSelectTowardsMixin } from 'src/mixins';
@@ -16,7 +17,7 @@ import { BlockFocusBlur } from 'services/focusBlur';
 // Represents flat strings of typically serif-font Roman characters, as
 // opposed to hierchical, nested, tree-structured math.
 // Wraps a single HTMLSpanElement.
-export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
+export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	replacedText?: string;
 	anticursorPosition = 0;
 
@@ -27,14 +28,14 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 
 	replaces(replacedText?: string | Fragment) {
 		if (replacedText instanceof Fragment)
-			this.replacedText = replacedText.remove().jQ.text();
+			this.replacedText = replacedText.remove().elements.text();
 		else if (typeof replacedText === 'string')
 			this.replacedText = replacedText;
 	}
 
-	jQadd(jQ: JQuery) {
-		super.jQadd(jQ);
-		this.ends[L]?.jQadd(this.jQ[0].firstChild as HTMLElement);
+	addToElements(el: VNode) {
+		super.addToElements(el);
+		this.ends[L]?.addToElements(this.elements.first.firstChild as HTMLElement);
 	};
 
 	createLeftOf(cursor: Cursor) {
@@ -100,8 +101,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 
 	selectOutOf(dir: Direction, cursor: Cursor) {
 		this.anticursorPosition = dir === L
-			? (cursor.selection?.jQ[0].textContent?.length ?? 1) - 1
-			: this.textContents().length - (cursor.selection?.jQ[0].textContent?.length ?? 1) + 1;
+			? (cursor.selection?.elements.first.textContent?.length ?? 1) - 1
+			: this.textContents().length - (cursor.selection?.elements.first.textContent?.length ?? 1) + 1;
 		cursor.insDirOf(dir, this);
 	}
 
@@ -125,8 +126,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 		else if (!cursor[L]) cursor.insLeftOf(this);
 		else { // split apart
 			const leftBlock = new TextBlock();
-			const leftPc = this.ends[L] as Node;
-			leftPc.disown().jQ.detach();
+			const leftPc = this.ends[L] as TNode;
+			leftPc.disown().elements.detach();
 			leftPc.adopt(leftBlock);
 
 			cursor.insLeftOf(this);
@@ -145,31 +146,36 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 		cursor.hide();
 		const textPc = this.fuseChildren() as TextPiece;
 
-		// insert cursor at approx position in DOMTextNode
-		const avgChWidth = (this.jQ.width() ?? 0) / this.text().length;
-		const approxPosition = Math.round((pageX - (this.jQ.offset()?.left ?? 0)) / avgChWidth);
+		// Insert cursor at approx position in DOMTextNode
+		const cursorStyle = getComputedStyle(this.elements.firstElement);
+		const avgChWidth = (
+			this.elements.firstElement.getBoundingClientRect().width
+			- parseFloat(cursorStyle.paddingLeft)
+			- parseFloat(cursorStyle.paddingRight)
+		) / this.text().length;
+		const approxPosition =
+			Math.round((pageX - this.elements.firstElement.getBoundingClientRect().left) / avgChWidth);
 		if (approxPosition <= 0) cursor.insAtLeftEnd(this);
 		else if (approxPosition >= textPc.text().length) cursor.insAtRightEnd(this);
 		else cursor.insLeftOf(textPc.splitRight(approxPosition));
 
-		// move towards mousedown (pageX)
-		let displ = pageX - (cursor.show().offset()?.left ?? 0); // displacement
+		// Move towards mousedown (pageX)
+		let displ = pageX - cursor.show().offset().left; // displacement
 		const dir = displ && displ < 0 ? L : R;
 		let prevDispl = dir;
 		// displ * prevDispl > 0 iff displacement direction === previous direction
 		while (cursor[dir] && displ * prevDispl > 0) {
 			cursor[dir]?.moveTowards(dir, cursor);
 			prevDispl = displ;
-			displ = pageX - (cursor.offset()?.left ?? 0);
+			displ = pageX - cursor.offset().left;
 		}
 		if (dir * displ < -dir * prevDispl) cursor[dir === L ? R : L]?.moveTowards(dir === L ? R : L, cursor);
 
 		if (!cursor.anticursor) {
-			// about to start mouse-selecting, the anticursor is gonna get put here
+			// About to start mouse-selecting, the anticursor is going to be placed here.
 			this.anticursorPosition = (cursor[L] && cursor[L]?.text().length) ?? 0;
-			// ^ get it? 'cos if there's no cursor[L], it's 0... I'm a terrible person.
 		} else if (cursor.anticursor.parent === this) {
-			// mouse-selecting within this TextBlock, re-insert the anticursor
+			// Mouse selecting within this TextBlock, re-insert the anticursor.
 			const cursorPosition = (cursor[L] && cursor[L]?.text().length) ?? 0;
 			if (this.anticursorPosition === cursorPosition) {
 				cursor.startSelection();
@@ -200,26 +206,26 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 			else if (cursor[R] === this) cursor[R] = this[R];
 		} else {
 			// If the text block contains the selection, then that needs to be removed before fuseChildren is called.
-			if (this.jQ.find('.mq-selection').length) cursor.clearSelection();
+			if (this.elements.find('.mq-selection').contents.length) cursor.clearSelection();
 			this.fuseChildren();
 		}
 
-		(function getCtrlr(node?: Node): Controller {
+		(function getCtrlr(node?: TNode): Controller {
 			return (node?.controller) ? node?.controller : getCtrlr(node?.parent);
 		})(cursor.parent).handle('textBlockExit');
 	}
 
 	fuseChildren() {
-		this.jQ[0].normalize();
+		this.elements.first.normalize();
 
-		const textPcDom = this.jQ[0].firstChild as Text;
+		const textPcDom = this.elements.first.firstChild as Text;
 		if (!textPcDom) return;
 		pray('only node in TextBlock span is Text node', textPcDom.nodeType === 3);
-		// nodeType === 3 has meant a Text node since ancient times:
+		// nodeType === 3 is a text node.
 		// https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
 
 		const textPc = new TextPiece(textPcDom.data);
-		textPc.jQadd(textPcDom);
+		textPc.addToElements(textPcDom);
 
 		this.children().disown();
 		return textPc.adopt(this);
@@ -228,18 +234,16 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(Node)) {
 	focus() {
 		super.focus();
 
-		(function getCtrlr(node?: Node): Controller {
+		(function getCtrlr(node?: TNode): Controller {
 			return (node?.controller) ? node?.controller : getCtrlr(node?.parent);
 		})(this).handle('textBlockEnter');
 	}
 }
 
-// Piece of plain text, with a TextBlock as a parent and no children.
-// Wraps a single DOMTextNode.
-// For convenience, has a .text property that's just a JavaScript string
-// mirroring the text contents of the DOMTextNode.
+// A piece of plain text, with a TextBlock as a parent and no children. This wraps a single DOMTextNode.
+// For convenience, it has a textStr property that is a string that mirrors the text contents of the DOMTextNode.
 // Text contents must always be nonempty.
-class TextPiece extends Node {
+class TextPiece extends TNode {
 	textStr: string;
 	dom?: Text;
 
@@ -250,11 +254,14 @@ class TextPiece extends Node {
 
 	text() { return this.textStr; }
 
-	jQadd(dom: JQuery | HTMLElement | Text) { this.dom = dom as Text; this.jQ = jQuery(dom as HTMLElement); }
+	addToElements(dom: VNode | HTMLElement | Text) {
+		this.dom = dom as Text;
+		this.elements = new VNode(dom);
+	}
 
-	jQize() {
-		this.jQadd(document.createTextNode(this.textStr));
-		return this.jQ;
+	domify() {
+		this.addToElements(document.createTextNode(this.textStr));
+		return this.elements;
 	}
 
 	appendText(text: string) {
@@ -274,8 +281,8 @@ class TextPiece extends Node {
 	}
 
 	splitRight(i: number) {
-		const newPc = new TextPiece(this.textStr.slice(i)).adopt(this.parent as Node, this, this[R]);
-		newPc.jQadd(this.dom?.splitText(i) as Text);
+		const newPc = new TextPiece(this.textStr.slice(i)).adopt(this.parent as TNode, this, this[R]);
+		newPc.addToElements(this.dom?.splitText(i) as Text);
 		this.textStr = this.textStr.slice(0, i);
 		return newPc;
 	}
@@ -304,14 +311,14 @@ class TextPiece extends Node {
 				this.dom?.deleteData(0, 1);
 				this.textStr = this.textStr.slice(1);
 			} else {
-				// note that the order of these 2 lines is annoyingly important
-				// (the second line mutates this.text.length)
+				// Note that the order of these 2 lines is important.
+				// (the second line mutates this.textStr.length)
 				this.dom?.deleteData(-1 + this.textStr.length, 1);
 				this.textStr = this.textStr.slice(0, -1);
 			}
 		} else {
 			this.remove();
-			this.jQ.remove();
+			this.elements.remove();
 			cursor[dir] = this[dir];
 		}
 	}
@@ -331,12 +338,11 @@ class TextPiece extends Node {
 			if (from) from.insTextAtDirEnd(ch, dir);
 			else {
 				const newPc = new TextPiece(ch).createDir(dir === L ? R : L, cursor);
-				newPc.jQ.insDirOf(dir === L ? R : L, cursor.selection?.jQ as JQuery<HTMLElement>);
+				if (cursor.selection) newPc.elements.insDirOf(dir === L ? R : L, cursor.selection.elements);
 			}
 
 			if (this.textStr.length === 1 && anticursor?.[dir === L ? R : L] === this) {
 				anticursor[dir === L ? R : L] = this[dir === L ? R : L];
-				// `this` will be removed in deleteTowards
 			}
 		}
 

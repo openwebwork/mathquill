@@ -1,15 +1,15 @@
 // Point base class of edit tree-related objects
 
 import { L, R } from 'src/constants';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
 
 export class Point {
-	parent?: Node;
-	[L]?: Node;
-	[R]?: Node;
-	ancestors?: { [key: number]: Point | Node };
+	parent?: TNode;
+	[L]?: TNode;
+	[R]?: TNode;
+	ancestors?: { [key: number]: Point | TNode };
 
-	constructor(parent?: Node, leftward?: Node, rightward?: Node) {
+	constructor(parent?: TNode, leftward?: TNode, rightward?: TNode) {
 		this.parent = parent;
 		this[L] = leftward;
 		this[R] = rightward;

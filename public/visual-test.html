@@ -11,8 +11,6 @@
 	<link rel="stylesheet" href="support/home.css">
 	<link rel="stylesheet" href="mathquill.css">
 
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"
-		integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 	<script src="mathquill.js"></script>
 	<script>
 		// Initial setup.
@@ -159,7 +157,7 @@
 		</p>
 
 		<script>
-			MQ.MathField($('#custom-behavior')[0], {
+			MQ.MathField(document.getElementById('custom-behavior'), {
 				spaceBehavesLikeTab: true,
 				leftRightIntoCmdGoes: 'up',
 				restrictMismatchedBrackets: true,

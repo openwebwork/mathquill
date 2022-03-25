@@ -5,7 +5,7 @@ import { L, R, prayDirection } from 'src/constants';
 import type { Handler, DirectionHandler, Handlers, Options } from 'src/options';
 import { Cursor } from 'src/cursor';
 import type { AbstractMathQuill } from 'src/abstractFields';
-import { Node } from 'tree/node';
+import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { HorizontalScroll } from 'services/scrollHoriz';
 import { LatexControllerExtension } from 'services/latex';
@@ -16,18 +16,18 @@ import { TextAreaController } from 'services/textarea';
 
 export class ControllerBase {
 	id: number;
-	root: Node;
-	container: JQuery;
+	root: TNode;
+	container: HTMLElement;
 	options: Options;
 	cursor: Cursor;
 	apiClass?: AbstractMathQuill;
 	KIND_OF_MQ = '';
 	editable = false;
 	blurred?: boolean;
-	textareaSpan?: JQuery<HTMLSpanElement>;
-	textarea?: JQuery<HTMLTextAreaElement>;
+	textareaSpan?: HTMLSpanElement;
+	textarea?: HTMLTextAreaElement;
 
-	constructor(root: Node, container: JQuery, options: Options) {
+	constructor(root: TNode, container: HTMLElement, options: Options) {
 		this.id = root.id;
 
 		this.root = root;
@@ -72,18 +72,18 @@ export class Controller extends
 			)
 		)
 	) {
-	constructor(root: Node, container: JQuery, options: Options) {
+	constructor(root: TNode, container: HTMLElement, options: Options) {
 		super(root, container, options);
 		root.controller = this;
 	}
 
 	// Methods that deal with the browser DOM events from interaction with the typist.
 
-	keystroke(key: string, evt: Event) {
+	keystroke(key: string, evt: KeyboardEvent) {
 		this.cursor.parent?.keystroke(key, evt, this);
 	}
 
-	escapeDir(dir: Direction, key: string, e: Event) {
+	escapeDir(dir: Direction, key: string, e: KeyboardEvent) {
 		prayDirection(dir);
 		const cursor = this.cursor;
 
@@ -103,7 +103,7 @@ export class Controller extends
 		const cursor = this.cursor, updown = cursor.options.leftRightIntoCmdGoes as 'up' | 'down' | undefined;
 
 		if (cursor.selection) {
-			cursor.insDirOf(dir, cursor.selection.ends[dir] as Node);
+			cursor.insDirOf(dir, cursor.selection.ends[dir] as TNode);
 		}
 		else if (cursor[dir]) cursor[dir]?.moveTowards(dir, cursor, updown);
 		else cursor.parent?.moveOutOf(dir, cursor, updown);
@@ -118,23 +118,23 @@ export class Controller extends
 	// - else check the parent's 'upOutOf'/'downOutOf' property:
 	//   + if it's a function, call it with the cursor as the sole argument and
 	//     use the return value as if it were the value of the property
-	//   + if it's a Node, jump up or down into it:
+	//   + if it's a TNode, jump up or down into it:
 	//     - if there is a cached Point in the block, insert there
 	//     - else, seekHoriz within the block to the current x-coordinate (to be
 	//       as close to directly above/below the current position as possible)
 	//   + unless it's exactly `true`, stop bubbling
 	moveUpDown(dir: 'up' | 'down') {
 		const cursor = this.notify('upDown').cursor;
-		const dirInto: keyof Node = `${dir}Into`, dirOutOf: keyof Node = `${dir}OutOf`;
-		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R]?.[dirInto] as Node);
-		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L]?.[dirInto] as Node);
+		const dirInto: keyof TNode = `${dir}Into`, dirOutOf: keyof TNode = `${dir}OutOf`;
+		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R]?.[dirInto] as TNode);
+		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L]?.[dirInto] as TNode);
 		else {
-			cursor.parent?.bubble((ancestor: Node) => {
+			cursor.parent?.bubble((ancestor: TNode) => {
 				if (ancestor[dirOutOf]) {
 					if (typeof ancestor[dirOutOf] === 'function')
 						(ancestor[dirOutOf] as (cursor: Cursor) => void)(cursor);
-					if (ancestor[dirOutOf] instanceof Node)
-						cursor.jumpUpDown(ancestor, ancestor[dirOutOf] as Node);
+					if (ancestor[dirOutOf] instanceof TNode)
+						cursor.jumpUpDown(ancestor, ancestor[dirOutOf] as TNode);
 					if (ancestor[dirOutOf] !== true)
 						return false;
 				}
@@ -150,14 +150,18 @@ export class Controller extends
 		const cursor = this.cursor;
 
 		const hadSelection = cursor.selection;
-		this.notify('edit'); // deletes selection if present
+		this.notify('edit'); // Shows the cursor and deletes a selection if present.
 		if (!hadSelection) {
 			if (cursor[dir]) cursor[dir]?.deleteTowards(dir, cursor);
 			else cursor.parent?.deleteOutOf(dir, cursor);
 		}
 
+		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
+		cursor[R]?.postOrder('contactWeld', cursor);
+
 		cursor[L]?.siblingDeleted?.(cursor.options, R);
 		cursor[R]?.siblingDeleted?.(cursor.options, L);
+
 		cursor.parent?.bubble('reflow');
 
 		return this;
@@ -174,7 +178,10 @@ export class Controller extends
 		} else {
 			new Fragment(cursor[R], cursor.parent?.ends[R]).remove();
 		};
-		cursor.insAtDirEnd(dir, cursor.parent as Node);
+		cursor.insAtDirEnd(dir, cursor.parent as TNode);
+
+		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
+		cursor[R]?.postOrder('contactWeld', cursor);
 
 		cursor[L]?.siblingDeleted?.(cursor.options, R);
 		cursor[R]?.siblingDeleted?.(cursor.options, L);

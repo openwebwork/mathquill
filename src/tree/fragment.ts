@@ -1,10 +1,10 @@
 // Fragment base classes of edit tree-related objects
 
-import type JQuery from 'jquery';
 import type { Direction } from 'src/constants';
-import { jQuery, L, R, iterator, pray, prayWellFormed } from 'src/constants';
+import { L, R, iterator, pray, prayWellFormed } from 'src/constants';
 import type { Ends } from 'tree/node';
-import { Node } from 'tree/node';
+import { VNode } from 'tree/vNode';
+import { TNode } from 'tree/node';
 
 // An entity outside the virtual tree with one-way pointers (so it's only a
 // "view" of part of the tree, not an actual node/entity in the tree) that
@@ -17,54 +17,51 @@ import { Node } from 'tree/node';
 // DocumentFragment, whose contents must be detached from the visible tree
 // and have their 'parent' pointers set to the DocumentFragment).
 export class Fragment {
-	jQ: JQuery = jQuery();
+	elements: VNode = new VNode;
 	ends: Ends = {};
 	disowned?: boolean;
-	each = iterator((yield_: (node: Node) => Node | boolean | void) => {
+	each = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
 		let el = this.ends[L];
 		if (!el) return this;
 
 		for (; el !== this.ends[R]?.[R]; el = el?.[R]) {
-			if (yield_(el as Node) === false) break;
+			if (yield_(el as TNode) === false) break;
 		}
 
 		return this;
 	});
 
-	constructor(withDir?: Node, oppDir?: Node, dir: Direction = L) {
+	constructor(withDir?: TNode, oppDir?: TNode, dir: Direction = L) {
 		pray('no half-empty fragments', !withDir === !oppDir);
 
 		if (!withDir) return;
 
-		pray('withDir is passed to Fragment', withDir instanceof Node);
-		pray('oppDir is passed to Fragment', oppDir instanceof Node);
+		pray('withDir is passed to Fragment', withDir instanceof TNode);
+		pray('oppDir is passed to Fragment', oppDir instanceof TNode);
 		pray('withDir and oppDir have the same parent', withDir.parent === oppDir?.parent);
 
 		this.ends[dir] = withDir;
 		this.ends[dir === L ? R : L] = oppDir;
 
-		// To build the jquery collection for a fragment, accumulate elements
-		// into an array and then call jQ.add once on the result. jQ.add sorts the
-		// collection according to document order each time it is called, so
-		// building a collection by folding jQ.add directly takes more than
-		// quadratic time in the number of elements.
-		//
-		// https://github.com/jquery/jquery/blob/2.1.4/src/traversing.js#L112
-		const accum = this.fold<Array<HTMLElement>>([], (accum, el) => {
-			accum.push(...el.jQ.get());
+		// To build the html collection for a fragment, accumulate elements into an array and then call elements.add
+		// once on the result. elements.add sorts the collection according to document order each time it is called, so
+		// building a collection by folding elements.add directly takes more than quadratic time in the number of
+		// elements.
+		const accum = this.fold<Array<Node>>([], (accum, el) => {
+			accum.push(...el.elements.contents);
 			return accum;
 		});
 
-		this.jQ = this.jQ.add(accum);
+		this.elements.add(accum);
 	}
 
 	// like Cursor::withDirInsertAt(dir, parent, withDir, oppDir)
-	withDirAdopt(dir: Direction, parent: Node, withDir?: Node, oppDir?: Node) {
+	withDirAdopt(dir: Direction, parent: TNode, withDir?: TNode, oppDir?: TNode) {
 		return (dir === L ? this.adopt(parent, withDir, oppDir)
 			: this.adopt(parent, oppDir, withDir));
 	}
 
-	adopt(parent: Node, leftward?: Node, rightward?: Node) {
+	adopt(parent: TNode, leftward?: TNode, rightward?: TNode) {
 		prayWellFormed(parent, leftward, rightward);
 
 		this.disowned = false;
@@ -87,9 +84,9 @@ export class Fragment {
 			parent.ends[R] = rightEnd;
 		}
 
-		(this.ends[R] as Node)[R] = rightward;
+		(this.ends[R] as TNode)[R] = rightward;
 
-		this.each((el: Node) => {
+		this.each((el: TNode) => {
 			el[L] = leftward;
 			el.parent = parent;
 			if (leftward) leftward[R] = el;
@@ -109,19 +106,19 @@ export class Fragment {
 		this.disowned = true;
 
 		const rightEnd = this.ends[R];
-		const parent = leftEnd.parent as Node;
+		const parent = leftEnd.parent as TNode;
 
 		prayWellFormed(parent, leftEnd[L], leftEnd);
 		prayWellFormed(parent, rightEnd, rightEnd?.[R]);
 
 		if (leftEnd[L]) {
-			(leftEnd[L] as Node)[R] = rightEnd?.[R];
+			(leftEnd[L] as TNode)[R] = rightEnd?.[R];
 		} else {
 			parent.ends[L] = rightEnd?.[R];
 		}
 
 		if (rightEnd?.[R]) {
-			(rightEnd[R] as Node)[L] = leftEnd[L];
+			(rightEnd[R] as TNode)[L] = leftEnd[L];
 		} else {
 			parent.ends[R] = leftEnd[L];
 		}
@@ -130,14 +127,14 @@ export class Fragment {
 	}
 
 	remove() {
-		this.jQ.remove();
+		this.elements.remove();
 		this.each('postOrder', 'dispose');
 		return this.disown();
 	}
 
-	fold<T>(fold: T, fn: (fold: T, child: Node) => T): T {
+	fold<T>(fold: T, fn: (fold: T, child: TNode) => T): T {
 		let ret = fold;
-		this.each((el: Node) => { ret = fn(ret, el); });
+		this.each((el: TNode) => { ret = fn(ret, el); });
 		return ret;
 	}
 }

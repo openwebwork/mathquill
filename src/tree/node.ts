@@ -1,62 +1,62 @@
-// Node base class of edit tree-related objects
+// TNode base class of edit tree-related objects
 
-import type JQuery from 'jquery';
 import type { Direction } from 'src/constants';
-import { jQuery, L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
+import { L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
 import { Selection } from 'src/selection';
+import { VNode } from 'tree/vNode';
 import { Fragment } from 'tree/fragment';
 
 export interface Ends {
-	[L]?: Node;
-	[R]?: Node;
+	[L]?: TNode;
+	[R]?: TNode;
 }
 
-const prayOverridden = () => pray('overridden or never called on this node');
+const prayOverridden = (name: string) => pray(`"${name}" should be overridden or never called on this node`);
 
 // MathQuill virtual-DOM tree-node abstract base class
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
-export class Node {
+export class TNode {
 	static id = 0;
-	static byId: { [key: number]: Node } = {};
-	static uniqueNodeId = () => ++Node.id;
+	static byId: { [key: number]: TNode } = {};
+	static uniqueNodeId = () => ++TNode.id;
 
-	jQ: JQuery = jQuery();
+	elements: VNode = new VNode;
 	id: number;
-	parent?: Node;
+	parent?: TNode;
 	ends: Ends = {};
-	[L]?: Node;
-	[R]?: Node;
+	[L]?: TNode;
+	[R]?: TNode;
 	controller?: Controller;
 
 	ctrlSeq = '';
 	siblingDeleted?: (opts: Options, dir?: Direction) => void;
 	siblingCreated?: (opts: Options, dir?: Direction) => void;
-	sub?: Node;
-	sup?: Node;
+	sub?: TNode;
+	sup?: TNode;
 	isSymbol?: boolean;
 	isSupSubLeft?: boolean;
 
-	upInto?: Node;
-	downInto?: Node;
-	upOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | Node | boolean;
-	downOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | Node | boolean;
+	upInto?: TNode;
+	downInto?: TNode;
+	upOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | TNode | boolean;
+	downOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | TNode | boolean;
 
 	reflow?: () => void;
 
-	bubble = iterator((yield_: (node: Node) => Node | boolean | void) => {
+	bubble = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		for (let ancestor: Node | undefined = this; ancestor; ancestor = ancestor.parent) {
+		for (let ancestor: TNode | undefined = this; ancestor; ancestor = ancestor.parent) {
 			if (yield_(ancestor) === false) break;
 		}
 
 		return this;
 	});;
 
-	postOrder = iterator((yield_: (node: Node) => Node | boolean | void) => {
-		(function recurse(descendant: Node) {
+	postOrder = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
+		(function recurse(descendant: TNode) {
 			descendant.eachChild(recurse);
 			yield_(descendant);
 		})(this);
@@ -65,47 +65,47 @@ export class Node {
 	});;
 
 	constructor() {
-		this.id = Node.uniqueNodeId();
-		Node.byId[this.id] = this;
+		this.id = TNode.uniqueNodeId();
+		TNode.byId[this.id] = this;
 	}
 
-	dispose() { delete Node.byId[this.id]; }
+	dispose() { delete TNode.byId[this.id]; }
 
-	toString() { return `{{ MathQuill Node #${this.id} }}`; }
+	toString() { return `{{ MathQuill TNode #${this.id} }}`; }
 
-	jQadd(jQ: JQuery | HTMLElement) { this.jQ = this.jQ.add(jQ); }
+	addToElements(el: VNode | HTMLElement) { this.elements.add(el); }
 
-	jQize(jQ?: JQuery) {
-		// jQuery-ifies this.html() and links up the .jQ of all corresponding Nodes
-		const jQlocal = jQ ? jQuery(jQ) : jQuery(this.html());
+	domify(vNode?: VNode) {
+		// Convert html string to DOM contents and add elements to all corresponding TNodes.
+		const localVNode = vNode instanceof VNode ? vNode : new VNode(this.html());
 
-		const jQadd = (el: HTMLElement) => {
-			if (el.getAttribute) {
+		const addToElements = (el: Node) => {
+			if (el instanceof HTMLElement) {
 				const cmdId = parseInt(el.getAttribute(mqCmdId) ?? '0');
 				const blockId = parseInt(el.getAttribute(mqBlockId) ?? '0');
-				if (cmdId) Node.byId[cmdId].jQadd(el);
-				if (blockId) Node.byId[blockId].jQadd(el);
+				if (cmdId) TNode.byId[cmdId].addToElements(el);
+				if (blockId) TNode.byId[blockId].addToElements(el);
 			}
 			for (let child = el.firstChild; child; child = child.nextSibling) {
-				jQadd(child as HTMLElement);
+				addToElements(child);
 			}
 		};
 
-		jQlocal.each((index, element) => jQadd(element));
-		return jQlocal;
+		localVNode.contents.forEach((element) => addToElements(element));
+		return localVNode;
 	}
 
 	createDir(dir: Direction, cursor: Cursor) {
 		prayDirection(dir);
-		this.jQize();
-		this.jQ.insDirOf(dir, cursor.jQ);
-		cursor[dir] = this.adopt(cursor.parent as Node, cursor[L], cursor[R]);
+		this.domify();
+		this.elements.insDirOf(dir, cursor.element);
+		cursor[dir] = this.adopt(cursor.parent as TNode, cursor[L], cursor[R]);
 		return this;
 	}
 
 	createLeftOf(el: Cursor) { this.createDir(L, el); }
 
-	selectChildren(leftEnd?: Node, rightEnd?: Node) {
+	selectChildren(leftEnd?: TNode, rightEnd?: TNode) {
 		return new Selection(leftEnd, rightEnd);
 	}
 
@@ -121,22 +121,22 @@ export class Node {
 		return new Fragment(this.ends[L], this.ends[R]);
 	}
 
-	eachChild(method: 'postOrder' | ((node: Node) => boolean) | ((node: Node) => void), order?: string) {
+	eachChild(method: 'postOrder' | ((node: TNode) => boolean) | ((node: TNode) => void), order?: string) {
 		const children = this.children();
 		children.each(method, order);
 		return this;
 	}
 
-	foldChildren<T>(fold: T, fn: ((fold: T, child: Node) => T)): T {
+	foldChildren<T>(fold: T, fn: ((fold: T, child: TNode) => T)): T {
 		return this.children().fold<T>(fold, fn);
 	}
 
-	withDirAdopt(dir: Direction, parent: Node, withDir?: Node, oppDir?: Node) {
+	withDirAdopt(dir: Direction, parent: TNode, withDir?: TNode, oppDir?: TNode) {
 		new Fragment(this, this).withDirAdopt(dir, parent, withDir, oppDir);
 		return this;
 	}
 
-	adopt(parent: Node, leftward?: Node, rightward?: Node) {
+	adopt(parent: TNode, leftward?: TNode, rightward?: TNode) {
 		new Fragment(this, this).adopt(parent, leftward, rightward);
 		return this;
 	}
@@ -147,14 +147,14 @@ export class Node {
 	};
 
 	remove() {
-		this.jQ.remove();
+		this.elements.remove();
 		this.postOrder('dispose');
 		return this.disown();
 	}
 
 	// Methods that deal with the browser DOM events from interaction with the typist.
 
-	keystroke(key: string, e: Event, ctrlr: Controller) {
+	keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
 		const cursor = ctrlr.cursor;
 
 		switch (key) {
@@ -182,7 +182,7 @@ export class Node {
 
 		// End -> move to the end of the current block.
 		case 'End':
-			ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent as Node);
+			ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent as TNode);
 			break;
 
 		// Ctrl-End -> move all the way to the end of the root block.
@@ -206,7 +206,7 @@ export class Node {
 
 		// Home -> move to the start of the root block or the current block.
 		case 'Home':
-			ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent as Node);
+			ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent as TNode);
 			break;
 
 		// Ctrl-Home -> move to the start of the current block.
@@ -293,20 +293,22 @@ export class Node {
 	write(_ignore_cursor: Cursor, _ignore_ch: string) { /* do nothing */ }
 	replaces(_ignore_fragment?: string | Fragment) { /* do nothing */ }
 	setOptions(_ignore_options: { text?: () => string, htmlTemplate?: string, latex?: () => string }) { return this; }
-	chToCmd(_ignore_ch: string, _ignore_options: Options): Node { return this; }
+	chToCmd(_ignore_ch: string, _ignore_options: Options): TNode { return this; }
 
 	// called by Controller::escapeDir, moveDir
-	moveOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor, _ignore_updown?: 'up' | 'down') { prayOverridden(); }
+	moveOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor, _ignore_updown?: 'up' | 'down')
+	{ prayOverridden('moveOutOf'); }
 	// called by Controller::moveDir
-	moveTowards(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: 'up' | 'down') { prayOverridden(); }
+	moveTowards(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: 'up' | 'down')
+	{ prayOverridden('moveTowards'); }
 	// called by Controller::deleteDir
-	deleteOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) { prayOverridden(); }
+	deleteOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) { prayOverridden('deleteOutOf'); }
 	// called by Controller::deleteDir
-	deleteTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
+	deleteTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden('deleteTowards'); }
 	// called by Controller::selectDir
-	unselectInto(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
+	unselectInto(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden('unselectInto'); }
 	// called by Controller::selectDir
-	selectOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) { prayOverridden(); }
+	selectOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) { prayOverridden('selectOutOf'); }
 	// called by Controller::selectDir
-	selectTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden(); }
+	selectTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) { prayOverridden('selectTowards'); }
 }

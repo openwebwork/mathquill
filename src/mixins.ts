@@ -1,7 +1,8 @@
 import type { Direction, Constructor } from 'src/constants';
 import { L, R } from 'src/constants';
 import type { Cursor } from 'src/cursor';
-import type { Node } from 'tree/node';
+import type { VNode } from 'tree/vNode';
+import type { TNode } from 'tree/node';
 import type { MathCommand, MathElement } from 'commands/mathElements';
 
 export const RootBlockMixin = (_: MathElement) => {
@@ -21,10 +22,10 @@ export const RootBlockMixin = (_: MathElement) => {
 // Editability methods called by the cursor for editing, cursor movements, and selection of the MathQuill tree.
 // These all take in a direction and the cursor.
 // The MathCommand and TextBlock classes use this mixin.
-export const deleteSelectTowardsMixin = <TBase extends Constructor<Node>>(Base: TBase) => class extends Base {
+export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base: TBase) => class extends Base {
 	moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 		const updownInto = updown && this[`${updown}Into`];
-		cursor.insAtDirEnd(dir === L ? R : L, updownInto || this.ends[dir === L ? R : L] as Node);
+		cursor.insAtDirEnd(dir === L ? R : L, updownInto || this.ends[dir === L ? R : L] as TNode);
 	}
 
 	deleteTowards(dir: Direction, cursor: Cursor) {
@@ -39,42 +40,26 @@ export const deleteSelectTowardsMixin = <TBase extends Constructor<Node>>(Base: 
 
 };
 
-const div_style = document.createElement('div').style,
-	transformPropNames = {
-		transform: 1,
-		WebkitTransform: 1,
-		MozTransform: 1,
-		OTransform: 1,
-		msTransform: 1
-	};
-
-let transformPropName = '';
-for (const prop in transformPropNames) {
-	if (prop in div_style) {
-		transformPropName = prop;
-		break;
-	}
-}
-
-// Use a CSS 2D transform to scale the jQuery-wrapped HTML elements,
+// Use a CSS transform to scale the HTML elements,
 // or gracefully degrade to increasing the fontSize to match the vertical Y scaling factor.
-// Ideas from http://github.com/louisremi/jquery.transform.js
-export const scale = transformPropName
-	? (jQ: JQuery<HTMLElement>, x: number, y: number) => jQ.css(transformPropName, `scale(${x},${y})`)
-	: (jQ: JQuery<HTMLElement>, x: number, y: number) => jQ.css('fontSize', `${y}em`);
+export const scale = (elts: Array<HTMLElement>, x: number, y: number) =>
+	elts.forEach((elt) => elt.style.transform = `scale(${x},${y})`);
 
 export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends Base {
-	delimjQs?: JQuery;
-	contentjQ?: JQuery;
+	delims?: [HTMLElement, HTMLElement];
+	content?: HTMLElement;
 
 	reflow = () => {
-		const height = (this.contentjQ?.outerHeight() ?? 0) / parseFloat(this.contentjQ?.css('fontSize') ?? '1');
-		scale(this.delimjQs as JQuery<HTMLElement>, Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
+		const contentStyle = this.content ? getComputedStyle(this.content) : undefined;
+		const boundingRect = this.content?.getBoundingClientRect();
+		const height = (boundingRect?.height ?? 0) / parseFloat(contentStyle?.fontSize ?? '1');
+		scale(this.delims as Array<HTMLElement>, Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
 	};
 
-	jQadd(jQ: JQuery | HTMLElement) {
-		super.jQadd(jQ);
-		this.delimjQs = this.jQ.children(':first').add(this.jQ.children(':last'));
-		this.contentjQ = this.jQ.children(':eq(1)');
+	addToElements(el: VNode | HTMLElement) {
+		super.addToElements(el);
+		const children = this.elements.children();
+		this.delims = [children.firstElement, children.lastElement];
+		this.content = children.contents[1] as HTMLElement;
 	}
 };

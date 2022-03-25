@@ -1,7 +1,7 @@
 /* global suite, test, assert */
 
 import { L, R } from 'src/constants';
-import { Node } from 'tree/node';
+import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 
 suite('tree', () => {
@@ -20,8 +20,8 @@ suite('tree', () => {
 		};
 
 		test('the empty case', () => {
-			const parent = new Node();
-			const child = new Node();
+			const parent = new TNode();
+			const child = new TNode();
 
 			child.adopt(parent);
 
@@ -34,9 +34,9 @@ suite('tree', () => {
 		});
 
 		test('with two children from the left', () => {
-			const parent = new Node();
-			const one = new Node();
-			const two = new Node();
+			const parent = new TNode();
+			const one = new TNode();
+			const two = new TNode();
 
 			one.adopt(parent);
 			two.adopt(parent, one);
@@ -45,9 +45,9 @@ suite('tree', () => {
 		});
 
 		test('with two children from the right', () => {
-			const parent = new Node();
-			const one = new Node();
-			const two = new Node();
+			const parent = new TNode();
+			const one = new TNode();
+			const two = new TNode();
 
 			two.adopt(parent);
 			one.adopt(parent, undefined, two);
@@ -56,10 +56,10 @@ suite('tree', () => {
 		});
 
 		test('adding one in the middle', () => {
-			const parent = new Node();
-			const leftward = new Node();
-			const rightward = new Node();
-			const middle = new Node();
+			const parent = new TNode();
+			const leftward = new TNode();
+			const rightward = new TNode();
+			const middle = new TNode();
 
 			leftward.adopt(parent);
 			rightward.adopt(parent, leftward);
@@ -86,8 +86,8 @@ suite('tree', () => {
 		};
 
 		test('the empty case', () => {
-			const parent = new Node();
-			const child = new Node();
+			const parent = new TNode();
+			const child = new TNode();
 
 			child.adopt(parent);
 			child.disown();
@@ -97,9 +97,9 @@ suite('tree', () => {
 		});
 
 		test('disowning the right end child', () => {
-			const parent = new Node();
-			const one = new Node();
-			const two = new Node();
+			const parent = new TNode();
+			const one = new TNode();
+			const two = new TNode();
 
 			one.adopt(parent);
 			two.adopt(parent, one);
@@ -115,9 +115,9 @@ suite('tree', () => {
 		});
 
 		test('disowning the left end child', () => {
-			const parent = new Node();
-			const one = new Node();
-			const two = new Node();
+			const parent = new TNode();
+			const one = new TNode();
+			const two = new TNode();
 
 			one.adopt(parent);
 			two.adopt(parent, one);
@@ -133,10 +133,10 @@ suite('tree', () => {
 		});
 
 		test('disowning the middle', () => {
-			const parent = new Node();
-			const leftward = new Node();
-			const rightward = new Node();
-			const middle = new Node();
+			const parent = new TNode();
+			const leftward = new TNode();
+			const rightward = new TNode();
+			const middle = new TNode();
 
 			leftward.adopt(parent);
 			rightward.adopt(parent, leftward);
@@ -168,13 +168,13 @@ suite('tree', () => {
 		});
 
 		test('half-empty fragments are disallowed', () => {
-			assert.throws(() => new Fragment(new Node(), 0), 'half-empty on the right');
-			assert.throws(() => new Fragment(0, new Node()), 'half-empty on the left');
+			assert.throws(() => new Fragment(new TNode(), 0), 'half-empty on the right');
+			assert.throws(() => new Fragment(0, new TNode()), 'half-empty on the left');
 		});
 
 		test('directionalized constructor call', () => {
-			const ChNode = class extends Node { constructor(ch) { super(); this.ch = ch; } };
-			const parent = new Node();
+			const ChNode = class extends TNode { constructor(ch) { super(); this.ch = ch; } };
+			const parent = new TNode();
 			new ChNode('a').adopt(parent, parent.ends[R]);
 			const b = new ChNode('b').adopt(parent, parent.ends[R]);
 			new ChNode('c').adopt(parent, parent.ends[R]);
@@ -190,9 +190,9 @@ suite('tree', () => {
 		});
 
 		test('disown is idempotent', () => {
-			const parent = new Node();
-			const one = new Node().adopt(parent);
-			const two = new Node().adopt(parent, one);
+			const parent = new TNode();
+			const one = new TNode().adopt(parent);
+			const two = new TNode().adopt(parent, one);
 
 			const frag = new Fragment(one, two);
 			frag.disown();

@@ -7,7 +7,7 @@ export class TextField extends EditableField {
 	static RootBlock = RootTextBlock;
 
 	__mathquillify() {
-		return super.__mathquillify('mq-editable-field mq-text-mode');
+		return super.__mathquillify('mq-editable-field', 'mq-text-mode');
 	}
 
 	latex(latex?: string) {

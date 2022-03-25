@@ -1,10 +1,11 @@
 // Input box to type backslash commands
 
-import { jQuery, L, R, LatexCmds, CharCmds } from 'src/constants';
+import { L, R, LatexCmds, CharCmds } from 'src/constants';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
 import type { Fragment } from 'tree/fragment';
-import type { Node } from 'tree/node';
+import type { TNode } from 'tree/node';
+import { VNode } from 'tree/vNode';
 import { VanillaSymbol, MathCommand } from 'commands/mathElements';
 import { TextBlock } from 'commands/textElements';
 
@@ -26,20 +27,20 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	createBlocks() {
 		super.createBlocks();
 
-		const leftEnd = this.ends[L] as Node;
+		const leftEnd = this.ends[L] as TNode;
 
 		leftEnd.focus = () => {
-			leftEnd.parent?.jQ.addClass('mq-hasCursor');
+			leftEnd.parent?.elements.addClass('mq-hasCursor');
 			if (leftEnd.isEmpty())
-				leftEnd.parent?.jQ.removeClass('mq-empty');
+				leftEnd.parent?.elements.removeClass('mq-empty');
 
 			return leftEnd;
 		};
 
 		leftEnd.blur = () => {
-			leftEnd.parent?.jQ.removeClass('mq-hasCursor');
+			leftEnd.parent?.elements.removeClass('mq-hasCursor');
 			if (leftEnd.isEmpty())
-				leftEnd.parent?.jQ.addClass('mq-empty');
+				leftEnd.parent?.elements.addClass('mq-empty');
 
 			return leftEnd;
 		};
@@ -54,7 +55,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 			}
 		};
 
-		leftEnd.keystroke = (key: string, e: Event, ctrlr: Controller) => {
+		leftEnd.keystroke = (key: string, e: KeyboardEvent, ctrlr: Controller) => {
 			if (key === 'Tab' || key === 'Enter' || key === 'Spacebar') {
 				(leftEnd.parent as LatexCommandInput).renderCommand(ctrlr.cursor);
 				e.preventDefault();
@@ -68,14 +69,21 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		super.createLeftOf(cursor);
 
 		if (this._replacedFragment) {
-			//FIXME: is monkey-patching the mousedown and mousemove handlers the right way to do this?
-			this.jQ = this._replacedFragment.jQ.addClass('mq-blur').on(
-				'mousedown mousemove',
-				(e) => {
-					jQuery(e.target = this.jQ[0]).trigger(e);
-					return false;
-				}
-			).insertBefore(this.jQ).add(this.jQ);
+			const el = this.elements.first;
+
+			this._replacedFragment.elements.addClass('mq-blur');
+			this.elements.first.before(...this._replacedFragment.elements.contents);
+			this.elements.add(this._replacedFragment.elements);
+
+			// FIXME: Is monkey-patching the mousedown and mousemove handlers the right way to do this?
+			const handler = (e: MouseEvent) => {
+				e.stopPropagation();
+				e.preventDefault();
+				el.dispatchEvent(new MouseEvent(e.type, e));
+			};
+
+			this.elements.firstElement.addEventListener('mousedown', handler);
+			this.elements.firstElement.addEventListener('mousemove', handler);
 		}
 	}
 
@@ -84,15 +92,13 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	}
 
 	renderCommand(cursor: Cursor) {
-		this.jQ = this.jQ.last();
+		this.elements = new VNode(this.elements.last);
 		this.remove();
-		if (this[R]) {
-			cursor.insLeftOf(this[R] as Node);
-		} else {
-			cursor.insAtRightEnd(this.parent as Node);
-		}
 
-		const latex = this.ends[L]?.latex() ?? ' ';
+		if (this[R]) cursor.insLeftOf(this[R] as TNode);
+		else cursor.insAtRightEnd(this.parent as TNode);
+
+		const latex = this.ends[L]?.latex() || ' ';
 		if (latex in LatexCmds) {
 			const cmd = new LatexCmds[latex](latex);
 			if (this._replacedFragment) cmd.replaces(this._replacedFragment);
