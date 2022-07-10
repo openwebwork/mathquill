@@ -471,7 +471,8 @@ export class Variable extends Symbol {
 					text = text.slice(1, text.length);
 			} else if (text[text.length - 1] == ' ' || text[text.length - 1] == '}') {
 				text = text.slice (0, -1);
-				if (!(this[R] instanceof Bracket || this[R] instanceof Fraction)) text += ' ';
+				if (!(this[R] instanceof Bracket || this[R] instanceof Fraction || this[R] instanceof SupSub))
+					text += ' ';
 			}
 		}
 		return text;
