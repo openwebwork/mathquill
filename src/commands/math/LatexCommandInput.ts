@@ -95,7 +95,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		this.elements = new VNode(this.elements.last);
 		this.remove();
 
-		if (this[R]) cursor.insLeftOf(this[R] as TNode);
+		if (this[R]) cursor.insLeftOf(this[R]);
 		else cursor.insAtRightEnd(this.parent as TNode);
 
 		const latex = this.ends[L]?.latex() || ' ';

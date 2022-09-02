@@ -43,7 +43,7 @@ export class Cursor extends Point {
 				if (this.selection && this.selection.ends[L]?.[L] === this[L])
 					this.selection.elements.first.before(this.element);
 				else
-					(this[R] as TNode).elements.first.before(this.element);
+					this[R].elements.first.before(this.element);
 			} else
 				(this.parent as TNode).elements.firstElement.append(this.element);
 			this.parent?.focus();
@@ -109,7 +109,7 @@ export class Cursor extends Point {
 		this.upDownCache[from.id] = Point.copy(this);
 		const cached = this.upDownCache[to.id];
 		if (cached) {
-			cached[R] ? this.insLeftOf(cached[R] as TNode) : this.insAtRightEnd(cached.parent as TNode);
+			cached[R] ? this.insLeftOf(cached[R]) : this.insAtRightEnd(cached.parent as TNode);
 		} else {
 			to.seek(this.offset().left, this);
 		}
@@ -153,7 +153,7 @@ export class Cursor extends Point {
 			}
 		}
 		if (this[R])
-			this.insLeftOf(this[R] as TNode);
+			this.insLeftOf(this[R]);
 		else
 			this.insAtRightEnd(greatgramp);
 

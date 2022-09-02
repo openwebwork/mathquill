@@ -294,7 +294,7 @@ class NthRoot extends SquareRoot {
 			return !node.controller ? getCursor(node.parent as TNode) : node.controller;
 		})(this);
 		if (ctrlr.options.rootsAreExponents) {
-			const isSupR = this[R] instanceof SupSub && (this[R] as SupSub).supsub === 'sup';
+			const isSupR = this[R] instanceof SupSub && this[R].supsub === 'sup';
 			return `${isSupR ? '(' : ''}(${this.ends[R]?.text() ?? ''})^(1/${index})${isSupR ? ')' : ''}`;
 		}
 

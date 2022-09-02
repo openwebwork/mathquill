@@ -181,7 +181,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 			if (pageX < blockBounds[L]) {
 				// closer to this block's left bound, or the bound left of that?
 				if (pageX - leftLeftBound < blockBounds[L] - pageX) {
-					if (block[L]) cursor.insAtRightEnd(block[L] as TNode);
+					if (block[L]) cursor.insAtRightEnd(block[L]);
 					else cursor.insLeftOf(this);
 				}
 				else cursor.insAtLeftEnd(block);
@@ -428,8 +428,8 @@ export class Equality extends BinaryOperator {
 	}
 
 	createLeftOf(cursor: Cursor) {
-		if (cursor[L] instanceof Inequality && (cursor[L] as Inequality).strict) {
-			(cursor[L] as Inequality).swap(false);
+		if (cursor[L] instanceof Inequality && cursor[L].strict) {
+			cursor[L].swap(false);
 			cursor[L]?.bubble('reflow');
 			return;
 		}
@@ -441,10 +441,10 @@ export class Digit extends VanillaSymbol {
 	createLeftOf(cursor: Cursor) {
 		if (cursor.options.autoSubscriptNumerals
 			&& cursor.parent !== cursor.parent?.parent?.sub
-			&& ((cursor[L] instanceof Variable && (cursor[L] as Variable).isItalic !== false)
+			&& ((cursor[L] instanceof Variable && cursor[L].isItalic !== false)
 				|| (cursor[L] instanceof SupSub
 					&& cursor[L]?.[L] instanceof Variable
-					&& (cursor[L]?.[L] as Variable).isItalic !== false))) {
+					&& cursor[L]?.[L].isItalic !== false))) {
 			new LatexCmds._().createLeftOf(cursor);
 			super.createLeftOf(cursor);
 			cursor.insRightOf(cursor.parent?.parent as TNode);
@@ -560,7 +560,7 @@ export class Letter extends Variable {
 					if (!this.shouldOmitPadding(last?.[R])) {
 						if (last?.[R] instanceof SupSub) {
 							// XXX monkey-patching, but what's the right thing here?
-							const supsub = last[R] as SupSub;
+							const supsub = last[R];
 							// Have operatorname-specific code in SupSub? A CSS-like language to style the
 							// math tree, but which ignores cursor and selection (which CSS can't)?
 							supsub.siblingCreated = supsub.siblingDeleted = () => {
@@ -744,10 +744,10 @@ export class SupSub extends MathCommand {
 				if (cursor) {
 					if (cursor[L] === this) {
 						if (dir === R && pt)
-							pt[L] ? cursor.insRightOf(pt[L] as TNode) : cursor.insAtLeftEnd(pt.parent as TNode);
+							pt[L] ? cursor.insRightOf(pt[L]) : cursor.insAtLeftEnd(pt.parent as TNode);
 						else cursor.insRightOf(this[dir] as TNode);
 					} else {
-						if (pt?.[R]) cursor.insRightOf(pt[R] as TNode);
+						if (pt?.[R]) cursor.insRightOf(pt[R]);
 					}
 				}
 				return;
@@ -763,7 +763,7 @@ export class SupSub extends MathCommand {
 				src.children().disown()
 					.adopt(cursor.parent as TNode, cursor[L], cursor[R])
 					.elements.insDirOf(R, cursor.element);
-				if (cursor[L]?.[R]) cursor.insLeftOf(cursor[L]?.[R] as TNode);
+				if (cursor[L]?.[R]) cursor.insLeftOf(cursor[L]?.[R]);
 				else cursor.insAtDirEnd(L, cursor.parent as TNode);
 			}
 			this.remove();
