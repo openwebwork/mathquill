@@ -69,7 +69,7 @@ export class AbstractMathQuill {
 		return this.__controller.root.elements.html()
 			.replace(new RegExp(` (?:${mqBlockId}|${mqCmdId})="?\\d+"?`, 'g'), '')
 			.replace(/<span class="?mq-cursor( mq-blink)?"?>.?<\/span>/i, '')
-			.replace(/ mq-hasCursor|mq-hasCursor ?/, '')
+			.replace(/ mq-has-cursor|mq-has-cursor ?/, '')
 			.replace(/ class=(""|(?= |>))/g, '');
 	}
 

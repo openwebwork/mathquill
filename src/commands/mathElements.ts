@@ -1020,6 +1020,7 @@ export class Bracket extends DelimsMixin(MathCommand) {
 			}
 			brack.bubble('reflow');
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			brack = this, side = brack.side;
 			if (brack.replacedFragment) brack.side = 0; // wrapping seln, don't be one-sided
 			else if (cursor[side === L ? R : L]) { // elsewise, auto-expand so ghost is at far end

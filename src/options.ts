@@ -230,5 +230,5 @@ export class Options {
 		return saneKeyboardEvents(el, handlers);
 	}
 
-	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => { return false; }
+	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => { return false; };
 }

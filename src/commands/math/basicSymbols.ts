@@ -76,7 +76,7 @@ LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
 // does not use Symbola font
 class NonSymbolaSymbol extends Symbol {
 	constructor(ch: string, html?: string) {
-		super(ch, `<span class="mq-nonSymbola">${html || ch}</span>`);
+		super(ch, `<span class="mq-non-symbola">${html || ch}</span>`);
 	}
 };
 

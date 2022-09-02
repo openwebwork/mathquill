@@ -47,12 +47,12 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 
 export const BlockFocusBlur = <TBase extends Constructor<TNode>>(Base: TBase) => class extends Base {
 	focus() {
-		this.elements.addClass('mq-hasCursor');
+		this.elements.addClass('mq-has-cursor');
 		this.elements.removeClass('mq-empty');
 	}
 
 	blur() {
-		this.elements.removeClass('mq-hasCursor');
+		this.elements.removeClass('mq-has-cursor');
 		if (this.isEmpty()) this.elements.addClass('mq-empty');
 	}
 };

@@ -77,7 +77,7 @@ export class Cursor extends Point {
 		else el.elements.last.after(this.element);
 
 		this.withDirInsertAt(dir, el.parent as TNode, el[dir], el);
-		this.parent?.elements.addClass('mq-hasCursor');
+		this.parent?.elements.addClass('mq-has-cursor');
 		return this;
 	}
 

@@ -11,8 +11,6 @@ body {
 	color: black;
 	background-color: white;
 	box-shadow: 0 0 1em black;
-	-moz-box-shadow: 0 0 1em black;
-	-webkit-box-shadow: 0 0 1em black;
 }
 
 #body {
@@ -32,8 +30,6 @@ code {
 	font: 90% monospace;
 	background: #DDD;
 	border-radius: .3em;
-	-moz-border-radius: .3em;
-	-webkit-border-radius: .3em;
 	padding: 0 .3em;
 }
 
