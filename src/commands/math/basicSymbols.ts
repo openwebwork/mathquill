@@ -103,21 +103,21 @@ LatexCmds.alpha =
 	LatexCmds.tau =
 	LatexCmds.chi =
 	LatexCmds.psi =
-	LatexCmds.omega = class extends Variable {
+	LatexCmds.omega = class extends NonSymbolaSymbol {
 		constructor(latex: string) {
 			super(`\\${latex} `, `&${latex};`);
 		}
 	};
 
 LatexCmds.phi = // W3C or Unicode?
-	bindMixin(Variable, '\\phi ', '&#981;');
+	bindMixin(NonSymbolaSymbol, '\\phi ', '&#981;');
 
 LatexCmds.phiv = // Elsevier and 9573-13
 	LatexCmds.varphi = // AMS and LaTeX
 	bindMixin(Variable, '\\varphi ', '&phi;');
 
 LatexCmds.epsilon = // W3C or Unicode?
-	bindMixin(Variable, '\\epsilon ', '&#1013;');
+	bindMixin(NonSymbolaSymbol, '\\epsilon ', '&#1013;');
 
 LatexCmds.epsiv = // Elsevier and 9573-13
 	LatexCmds.varepsilon = // AMS and LaTeX
