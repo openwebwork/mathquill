@@ -455,6 +455,7 @@ export class Digit extends VanillaSymbol {
 
 export class Variable extends Symbol {
 	isItalic = false;
+	isPartOfOperator = false;  // Used in src/services/mouse.ts
 
 	constructor(ch: string, html?: string) {
 		super(ch, `<var>${html || ch}</var>`);
@@ -513,6 +514,7 @@ export class Letter extends Variable {
 
 	italicize(bool: boolean) {
 		this.isItalic = bool;
+		this.isPartOfOperator = !bool;
 		this.elements.toggleClass('mq-operator-name', !bool);
 		return this;
 	}
