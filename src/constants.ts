@@ -54,7 +54,7 @@ type CallableKeyOf<S, T, U, V> = keyof {
 	[P in keyof S as S[P] extends ((arg1?: U, arg2?: V) => T) ? P : never]: unknown
 };
 
-export const iterator = <R, S, T, U, V>(generator: (yield_: (obj: R) => S | undefined) => T) => {
+export const iterator = <R extends object, S, T, U, V>(generator: (yield_: (obj: R) => S | undefined) => T) => {
 	return (fn: ((obj: R) => S) | string, arg1?: U, arg2?: V) => {
 		const yield_ = typeof fn === 'function' ? fn
 			: (obj: R) => {
