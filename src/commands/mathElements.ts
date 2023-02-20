@@ -455,7 +455,6 @@ export class Digit extends VanillaSymbol {
 
 export class Variable extends Symbol {
 	isItalic = false;
-	isPartOfOperator = false;
 
 	constructor(ch: string, html?: string) {
 		super(ch, `<var>${html || ch}</var>`);
@@ -463,17 +462,15 @@ export class Variable extends Symbol {
 
 	text() {
 		let text = this.ctrlSeq;
-		if (this.isPartOfOperator) {
-			if (text[0] == '\\') {
-				if (text.startsWith('\\operatorname{'))
-					text = text.slice(14, text.length);
-				else
-					text = text.slice(1, text.length);
-			} else if (text[text.length - 1] == ' ' || text[text.length - 1] == '}') {
-				text = text.slice (0, -1);
-				if (!(this[R] instanceof Bracket || this[R] instanceof Fraction || this[R] instanceof SupSub))
-					text += ' ';
-			}
+		if (text[0] == '\\') {
+			if (text.startsWith('\\operatorname{'))
+				text = text.slice(14, text.length);
+			else
+				text = text.slice(1, text.length);
+		} else if (text[text.length - 1] == ' ' || text[text.length - 1] == '}') {
+			text = text.slice (0, -1);
+			if (!(this[R] instanceof Bracket || this[R] instanceof Fraction || this[R] instanceof SupSub))
+				text += ' ';
 		}
 		return text;
 	};
@@ -516,7 +513,6 @@ export class Letter extends Variable {
 
 	italicize(bool: boolean) {
 		this.isItalic = bool;
-		this.isPartOfOperator = !bool;
 		this.elements.toggleClass('mq-operator-name', !bool);
 		return this;
 	}
