@@ -131,25 +131,19 @@ export const OPP_BRACKS: { readonly [key: string]: string } = {
 export type EmbedOptions = { text?: () => string, htmlString?: string, latex?: () => string };
 export const EMBEDS: { [key: string]: (data: string) => EmbedOptions } = {};
 
-// The set of operator names like \sin, \cos, etc that are built-into LaTeX,
-// see Section 3.17 of the Short Math Guide: http://tinyurl.com/jm9okjc
-// MathQuill auto-unitalicizes some operator names not in that set, like 'hcf'
-// and 'arsinh', which must be exported as \operatorname{hcf} and
-// \operatorname{arsinh}. Note: over/under line/arrow \lim variants like
-// \varlimsup are not supported
+// The set of operator names like \arg, \deg, etc that are built-into LaTeX,
+// see Section 3.15 of the Short Math Guide: http://tug.ctan.org/info/short-math-guide/short-math-guide.pdf
+// MathQuill auto-unitalicizes some operator names not in that set, like 'hcf',
+// which must be exported as \operatorname{hcf}.
+// Note: over/under line/arrow \lim variants like \varlimsup are not supported.
+// Note that this no longer includes ln, log, or any of the trig functions.
+// Those are now latex commands that are implemented by the MathFunction class.
 export const BuiltInOpNames: { [key: string]: 1 } = {};
 
 // Standard operators
 for (const op of [
-	'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim', 'ln',
-	'log', 'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
+	'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim',
+	'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
 ]) { BuiltInOpNames[op] = 1; }
-
-// Trig operators
-// why coth but not sech and csch, LaTeX?
-for (const trig of [
-	'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan',
-	'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'coth'
-]) { BuiltInOpNames[trig] = 1; }
 
 export const TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };

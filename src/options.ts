@@ -33,6 +33,7 @@ export interface InputOptions {
 	sumStartsWithNEquals?: boolean;
 	supSubsRequireOperand?: boolean;
 	rootsAreExponents?: boolean;
+	logsChangeBase?: boolean;
 	maxDepth?: number;
 	autoSubscriptNumerals?: boolean;
 	typingSlashWritesDivisionSymbol?: boolean;
@@ -123,15 +124,9 @@ export class Options {
 
 		// Standard operators
 		for (const op of [
-			'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim', 'ln',
-			'log', 'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
+			'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim',
+			'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
 		]) { ops[op] = 1; }
-
-		// Trig operators
-		for (const autoTrig of ['sin', 'cos', 'tan', 'sec', 'cosec', 'csc', 'cotan', 'cot', 'ctg']) {
-			ops[autoTrig] = ops[`arc${autoTrig}`] = ops[`${autoTrig}h`] =
-				ops[`ar${autoTrig}h`] = ops[`arc${autoTrig}h`] = 1;
-		}
 
 		// compat with some of the nonstandard LaTeX exported by MathQuill
 		// before #247. None of these are real LaTeX commands so, seems safe
@@ -262,6 +257,16 @@ export class Options {
 	set rootsAreExponents(rootsAreExponents) {
 		if (this instanceof Options) this.#_rootsAreExponents = rootsAreExponents;
 		else Options.#rootsAreExponents = rootsAreExponents;
+	}
+
+	// If true then the text output for the logarithm with base b of x will be 'log(x)/log(b)'.  Otherwise the output
+	// will be 'logb(b,x)'.  Note that this option does not affect base 10 output.  That is always "log10(x)".
+	static #logsChangeBase = false;
+	#_logsChangeBase?: boolean;
+	get logsChangeBase() { return this.#_logsChangeBase ?? Options.#logsChangeBase; }
+	set logsChangeBase(logsChangeBase) {
+		if (this instanceof Options) this.#_logsChangeBase = logsChangeBase;
+		else Options.#logsChangeBase = logsChangeBase;
 	}
 
 	// Specifies the maximum number of nested MathBlocks allowed.

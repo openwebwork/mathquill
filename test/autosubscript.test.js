@@ -19,12 +19,12 @@ suite('autoSubscript', () => {
 		assert.equal(mq.latex(), 'x_{23}');
 	});
 
-	test('do not autosubscript functions', () => {
-		mq.latex('sin');
+	test('do not autosubscript operator name', () => {
+		mq.latex('ker');
 		mq.typedText('2');
-		assert.equal(mq.latex(), '\\sin2');
+		assert.equal(mq.latex(), '\\ker2');
 		mq.typedText('3');
-		assert.equal(mq.latex(), '\\sin23');
+		assert.equal(mq.latex(), '\\ker23');
 	});
 
 	test('autosubscript exponentiated variables', () => {
@@ -35,18 +35,18 @@ suite('autoSubscript', () => {
 		assert.equal(mq.latex(), 'x_{23}^2');
 	});
 
-	test('do not autosubscript exponentiated functions', () => {
-		mq.latex('sin^{2}');
+	test('do not autosubscript exponentiated operator name', () => {
+		mq.latex('ker^{2}');
 		mq.typedText('2');
-		assert.equal(mq.latex(), '\\sin^22');
+		assert.equal(mq.latex(), '\\ker^22');
 		mq.typedText('3');
-		assert.equal(mq.latex(), '\\sin^223');
+		assert.equal(mq.latex(), '\\ker^223');
 	});
 
-	test('do not autosubscript subscripted functions', () => {
-		mq.latex('sin_{10}');
+	test('do not autosubscript subscripted operator name', () => {
+		mq.latex('ker_{10}');
 		mq.typedText('2');
-		assert.equal(mq.latex(), '\\sin_{10}2');
+		assert.equal(mq.latex(), '\\ker_{10}2');
 	});
 
 	test('backspace through compound subscript', () => {

@@ -25,8 +25,11 @@ suite('typing with auto-replaces', () => {
 
 	suite('LiveFraction', () => {
 		test('full MathQuill', () => {
-			mq.typedText('1/2').keystroke('Tab').typedText('+sinx/');
-			assertLatex('\\frac{1}{2}+\\frac{\\sin x}{ }');
+			mq.options.addAutoCommands('sin');
+			mq.typedText('1/2').keystroke('Tab').typedText('+sinx').keystroke('Tab').typedText('/');
+			assertLatex('\\frac{1}{2}+\\frac{\\sin\\left(x\\right)}{ }');
+			mq.options.removeAutoCommands('sin');
+
 			mq.latex('').typedText('1+/2');
 			assertLatex('1+\\frac{2}{ }');
 			mq.latex('').typedText('1 2/3');
@@ -48,6 +51,11 @@ suite('typing with auto-replaces', () => {
 			assertLatex('\\sqrt{-x}');
 		});
 
+		test('advanced (math function)', () => {
+			mq.typedText('\\sin^2');
+			assertLatex('\\sin^2\\left(\\right)');
+		});
+
 		test('they\'re passed their name', () => {
 			mq.cmd('\\alpha');
 			assert.equal(mq.latex(), '\\alpha');
@@ -59,8 +67,8 @@ suite('typing with auto-replaces', () => {
 		});
 
 		test('auto-operator names', () => {
-			mq.typedText('\\sin^2');
-			assertLatex('\\sin^2');
+			mq.typedText('\\ker^2');
+			assertLatex('\\ker^2');
 		});
 
 		test('nonexistent LaTeX command', () => {
@@ -881,7 +889,7 @@ suite('typing with auto-replaces', () => {
 	suite('autoCommands', () => {
 		setup(() => {
 			mq.config({
-				autoOperatorNames: 'sin pp',
+				autoOperatorNames: 'ker pp',
 				autoCommands: 'pi tau phi theta Gamma sum prod sqrt nthroot'
 			});
 		});
@@ -929,24 +937,24 @@ suite('typing with auto-replaces', () => {
 		});
 
 		test('sequences of auto-commands and other assorted characters', () => {
-			mq.typedText('sin' + 'pi');
-			assertLatex('\\sin\\pi');
+			mq.typedText('ker' + 'pi');
+			assertLatex('\\ker\\pi');
 			mq.keystroke('Left Backspace');
-			assertLatex('si\\pi');
+			assertLatex('ke\\pi');
 			mq.keystroke('Left').typedText('p');
-			assertLatex('spi\\pi');
+			assertLatex('kpe\\pi');
 			mq.typedText('i');
-			assertLatex('s\\pi i\\pi');
+			assertLatex('k\\pi e\\pi');
 			mq.typedText('p');
-			assertLatex('s\\pi pi\\pi');
-			mq.keystroke('Right').typedText('n');
-			assertLatex('s\\pi pin\\pi');
-			mq.keystroke('Left Left Left').typedText('s');
-			assertLatex('s\\pi spin\\pi');
-			mq.keystroke('Backspace');
-			assertLatex('s\\pi pin\\pi');
-			mq.keystroke('Delete').keystroke('Backspace');
-			assertLatex('\\sin\\pi');
+			assertLatex('k\\pi pe\\pi');
+			mq.keystroke('Right').typedText('r');
+			assertLatex('k\\pi per\\pi');
+			mq.keystroke('Left Left Left').typedText('k');
+			assertLatex('k\\pi kper\\pi');
+			mq.keystroke('Delete');
+			assertLatex('k\\pi\\ker\\pi');
+			mq.keystroke('Backspace').keystroke('Backspace');
+			assertLatex('\\ker\\pi');
 		});
 
 		test('has lower "precedence" than operator names', () => {
@@ -961,7 +969,7 @@ suite('typing with auto-replaces', () => {
 		test('command length less than 2', () => assert.throws(() => MQ.config({ autoCommands: 'e' })));
 
 		test('command is a built-in operator name', () => {
-			const cmds = ('Pr arg deg det dim exp gcd hom ker lg lim ln log max min sup'
+			const cmds = ('Pr arg deg det dim exp gcd hom ker lg lim max min sup'
 				+ ' limsup liminf injlim projlim Pr').split(' ');
 			for (const cmd of cmds) {
 				assert.throws(() => MQ.config({ autoCommands: cmd }), `MQ.config({ autoCommands: "${cmd}" })`);
@@ -969,9 +977,9 @@ suite('typing with auto-replaces', () => {
 		});
 
 		test('built-in operator names even after auto-operator names overridden', () => {
-			MQ.config({ autoOperatorNames: 'sin arcosh cosh cos cosec csc' });
+			MQ.config({ autoOperatorNames: 'dim hom ker hcf hcfe' });
 			// ^ happen to be the ones required by autoOperatorNames.test.js
-			const cmds = 'Pr arg deg det exp gcd lg lim ln log max min sup'.split(' ');
+			const cmds = 'Pr arg deg det exp gcd lg lim max min sup'.split(' ');
 			for (const cmd of cmds) {
 				assert.throws(() => MQ.config({ autoCommands: cmd }), `MQ.config({ autoCommands: "${cmd}" })`);
 			}

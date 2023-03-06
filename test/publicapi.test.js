@@ -373,8 +373,8 @@ suite('Public API', () => {
 		});
 
 		test('operator name', () => {
-			mq.cmd('\\sin');
-			assert.equal(mq.latex(), '\\sin');
+			mq.cmd('\\ker');
+			assert.equal(mq.latex(), '\\ker');
 		});
 
 		test('nonexistent LaTeX command is noop', () => {
