@@ -112,13 +112,13 @@ export class Fragment {
 		prayWellFormed(parent, rightEnd, rightEnd?.[R]);
 
 		if (leftEnd[L]) {
-			(leftEnd[L] as TNode)[R] = rightEnd?.[R];
+			leftEnd[L][R] = rightEnd?.[R];
 		} else {
 			parent.ends[L] = rightEnd?.[R];
 		}
 
 		if (rightEnd?.[R]) {
-			(rightEnd[R] as TNode)[L] = leftEnd[L];
+			rightEnd[R][L] = leftEnd[L];
 		} else {
 			parent.ends[R] = leftEnd[L];
 		}

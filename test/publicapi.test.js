@@ -39,7 +39,7 @@ suite('Public API', () => {
 			MQ.MathField(el);
 			const rootBlock = el.querySelector('.mq-root-block');
 			assert.ok(rootBlock.classList.contains('mq-empty'));
-			assert.ok(!rootBlock.classList.contains('mq-hasCursor'));
+			assert.ok(!rootBlock.classList.contains('mq-has-cursor'));
 		});
 
 	});

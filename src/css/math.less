@@ -24,7 +24,7 @@
 	}
 
 	// TODO: dasherize non-symbola
-	var, .mq-text-mode, .mq-nonSymbola {
+	var, .mq-text-mode, .mq-non-symbola {
 		font-family: @times;
 		line-height: .9;
 	}
@@ -58,7 +58,7 @@
 		white-space: pre;  
 	}
 
-	.mq-text-mode.mq-hasCursor {
+	.mq-text-mode.mq-has-cursor {
 		box-shadow: inset darkgray 0 .1em .2em;
 		padding: 0 .1em;
 		margin: 0 -.1em;
@@ -205,10 +205,6 @@
 	.mq-paren {
 		padding: 0 .1em;
 		vertical-align: top;
-		-webkit-transform-origin: center .06em;
-		-moz-transform-origin: center .06em;
-		-ms-transform-origin: center .06em;
-		-o-transform-origin: center .06em;
 		transform-origin: center .06em;
 
 		&.mq-ghost {
@@ -321,9 +317,6 @@
 		line-height: .95em;
 		margin-bottom: -.7em;
 		transform: scaleX(1.5);
-		-moz-transform: scaleX(1.5);
-		-o-transform: scaleX(1.5);
-		-webkit-transform: scaleX(1.5);
 	}
 
 	.mq-hat-stem {
@@ -356,11 +349,7 @@
 
 	.mq-overarc {
 		border-top: 1px solid black;
-		-webkit-border-top-right-radius: 50% .3em;
-		-moz-border-radius-topright: 50% .3em;
 		border-top-right-radius: 50% .3em;
-		-webkit-border-top-left-radius: 50% .3em;
-		-moz-border-radius-topleft: 50% .3em;
 		border-top-left-radius: 50% .3em;
 		margin-top: 1px;
 		padding-top: 0.15em;
@@ -384,12 +373,8 @@
 		}
 
 		&.mq-arrow-left::before {
-			-moz-transform: scaleX(-1);
-			-o-transform: scaleX(-1);
-			-webkit-transform: scaleX(-1);
 			transform: scaleX(-1);
 			filter: fliph;
-			-ms-filter: "FlipH";
 		}
 
 		&.mq-arrow-both {
@@ -404,12 +389,8 @@
 			}
 
 			&::before{
-				-moz-transform: scaleX(-1);
-				-o-transform: scaleX(-1);
-				-webkit-transform: scaleX(-1);
 				transform: scaleX(-1);
 				filter: fliph;
-				-ms-filter: "FlipH";
 			}
 
 			&::after {

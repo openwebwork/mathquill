@@ -34,15 +34,6 @@ module.exports = (env, argv) => {
 		module: {
 			rules: [
 				{
-					// js
-					test: /\.js$/,
-					exclude: (file) => {
-						// Don't transpile node_modules
-						return /node_modules/.test(file);
-					},
-					use: ['babel-loader']
-				},
-				{
 					// typescript
 					test: /\.ts$/,
 					loader: 'ts-loader'

@@ -30,7 +30,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		const leftEnd = this.ends[L] as TNode;
 
 		leftEnd.focus = () => {
-			leftEnd.parent?.elements.addClass('mq-hasCursor');
+			leftEnd.parent?.elements.addClass('mq-has-cursor');
 			if (leftEnd.isEmpty())
 				leftEnd.parent?.elements.removeClass('mq-empty');
 
@@ -38,7 +38,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		};
 
 		leftEnd.blur = () => {
-			leftEnd.parent?.elements.removeClass('mq-hasCursor');
+			leftEnd.parent?.elements.removeClass('mq-has-cursor');
 			if (leftEnd.isEmpty())
 				leftEnd.parent?.elements.addClass('mq-empty');
 
@@ -95,7 +95,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		this.elements = new VNode(this.elements.last);
 		this.remove();
 
-		if (this[R]) cursor.insLeftOf(this[R] as TNode);
+		if (this[R]) cursor.insLeftOf(this[R]);
 		else cursor.insAtRightEnd(this.parent as TNode);
 
 		const latex = this.ends[L]?.latex() || ' ';

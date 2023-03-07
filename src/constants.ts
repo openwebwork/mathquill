@@ -50,12 +50,17 @@ export const noop = () => { /* do nothing */ };
 //  Note that the for-in loop will yield 'each', but 'each' maps to
 //  the function object created by iterator() which does not have a
 //  .method() method, so that just fails silently.
-type CallableKeyOf<S, T, U, V> = {[P in keyof S]: P extends Extract<S, (arg1?: U, arg2?: V) => T> ? P : never}[keyof S];
+type CallableKeyOf<S, T, U, V> = keyof {
+	[P in keyof S as S[P] extends ((arg1?: U, arg2?: V) => T) ? P : never]: unknown
+};
 
-export const iterator = <R, S, T, U, V>(generator: (yield_: (obj: R) => S | undefined) => T) => {
+export const iterator = <R extends object, S, T, U, V>(generator: (yield_: (obj: R) => S | undefined) => T) => {
 	return (fn: ((obj: R) => S) | string, arg1?: U, arg2?: V) => {
 		const yield_ = typeof fn === 'function' ? fn
-			: (obj: R) => { if (fn in obj) return obj[fn as CallableKeyOf<R, S, U, V>](arg1, arg2) as S; };
+			: (obj: R) => {
+				if (fn in obj)
+					return (obj[fn as CallableKeyOf<R, S, U, V>] as ((arg1?: U, arg2?: V) => S))(arg1, arg2);
+			};
 		return generator(yield_);
 	};
 };
