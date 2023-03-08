@@ -969,7 +969,7 @@ suite('typing with auto-replaces', () => {
 		test('command length less than 2', () => assert.throws(() => MQ.config({ autoCommands: 'e' })));
 
 		test('command is a built-in operator name', () => {
-			const cmds = ('Pr arg deg det dim exp gcd hom ker lg lim max min sup'
+			const cmds = ('Pr arg det dim exp gcd hom ker lg lim max min sup'
 				+ ' limsup liminf injlim projlim Pr').split(' ');
 			for (const cmd of cmds) {
 				assert.throws(() => MQ.config({ autoCommands: cmd }), `MQ.config({ autoCommands: "${cmd}" })`);
@@ -979,7 +979,7 @@ suite('typing with auto-replaces', () => {
 		test('built-in operator names even after auto-operator names overridden', () => {
 			MQ.config({ autoOperatorNames: 'dim hom ker hcf hcfe' });
 			// ^ happen to be the ones required by autoOperatorNames.test.js
-			const cmds = 'Pr arg deg det exp gcd lg lim max min sup'.split(' ');
+			const cmds = 'Pr arg det exp gcd lg lim max min sup'.split(' ');
 			for (const cmd of cmds) {
 				assert.throws(() => MQ.config({ autoCommands: cmd }), `MQ.config({ autoCommands: "${cmd}" })`);
 			}

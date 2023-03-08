@@ -1,6 +1,6 @@
 // Symbols for Advanced Mathematics
 
-import { noop, bindMixin, LatexCmds } from 'src/constants';
+import { L, R, noop, bindMixin, LatexCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElements';
 
@@ -339,7 +339,17 @@ LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection =
 	bindMixin(BinaryOperator, '\\cap ', '&cap;');
 
 // FIXME: the correct LaTeX would be ^\circ but we can't parse that
-LatexCmds.deg = LatexCmds.degree = bindMixin(VanillaSymbol, '\\degree ', '&deg;');
+LatexCmds.deg = LatexCmds.degree = class degree extends VanillaSymbol {
+	constructor() {
+		super('\\degree ', '&deg;');
+	}
+
+	text() {
+		const leftText = this[L]?.text();
+		const rightText = this[R]?.text();
+		return `${leftText && leftText !== ' ' ? ' ' : ''}deg${rightText && /^[^FCK]$/.test(rightText) ? ' ' : ''}`;
+	}
+};
 
 LatexCmds.ang = LatexCmds.angle = bindMixin(VanillaSymbol, '\\angle ', '&ang;');
 LatexCmds.measuredangle = bindMixin(VanillaSymbol, '\\measuredangle ', '&#8737;');
