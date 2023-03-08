@@ -28,37 +28,37 @@ suite('text() output', () => {
 
 	test('degrees typed with no spaces', () => {
 		mq.typedText('0degC');
-		assert.equal(mq.text(), '0 degC', '0 degrees Celsius');
+		assert.equal(mq.text(), '0\u00B0C', '0 degrees Celsius');
 		mq.empty();
 
 		mq.typedText('32degF');
-		assert.equal(mq.text(), '32 degF', '32 degrees Fahrenheit');
+		assert.equal(mq.text(), '32\u00B0F', '32 degrees Fahrenheit');
 		mq.empty();
 
 		mq.typedText('273.15degK');
-		assert.equal(mq.text(), '273.15 degK', '273.15 degrees Kelvin');
+		assert.equal(mq.text(), '273.15\u00B0K', '273.15 degrees Kelvin');
 		mq.empty();
 
 		mq.typedText('5degH');
-		assert.equal(mq.text(), '5 deg H', '5 degrees H?');
+		assert.equal(mq.text(), '5\u00B0 H', '5 degrees H?');
 		mq.empty();
 	});
 
 	test('degrees typed with spaces', () => {
 		mq.typedText('0 degC');
-		assert.equal(mq.text(), '0 degC', '0 degrees Celsius');
+		assert.equal(mq.text(), '0 \u00B0C', '0 degrees Celsius');
 		mq.empty();
 
 		mq.typedText('32 degF');
-		assert.equal(mq.text(), '32 degF', '32 degrees Fahrenheit');
+		assert.equal(mq.text(), '32 \u00B0F', '32 degrees Fahrenheit');
 		mq.empty();
 
 		mq.typedText('273.15 degK');
-		assert.equal(mq.text(), '273.15 degK', '273.15 degrees Kelvin');
+		assert.equal(mq.text(), '273.15 \u00B0K', '273.15 degrees Kelvin');
 		mq.empty();
 
 		mq.typedText('5 degH');
-		assert.equal(mq.text(), '5 deg H', '5 degrees H?');
+		assert.equal(mq.text(), '5 \u00B0 H', '5 degrees H?');
 		mq.empty();
 	});
 });

@@ -1,6 +1,6 @@
 // Symbols for Advanced Mathematics
 
-import { L, R, noop, bindMixin, LatexCmds } from 'src/constants';
+import { R, noop, bindMixin, LatexCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElements';
 
@@ -245,8 +245,11 @@ LatexCmds.perp = LatexCmds.perpendicular = bindMixin(VanillaSymbol, '\\perp ', '
 LatexCmds.nabla = LatexCmds.del = bindMixin(VanillaSymbol, '\\nabla ', '&nabla;');
 LatexCmds.hbar = bindMixin(VanillaSymbol, '\\hbar ', '&#8463;');
 
+// FIXME: \AA is not valid LaTeX in math mode.  Neither is \text\AA (which is what this was before).  Furthermore,
+// \text\AA does not parse correctly.  Valid LaTeX in math mode without any packages would be \textup{~\AA}, but that
+// also does not parse correctly.
 LatexCmds.AA = LatexCmds.Angstrom = LatexCmds.angstrom =
-	bindMixin(VanillaSymbol, '\\text\\AA ', '&#8491;');
+	bindMixin(VanillaSymbol, '\\AA ', '&#8491;', '\u00C5');
 
 LatexCmds.ring = LatexCmds.circ = LatexCmds.circle =
 	bindMixin(VanillaSymbol, '\\circ ', '&#8728;');
@@ -345,9 +348,8 @@ LatexCmds.deg = LatexCmds.degree = class degree extends VanillaSymbol {
 	}
 
 	text() {
-		const leftText = this[L]?.text();
 		const rightText = this[R]?.text();
-		return `${leftText && leftText !== ' ' ? ' ' : ''}deg${rightText && /^[^FCK]$/.test(rightText) ? ' ' : ''}`;
+		return `\u00B0${rightText && /^[^FCK]$/.test(rightText) ? ' ' : ''}`;
 	}
 };
 
