@@ -33,7 +33,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			const html = block.join('html');
 			this.root.elements.html(html);
 			this.root.domify(this.root.elements.children());
-			this.root.finalizeInsert(this.cursor.options);
+			this.root.finalizeInsert(this.cursor.options, this.cursor);
 		}
 		else {
 			this.root.elements.empty();
@@ -80,7 +80,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 
 			this.root.elements.lastElement.append(...this.root.domify().contents);
 
-			this.root.finalizeInsert(this.cursor.options);
+			this.root.finalizeInsert(this.cursor.options, this.cursor);
 		}
 	}
 };

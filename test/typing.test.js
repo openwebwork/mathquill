@@ -1075,6 +1075,7 @@ suite('typing with auto-replaces', () => {
 			assert.equal(mq.keystroke('Left').typedText('+').latex(), 'x^{a+b}');
 			mq.latex('');
 		});
+
 		test('supSubsRequireOperand', () => {
 			assert.equal(mq.typedText('^').latex(), '^{ }');
 			assert.equal(mq.typedText('2').latex(), '^2');
@@ -1114,6 +1115,13 @@ suite('typing with auto-replaces', () => {
 			mq.latex('');
 			assert.equal(mq.typedText('2').latex(), '2');
 			assert.equal(mq.keystroke('Shift-Left').typedText('^').latex(), '2');
+			mq.latex('');
+			assert.equal(mq.typedText('x^2').latex(), 'x^2');
+			mq.keystroke('Left Left');
+			assert.equal(mq.typedText('+').latex(), 'x+2');
+			mq.latex('');
+			assert.equal(mq.typedText('x^2').latex(), 'x^2');
+			assert.equal(mq.keystroke('Left Left').typedText('(').latex(), 'x\\left(2\\right)');
 		});
 	});
 

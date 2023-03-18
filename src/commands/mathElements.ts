@@ -20,9 +20,6 @@ import { MathBlock } from 'commands/mathBlock';
 // Both MathBlock's and MathCommand's descend from it.
 export class MathElement extends TNode {
 	finalizeInsert(options: Options, cursor: Cursor) {
-		// `cursor` param is only for SupSub::contactWeld,
-		// and is deliberately only passed in by writeLatex,
-		// see ea7307eb4fac77c149a11ffdf9a831df85247693
 		this.postOrder('finalizeTree', options);
 		this.postOrder('contactWeld', cursor);
 
@@ -129,7 +126,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 			this.placeCursor(cursor);
 			this.prepareInsertionAt(cursor);
 		}
-		this.finalizeInsert(cursor.options);
+		this.finalizeInsert(cursor.options, cursor);
 		this.placeCursor(cursor);
 	}
 
@@ -561,19 +558,8 @@ export class Letter extends Variable {
 					if (word in TwoWordOpNames) last?.[L]?.[L]?.[L]?.elements.addClass('mq-last');
 					if (!this.shouldOmitPadding(first?.[L])) first?.elements.addClass('mq-first');
 					if (!this.shouldOmitPadding(last?.[R])) {
-						if (last?.[R] instanceof SupSub) {
-							// XXX monkey-patching, but what's the right thing here?
-							const supsub = last[R];
-							// Have operatorname-specific code in SupSub? A CSS-like language to style the
-							// math tree, but which ignores cursor and selection (which CSS can't)?
-							supsub.siblingCreated = supsub.siblingDeleted = () => {
-								supsub.elements.toggleClass('mq-after-operator-name', !(supsub[R] instanceof Bracket));
-							};
-							supsub.siblingCreated(opts);
-						}
-						else {
-							last?.elements.toggleClass('mq-last', !(last?.[R] instanceof Bracket));
-						}
+						if (last?.[R] instanceof SupSub) last[R].siblingCreated?.(opts);
+						else last?.elements.toggleClass('mq-last', !(last?.[R] instanceof Bracket));
 					}
 
 					i += len - 1;
@@ -711,23 +697,35 @@ export class SupSub extends MathCommand {
 				sup.style.marginBottom = `${cur_margin + needed}px`;
 			}
 		};
+
+		this.siblingCreated = this.siblingDeleted = (options: Options) => {
+			if (this[L] instanceof Letter && this[L].isPartOfOperator && this[R] &&
+				!(this[R] instanceof BinaryOperator
+					|| this[R] instanceof UpperLowerLimitCommand
+					|| this[R] instanceof Bracket)
+			)
+				this.elements.addClass('mq-after-operator-name');
+			else this.elements.removeClass('mq-after-operator-name');
+
+			this.maybeFlatten(options);
+		};
 	}
 
-	hasValidBase(cursor: Cursor) {
-		return !cursor.options.supSubsRequireOperand || (
-			cursor[L] &&
-			cursor[L]?.ctrlSeq !== '\\ ' &&
-			!(cursor[L] instanceof BinaryOperator) &&
-			!/^[,;:]$/.test(cursor[L]?.ctrlSeq ?? '')
+	hasValidBase(options: Options, leftward?: TNode, parent?: TNode) {
+		return !options.supSubsRequireOperand || (
+			leftward &&
+			leftward.ctrlSeq !== '\\ ' &&
+			!(leftward instanceof BinaryOperator) &&
+			!/^[,;:]$/.test(leftward.ctrlSeq ?? '')
 		) || (
-			!cursor[L] &&
-			cursor.parent?.parent instanceof MathFunction &&
-			cursor.parent == cursor.parent.parent.blocks[0]
+			!leftward &&
+			parent?.parent instanceof MathFunction &&
+			parent == parent.parent.blocks[0]
 		);
 	}
 
 	createLeftOf(cursor: Cursor) {
-		if (this.hasValidBase(cursor)) {
+		if (this.hasValidBase(cursor.options, cursor[L], cursor.parent)) {
 			// If this SupSub is being placed on a fraction, then add parentheses around the fraction.
 			if (cursor[L] instanceof Fraction) {
 				const brack = new Bracket(R, '(', ')', '(', ')');
@@ -782,20 +780,7 @@ export class SupSub extends MathCommand {
 			}
 		}
 
-		// On deletion of something to the left check to see if this has been left with an invalid base.
-		// If so bring the children out, and remove this SupSub.
-		if (cursor && cursor[R] === this && (!this.hasValidBase(cursor) || cursor[L] instanceof Fraction)) {
-			for (const supsub of ['sub', 'sup'] as Array<keyof Pick<SupSub, 'sub' | 'sup'>>) {
-				const src = this[supsub];
-				if (!src) continue;
-				src.children().disown()
-					.adopt(cursor.parent as TNode, cursor[L], cursor[R])
-					.elements.insDirOf(R, cursor.element);
-				if (cursor[L]?.[R]) cursor.insLeftOf(cursor[L]?.[R]);
-				else cursor.insAtDirEnd(L, cursor.parent as TNode);
-			}
-			this.remove();
-		}
+		this.maybeFlatten(cursor.options);
 
 		// Only allow deletion of a sup or sub in a function supsub block when it is empty.
 		// This sets that up when the first sup or sub is created.
@@ -818,6 +803,26 @@ export class SupSub extends MathCommand {
 
 	finalizeTree() {
 		(this.ends[L] as TNode).isSupSubLeft = true;
+	}
+
+	// Check to see if this has an invalid base.  If so bring the children out, and remove this SupSub.
+	maybeFlatten(options: Options) {
+		const cursor = this.getController()?.cursor;
+		const leftward = cursor?.[R] === this ? cursor[L] : this[L];
+		if (!this.hasValidBase(options, leftward, this.parent) || leftward instanceof Fraction) {
+			for (const supsub of ['sub', 'sup'] as Array<keyof Pick<SupSub, 'sub' | 'sup'>>) {
+				const src = this[supsub];
+				if (!src) continue;
+				src.children().disown()
+					.adopt(this.parent as TNode, this[L], this)
+					.elements.insDirOf(L, this.elements);
+			}
+			this.remove();
+			if (leftward === cursor?.[L]) {
+				if (cursor?.[L]?.[R]) cursor.insLeftOf(cursor[L]?.[R]);
+				else cursor?.insAtDirEnd(L, cursor.parent as TNode);
+			}
+		}
 	}
 
 	moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
