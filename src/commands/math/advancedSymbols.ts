@@ -1,6 +1,6 @@
 // Symbols for Advanced Mathematics
 
-import { noop, bindMixin, LatexCmds } from 'src/constants';
+import { R, noop, bindMixin, LatexCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElements';
 
@@ -245,8 +245,11 @@ LatexCmds.perp = LatexCmds.perpendicular = bindMixin(VanillaSymbol, '\\perp ', '
 LatexCmds.nabla = LatexCmds.del = bindMixin(VanillaSymbol, '\\nabla ', '&nabla;');
 LatexCmds.hbar = bindMixin(VanillaSymbol, '\\hbar ', '&#8463;');
 
+// FIXME: \AA is not valid LaTeX in math mode.  Neither is \text\AA (which is what this was before).  Furthermore,
+// \text\AA does not parse correctly.  Valid LaTeX in math mode without any packages would be \textup{~\AA}, but that
+// also does not parse correctly.
 LatexCmds.AA = LatexCmds.Angstrom = LatexCmds.angstrom =
-	bindMixin(VanillaSymbol, '\\text\\AA ', '&#8491;');
+	bindMixin(VanillaSymbol, '\\AA ', '&#8491;', '\u00C5');
 
 LatexCmds.ring = LatexCmds.circ = LatexCmds.circle =
 	bindMixin(VanillaSymbol, '\\circ ', '&#8728;');
@@ -339,7 +342,16 @@ LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection =
 	bindMixin(BinaryOperator, '\\cap ', '&cap;');
 
 // FIXME: the correct LaTeX would be ^\circ but we can't parse that
-LatexCmds.deg = LatexCmds.degree = bindMixin(VanillaSymbol, '\\degree ', '&deg;');
+LatexCmds.deg = LatexCmds.degree = class degree extends VanillaSymbol {
+	constructor() {
+		super('\\degree ', '&deg;');
+	}
+
+	text() {
+		const rightText = this[R]?.text();
+		return `\u00B0${rightText && /^[^FCK]$/.test(rightText) ? ' ' : ''}`;
+	}
+};
 
 LatexCmds.ang = LatexCmds.angle = bindMixin(VanillaSymbol, '\\angle ', '&ang;');
 LatexCmds.measuredangle = bindMixin(VanillaSymbol, '\\measuredangle ', '&#8737;');

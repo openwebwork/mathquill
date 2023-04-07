@@ -18,3 +18,4 @@ import 'test/tree.test';
 import 'test/focusBlur.test';
 import 'test/SupSub.test';
 import 'test/MathFunction.test';
+import 'test/text-output.test';

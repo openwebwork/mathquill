@@ -360,8 +360,6 @@ suite('MathFunction', () => {
 		});
 	});
 
-	// FIXME: For WeBWorK text output is extremely important.  Currently these are the only tests to check text output.
-	// Much more of this is needed.
 	suite('text output', () => {
 		test('function without supsubs', () => {
 			mq.typedText('sin');

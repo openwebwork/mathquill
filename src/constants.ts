@@ -131,7 +131,7 @@ export const OPP_BRACKS: { readonly [key: string]: string } = {
 export type EmbedOptions = { text?: () => string, htmlString?: string, latex?: () => string };
 export const EMBEDS: { [key: string]: (data: string) => EmbedOptions } = {};
 
-// The set of operator names like \arg, \deg, etc that are built-into LaTeX,
+// The set of operator names like \arg, \det, etc that are built-into LaTeX,
 // see Section 3.15 of the Short Math Guide: http://tug.ctan.org/info/short-math-guide/short-math-guide.pdf
 // MathQuill auto-unitalicizes some operator names not in that set, like 'hcf',
 // which must be exported as \operatorname{hcf}.
@@ -142,7 +142,7 @@ export const BuiltInOpNames: { [key: string]: 1 } = {};
 
 // Standard operators
 for (const op of [
-	'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim',
+	'arg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim',
 	'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
 ]) { BuiltInOpNames[op] = 1; }
 

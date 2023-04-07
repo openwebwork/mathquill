@@ -124,7 +124,7 @@ export class Options {
 
 		// Standard operators
 		for (const op of [
-			'arg', 'deg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim',
+			'arg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim',
 			'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
 		]) { ops[op] = 1; }
 
