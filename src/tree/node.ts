@@ -289,7 +289,7 @@ export class TNode {
 	blur(_ignore_cursor?: Cursor) { /* do nothing */ }
 	seek(_ignore_left: number, _ignore_cursor: Cursor) { /* do nothing */ }
 	writeLatex(_ignore_cursor: Cursor, _ignore_latex: string) { /* do nothing */ }
-	finalizeInsert(_ignore_options: Options, _ignore_cursor?: Cursor) { /* do nothing */ }
+	finalizeInsert(_ignore_options: Options, _ignore_cursor: Cursor) { /* do nothing */ }
 	write(_ignore_cursor: Cursor, _ignore_ch: string) { /* do nothing */ }
 	replaces(_ignore_fragment?: string | Fragment) { /* do nothing */ }
 	setOptions(_ignore_options: { text?: () => string, htmlTemplate?: string, latex?: () => string }) { return this; }

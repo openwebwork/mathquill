@@ -148,6 +148,9 @@ suite('CSS', () => {
 		mq.typedText('2').keystroke('Tab').typedText('(');
 		assert.ok(!supsub.classList.contains('mq-after-operator-name'));
 
+		mq.keystroke('Delete Left Left Left Backspace');
+		assert.ok(!supsub.classList.contains('mq-after-operator-name'));
+
 		const mqEl = mq.el();
 		while (mqEl.firstChild) mqEl.firstChild.remove();
 	});

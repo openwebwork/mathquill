@@ -78,8 +78,7 @@ export default class MathQuill {
 					ctrlr.KIND_OF_MQ = kind;
 					return new APIClasses[kind](ctrlr).config(opts).__mathquillify();
 				};
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			(MQ as MQApi)[kind as keyof MQApi].prototype = APIClasses[kind].prototype;
+			Object.setPrototypeOf((MQ as MQApi)[kind as keyof MQApi], APIClasses[kind]);
 		}
 
 		return MQ as MQApi;
