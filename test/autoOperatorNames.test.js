@@ -47,13 +47,13 @@ suite('autoOperatorNames', () => {
 			assert.equal(count, 2 + str.length);
 		};
 
-		assertAutoOperatorNamesWork('sin', '\\sin');
-		assertAutoOperatorNamesWork('arcosh', '\\operatorname{arcosh}');
-		assertAutoOperatorNamesWork('acosh', 'a\\cosh');
-		assertAutoOperatorNamesWork('cosine', '\\cos ine');
-		assertAutoOperatorNamesWork('arcosecant', 'ar\\operatorname{cosec}ant');
-		assertAutoOperatorNamesWork('cscscscscscsc', '\\csc s\\csc s\\csc sc');
-		assertAutoOperatorNamesWork('scscscscscsc', 's\\csc s\\csc s\\csc');
+		assertAutoOperatorNamesWork('ker', '\\ker');
+		assertAutoOperatorNamesWork('hcf', '\\operatorname{hcf}');
+		assertAutoOperatorNamesWork('ahcfe', 'a\\operatorname{hcfe}');
+		assertAutoOperatorNamesWork('dimline', '\\dim line');
+		assertAutoOperatorNamesWork('arhcfant', 'ar\\operatorname{hcf}ant');
+		assertAutoOperatorNamesWork('kerskerskersc', '\\ker s\\ker s\\ker sc');
+		assertAutoOperatorNamesWork('skerskersker', 's\\ker s\\ker s\\ker');
 	});
 
 	test('text() output', () => {
@@ -62,8 +62,8 @@ suite('autoOperatorNames', () => {
 			assertText(`outputting ${latexStr}`, text);
 		};
 
-		assertTranslatedCorrectly('\\sin', 'sin ');
-		assertTranslatedCorrectly('\\sin\\left(xy\\right)', 'sin(xy)');
+		assertTranslatedCorrectly('\\ker', 'ker ');
+		assertTranslatedCorrectly('\\ker\\left(xy\\right)', 'ker(xy)');
 	});
 
 	test('deleting', () => {
@@ -74,33 +74,38 @@ suite('autoOperatorNames', () => {
 			return _autoUnItalicize.apply(this, arguments);
 		};
 
-		const str = 'cscscscscscsc';
+		mq.options.addAutoOperatorNames('cac');
+
+		const str = 'cacacacacacac';
 		for (const char of str) mq.typedText(char);
-		assertLatex(`typing '${str}'`, '\\csc s\\csc s\\csc sc');
+		assertLatex(`typing '${str}'`, '\\operatorname{cac}a\\operatorname{cac}a\\operatorname{cac}ac');
 		assert.equal(count, str.length);
 
 		mq.moveToLeftEnd().keystroke('Delete');
-		assertLatex('deleted first char', 's\\csc s\\csc s\\csc');
+		assertLatex('deleted first char', 'a\\operatorname{cac}a\\operatorname{cac}a\\operatorname{cac}');
 		assert.equal(count, str.length + 1);
 
 		mq.typedText('c');
-		assertLatex('typed back first char', '\\csc s\\csc s\\csc sc');
+		assertLatex('typed back first char', '\\operatorname{cac}a\\operatorname{cac}a\\operatorname{cac}ac');
 		assert.equal(count, str.length + 2);
 
 		mq.typedText('+');
-		assertLatex('typed plus to interrupt sequence of letters', 'c+s\\csc s\\csc s\\csc');
+		assertLatex('typed plus to interrupt sequence of letters',
+			'c+a\\operatorname{cac}a\\operatorname{cac}a\\operatorname{cac}');
 		assert.equal(count, str.length + 4);
 
 		mq.keystroke('Backspace');
-		assertLatex('deleted plus', '\\csc s\\csc s\\csc sc');
+		assertLatex('deleted plus', '\\operatorname{cac}a\\operatorname{cac}a\\operatorname{cac}ac');
 		assert.equal(count, str.length + 5);
+
+		mq.options.removeAutoOperatorNames('cac');
 	});
 
 	suite('override autoOperatorNames', () => {
 		test('basic', () => {
-			mq.config({ autoOperatorNames: 'sin lol' });
-			mq.typedText('arcsintrololol');
-			assert.equal(mq.latex(), 'arc\\sin tro\\operatorname{lol}ol');
+			mq.config({ autoOperatorNames: 'ker lol' });
+			mq.typedText('arckertrololol');
+			assert.equal(mq.latex(), 'arc\\ker tro\\operatorname{lol}ol');
 		});
 
 		test('command contains non-letters', () => {

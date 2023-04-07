@@ -1,6 +1,6 @@
 // Abstract classes of math blocks and commands.
 
-import type { Direction } from 'src/constants';
+import type { Direction, Constructor } from 'src/constants';
 import {
 	noop, L, R, mqCmdId, pray, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames
 } from 'src/constants';
@@ -81,6 +81,7 @@ export class MathElement extends TNode {
 // Descendant commands are organized into blocks.
 export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 	blocks: Array<MathBlock>;
+	contentIndex = 0;
 	htmlTemplate: string;
 	textTemplate: Array<string>;
 	replacedFragment?: Fragment;
@@ -123,8 +124,8 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 		this.createBlocks();
 		super.createLeftOf(cursor);
 		if (replacedFragment) {
-			replacedFragment.adopt(this.ends[L] as TNode);
-			this.ends[L]?.elements.firstElement.append(...replacedFragment.elements.contents);
+			replacedFragment.adopt(this.blocks[this.contentIndex]);
+			this.blocks[this.contentIndex]?.elements.firstElement.append(...replacedFragment.elements.contents);
 			this.placeCursor(cursor);
 			this.prepareInsertionAt(cursor);
 		}
@@ -456,7 +457,7 @@ export class Digit extends VanillaSymbol {
 
 export class Variable extends Symbol {
 	isItalic = false;
-	isPartOfOperator = false;  // Used in src/services/mouse.ts
+	isPartOfOperator = false;
 
 	constructor(ch: string, html?: string) {
 		super(ch, `<var>${html || ch}</var>`);
@@ -659,6 +660,29 @@ export class Fraction extends MathCommand {
 	}
 };
 
+export const supSubText = (prefix: string, block?: TNode) => {
+	let needParens = false;
+	let numBlocks = 0;
+	let haveDigits = false;
+	block?.eachChild((child: TNode) => {
+		if (child instanceof Digit) haveDigits = true;
+		if (!(child instanceof Digit || (child instanceof BinaryOperator && child.isUnary))) ++numBlocks;
+		if ((haveDigits && numBlocks) || numBlocks > 1 ||
+			(child instanceof BinaryOperator && !child.isUnary) ||
+			('text' in LatexCmds && child instanceof LatexCmds.text) ||
+			child instanceof UpperLowerLimitCommand ||
+			child instanceof Fraction ||
+			child.ctrlSeq === '\\ ' ||
+			/^[,;:]$/.test(child.ctrlSeq)) {
+			needParens = true;
+		}
+		return !needParens;
+	});
+
+	const l = block?.text() !== ' ' && block?.text();
+	return l ? prefix + (needParens ? `(${l})` : l) : '';
+};
+
 export class SupSub extends MathCommand {
 	supsub: 'sup' | 'sub' = 'sup';
 
@@ -695,6 +719,10 @@ export class SupSub extends MathCommand {
 			cursor[L]?.ctrlSeq !== '\\ ' &&
 			!(cursor[L] instanceof BinaryOperator) &&
 			!/^[,;:]$/.test(cursor[L]?.ctrlSeq ?? '')
+		) || (
+			!cursor[L] &&
+			cursor.parent?.parent instanceof MathFunction &&
+			cursor.parent == cursor.parent.parent.blocks[0]
 		);
 	}
 
@@ -768,6 +796,24 @@ export class SupSub extends MathCommand {
 			}
 			this.remove();
 		}
+
+		// Only allow deletion of a sup or sub in a function supsub block when it is empty.
+		// This sets that up when the first sup or sub is created.
+		if (
+			this.parent?.parent instanceof MathFunction &&
+			this.parent == this.parent.parent.blocks[0] &&
+			!(this.sup && this.sub)
+		) {
+			const fcnBlock = this.parent.parent.blocks[0];
+			for (const supsub of ['sub', 'sup'] as Array<keyof Pick<SupSub, 'sub' | 'sup'>>) {
+				const src = this[supsub];
+				if (!src) continue;
+				src.deleteOutOf = (dir: Direction, cursor: Cursor) => {
+					if (src.isEmpty()) this.remove();
+					cursor.insAtDirEnd(dir, fcnBlock);
+				};
+			}
+		}
 	}
 
 	finalizeTree() {
@@ -806,29 +852,7 @@ export class SupSub extends MathCommand {
 	}
 
 	text() {
-		const text = (prefix: string, block?: TNode) => {
-			let needParens = false;
-			let numBlocks = 0;
-			let haveDigits = false;
-			block?.eachChild((child: TNode) => {
-				if (child instanceof Digit) haveDigits = true;
-				if (!(child instanceof Digit || (child instanceof BinaryOperator && child.isUnary))) ++numBlocks;
-				if ((haveDigits && numBlocks) || numBlocks > 1 ||
-					(child instanceof BinaryOperator && !child.isUnary) ||
-					('text' in LatexCmds && child instanceof LatexCmds.text) ||
-					child instanceof UpperLowerLimitCommand ||
-					child instanceof Fraction ||
-					child.ctrlSeq === '\\ ' ||
-					/^[,;:]$/.test(child.ctrlSeq)) {
-					needParens = true;
-				}
-				return !needParens;
-			});
-
-			const l = block?.text() !== ' ' && block?.text();
-			return l ? prefix + (needParens ? `(${l})` : l) : '';
-		};
-		const mainText = text('_', this.sub) + text('^', this.sup);
+		const mainText = supSubText('_', this.sub) + supSubText('^', this.sup);
 		return mainText + (mainText && this[R] instanceof Digit ? ' ' : '');
 	}
 
@@ -866,26 +890,52 @@ export class SupSub extends MathCommand {
 			const oppositeSupsub = supsub === 'sub' ? 'sup' : 'sub';
 			const updown = supsub === 'sub' ? 'down' : 'up';
 			const thisSupsub = this[supsub] as MathElement;
-			thisSupsub.deleteOutOf = (dir: Direction, cursor: Cursor) => {
-				cursor.insDirOf((thisSupsub[dir] ? (dir === L ? R : L) : dir), thisSupsub.parent as TNode);
-				if (!thisSupsub.isEmpty()) {
-					const end = thisSupsub.ends[dir];
-					thisSupsub.children().disown()
-						.withDirAdopt(dir, cursor.parent as TNode, cursor[dir], cursor[dir === L ? R : L])
-						.elements.insDirOf(dir === L ? R : L, cursor.element);
-					cursor[dir === L ? R : L] = end;
-				}
-				this.supsub = oppositeSupsub;
-				delete this[supsub];
-				delete this[`${updown}Into`];
-				(this[oppositeSupsub] as TNode)[`${updown}OutOf`] = insLeftOfMeUnlessAtEnd;
-				delete (this[oppositeSupsub] as Partial<MathElement>).deleteOutOf;
-				if (supsub === 'sub') {
-					this.elements.addClass('mq-sup-only');
-					this.elements.first.lastChild?.remove();
-				}
-				thisSupsub.remove();
-			};
+
+			if (this.parent?.parent instanceof MathFunction && this.parent === this.parent.parent.blocks[0]) {
+				// Only allow deletion of a sup or sub in a function supsub block when it is empty.
+				// This sets that up when the second sup or sub is created (or when parsing and both exist).
+				thisSupsub.deleteOutOf = (dir: Direction, cursor: Cursor) => {
+					if (thisSupsub.isEmpty()) {
+						cursor[dir === L ? R : L] = thisSupsub.ends[dir];
+						this.supsub = oppositeSupsub;
+						delete this[supsub];
+						delete this[`${updown}Into`];
+						const remainingSupsub = this[oppositeSupsub] as SupSub;
+						remainingSupsub[`${updown}OutOf`] = insLeftOfMeUnlessAtEnd;
+						remainingSupsub.deleteOutOf = (dir: Direction, cursor: Cursor) => {
+							if (remainingSupsub.isEmpty()) this.remove();
+							cursor.insAtDirEnd(dir, this.parent as TNode);
+						};
+						if (supsub === 'sub') {
+							this.elements.addClass('mq-sup-only');
+							this.elements.first.lastChild?.remove();
+						}
+						thisSupsub.remove();
+					}
+					cursor.insDirOf((thisSupsub[dir] ? (dir === L ? R : L) : dir), thisSupsub.parent as TNode);
+				};
+			} else {
+				thisSupsub.deleteOutOf = (dir: Direction, cursor: Cursor) => {
+					cursor.insDirOf((thisSupsub[dir] ? (dir === L ? R : L) : dir), thisSupsub.parent as TNode);
+					if (!thisSupsub.isEmpty()) {
+						const end = thisSupsub.ends[dir];
+						thisSupsub.children().disown()
+							.withDirAdopt(dir, cursor.parent as TNode, cursor[dir], cursor[dir === L ? R : L])
+							.elements.insDirOf(dir === L ? R : L, cursor.element);
+						cursor[dir === L ? R : L] = end;
+					}
+					this.supsub = oppositeSupsub;
+					delete this[supsub];
+					delete this[`${updown}Into`];
+					(this[oppositeSupsub] as TNode)[`${updown}OutOf`] = insLeftOfMeUnlessAtEnd;
+					delete (this[oppositeSupsub] as Partial<MathElement>).deleteOutOf;
+					if (supsub === 'sub') {
+						this.elements.addClass('mq-sup-only');
+						this.elements.first.lastChild?.remove();
+					}
+					thisSupsub.remove();
+				};
+			}
 		}
 	}
 }
@@ -925,16 +975,206 @@ export class UpperLowerLimitCommand extends MathCommand {
 	}
 };
 
-// Round/Square/Curly/Angle Brackets (aka Parens/Brackets/Braces)
-// First typed as one-sided bracket with matching "ghost" bracket at
-// far end of current block, until you type an opposing one.
-export class Bracket extends DelimsMixin(MathCommand) {
-	side: Direction;
+type BracketType = Bracket | MathFunction;
+
+const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends DelimsMixin(Base) {
+	side: Direction = L;
 	sides: {
 		[L]: { ch: string, ctrlSeq: string },
 		[R]: { ch: string, ctrlSeq: string }
-	};
+	} = { [L]: { ch: '(', ctrlSeq: '(' }, [R]: { ch: ')', ctrlSeq: ')' } };
+	inserted = false;
 
+	matchBrack(opts: Options, expectedSide?: Direction, node?: TNode): false | BracketType {
+		// Return node iff it's a matching 1-sided bracket of expected side (if any).
+		// A function is only allowed to match an ending parentheses.
+		return ((node instanceof Bracket && (!(this instanceof MathFunction) || node.sides[node.side]?.ch === ')')) ||
+			(node instanceof MathFunction && this.sides[this.side].ch === ')'))
+			&& !!node.side
+			&& node.side !== (expectedSide === L ? R : expectedSide === R ? L : 0)
+			&& (!opts.restrictMismatchedBrackets
+				|| OPP_BRACKS[this.sides[this.side].ch] === node.sides[node.side].ch
+				|| { '(': ']', '[': ')' }[this.sides[L].ch] === node.sides[R].ch)
+			&& node;
+	}
+
+	closeOpposing(brack: BracketType) {
+		brack.side = 0;
+		// Copy this objects info to brack as this may be a different type of bracket (like (a, b]).
+		brack.sides[this.side] = this.sides[this.side];
+		const delim = brack.delims?.[this.side === L ? 0 : 1];
+		if (delim) {
+			delim.classList.remove('mq-ghost');
+			delim.innerHTML = this.sides[this.side].ch;
+		}
+	}
+
+	createLeftOf(cursor: Cursor) {
+		let brack, side;
+		if (!this.replacedFragment) {
+			// If a selection is not being wrapped in this bracket, check to see if this
+			// bracket is next to or inside an opposing one-sided bracket.
+			const opts = cursor.options;
+			if (this.sides[L].ch === '|') {
+				// Check both sides if this is an absolute value bracket.
+				brack = this.matchBrack(opts, R, cursor[R])
+					|| this.matchBrack(opts, L, cursor[L])
+					|| this.matchBrack(opts, undefined, cursor.parent?.parent);
+			}
+			else {
+				const otherSide = this.side === L ? R : L;
+				brack = this.matchBrack(opts, otherSide, cursor[otherSide])
+					|| this.matchBrack(opts, otherSide, cursor.parent?.parent);
+			}
+		}
+		if (brack) {
+			// brack may be an absolute value with .side not yet set
+			side = this.side = brack.side === L ? R : L;
+
+			// Move the stuff between this bracket and the ghost of the other bracket outside.
+			if (brack === cursor.parent?.parent && cursor[side]) {
+				new Fragment(cursor[side], cursor.parent?.ends[side], side === L ? R : L)
+					.disown().withDirAdopt(side === L ? R : L, brack.parent as TNode, brack, brack[side])
+					.elements.insDirOf(side, brack.elements);
+			}
+
+			if (this instanceof MathFunction && side === L) {
+				// If a math function is typed between a ghosted left parenthesis and a solid right parenthesis,
+				// then adopt its contents and replace the parentheses.
+				const rightward = brack === cursor.parent?.parent && cursor[R] !== brack.ends[R]?.[R] ?
+					new Fragment(cursor[R], brack.ends[R]?.ends[R], L).disown() : undefined;
+				cursor.insRightOf(brack);
+				this.side = 0;
+				if (rightward) this.replaces(rightward);
+				super.createLeftOf(cursor);
+				brack.remove();
+				this.bubble('reflow');
+				return;
+			} else {
+				this.closeOpposing(brack);
+				brack.bubble('reflow');
+			}
+		} else {
+			// If a math function is typed to the left of a parentheses and a selection is not being wrapped,
+			// then adopt then contents of the parentheses and remove them.
+			if (this instanceof MathFunction && !this.replacedFragment && cursor[R] instanceof Bracket
+				&& cursor[R].sides[L].ch === '(' && cursor[R].sides[R].ch === ')')
+			{
+				const paren = cursor[R];
+				this.side = paren.side;
+				this.replaces(new Fragment(paren.ends[L]?.ends[L], paren.ends[R]?.ends[R], L));
+				super.createLeftOf(cursor);
+				paren.remove();
+				this.bubble('reflow');
+				return;
+			}
+
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			brack = this, side = brack.side;
+			// If wrapping a selection, don't be one-sided.
+			if (brack.replacedFragment) brack.side = 0;
+			else if (cursor[side === L ? R : L]) {
+				// Auto-expand so the ghost is at the far end.
+				brack.replaces(new Fragment(cursor[side === L ? R : L], cursor.parent?.ends[side === L ? R : L], side));
+				delete cursor[side === L ? R : L];
+			}
+			super.createLeftOf(cursor);
+		}
+		if (side === L) cursor.insAtLeftEnd(brack.ends[L] as TNode);
+		else cursor.insRightOf(brack);
+	}
+
+	unwrap() {
+		const node = this.blocks[this.contentIndex].children().disown().adopt(this.parent as TNode, this, this[R]);
+		if (node) this.elements.last.after(...node.elements.contents);
+		this.remove();
+	}
+
+	deleteSide(side: Direction, outward: boolean, cursor: Cursor) {
+		const parent = this.parent as TNode, sib = this[side], farEnd = parent.ends[side];
+
+		if (side === this.side) {
+			// If deleting a non-ghost of a one-sided bracket, then unwrap the bracket.
+			this.unwrap();
+			sib ? cursor.insDirOf(side === L ? R : L, sib) : cursor.insAtDirEnd(side, parent);
+			return;
+		}
+
+		const wasSolid = !this.side;
+		this.side = side === L ? R : L;
+		// If deleting a like, outer close-brace of [(1+2)+3} where the inner open-paren is a ghost then become [1+2)+3.
+		if (this.matchBrack(cursor.options, side, this.blocks[this.contentIndex].ends[this.side])) {
+			this.closeOpposing(this.blocks[this.contentIndex].ends[this.side] as BracketType);
+			const origEnd = this.blocks[this.contentIndex].ends[side];
+			this.unwrap();
+			origEnd?.siblingCreated?.(cursor.options, side);
+			sib ? cursor.insDirOf(side === L ? R : L, sib) : cursor.insAtDirEnd(side, parent);
+		}
+		else {
+			// If deleting a like, inner close-brace of ([1+2}+3) where the outer open-paren is a ghost,
+			// then become [1+3+3).
+			if (this.matchBrack(cursor.options, side, this.parent?.parent)) {
+				(this.parent?.parent as BracketType).closeOpposing(this);
+				(this.parent?.parent as BracketType).unwrap();
+			}
+			else if (outward && wasSolid) {
+				// If deleting outward from a solid pair, unwrap.
+				this.unwrap();
+				sib ? cursor.insDirOf(side === L ? R : L, sib) : cursor.insAtDirEnd(side, parent);
+				return;
+			}
+			else {
+				// If deleting just one of a pair of brackets, become one-sided.
+				this.sides[side] = {
+					ch: OPP_BRACKS[this.sides[this.side].ch],
+					ctrlSeq: OPP_BRACKS[this.sides[this.side].ctrlSeq]
+				};
+				this.delims?.forEach((delim, index) => {
+					delim.classList.remove('mq-ghost');
+					if (index === (side === L ? 0 : 1)) {
+						delim.classList.add('mq-ghost');
+						delim.innerHTML = this.sides[side].ch;
+					}
+				});
+			}
+			if (sib) {
+				// Auto-expand so the ghost is at the far end.
+				const origEnd = this.blocks[this.contentIndex].ends[side];
+				this.blocks[this.contentIndex].elements.removeClass('mq-empty');
+				new Fragment(sib, farEnd, side === L ? R : L).disown()
+					.withDirAdopt(side === L ? R : L, this.blocks[this.contentIndex], origEnd)
+					.elements.insAtDirEnd(side, this.blocks[this.contentIndex].elements);
+				origEnd?.siblingCreated?.(cursor.options, side);
+				cursor.insDirOf(side === L ? R : L, sib);
+			}
+			else {
+				// Otherwise the cursor goes just outside or just inside the parentheses.
+				outward ? cursor.insDirOf(side, this) : cursor.insAtDirEnd(side, this.blocks[this.contentIndex]);
+			}
+		}
+	}
+
+	deleteTowards(dir: Direction, cursor: Cursor) {
+		this.deleteSide(dir === L ? R : L, false, cursor);
+	}
+
+	finalizeTree() {
+		if (!this.inserted) {
+			this.blocks[this.contentIndex].deleteOutOf =
+				(dir: Direction, cursor: Cursor) => this.deleteSide(dir, true, cursor);
+			this.inserted = true;
+			return;
+		}
+
+		this.delims?.[this.side === L ? 1 : 0].classList.remove('mq-ghost');
+		this.side = 0;
+	}
+};
+
+// Round/Square/Curly/Angle Brackets (aka Parens/Brackets/Braces)
+// First typed as one-sided bracket with matching "ghost" bracket at
+// far end of current block, until you type an opposing one.
+export class Bracket extends BracketMixin(MathCommand) {
 	constructor(side: Direction, open: string, close: string, ctrlSeq: string, end: string) {
 		super(`\\left${ctrlSeq}`, undefined, [open, close]);
 		this.side = side;
@@ -944,15 +1184,16 @@ export class Bracket extends DelimsMixin(MathCommand) {
 		};
 		this.placeCursor = noop;
 
-		this.siblingCreated = (opts: Options, dir?: Direction) => { // if something typed between ghost and far
-			if (dir === (this.side === L ? R : L)) this.finalizeTree(); // end of its block, solidify
+		// If something is typed between the ghost and the far end of its block, then solidify the ghost.
+		this.siblingCreated = (opts: Options, dir?: Direction) => {
+			if (dir === (this.side === L ? R : L)) this.finalizeTree();
 		};
 	}
 
 	numBlocks() { return 1; }
 
 	html() {
-		// wait until now so that .side may be set by createLeftOf or parser
+		// Wait until now to set the html template so that .side may be set by createLeftOf or the parser.
 		this.htmlTemplate =
 			'<span class="mq-non-leaf">'
 			+   `<span class="mq-scaled mq-paren${this.side === R ? ' mq-ghost' : ''}">`
@@ -974,142 +1215,226 @@ export class Bracket extends DelimsMixin(MathCommand) {
 	text() {
 		return `${this.sides[L]?.ch ?? ''}${this.ends[L]?.text() ?? ''}${this.sides[R]?.ch ?? ''}`;
 	}
+}
 
-	matchBrack(opts: Options, expectedSide?: Direction, node?: TNode) {
-		// return node iff it's a matching 1-sided bracket of expected side (if any)
-		return node instanceof Bracket && node.side &&
-			node.side !== (expectedSide === L ? R : expectedSide === R ? L : undefined)
-			&& (!opts.restrictMismatchedBrackets
-				|| OPP_BRACKS[this.sides[this.side].ch] === node.sides[node.side].ch
-				|| { '(': ']', '[': ')' }[this.sides[L].ch] === node.sides[R].ch) && node;
+export class MathFunction extends BracketMixin(MathCommand) {
+	contentIndex = 1;
+
+	constructor(ctrlSeq: string) {
+		super(ctrlSeq, undefined, [`${ctrlSeq.slice(1)}(`, ')']);
+
+		// If something is typed after the ghost, then solidify the end parenthesis.
+		// Also if something is typed before or after the function,
+		// then determine if padding is needed before the function name.
+		this.siblingCreated = (opts: Options, dir?: Direction) => {
+			if (dir === R) this.finalizeTree();
+			else this.updateFirst();
+		};
+		this.siblingDeleted = () => this.updateFirst();
 	}
 
-	closeOpposing(brack: Bracket) {
-		brack.side = 0;
-		brack.sides[this.side] = this.sides[this.side]; // copy over my info (may be
-		const delim = brack.delims?.[this.side === L ? 0 : 1]; // mismatched, like [a, b))
-		if (delim) {
-			delim.classList.remove('mq-ghost');
-			delim.innerHTML = this.sides[this.side].ch;
-		}
+	// Add or remove padding depending on what is before the function name.
+	updateFirst() {
+		if (this[L] && (
+			!(this[L] instanceof BinaryOperator) &&
+			(!(this[L] instanceof Variable) || !this[L].isPartOfOperator)
+		))
+			(this.elements.first as HTMLEmbedElement).classList.add('mq-first');
+		else
+			(this.elements.first as HTMLEmbedElement).classList.remove('mq-first');
 	}
 
-	createLeftOf(cursor: Cursor) {
-		let brack, side;
-		if (!this.replacedFragment) { // unless wrapping seln in brackets,
-			// check if next to or inside an opposing one-sided bracket
-			const opts = cursor.options;
-			if (this.sides[L].ch === '|') { // check both sides if I'm a pipe
-				brack = this.matchBrack(opts, R, cursor[R])
-					|| this.matchBrack(opts, L, cursor[L])
-					|| this.matchBrack(opts, undefined, cursor.parent?.parent);
-			}
-			else {
-				const otherSide = this.side === L ? R : L;
-				brack = this.matchBrack(opts, otherSide, cursor[otherSide])
-					|| this.matchBrack(opts, otherSide, cursor.parent?.parent);
-			}
-		}
-		if (brack) {
-			side = this.side = brack.side === L ? R : L; // may be pipe with .side not yet set
-			this.closeOpposing(brack);
-			if (brack === cursor.parent?.parent && cursor[side]) { // move the stuff between
-				new Fragment(cursor[side], cursor.parent?.ends[side], side === L ? R : L) // me and ghost outside
-					.disown().withDirAdopt(side === L ? R : L, brack.parent as TNode, brack, brack[side])
-					.elements.insDirOf(side, brack.elements);
-			}
-			brack.bubble('reflow');
-		} else {
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
-			brack = this, side = brack.side;
-			if (brack.replacedFragment) brack.side = 0; // wrapping seln, don't be one-sided
-			else if (cursor[side === L ? R : L]) { // elsewise, auto-expand so ghost is at far end
-				brack.replaces(new Fragment(cursor[side === L ? R : L], cursor.parent?.ends[side === L ? R : L], side));
-				delete cursor[side === L ? R : L];
-			}
-			super.createLeftOf(cursor);
-		}
-		if (side === L) cursor.insAtLeftEnd(brack.ends[L] as TNode);
-		else cursor.insRightOf(brack);
+	addToElements(el: VNode | HTMLElement) {
+		this.elements.add(el);
+		const children = new VNode(this.elements.children().last).children();
+		this.delims = [children.contents[0] as HTMLElement, children.contents[2] as HTMLElement];
+		this.content = children.contents[1] as HTMLElement;
 	}
 
-	unwrap() {
-		const node = this.ends[L]?.children().disown().adopt(this.parent as TNode, this, this[R]);
-		if (node) this.elements.last.after(...node.elements.contents);
-		this.remove();
+	numBlocks() { return 2; }
+
+	html() {
+		this.htmlTemplate = '<span class="mq-non-leaf mq-math-function">'
+			+   `<span class="mq-non-leaf mq-function-name">${this.ctrlSeq.slice(1)}</span>`
+			+   '<span class="mq-non-leaf mq-function-supsub">&0</span>'
+			+   '<span class="mq-non-leaf mq-function-params">'
+			+     '<span class="mq-scaled mq-paren">(</span>'
+			+     '<span class="mq-non-leaf">&1</span>'
+			+     `<span class="mq-scaled mq-paren${this.side === L ? ' mq-ghost' : ''}">)</span>`
+			+   '</span>'
+			+ '</span>';
+
+		// Only allow supsub's to be inserted into the block before the parentheses.
+		// If anything else is typed, move to the content block, so it will be inserted there.
+		this.blocks[0].writeHandler = (cursor: Cursor, ch: string) => {
+			if (ch === '_' || ch === '^') return false;
+
+			// If at the left end of the supsub block and a character was typed that extends this function name to
+			// another one, then extend the function name.
+			if (!cursor[L] && LatexCmds[`${this.ctrlSeq.slice(1)}${ch}`]?.prototype instanceof MathFunction) {
+				this.ctrlSeq = `${this.ctrlSeq}${ch}`;
+				this.elements.children().first.textContent += ch;
+				this.bubble('reflow');
+				return true;
+			}
+
+			this.enterContentBlock(L, cursor);
+
+			// If a starting parenthesis is typed, don't actually create it.  Just move the cursor to the content
+			// block, and let the hardcoded parenthesis appear.  So it appears as if typing the parenthesis does add
+			// a parenthesis.
+			if (ch === '(') return true;
+
+			return false;
+		};
+
+		return super.html();
+	}
+
+	enterContentBlock(dir: Direction, cursor: Cursor) {
+		if (dir === L) cursor.insAtLeftEnd(this.blocks[1]);
+		else cursor.insAtRightEnd(this.blocks[1]);
 	}
 
 	deleteSide(side: Direction, outward: boolean, cursor: Cursor) {
-		const parent = this.parent as TNode, sib = this[side], farEnd = parent.ends[side];
-
-		if (side === this.side) { // deleting non-ghost of one-sided bracket, unwrap
-			this.unwrap();
-			sib ? cursor.insDirOf(side === L ? R : L, sib) : cursor.insAtDirEnd(side, parent);
-			return;
-		}
-
-		const wasSolid = !this.side;
-		this.side = side === L ? R : L;
-		// if deleting like, outer close-brace of [(1+2)+3} where inner open-paren
-		if (this.matchBrack(cursor.options, side, this.ends[L]?.ends[this.side])) { // is ghost,
-			this.closeOpposing(this.ends[L]?.ends[this.side] as Bracket); // then become [1+2)+3
-			const origEnd = this.ends[L]?.ends[side];
-			this.unwrap();
-			origEnd?.siblingCreated?.(cursor.options, side);
-			sib ? cursor.insDirOf(side === L ? R : L, sib) : cursor.insAtDirEnd(side, parent);
-		}
-		else { // if deleting like, inner close-brace of ([1+2}+3) where outer
-			if (this.matchBrack(cursor.options, side, this.parent?.parent)) { // open-paren is
-				(this.parent?.parent as Bracket).closeOpposing(this); // ghost, then become [1+2+3)
-				(this.parent?.parent as Bracket).unwrap();
-			} // else if deleting outward from a solid pair, unwrap
-			else if (outward && wasSolid) {
-				this.unwrap();
-				sib ? cursor.insDirOf(side === L ? R : L, sib) : cursor.insAtDirEnd(side, parent);
-				return;
+		if (side === L && !(this.blocks[0].isEmpty() && this.blocks[1].isEmpty())) {
+			let brack, supsub;
+			if (!this.blocks[1].isEmpty()) {
+				cursor.insLeftOf(this);
+				brack = new Bracket(L, '(', ')', '(', ')');
+				brack.replaces(this.blocks[1].children());
+				brack.createLeftOf(cursor);
+				// Make the parentheses one sided if this function was.
+				if (this.side) {
+					brack.delims?.[R].classList.add('mq-ghost');
+					brack.side = L;
+				}
 			}
-			else { // else deleting just one of a pair of brackets, become one-sided
-				this.sides[side] = {
-					ch: OPP_BRACKS[this.sides[this.side].ch],
-					ctrlSeq: OPP_BRACKS[this.sides[this.side].ctrlSeq]
-				};
-				this.delims?.forEach((delim, index) => {
-					delim.classList.remove('mq-ghost');
-					if (index === (side === L ? 0 : 1)) {
-						delim.classList.add('mq-ghost');
-						delim.innerHTML = this.sides[side].ch;
+
+			// If there is a SupSub in the supsub block, then it must be replaced with a new instance.  This is because
+			// the original instance has the special MathFunction deleteOutOf handlers.  Those will not work for a usual
+			// SupSub.
+			if (!this.blocks[0].isEmpty() && this.blocks[0].ends[L] instanceof SupSub) {
+				cursor.insLeftOf(brack ?? this);
+				// A temporary base is created first and then removed later, because if supSubsRequireOperand is true
+				// the following causes errors when the contact weld is called later otherwise.
+				const tmpBase = new Variable('x');
+				tmpBase.createLeftOf(cursor);
+				const origSupSub = this.blocks[0].ends[L];
+				for (const supOrSub of ['sub', 'sup'] as Array<keyof Pick<SupSub, 'sub' | 'sup'>>) {
+					const src = origSupSub[supOrSub];
+					if (src) {
+						if (supsub) cursor.insRightOf(supsub);
+						const newSupOrSub = new LatexCmds[supOrSub === 'sub' ? 'subscript' : 'superscript'] as SupSub;
+						newSupOrSub.replaces(src.children());
+						newSupOrSub.createLeftOf(cursor);
+						if (!supsub) supsub = newSupOrSub;
 					}
-				});
+				}
+				tmpBase.remove();
 			}
-			if (sib) { // auto-expand so ghost is at far end
-				const origEnd = this.ends[L]?.ends[side];
-				this.ends[L]?.elements.removeClass('mq-empty');
-				new Fragment(sib, farEnd, side === L ? R : L).disown()
-					.withDirAdopt(side === L ? R : L, this.ends[L] as TNode, origEnd)
-					.elements.insAtDirEnd(side, this.ends[L]?.elements as VNode);
-				origEnd?.siblingCreated?.(cursor.options, side);
-				cursor.insDirOf(side === L ? R : L, sib);
-			} // didn't auto-expand, cursor goes just outside or just inside parens
-			else (outward ? cursor.insDirOf(side, this)
-				: cursor.insAtDirEnd(side, this.ends[L] as TNode));
-		}
-	}
 
-	deleteTowards(dir: Direction, cursor: Cursor) {
-		this.deleteSide(dir === L ? R : L, false, cursor);
+			this.remove();
+			if (supsub) cursor.insLeftOf(supsub);
+			else if (brack) cursor.insLeftOf(brack);
+		} else
+			super.deleteSide(side, outward, cursor);
 	}
 
 	finalizeTree() {
-		(this.ends[L] as MathElement).deleteOutOf =
-			(dir: Direction, cursor: Cursor) => (this.ends[L]?.parent as Bracket).deleteSide(dir, true, cursor);
-		// FIXME HACK: after initial creation/insertion, finalizeTree would only be
-		// called if the paren is selected and replaced, e.g. by LiveFraction
-		this.finalizeTree = () => {
-			this.delims?.[this.side === L ? 1 : 0].classList.remove('mq-ghost');
-			this.side = 0;
-		};
+		const inserted = this.inserted;
+		super.finalizeTree();
+
+		if (!inserted) {
+			this.blocks[0].deleteOutOf = (dir: Direction, cursor: Cursor) => {
+				// If at the left end of the supsub block and removing the last character of this function name is still
+				// a valid function name, then shorten the function name.
+				if (!cursor[L] && LatexCmds[this.ctrlSeq.slice(1, -1)]?.prototype instanceof MathFunction) {
+					this.ctrlSeq = this.ctrlSeq.slice(0, -1);
+					this.elements.children().first.textContent = this.ctrlSeq.slice(1);
+					this.bubble('reflow');
+					return;
+				}
+
+				if (dir === L) this.deleteSide(dir, true, cursor);
+				// If deleting right out of the supsub block, move the cursor to the content block.
+				else this.enterContentBlock(L, cursor);
+			};
+
+			this.blocks[1].deleteOutOf = (dir: Direction, cursor: Cursor) => {
+				// If deleting left out of the content block, move the cursor to the supsub block.
+				if (dir === L)  cursor?.insAtRightEnd(this.blocks[0]);
+				else this.deleteSide(dir, true, cursor);
+			};
+		}
+
+		this.updateFirst();
 	}
-}
+
+	latex() {
+		return `${this.ctrlSeq}${this.blocks[0]?.latex() ?? ''}\\left(${this.blocks[1]?.latex() ?? ''}\\right)`;
+	}
+
+	text() {
+		return `${this.ctrlSeq.slice(1)}${this.blocks[0]?.text() ?? ''}(${this.blocks[1]?.text() ?? ''})`;
+	}
+
+	parser() {
+		// Create the other end solid.
+		this.side = 0;
+
+		this.blocks = [ new MathBlock(), new MathBlock() ];
+		for (const block of this.blocks) {
+			block.adopt(this, this.ends[R]);
+		}
+
+		return Parser.optWhitespace.then(Parser.regex(/^(?=[_^])/))
+			.then(latexMathParser.block.map((block: TNode) => {
+				block.children().adopt(this.blocks[0], this.blocks[0].ends[R]);
+			})).many().or(Parser.succeed(this))
+			.then(Parser.optWhitespace)
+			.then(
+				Parser.regex(/^(?=\))|^(?=\\right\))/)
+					.or(
+						Parser.string('\\left(')
+							.then(latexMathParser.block.many().map((blocks: Array<MathBlock>) => {
+								for (const block of blocks) {
+									block.children().adopt(this.blocks[1], this.blocks[1].ends[R]);
+								}
+							})
+								.then(Parser.optWhitespace)
+								.skip(Parser.string('\\right)'))
+							)
+							.or(
+								Parser.string('(')
+									.then(latexMathParser.block.many().map((blocks: Array<MathBlock>) => {
+										if (blocks[blocks.length - 1].text() === ')') blocks.splice(-1);
+										for (const block of blocks) {
+											block.children().adopt(this.blocks[1], this.blocks[1].ends[R]);
+										}
+									})
+										.then(Parser.optWhitespace)
+										.skip(Parser.string(')').or(Parser.succeed(this)))
+									)
+									.or(
+										Parser.regex(/^\d+\.?\d*|^\d*\.?\d+/).map((number: string) => {
+											for (const d of number) {
+												const digit = d === '.' ? new VanillaSymbol('.') : new Digit(d);
+												digit.adopt(this.blocks[1], this.blocks[1].ends[R]);
+											}
+										})
+											.or(
+												latexMathParser.block.map((block: MathBlock) => {
+													block.children().adopt(this.blocks[1], this.blocks[1].ends[R]);
+												})
+											)
+									)
+							)
+							.or(Parser.succeed(this))
+					)
+			).result(this);
+	}
+};
 
 interface LatexMathParser extends Parser {
 	block: Parser;

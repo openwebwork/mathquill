@@ -17,3 +17,4 @@ import 'test/select.test';
 import 'test/tree.test';
 import 'test/focusBlur.test';
 import 'test/SupSub.test';
+import 'test/MathFunction.test';

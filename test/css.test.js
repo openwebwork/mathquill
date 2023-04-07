@@ -122,15 +122,15 @@ suite('CSS', () => {
 		assertBinaryOperator(6, '\\textcolor{red}{\\class{dummy}{-}}2\\textcolor{green}{\\class{dummy}{+}}');
 	});
 
-	test('operator name spacing, e.g., sin x', () => {
+	test('operator name spacing, e.g., ker x', () => {
 		const span = document.createElement('span');
 		document.getElementById('mock')?.append(span);
 		const mq = MQ.MathField(span);
 
-		mq.typedText('sin');
+		mq.typedText('ker');
 		const operatorNameParts = mq.el().querySelectorAll('var.mq-operator-name');
 		const n = operatorNameParts[operatorNameParts.length - 1];
-		assert.equal(n.textContent, 'n');
+		assert.equal(n.textContent, 'r');
 		assert.ok(!n.classList.contains('mq-last'));
 
 		mq.typedText('x');

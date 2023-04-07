@@ -15,7 +15,7 @@ import type { MathBlock } from 'commands/mathBlock';
 import type { MathElement } from 'commands/mathElements';
 import {
 	BinaryOperator, Equality, MathCommand, Symbol, Letter, insLeftOfMeUnlessAtEnd, Fraction, SupSub,
-	UpperLowerLimitCommand, Bracket, latexMathParser
+	UpperLowerLimitCommand, Bracket, latexMathParser, supSubText, MathFunction
 } from 'commands/mathElements';
 
 class Style extends MathCommand {
@@ -221,6 +221,39 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 
 // LiveFraction
 LatexCmds.over = CharCmds['/'] = class extends FractionChooseCreateLeftOfMixin(Fraction) {};
+
+// Note that the non-standard variants of these are no longer supported.  Those are cosec, cotan, and ctg, and all of
+// the derived variants of those, as well as any of the ar${trigFunction}h derived variants.
+for (const trigFunction of ['sin', 'cos', 'tan', 'sec', 'csc', 'cot']) {
+	for (const trigVariant of [trigFunction, `arc${trigFunction}`, `${trigFunction}h`, `arc${trigFunction}h`]) {
+		LatexCmds[trigVariant] = bindMixin(MathFunction, `\\${trigVariant}`);
+	}
+}
+
+LatexCmds['ln'] = bindMixin(MathFunction, '\\ln');
+LatexCmds['log'] = class extends MathFunction {
+	constructor() { super('\\log'); }
+
+	text() {
+		const base = this.blocks[0].ends[L]?.sub?.text() || '';
+		const param = this.blocks[1].text() || '';
+		const exponent = supSubText('^', this.blocks[0].ends[L]?.sup);
+
+		if (!base) return super.text();
+		else if (base === '10') {
+			return exponent ? `(log10(${param}))${exponent}` : `log10(${param})`;
+		} else if (this.getController()?.options.logsChangeBase) {
+			let leftward = this[L];
+			for (; leftward && leftward.ctrlSeq === '\\ '; leftward = leftward[L]);
+			return exponent
+				|| (leftward && !(leftward instanceof BinaryOperator))
+				|| (leftward instanceof BinaryOperator && leftward.isUnary)
+				? `(log(${param})/log(${base}))${exponent}` : `log(${param})/log(${base})`;
+		} else {
+			return exponent ? `(logb(${base},${param}))${exponent}` : `logb(${base},${param})`;
+		}
+	}
+};
 
 class SquareRoot extends MathCommand {
 	constructor() {

@@ -11,6 +11,8 @@ import { VanillaSymbol, MathElement, MathCommand, Letter, Digit, latexMathParser
 
 // The MathBlock and the RootMathCommand (used by the RootTextBlock) use this.
 export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) => class extends Base {
+	writeHandler?: (cursor: Cursor, ch: string) => boolean;
+
 	chToCmd(ch: string, options: Options): TNode {
 		const cons = CharCmds[ch] || LatexCmds[ch];
 		// exclude f because it gets a dedicated command with more spacing
@@ -29,6 +31,8 @@ export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) 
 	}
 
 	write(cursor: Cursor, ch: string) {
+		if (this.writeHandler?.(cursor, ch)) return;
+
 		if (this.isSupSubLeft) {
 			if (cursor.options.autoSubscriptNumerals && this === this.parent?.sub) {
 				if (ch === '_') return;

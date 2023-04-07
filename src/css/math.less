@@ -405,4 +405,21 @@
 			}
 		}
 	}
+
+	.mq-math-function {
+		&.mq-first {
+			padding-left: 0.2em;
+		}
+
+		.mq-function-name {
+			font-family: Symbola, "Times New Roman", serif;
+			line-height: 0.9;
+			font-style: normal;
+		}
+
+		.mq-function-supsub.mq-empty::after,
+		.mq-function-supsub.mq-has-cursor .mq-cursor::after {
+			content: unset;
+		}
+	}
 }
