@@ -2,6 +2,12 @@
 
 import { noop } from 'src/constants';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
+import { Options } from 'src/options';
+import { MathField } from 'commands/math';
+import { Controller } from 'src/controller';
+
+// FIXME:  Most of this needs to be reworked.  The fact is that the fake events that are being sent do not correctly
+// emulate actual behavior in a browser, and so the tests are a complete sham.
 
 suite('saneKeyboardEvents', () => {
 	let el;
@@ -15,102 +21,114 @@ suite('saneKeyboardEvents', () => {
 
 	test('normal keys', (done) => {
 		let counter = 0;
-		saneKeyboardEvents(el, {
-			keystroke: noop,
-			typedText: (text) => {
-				counter += 1;
-				assert.ok(counter <= 1, 'callback is only called once');
-				assert.equal(text, 'a', 'text comes back as a');
-				assert.equal(el.value, '', 'the textarea remains empty');
 
-				done();
-			}
-		});
+		const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+		ctrlr.options.overrideKeystroke = noop;
+		ctrlr.options.overrideTypedText = (text) => {
+			counter += 1;
+			assert.ok(counter <= 1, 'callback is only called once');
+			assert.equal(text, 'a', 'text comes back as a');
+			assert.equal(el.value, '', 'the textarea remains empty');
 
-		el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent('keypress', { which: 97, keyCode: 97, bubbles: true }));
+			done();
+		};
+		saneKeyboardEvents(el, ctrlr);
+
+		el.dispatchEvent(new KeyboardEvent('keydown',
+			{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
+		el.dispatchEvent(new InputEvent('input', { data: 'a', bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress',
+			{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
 		el.value = 'a';
 	});
 
 	test('normal keys without keypress', (done) => {
 		let counter = 0;
-		saneKeyboardEvents(el, {
-			keystroke: noop,
-			typedText: (text) => {
-				counter += 1;
-				assert.ok(counter <= 1, 'callback is only called once');
-				assert.equal(text, 'a', 'text comes back as a');
-				assert.equal(el.value, '', 'the textarea remains empty');
 
-				done();
-			}
-		});
+		const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+		ctrlr.options.overrideKeystroke = noop;
+		ctrlr.options.overrideTypedText = (text) => {
+			counter += 1;
+			assert.ok(counter <= 1, 'callback is only called once');
+			assert.equal(text, 'a', 'text comes back as a');
+			assert.equal(el.value, '', 'the textarea remains empty');
 
-		el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent('keyup', { which: 97, keyCode: 97, bubbles: true }));
+			done();
+		};
+		saneKeyboardEvents(el, ctrlr);
+
+		el.dispatchEvent(new KeyboardEvent('keydown',
+			{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
+		el.dispatchEvent(new InputEvent('input', { data: 'a', bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keyup',
+			{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
 		el.value = 'a';
 	});
 
 	test('one keydown only', (done) => {
 		let counter = 0;
 
-		saneKeyboardEvents(el, {
-			keystroke: (key) => {
-				counter += 1;
-				assert.ok(counter <= 1, 'callback is called only once');
-				assert.equal(key, 'Backspace', 'key is correctly set');
+		const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+		ctrlr.options.overrideKeystroke = (key) => {
+			counter += 1;
+			assert.ok(counter <= 1, 'callback is called only once');
+			assert.equal(key, 'Backspace', 'key is correctly set');
 
-				done();
-			}
-		});
+			done();
+		};
+		saneKeyboardEvents(el, ctrlr);
 
-		el.dispatchEvent(new KeyboardEvent('keydown', { which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
 	});
 
 	test('a series of keydowns only', (done) => {
 		let counter = 0;
 
-		saneKeyboardEvents(el, {
-			keystroke: (key, keydown) => {
-				counter += 1;
-				assert.ok(counter <= 3, 'callback is called at most 3 times');
+		const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+		ctrlr.options.overrideKeystroke = (key, keydown) => {
+			counter += 1;
+			assert.ok(counter <= 3, 'callback is called at most 3 times');
 
-				assert.ok(keydown);
-				assert.equal(key, 'Left');
+			assert.ok(keydown);
+			assert.equal(key, 'Left');
 
-				if (counter === 3) done();
-			}
-		});
+			if (counter === 3) done();
+		};
+		saneKeyboardEvents(el, ctrlr);
 
-		el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true }));
 	});
 
-	test('one keydown and a series of keypresses', (done) => {
+	test('three keydowns and corresponding keypresses', (done) => {
 		let counter = 0;
 
-		saneKeyboardEvents(el, {
-			keystroke: (key, keydown) => {
-				counter += 1;
-				assert.ok(counter <= 3, 'callback is called at most 3 times');
+		const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+		ctrlr.options.overrideKeystroke = (key, keydown) => {
+			counter += 1;
+			assert.ok(counter <= 3, 'callback is called at most 3 times');
 
-				assert.ok(keydown);
-				assert.equal(key, 'Backspace');
+			assert.ok(keydown);
+			assert.equal(key, 'Backspace');
 
-				if (counter === 3) done();
-			}
-		});
+			if (counter === 3) done();
+		};
+		saneKeyboardEvents(el, ctrlr);
 
-		el.dispatchEvent(new KeyboardEvent('keydown', { which: 8, keyCode: 8, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent('keypress', { which: 8, keyCode: 8, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent('keypress', { which: 8, keyCode: 8, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent('keypress', { which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent('keypress', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
 	});
 
 	suite('select', () => {
 		test('select populates the textarea but doesn\'t call .typedText()', () => {
-			const shim = saneKeyboardEvents(el, { keystroke: noop });
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = noop;
+			const shim = saneKeyboardEvents(el, ctrlr);
 
 			shim.select('foobar');
 
@@ -129,7 +147,9 @@ suite('saneKeyboardEvents', () => {
 		test('select populates the textarea but doesn\'t call text' +
 			' on keydown, even when the selection is not properly' +
 			' detectable', () => {
-			const shim = saneKeyboardEvents(el, { keystroke: noop });
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = noop;
+			const shim = saneKeyboardEvents(el, ctrlr);
 
 			shim.select('foobar');
 			// monkey-patch the dom-level selection so that hasSelection()
@@ -141,7 +161,9 @@ suite('saneKeyboardEvents', () => {
 		});
 
 		test('blurring', () => {
-			const shim = saneKeyboardEvents(el, { keystroke: noop });
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = noop;
+			const shim = saneKeyboardEvents(el, ctrlr);
 
 			shim.select('foobar');
 			el.blur();
@@ -157,7 +179,10 @@ suite('saneKeyboardEvents', () => {
 		});
 
 		test('blur then empty selection', () => {
-			const shim = saneKeyboardEvents(el, { keystroke: noop });
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = noop;
+			const shim = saneKeyboardEvents(el, ctrlr);
+
 			shim.select('foobar');
 			el.blur();
 			shim.select('');
@@ -185,17 +210,14 @@ suite('saneKeyboardEvents', () => {
 				this.skip();
 			}
 
-			const shim = saneKeyboardEvents(el, {
-				keystroke: (key) => {
-					assert.equal(key, 'Left');
-					el.blur();
-				}
-			});
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = (key) => { assert.equal(key, 'Left'); el.blur(); };
+			const shim = saneKeyboardEvents(el, ctrlr);
 
 			shim.select('foobar');
 			assert.ok(document.activeElement === el, 'textarea focused');
 
-			el.dispatchEvent(new KeyboardEvent('keydown', { which: 37, keyCode: 37, bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true }));
 			assert.ok(document.activeElement !== el, 'textarea blurred');
 
 			setTimeout(() => {
@@ -209,10 +231,14 @@ suite('saneKeyboardEvents', () => {
 			test('select() immediately after paste', () => {
 				let pastedText;
 				let onPaste = (text) => pastedText = text;
-				const shim = saneKeyboardEvents(el, { paste: (text) => onPaste(text) });
 
-				el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-				el.value = '$x^2+1$';
+				const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+				ctrlr.options.overridePaste = (text) => onPaste(text);
+				const shim = saneKeyboardEvents(el, ctrlr);
+
+				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+				event.clipboardData.setData('text/plain', '$x^2+1$');
+				el.dispatchEvent(event);
 
 				shim.select('$\\frac{x^2+1}{2}$');
 				assert.equal(pastedText, '$x^2+1$');
@@ -227,10 +253,14 @@ suite('saneKeyboardEvents', () => {
 			test('select() after paste/input', () => {
 				let pastedText;
 				let onPaste = (text) => pastedText = text;
-				const shim = saneKeyboardEvents(el, { paste: (text) => onPaste(text) });
 
-				el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-				el.value = '$x^2+1$';
+				const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+				ctrlr.options.overridePaste = (text) => onPaste(text);
+				const shim = saneKeyboardEvents(el, ctrlr);
+
+				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+				event.clipboardData.setData('text/plain', '$x^2+1$');
+				el.dispatchEvent(event);
 
 				el.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(pastedText, '$x^2+1$');
@@ -248,13 +278,17 @@ suite('saneKeyboardEvents', () => {
 			test('select() immediately after keydown/keypress', () => {
 				let typedText;
 				let onText = (text) => typedText = text;
-				const shim = saneKeyboardEvents(el, {
-					keystroke: noop,
-					typedText: (text) => onText(text)
-				});
 
-				el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
-				el.dispatchEvent(new KeyboardEvent('keypress', { which: 97, keyCode: 97, bubbles: true }));
+				const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+				ctrlr.options.overrideKeystroke = noop;
+				ctrlr.options.overrideTypedText = (text) => onText(text);
+				const shim = saneKeyboardEvents(el, ctrlr);
+
+				el.dispatchEvent(new KeyboardEvent('keydown',
+					{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
+				el.dispatchEvent(new KeyboardEvent('keypress',
+					{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
+				el.dispatchEvent(new InputEvent('input', { data: 'a', bubbles: true }));
 				el.value = 'a';
 
 				shim.select('$\\frac{a}{2}$');
@@ -270,16 +304,19 @@ suite('saneKeyboardEvents', () => {
 			test('select() after keydown/keypress/input', () => {
 				let typedText;
 				let onText = (text) => typedText = text;
-				const shim = saneKeyboardEvents(el, {
-					keystroke: noop,
-					typedText: (text) => onText(text)
-				});
 
-				el.dispatchEvent(new KeyboardEvent('keydown', { which: 97, keyCode: 97, bubbles: true }));
-				el.dispatchEvent(new KeyboardEvent('keypress', { which: 97, keyCode: 97, bubbles: true }));
+				const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+				ctrlr.options.overrideKeystroke = noop;
+				ctrlr.options.overrideTypedText = (text) => onText(text);
+				const shim = saneKeyboardEvents(el, ctrlr);
+
+				el.dispatchEvent(new KeyboardEvent('keydown',
+					{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
+				el.dispatchEvent(new KeyboardEvent('keypress',
+					{ key: 'a', shiftKey: true, which: 65, keyCode: 65, bubbles: true }));
+				el.dispatchEvent(new InputEvent('input', { data: 'a', bubbles: true }));
 				el.value = 'a';
 
-				el.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(typedText, 'a');
 
 				onText = null;
@@ -291,9 +328,11 @@ suite('saneKeyboardEvents', () => {
 				assert.equal(el.value, '$2$');
 			});
 
-			suite('unrecognized keys that move cursor and clear selection', () => {
+			suite('keys that should not move cursor or clear selection', () => {
 				test('without keypress', () => {
-					const shim = saneKeyboardEvents(el, { keystroke: noop });
+					const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+					ctrlr.options.overrideKeystroke = noop;
+					const shim = saneKeyboardEvents(el, ctrlr);
 
 					shim.select('a');
 					assert.equal(el.value, 'a');
@@ -301,10 +340,9 @@ suite('saneKeyboardEvents', () => {
 					if (!supportsSelectionAPI()) return;
 
 					el.dispatchEvent(new KeyboardEvent('keydown',
-						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
-					el.selectionEnd = 0;
+						{ key: 'ArrowLeft', which: 37, keyCode: 37, altKey: true, bubbles: true }));
 					el.dispatchEvent(new KeyboardEvent('keyup',
-						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+						{ key: 'ArrowLeft', which: 37, keyCode: 37, altKey: true, bubbles: true }));
 					assert.ok(el.selectionStart !== el.selectionEnd);
 
 					el.blur();
@@ -313,7 +351,9 @@ suite('saneKeyboardEvents', () => {
 				});
 
 				test('with keypress, many characters selected', () => {
-					const shim = saneKeyboardEvents(el, { keystroke: noop });
+					const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+					ctrlr.options.overrideKeystroke = noop;
+					const shim = saneKeyboardEvents(el, ctrlr);
 
 					shim.select('many characters');
 					assert.equal(el.value, 'many characters');
@@ -321,10 +361,9 @@ suite('saneKeyboardEvents', () => {
 					if (!supportsSelectionAPI()) return;
 
 					el.dispatchEvent(new KeyboardEvent('keydown',
-						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+						{ key: 'ArrowLeft', which: 37, keyCode: 37, altKey: true, bubbles: true }));
 					el.dispatchEvent(new KeyboardEvent('keypress',
-						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
-					el.selectionEnd = 0;
+						{ key: 'ArrowLeft', which: 37, keyCode: 37, altKey: true, bubbles: true }));
 
 					el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 					assert.ok(el.selectionStart !== el.selectionEnd);
@@ -336,14 +375,15 @@ suite('saneKeyboardEvents', () => {
 
 				test('with keypress, only 1 character selected', () => {
 					let count = 0;
-					const shim = saneKeyboardEvents(el, {
-						keystroke: noop,
-						typedText: (ch) => {
-							assert.equal(ch, 'a');
-							assert.equal(el.value, '');
-							count += 1;
-						}
-					});
+
+					const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+					ctrlr.options.overrideKeystroke = noop;
+					ctrlr.options.overrideTypedText = (ch) => {
+						assert.equal(ch, 'a');
+						assert.equal(el.value, '');
+						count += 1;
+					};
+					const shim = saneKeyboardEvents(el, ctrlr);
 
 					shim.select('a');
 					assert.equal(el.value, 'a');
@@ -351,13 +391,14 @@ suite('saneKeyboardEvents', () => {
 					if (!supportsSelectionAPI()) return;
 
 					el.dispatchEvent(new KeyboardEvent('keydown',
-						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+						{ key: 'ArrowLeft', which: 37, keyCode: 37, altKey: true, bubbles: true }));
 					el.dispatchEvent(new KeyboardEvent('keypress',
-						{ which: 37, keyCode: 37, altKey: true, bubbles: true }));
+						{ key: 'ArrowLeft', which: 37, keyCode: 37, altKey: true, bubbles: true }));
 					el.selectionEnd = 0;
 
-					el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
-					assert.equal(count, 1);
+					el.dispatchEvent(new KeyboardEvent('keyup',
+						{ key: 'ArrowLeft', which: 37, keyCode: 37, altKey: true, bubbles: true }));
+					assert.equal(count, 0);
 
 					el.blur();
 					shim.select('');
@@ -369,65 +410,61 @@ suite('saneKeyboardEvents', () => {
 
 	suite('paste', () => {
 		test('paste event only', (done) => {
-			saneKeyboardEvents(el, {
-				paste: (text) => {
-					assert.equal(text, '$x^2+1$');
-					done();
-				}
-			});
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overridePaste = (text) => { assert.equal(text, '$x^2+1$'); done(); };
+			saneKeyboardEvents(el, ctrlr);
 
-			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-			el.value = '$x^2+1$';
+			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+			event.clipboardData.setData('text/plain', '$x^2+1$');
+			el.dispatchEvent(event);
 		});
 
 		test('paste after keydown/keypress', (done) => {
-			saneKeyboardEvents(el, {
-				keystroke: noop,
-				paste: (text) => {
-					assert.equal(text, 'foobar');
-					done();
-				}
-			});
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = noop;
+			ctrlr.options.overridePaste = (text) => { assert.equal(text, 'foobar'); done(); };
+			saneKeyboardEvents(el, ctrlr);
 
-			// Ctrl-V in Firefox or Opera, according to unixpapa.com/js/key.html
-			// without an `input` event
-			el.dispatchEvent(new KeyboardEvent('keydown', { which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
-			el.dispatchEvent(new KeyboardEvent('keypress', { which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
-			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-			el.value = 'foobar';
+			el.dispatchEvent(new KeyboardEvent('keydown',
+				{ key: 'v', which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keypress',
+				{ key: 'v', which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
+
+			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+			event.clipboardData.setData('text/plain', 'foobar');
+			el.dispatchEvent(event);
 		});
 
-		test('paste after keydown/keypress/input', (done) => {
-			saneKeyboardEvents(el, {
-				keystroke: noop,
-				paste: (text) => {
-					assert.equal(text, 'foobar');
-					done();
-				}
-			});
+		test('paste after keydown/keypress and before input', (done) => {
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = noop;
+			ctrlr.options.overridePaste = (text) => { assert.equal(text, 'foobar'); done(); };
+			saneKeyboardEvents(el, ctrlr);
 
-			// Ctrl-V in Firefox or Opera, according to unixpapa.com/js/key.html
-			// with an `input` event
-			el.dispatchEvent(new KeyboardEvent('keydown', { which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
-			el.dispatchEvent(new KeyboardEvent('keypress', { which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
-			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-			el.value = 'foobar';
-			el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keydown',
+				{ key: 'v', which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keypress',
+				{ key: 'v', which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
+			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+			event.clipboardData.setData('text/plain', 'foobar');
+			el.dispatchEvent(event);
+			el.dispatchEvent(new InputEvent('input',
+				{ key: 'v', which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
 		});
 
 		test('keypress timeout happening before paste timeout', (done) => {
-			saneKeyboardEvents(el, {
-				keystroke: noop,
-				paste: (text) => {
-					assert.equal(text, 'foobar');
-					done();
-				}
-			});
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideKeystroke = noop;
+			ctrlr.options.overridePaste = (text) => { assert.equal(text, 'foobar'); done(); };
+			saneKeyboardEvents(el, ctrlr);
 
-			el.dispatchEvent(new KeyboardEvent('keydown', { which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
-			el.dispatchEvent(new KeyboardEvent('keypress', { which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
-			el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true }));
-			el.value = 'foobar';
+			el.dispatchEvent(new KeyboardEvent('keydown',
+				{ key: 'v', which: 86, keyCode: 86, ctrlKey: true, bubbles: true }));
+			el.dispatchEvent(new KeyboardEvent('keypress',
+				{ key: 'v', which: 118, keyCode: 118, ctrlKey: true, bubbles: true }));
+			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+			event.clipboardData.setData('text/plain', 'foobar');
+			el.dispatchEvent(event);
 
 			// this synthesizes the keypress timeout calling handleText()
 			// before the paste timeout happens.
@@ -438,7 +475,9 @@ suite('saneKeyboardEvents', () => {
 	suite('copy', () => {
 		test('only runs handler once even if handler synchronously selects', () => {
 			// ...which MathQuill does and resulted in a stack overflow: https://git.io/vosm0
-			const shim = saneKeyboardEvents(el, { copy: () => shim.select() });
+			const ctrlr = new Controller(new MathField.RootBlock, el, new Options);
+			ctrlr.options.overrideCopy = () => shim.select();
+			const shim = saneKeyboardEvents(el, ctrlr);
 
 			el.dispatchEvent(new ClipboardEvent('copy', { bubbles: true }));
 		});

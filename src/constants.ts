@@ -59,7 +59,7 @@ export const iterator = <R extends object, S, T, U, V>(generator: (yield_: (obj:
 		const yield_ = typeof fn === 'function' ? fn
 			: (obj: R) => {
 				if (fn in obj)
-					return (obj[fn as CallableKeyOf<R, S, U, V>] as ((arg1?: U, arg2?: V) => S))(arg1, arg2);
+					return (obj[fn as CallableKeyOf<R, S, U, V>] as unknown as ((arg1?: U, arg2?: V) => S))(arg1, arg2);
 			};
 		return generator(yield_);
 	};

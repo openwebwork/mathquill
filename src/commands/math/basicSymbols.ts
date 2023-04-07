@@ -32,7 +32,7 @@ class OperatorName extends Symbol {
 	}
 }
 
-for (const fn in Options.autoOperatorNames) {
+for (const fn in (new Options).autoOperatorNames) {
 	if (fn !== '_maxLength') {
 		LatexCmds[fn] = OperatorName;
 	}

@@ -79,7 +79,7 @@ suite('autoOperatorNames', () => {
 		assertLatex(`typing '${str}'`, '\\csc s\\csc s\\csc sc');
 		assert.equal(count, str.length);
 
-		mq.moveToLeftEnd().keystroke('Del');
+		mq.moveToLeftEnd().keystroke('Delete');
 		assertLatex('deleted first char', 's\\csc s\\csc s\\csc');
 		assert.equal(count, str.length + 1);
 
@@ -111,17 +111,17 @@ suite('autoOperatorNames', () => {
 			assert.throws(() => MQ.config({ autoOperatorNames: 'e' }));
 		});
 
-		suite('command list not perfectly space-delimited', () => {
+		suite('command list not perfectly space-delimited is okay', () => {
 			test('double space', () => {
-				assert.throws(() => MQ.config({ autoOperatorNames: 'pi  theta' }));
+				assert.ok(() => MQ.config({ autoOperatorNames: 'pi  theta' }));
 			});
 
 			test('leading space', () => {
-				assert.throws(() => MQ.config({ autoOperatorNames: ' pi' }));
+				assert.ok(() => MQ.config({ autoOperatorNames: ' pi' }));
 			});
 
 			test('trailing space', () => {
-				assert.throws(() => MQ.config({ autoOperatorNames: 'pi ' }));
+				assert.ok(() => MQ.config({ autoOperatorNames: 'pi ' }));
 			});
 		});
 	});

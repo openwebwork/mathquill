@@ -139,8 +139,9 @@
 				}).focus().moveToLeftEnd().keystroke('Right');
 				const textarea = document.querySelector('#reflowing-test textarea');
 				// Paste some stuff that needs resizing
-				textarea.dispatchEvent(new Event('paste', {bubbles: true}));
-				textarea.value = '\\pi\\sqrt{\\sqrt{\\frac12}}';
+				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+				event.clipboardData.setData('text/plain', '\\pi\\sqrt{\\sqrt{\\frac12}}');
+				textarea.dispatchEvent(event);
 				setTimeout(() => {if (count !== 1) throw 'reflow not called';});
 			})();
 		</script>
@@ -516,7 +517,7 @@
 			anything else and confirm this blurs: <span id="no-kbd-math"></span> (confirmed working on iOS 6.1.3)
 		</p>
 
-		<h3>substituteKeyboardEvents</h3>
+		<h3>Keyboard Event Overrides</h3>
 
 		<p>Should be able to prevent cut, typing, and pasting in this field: <span id="disable-typing">1+2+3</span></p>
 
@@ -641,23 +642,18 @@
 		});
 
 		MQ.MathField(document.getElementById('disable-typing'), {
-			substituteKeyboardEvents: (textarea, handlers) => {
-				const config = Object.assign({}, handlers);
-				config.cut = config.paste = config.keystroke = config.typedText = config.copy =
-					() => { /* do nothing */};
-				return MQ.saneKeyboardEvents(textarea, config);
-			}
+			overrideCut: () => { /* do nothing */ },
+			overridePaste: () => { /* do nothing */ },
+			overrideKeystroke: () => { /* do nothing */ },
+			overrideTypedText: () => { /* do nothing */ },
+			overrideCopy: () => { /* do nothing */ },
 		});
 
-		MQ.MathField(document.getElementById('wrap-typing'), {
-			substituteKeyboardEvents: (textarea, handlers) => {
-				const config = Object.assign({}, handlers);
-				config.typedText = (text) => {
-					handlers.typedText('<');
-					handlers.typedText(text);
-					handlers.typedText('>');
-				};
-				return MQ.saneKeyboardEvents(textarea, config);
+		const mq = MQ.MathField(document.getElementById('wrap-typing'), {
+			overrideTypedText: (text) => {
+				mq.typedText('<');
+				mq.typedText(text);
+				mq.typedText('>');
 			}
 		});
 	</script>

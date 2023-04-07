@@ -169,14 +169,14 @@ export class TNode {
 			break;
 
 		// Tab or Esc -> go one block right if it exists, else escape right.
-		case 'Esc':
+		case 'Escape':
 		case 'Tab':
 			ctrlr.escapeDir(R, key, e);
 			return;
 
 		// Shift-Tab -> go one block left if it exists, else escape left.
 		case 'Shift-Tab':
-		case 'Shift-Esc':
+		case 'Shift-Escape':
 			ctrlr.escapeDir(L, key, e);
 			return;
 
@@ -259,13 +259,13 @@ export class TNode {
 		case 'Ctrl-Up': break;
 		case 'Ctrl-Down': break;
 
-		case 'Ctrl-Shift-Del':
-		case 'Ctrl-Del':
+		case 'Ctrl-Shift-Delete':
+		case 'Ctrl-Delete':
 			ctrlr.ctrlDeleteDir(R);
 			break;
 
-		case 'Shift-Del':
-		case 'Del':
+		case 'Shift-Delete':
+		case 'Delete':
 			ctrlr.deleteForward();
 			break;
 
@@ -294,6 +294,14 @@ export class TNode {
 	replaces(_ignore_fragment?: string | Fragment) { /* do nothing */ }
 	setOptions(_ignore_options: { text?: () => string, htmlTemplate?: string, latex?: () => string }) { return this; }
 	chToCmd(_ignore_ch: string, _ignore_options: Options): TNode { return this; }
+
+	getController() {
+		// Navigate up the tree to find the controller.
+		return (function getCursor(node: TNode): Controller | undefined {
+			if (node.controller) return node.controller;
+			if (node.parent) return getCursor(node.parent);
+		})(this);
+	}
 
 	// called by Controller::escapeDir, moveDir
 	moveOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor, _ignore_updown?: 'up' | 'down')

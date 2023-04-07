@@ -77,12 +77,6 @@ export class Controller extends
 		root.controller = this;
 	}
 
-	// Methods that deal with the browser DOM events from interaction with the typist.
-
-	keystroke(key: string, evt: KeyboardEvent) {
-		this.cursor.parent?.keystroke(key, evt, this);
-	}
-
 	escapeDir(dir: Direction, key: string, e: KeyboardEvent) {
 		prayDirection(dir);
 		const cursor = this.cursor;

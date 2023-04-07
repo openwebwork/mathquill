@@ -3,8 +3,6 @@
 import type { Direction } from 'src/constants';
 import { BuiltInOpNames } from 'src/constants';
 import type { AbstractMathQuill } from 'src/abstractFields';
-import type { TextAreaHandlers } from 'services/saneKeyboardEvents.util';
-import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 
 export type Handler = (mq: AbstractMathQuill) => void;
 export type DirectionHandler = (dir: Direction, mq: AbstractMathQuill) => void;
@@ -40,8 +38,13 @@ export interface InputOptions {
 	typingSlashWritesDivisionSymbol?: boolean;
 	typingAsteriskWritesTimesSymbol?: boolean;
 	substituteTextarea?: () => HTMLTextAreaElement;
-	substituteKeyboardEvents?: typeof saneKeyboardEvents;
 	handlers?: Handlers;
+	overridePaste?: () => void;
+	overrideCut?: () => void;
+	overrideCopy?: () => void;
+	overrideTypedText?: (text: string) => void;
+	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
+	ignoreNextMousedown: (e?: MouseEvent) => boolean;
 }
 
 type NamesWLength = { [key: string]: number, _maxLength: number };
@@ -55,36 +58,67 @@ export class Options {
 	// particular math field.
 
 	// Wether mouse events are active for StaticMath blocks
-	static mouseEvents = true;
-	_mouseEvents?: boolean;
-	get mouseEvents() { return this._mouseEvents ?? Options.mouseEvents; }
-	set mouseEvents(mouseEvents) { this._mouseEvents = mouseEvents; }
+	static #mouseEvents = true;
+	#_mouseEvents?: boolean;
+	get mouseEvents() { return this.#_mouseEvents ?? Options.#mouseEvents; }
+	set mouseEvents(mouseEvents) {
+		if (this instanceof Options) this.#_mouseEvents = mouseEvents;
+		else Options.#mouseEvents = mouseEvents;
+	}
 
 	// The set of commands that are automatically typeset without typing a preceding backslash.
-	static autoCommands: NamesWLength = { _maxLength: 0 };
-	_autoCommands?: NamesWLength;
-	get autoCommands(): NamesWLength { return this._autoCommands ?? Options.autoCommands; }
+	static #autoCommands: NamesWLength = { _maxLength: 0 };
+	#_autoCommands?: NamesWLength;
+	get autoCommands(): NamesWLength { return this.#_autoCommands ?? Options.#autoCommands; }
 	set autoCommands(cmds: string | NamesWLength) {
 		if (typeof cmds === 'object') {
-			this._autoCommands = cmds;
+			if (this instanceof Options) {
+				this.#_autoCommands = { _maxLength: 0 };
+				Object.assign(this.#_autoCommands, cmds);
+			} else Object.assign(Options.#autoCommands, cmds);
 			return;
 		}
 
-		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
+		if (!/^\s*[a-z]+(?:\s+[a-z]+)*\s*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
-		const list = cmds.split(' '), dict: NamesWLength = { _maxLength: 0 };
+		const list = cmds.trim().split(/\s+/), dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
 			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
 			dict[cmd] = 1;
 			dict._maxLength = Math.max(dict._maxLength, cmd.length);
 		}
-		this._autoCommands = dict;
+		if (this instanceof Options) this.#_autoCommands = dict;
+		else Options.#autoCommands = dict;
+	}
+
+	addAutoCommands(cmds: string | Array<string>) {
+		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
+		if (!this.#_autoCommands) throw 'autoCommands setter not working';
+		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
+		for (const cmd of newCmds) {
+			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw `${cmd} is not a valid autocommand name`;
+			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
+			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
+			this.#_autoCommands[cmd] = 1;
+			this.#_autoCommands._maxLength = Math.max(this.#_autoCommands._maxLength, cmd.length);
+		}
+	}
+
+	removeAutoCommands(cmds: string | Array<string>) {
+		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
+		if (!this.#_autoCommands) throw 'autoCommands setter not working';
+		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
+		for (const cmd of removeCmds) {
+			delete this.#_autoCommands[cmd];
+		}
+		this.#_autoCommands._maxLength = Object.keys(this.#_autoCommands)
+			.reduce((l, cmd) => cmd === '_maxLength' ? l : cmd.length > l ? cmd.length : l, 0);
 	}
 
 	// The set of operator names that MathQuill auto-unitalicizes.
-	static autoOperatorNames: NamesWLength = (() => {
+	static #autoOperatorNames: NamesWLength = (() => {
 		const ops: NamesWLength = { _maxLength: 9 };
 
 		// Standard operators
@@ -105,114 +139,171 @@ export class Options {
 
 		return ops;
 	})();
-	_autoOperatorNames?: NamesWLength;
-	get autoOperatorNames(): NamesWLength { return this._autoOperatorNames ?? Options.autoOperatorNames; }
+	#_autoOperatorNames?: NamesWLength;
+	get autoOperatorNames(): NamesWLength { return this.#_autoOperatorNames ?? Options.#autoOperatorNames; }
 	set autoOperatorNames(cmds: string | NamesWLength) {
 		if (typeof cmds === 'object') {
-			this._autoCommands = cmds;
+			if (this instanceof Options) {
+				this.#_autoOperatorNames = { _maxLength: 0 };
+				Object.assign(this.#_autoOperatorNames, cmds);
+			} else Object.assign(Options.#autoOperatorNames, cmds);
 			return;
 		}
 
-		if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
+		if (!/^\s*[a-z]+(?:\s+[a-z]+)*\s*$/i.test(cmds)) {
 			throw `"${cmds}" not a space-delimited list of only letters`;
 		}
-		const list = cmds.split(' '), dict: NamesWLength = { _maxLength: 0 };
+		const list = cmds.trim().split(/\s+/), dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
 			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
 			dict[cmd] = 1;
 			dict._maxLength = Math.max(dict._maxLength, cmd.length);
 		}
-		this._autoOperatorNames = dict;
+		if (this instanceof Options) this.#_autoOperatorNames = dict;
+		else Options.#autoOperatorNames = dict;
+	}
+
+	addAutoOperatorNames(cmds: string | Array<string>) {
+		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
+		if (!(this.#_autoOperatorNames)) throw 'autoOperatorNames setter not working';
+		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
+		for (const cmd of newCmds) {
+			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw `${cmd} is not a valid autocommand name`;
+			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
+			this.#_autoOperatorNames[cmd] = 1;
+			this.#_autoOperatorNames._maxLength = Math.max(this.#_autoOperatorNames._maxLength, cmd.length);
+		}
+	}
+
+	removeAutoOperatorNames(cmds: string | Array<string>) {
+		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
+		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
+		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
+		for (const cmd of removeCmds) {
+			delete this.#_autoOperatorNames[cmd];
+		}
+		this.#_autoOperatorNames._maxLength = Object.keys(this.#_autoOperatorNames)
+			.reduce((l, cmd) => cmd === '_maxLength' ? l : cmd.length > l ? cmd.length : l, 0);
 	}
 
 	// Characters that "break out" of superscripts and subscripts
-	static charsThatBreakOutOfSupSub = '';
-	_charsThatBreakOutOfSupSub?: string;
-	get charsThatBreakOutOfSupSub() { return this._charsThatBreakOutOfSupSub ?? Options.charsThatBreakOutOfSupSub; }
+	static #charsThatBreakOutOfSupSub = '';
+	#_charsThatBreakOutOfSupSub?: string;
+	get charsThatBreakOutOfSupSub() { return this.#_charsThatBreakOutOfSupSub ?? Options.#charsThatBreakOutOfSupSub; }
 	set charsThatBreakOutOfSupSub(charsThatBreakOutOfSupSub) {
-		this._charsThatBreakOutOfSupSub = charsThatBreakOutOfSupSub;
+		if (this instanceof Options) this.#_charsThatBreakOutOfSupSub = charsThatBreakOutOfSupSub;
+		else Options.#charsThatBreakOutOfSupSub = charsThatBreakOutOfSupSub;
 	}
 
 	// Not fully implemented stateless clipboard
-	static statelessClipboard = false;
-	_statelessClipboard?: boolean;
-	get statelessClipboard() { return this._statelessClipboard ?? Options.statelessClipboard; }
-	set statelessClipboard(statelessClipboard) { this._statelessClipboard = statelessClipboard; }
+	static #statelessClipboard = false;
+	#_statelessClipboard?: boolean;
+	get statelessClipboard() { return this.#_statelessClipboard ?? Options.#statelessClipboard; }
+	set statelessClipboard(statelessClipboard) {
+		if (this instanceof Options) this.#_statelessClipboard = statelessClipboard;
+		else Options.#statelessClipboard = statelessClipboard;
+	}
 
 	// If true then space will behave like tab escaping from the current block instead of inserting a space.
-	static spaceBehavesLikeTab = false;
-	_spaceBehavesLikeTab?: boolean;
-	get spaceBehavesLikeTab() { return this._spaceBehavesLikeTab ?? Options.spaceBehavesLikeTab; }
-	set spaceBehavesLikeTab(spaceBehavesLikeTab) { this._spaceBehavesLikeTab = spaceBehavesLikeTab; }
+	static #spaceBehavesLikeTab = false;
+	#_spaceBehavesLikeTab?: boolean;
+	get spaceBehavesLikeTab() { return this.#_spaceBehavesLikeTab ?? Options.#spaceBehavesLikeTab; }
+	set spaceBehavesLikeTab(spaceBehavesLikeTab) {
+		if (this instanceof Options) this.#_spaceBehavesLikeTab = spaceBehavesLikeTab;
+		else Options.#spaceBehavesLikeTab = spaceBehavesLikeTab;
+	}
 
 	// Set to 'up' or 'down' so that left and right go up or down (respectively) into commands.
-	static leftRightIntoCmdGoes: 'up' | 'down' | undefined = undefined;
-	_leftRightIntoCmdGoes?: 'up' | 'down';
-	get leftRightIntoCmdGoes() { return this._leftRightIntoCmdGoes ?? Options.leftRightIntoCmdGoes; }
+	static #leftRightIntoCmdGoes: 'up' | 'down' | undefined = undefined;
+	#_leftRightIntoCmdGoes?: 'up' | 'down';
+	get leftRightIntoCmdGoes() { return this.#_leftRightIntoCmdGoes ?? Options.#leftRightIntoCmdGoes; }
 	set leftRightIntoCmdGoes(updown: 'up' | 'down' | string | undefined) {
 		if (updown && updown !== 'up' && updown !== 'down') {
 			throw `"up" or "down" required for leftRightIntoCmdGoes option, got "${updown}"`;
 		}
-		this._leftRightIntoCmdGoes = updown as 'up' | 'down' | undefined;
+		if (this instanceof Options) this.#_leftRightIntoCmdGoes = updown as 'up' | 'down' | undefined;
+		else Options.#leftRightIntoCmdGoes = updown as 'up' | 'down' | undefined;
 	}
 
 	// If true then you can type '[a,b)' and '(a,b]', but if you type '[x}' or '{x)', you'll get '[{x}]' or '{(x)}'
 	// instead.
-	static restrictMismatchedBrackets = false;
-	_restrictMismatchedBrackes?: boolean;
-	get restrictMismatchedBrackets() { return this._restrictMismatchedBrackes ?? Options.restrictMismatchedBrackets; }
+	static #restrictMismatchedBrackets = false;
+	#_restrictMismatchedBrackets?: boolean;
+	get restrictMismatchedBrackets() {
+		return this.#_restrictMismatchedBrackets ?? Options.#restrictMismatchedBrackets;
+	}
 	set restrictMismatchedBrackets(restrictMismatchedBrackets) {
-		this._restrictMismatchedBrackes = restrictMismatchedBrackets;
+		if (this instanceof Options) this.#_restrictMismatchedBrackets = restrictMismatchedBrackets;
+		else Options.#restrictMismatchedBrackets = restrictMismatchedBrackets;
 	}
 
 	// If true then when you type '\sum', '\prod', or '\coprod', the lower limit starts out with 'n='.
-	static sumStartsWithNEquals = false;
-	_sumStartsWithNEquals?: boolean;
-	get sumStartsWithNEquals() { return this._sumStartsWithNEquals ?? Options.sumStartsWithNEquals; }
-	set sumStartsWithNEquals(sumStartsWithNEquals) { this._sumStartsWithNEquals = sumStartsWithNEquals; }
+	static #sumStartsWithNEquals = false;
+	#_sumStartsWithNEquals?: boolean;
+	get sumStartsWithNEquals() { return this.#_sumStartsWithNEquals ?? Options.#sumStartsWithNEquals; }
+	set sumStartsWithNEquals(sumStartsWithNEquals) {
+		if (this instanceof Options) this.#_sumStartsWithNEquals = sumStartsWithNEquals;
+		else Options.#sumStartsWithNEquals = sumStartsWithNEquals;
+	}
 
 	// Disables typing of superscripts and subscripts when there's nothing to the left of the cursor.
-	static supSubsRequireOperand = false;
-	_supSubsRequireOperand?: boolean;
-	get supSubsRequireOperand() { return this._supSubsRequireOperand ?? Options.supSubsRequireOperand; }
-	set supSubsRequireOperand(supSubsRequireOperand) { this._supSubsRequireOperand = supSubsRequireOperand; }
+	static #supSubsRequireOperand = false;
+	#_supSubsRequireOperand?: boolean;
+	get supSubsRequireOperand() { return this.#_supSubsRequireOperand ?? Options.#supSubsRequireOperand; }
+	set supSubsRequireOperand(supSubsRequireOperand) {
+		if (this instanceof Options) this.#_supSubsRequireOperand = supSubsRequireOperand;
+		else Options.#supSubsRequireOperand = supSubsRequireOperand;
+	}
 
 	// If true then the text output for an nth root will be 'x^(1/n)' instead of 'root(n,x)'.
-	static rootsAreExponents = false;
-	_rootsAreExponents?: boolean;
-	get rootsAreExponents() { return this._rootsAreExponents ?? Options.rootsAreExponents; }
-	set rootsAreExponents(rootsAreExponents) { this._rootsAreExponents = rootsAreExponents; }
+	static #rootsAreExponents = false;
+	#_rootsAreExponents?: boolean;
+	get rootsAreExponents() { return this.#_rootsAreExponents ?? Options.#rootsAreExponents; }
+	set rootsAreExponents(rootsAreExponents) {
+		if (this instanceof Options) this.#_rootsAreExponents = rootsAreExponents;
+		else Options.#rootsAreExponents = rootsAreExponents;
+	}
 
 	// Specifies the maximum number of nested MathBlocks allowed.
-	static maxDepth = undefined;
-	_maxDepth?: number;
-	get maxDepth() { return this._maxDepth ?? Options.maxDepth; }
-	set maxDepth(maxDepth) { if (typeof maxDepth === 'number') this._maxDepth = maxDepth; }
+	static #maxDepth?: number = undefined;
+	#_maxDepth?: number;
+	get maxDepth() { return this.#_maxDepth ?? Options.#maxDepth; }
+	set maxDepth(maxDepth) {
+		if (typeof maxDepth === 'number') {
+			if (this instanceof Options) this.#_maxDepth = maxDepth;
+			else Options.#maxDepth = maxDepth;
+		}
+	}
 
 	// If true then a number typed after a letter will automatically be put into a subscript.
-	static autoSubscriptNumerals = false;
-	_autoSubscriptNumerals?: boolean;
-	get autoSubscriptNumerals() { return this._autoSubscriptNumerals ?? Options.autoSubscriptNumerals; }
-	set autoSubscriptNumerals(autoSubscriptNumerals) { this._autoSubscriptNumerals = autoSubscriptNumerals; }
+	static #autoSubscriptNumerals = false;
+	#_autoSubscriptNumerals?: boolean;
+	get autoSubscriptNumerals() { return this.#_autoSubscriptNumerals ?? Options.#autoSubscriptNumerals; }
+	set autoSubscriptNumerals(autoSubscriptNumerals) {
+		if (this instanceof Options) this.#_autoSubscriptNumerals = autoSubscriptNumerals;
+		else Options.#autoSubscriptNumerals = autoSubscriptNumerals;
+	}
 
 	// If true then typing a slash gives the division symbol instead of a live fraction.
-	static typingSlashWritesDivisionSymbol = false;
-	_typingSlashWritesDivisionSymbol?: boolean;
+	static #typingSlashWritesDivisionSymbol = false;
+	#_typingSlashWritesDivisionSymbol?: boolean;
 	get typingSlashWritesDivisionSymbol() {
-		return this._typingSlashWritesDivisionSymbol ?? Options.typingSlashWritesDivisionSymbol;
+		return this.#_typingSlashWritesDivisionSymbol ?? Options.#typingSlashWritesDivisionSymbol;
 	}
 	set typingSlashWritesDivisionSymbol(typingSlashWritesDivisionSymbol) {
-		this._typingSlashWritesDivisionSymbol = typingSlashWritesDivisionSymbol;
+		if (this instanceof Options) this.#_typingSlashWritesDivisionSymbol = typingSlashWritesDivisionSymbol;
+		else Options.#typingSlashWritesDivisionSymbol = typingSlashWritesDivisionSymbol;
 	}
 
 	// If true then typing an asterisk gives the times symbol.
-	static typingAsteriskWritesTimesSymbol = false;
-	_typingAsteriskWritesTimesSymbol?: boolean;
+	static #typingAsteriskWritesTimesSymbol = false;
+	#_typingAsteriskWritesTimesSymbol?: boolean;
 	get typingAsteriskWritesTimesSymbol() {
-		return this._typingAsteriskWritesTimesSymbol ?? Options.typingAsteriskWritesTimesSymbol;
+		return this.#_typingAsteriskWritesTimesSymbol ?? Options.#typingAsteriskWritesTimesSymbol;
 	}
 	set typingAsteriskWritesTimesSymbol(typingAsteriskWritesTimesSymbol) {
-		this._typingAsteriskWritesTimesSymbol = typingAsteriskWritesTimesSymbol;
+		if (this instanceof Options) this.#_typingAsteriskWritesTimesSymbol = typingAsteriskWritesTimesSymbol;
+		else Options.#typingAsteriskWritesTimesSymbol = typingAsteriskWritesTimesSymbol;
 	}
 
 	handlers?: Handlers;
@@ -221,14 +312,15 @@ export class Options {
 		const textarea = document.createElement('textarea');
 		textarea.setAttribute('autocapitalize', 'off');
 		textarea.setAttribute('autocomplete', 'off');
-		textarea.setAttribute('autocorrext', 'off');
 		textarea.setAttribute('spellcheck', 'false');
 		return textarea;
 	}
 
-	substituteKeyboardEvents(el: HTMLTextAreaElement, handlers: TextAreaHandlers) {
-		return saneKeyboardEvents(el, handlers);
-	}
+	overridePaste?: (test: string) => void;
+	overrideCut?: () => void;
+	overrideCopy?: () => void;
+	overrideTypedText?: (text: string) => void;
+	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
 
 	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => { return false; };
 }

@@ -2,7 +2,6 @@
 
 import type { Direction } from 'src/constants';
 import { mqCmdId, L, R, pray, prayDirection, LatexCmds, CharCmds } from 'src/constants';
-import type { Controller } from 'src/controller';
 import { Parser } from 'services/parser.util';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
@@ -210,9 +209,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 			this.fuseChildren();
 		}
 
-		(function getCtrlr(node?: TNode): Controller {
-			return (node?.controller) ? node?.controller : getCtrlr(node?.parent);
-		})(cursor.parent).handle('textBlockExit');
+		this?.getController()?.handle('textBlockExit');
 	}
 
 	fuseChildren() {
@@ -234,9 +231,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	focus() {
 		super.focus();
 
-		(function getCtrlr(node?: TNode): Controller {
-			return (node?.controller) ? node?.controller : getCtrlr(node?.parent);
-		})(this).handle('textBlockEnter');
+		this.getController()?.handle('textBlockEnter');
 	}
 }
 

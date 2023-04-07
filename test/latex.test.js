@@ -5,10 +5,12 @@ import { Options } from 'src/options';
 import { Bracket, latexMathParser } from 'commands/mathElements';
 
 suite('latex', () => {
+	const options = new Options;
+
 	const assertParsesLatex = (str, latex) => {
 		if (typeof latex === 'undefined') latex = str;
 
-		const result = latexMathParser.parse(str).postOrder('finalizeTree', Options.prototype).join('latex');
+		const result = latexMathParser.parse(str).postOrder('finalizeTree', options).join('latex');
 		assert.equal(result, latex,
 			`parsing '${str}', got '${result}', expected '${latex}'`
 		);

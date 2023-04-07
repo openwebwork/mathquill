@@ -27,6 +27,13 @@
 			margin-bottom: 0.5rem;
 		}
 
+		.auto-options {
+			display: flex;
+			flex-direction: column;
+			gap: 0.1rem;
+			max-width: 150px;
+		}
+
 		input[type=text] {
 			padding: 4px 6px 2px;
 			border: 1px solid #ccc;
@@ -113,7 +120,10 @@
 					label.textContent = `Enable ${option}`;
 					optionDiv.append(input, label);
 					optionsContainer.append(optionDiv);
-					input.addEventListener('change', () => mathField.config({ [option]: input.checked }));
+					input.addEventListener('change', () => {
+						mathField.options[option] = input.checked;
+						mathField.reflow();
+					});
 				}
 			}
 
@@ -137,37 +147,146 @@
 				downLabel.textContent = 'down';
 				optionDiv.append('leftRightIntoCmdGoes: ', upInput, upLabel, downInput, downLabel);
 				optionsContainer.append(optionDiv);
-				upInput.addEventListener('click', () => mathField.config({ leftRightIntoCmdGoes: 'up' }));
-				downInput.addEventListener('click', () => mathField.config({ leftRightIntoCmdGoes: 'down' }));
+				upInput.addEventListener('click', () => mathField.options.leftRightIntoCmdGoes = 'up');
+				downInput.addEventListener('click', () => mathField.options.leftRightIntoCmdGoes = 'down');
 			}
 
 			// Special case for autoCommands
 			{
 				const optionDiv = document.createElement('div');
-				const autoCommands_checks = [];
-				optionDiv.append('autoCommands: ');
-				for (const cmd of ['pi', 'sqrt', 'root', 'vert', 'inf', 'union', 'abs']) {
-					const check = document.createElement('input');
-					check.type = 'checkbox';
-					check.name = 'autoCommands';
-					check.id = `autoCommands_${cmd}`;
-					check.value = cmd;
-					check.checked = true;
-					autoCommands_checks.push(check);
-					const label = document.createElement('label');
-					label.setAttribute('for', `autoCommands_${cmd}`);
-					label.textContent = cmd;
-					label.style.marginRight = '1rem';
-					check.addEventListener('change', () => {
-						mathField.config({
-							autoCommands:
-							autoCommands_checks.filter((check) => check.checked).map((check) => check.value).join(' ')
-						});
-					});
-					optionDiv.append(check, label);
+				optionDiv.classList.add('auto-options');
+				const optionLabel = document.createElement('label');
+				optionLabel.textContent = 'autoCommands:';
+				optionLabel.for = 'currentAutoCommands';
+				const optionSelect = document.createElement('select');
+				optionSelect.id = 'currentAutoCommands';
+				optionSelect.name = 'currentAutoCommands';
+				optionSelect.multiple = 'true';
+				optionSelect.size = '10';
+
+				for (const cmd of Object.keys(mathField.options.autoCommands).sort()) {
+					if (cmd === '_maxLength') continue;
+					const cmdOption = document.createElement('option');
+					cmdOption.value = cmd;
+					cmdOption.textContent = cmd;
+					optionSelect.add(cmdOption);
 				}
+
+				const deleteButton = document.createElement('button');
+				deleteButton.type = 'button';
+				deleteButton.textContent = 'Delete Selected';
+				deleteButton.addEventListener('click', () => {
+					for (const cmd of Array.from(optionSelect.selectedOptions)) {
+						mathField.options.removeAutoCommands(cmd.value);
+						cmd.remove();
+					}
+				});
+
+				const optionInput = document.createElement('input');
+				optionInput.type = 'text';
+				optionInput.name = 'add-auto-command';
+
+				const addButton = document.createElement('button');
+				addButton.type = 'button';
+				addButton.textContent = 'Add Command';
+				addButton.addEventListener('click', () => {
+					try {
+						mathField.options.addAutoCommands(optionInput.value);
+					} catch (e) {
+						alert(e);
+						return;
+					}
+					const cmdOption = document.createElement('option');
+					cmdOption.value = optionInput.value.trim();
+					cmdOption.textContent = optionInput.value.trim();
+					let added = false;
+					for (const opt of optionSelect.options) {
+						if (cmdOption.value === opt.value) {
+							added = true;
+							alert('This command has already been added.');
+							break;
+						} else if (cmdOption.value < opt.value) {
+							added = true;
+							optionSelect.add(cmdOption, opt);
+							break;
+						}
+					}
+					if (!added) optionSelect.add(cmdOption);
+					optionInput.value = '';
+				});
+
+				optionDiv.append(optionLabel, optionSelect, deleteButton, optionInput, addButton);
 				optionsContainer.append(optionDiv);
 			}
+
+			// Special case for autoOperatorNames
+			{
+				const optionDiv = document.createElement('div');
+				optionDiv.classList.add('auto-options');
+				const optionLabel = document.createElement('label');
+				optionLabel.textContent = 'autoOperatorNames:';
+				optionLabel.for = 'currentAutoOperatorNames';
+				const optionSelect = document.createElement('select');
+				optionSelect.id = 'currentAutoOperatorNames';
+				optionSelect.name = 'currentAutoOperatorNames';
+				optionSelect.multiple = 'true';
+				optionSelect.size = '10';
+
+				for (const cmd of Object.keys(mathField.options.autoOperatorNames).sort()) {
+					if (cmd === '_maxLength') continue;
+					const cmdOption = document.createElement('option');
+					cmdOption.value = cmd;
+					cmdOption.textContent = cmd;
+					optionSelect.add(cmdOption);
+				}
+
+				const deleteButton = document.createElement('button');
+				deleteButton.type = 'button';
+				deleteButton.textContent = 'Delete Selected';
+				deleteButton.addEventListener('click', () => {
+					for (const cmd of Array.from(optionSelect.selectedOptions)) {
+						mathField.options.removeAutoOperatorNames(cmd.value);
+						cmd.remove();
+					}
+				});
+
+				const optionInput = document.createElement('input');
+				optionInput.type = 'text';
+				optionInput.name = 'add-auto-operator-name';
+
+				const addButton = document.createElement('button');
+				addButton.type = 'button';
+				addButton.textContent = 'Add Operator Name';
+				addButton.addEventListener('click', () => {
+					try {
+						mathField.options.addAutoOperatorNames(optionInput.value);
+					} catch (e) {
+						alert(e);
+						return;
+					}
+					const cmdOption = document.createElement('option');
+					cmdOption.value = optionInput.value.trim();
+					cmdOption.textContent = optionInput.value.trim();
+					let added = false;
+					for (const opt of optionSelect.options) {
+						if (cmdOption.value === opt.value) {
+							added = true;
+							alert('This operator name has already been added.');
+							break;
+						} else if (cmdOption.value < opt.value) {
+							added = true;
+							optionSelect.add(cmdOption, opt);
+							break;
+						}
+					}
+					if (!added) optionSelect.add(cmdOption);
+					optionInput.value = '';
+				});
+
+				optionDiv.append(optionLabel, optionSelect, deleteButton, optionInput, addButton);
+				optionsContainer.append(optionDiv);
+			}
+
 		})();
 	</script>
 </body>
