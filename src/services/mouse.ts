@@ -1,10 +1,12 @@
 // Deals with mouse events for clicking and drag-to-select.
 
 import type { Constructor } from 'src/constants';
-import { mqCmdId, mqBlockId, noop, pray } from 'src/constants';
+import { mqCmdId, mqBlockId, noop, pray, L, R } from 'src/constants';
 import { TNode } from 'tree/node';
 import type { ControllerBase } from 'src/controller';
 import type { HorizontalScroll } from 'services/scrollHoriz';
+import { Letter, Digit } from 'commands/mathElements';
+import { TextBlock } from 'commands/textElements';
 
 export const MouseEventController =
 	<TBase extends Constructor<ControllerBase> & ReturnType<typeof HorizontalScroll>>(Base: TBase) => class extends Base
@@ -62,6 +64,57 @@ export const MouseEventController =
 					ownerDocument.removeEventListener('mousemove', docmousemove);
 					ownerDocument.removeEventListener('mouseup', mouseup);
 				};
+
+				if (e.detail === 3) {
+					// If this is a triple click, then select all and return.
+					ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
+					while (cursor[L]) ctrlr.selectLeft();
+					mouseup();
+					return;
+				} else if (e.detail === 2) {
+					// If this is a double click, then select the block that is to the right of the cursor, and return.
+					// Note that the interpretation of what a block is in this situation is not a true MathQuill block.
+					// Rather an attempt is made to select word like blocks.
+					ctrlr.seek(e.target as HTMLElement, e.pageX ?? 0);
+					if (!cursor[R] && cursor[L]?.parent === root) ctrlr.moveLeft();
+
+					if (cursor[R] instanceof Letter) {
+						// If a "Letter" is to the right of the cursor, then try to select all adjacent "Letter"s that
+						// are of the same basic ilk.  That means all "Letter"s that are part of an operator name, or
+						// all "Letter"s that are not part of an operator name.
+						const currentNode = cursor[R];
+						while (
+							cursor[L] &&
+							cursor[L] instanceof Letter &&
+							cursor[L].isPartOfOperator === currentNode.isPartOfOperator
+						)
+							ctrlr.moveLeft();
+						cursor.startSelection();
+						while (
+							cursor[R] &&
+							cursor[R] instanceof Letter &&
+							cursor[R].isPartOfOperator === currentNode.isPartOfOperator
+						)
+							ctrlr.selectRight();
+					} else if (cursor[R] instanceof Digit) {
+						// If a "Digit" is to the right of the cursor, then select all adjacent "Digit"s.
+						while (cursor[L] && cursor[L] instanceof Digit) ctrlr.moveLeft();
+						cursor.startSelection();
+						while (cursor[R] && cursor[R] instanceof Digit) ctrlr.selectRight();
+					} else {
+						cursor.startSelection();
+						ctrlr.selectRight();
+					}
+
+					// If the cursor is in a text block, then select the whole text block.
+					if (cursor[L]?.parent instanceof TextBlock) {
+						cursor[L].parent.moveOutOf(L, cursor);
+						ctrlr.selectRight();
+					}
+
+					mouseup();
+					return;
+				}
 
 				if (ctrlr.blurred) {
 					if (!ctrlr.editable) rootEl?.prepend(textareaSpan as HTMLSpanElement);
