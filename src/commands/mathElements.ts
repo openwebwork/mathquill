@@ -983,7 +983,7 @@ export class UpperLowerLimitCommand extends MathCommand {
 type BracketType = Bracket | MathFunction;
 
 const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends DelimsMixin(Base) {
-	side: Direction = L;
+	side?: Direction = L;
 	sides: {
 		[L]: { ch: string, ctrlSeq: string },
 		[R]: { ch: string, ctrlSeq: string }
@@ -993,18 +993,22 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => cl
 	matchBrack(opts: Options, expectedSide?: Direction, node?: TNode): false | BracketType {
 		// Return node iff it's a matching 1-sided bracket of expected side (if any).
 		// A function is only allowed to match an ending parentheses.
-		return ((node instanceof Bracket && (!(this instanceof MathFunction) || node.sides[node.side]?.ch === ')')) ||
-			(node instanceof MathFunction && this.sides[this.side].ch === ')'))
-			&& !!node.side
-			&& node.side !== (expectedSide === L ? R : expectedSide === R ? L : 0)
-			&& (!opts.restrictMismatchedBrackets
-				|| OPP_BRACKS[this.sides[this.side].ch] === node.sides[node.side].ch
-				|| { '(': ']', '[': ')' }[this.sides[L].ch] === node.sides[R].ch)
-			&& node;
+		return (
+			((node instanceof Bracket &&
+				(!(this instanceof MathFunction) || (!!node.side && node.sides[node.side].ch) === ')')) ||
+				(node instanceof MathFunction && !!this.side && this.sides[this.side].ch === ')')) &&
+			!!node.side &&
+			node.side !== (expectedSide === L ? R : expectedSide === R ? L : 0) &&
+			(!opts.restrictMismatchedBrackets ||
+				(this.side && OPP_BRACKS[this.sides[this.side].ch] === node.sides[node.side].ch) ||
+				{ '(': ']', '[': ')' }[this.sides[L].ch] === node.sides[R].ch) &&
+			node
+		);
 	}
 
 	closeOpposing(brack: BracketType) {
-		brack.side = 0;
+		delete brack.side;
+		if (!this.side) return;
 		// Copy this objects info to brack as this may be a different type of bracket (like (a, b]).
 		brack.sides[this.side] = this.sides[this.side];
 		const delim = brack.delims?.[this.side === L ? 0 : 1];
@@ -1049,7 +1053,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => cl
 				const rightward = brack === cursor.parent?.parent && cursor[R] !== brack.ends[R]?.[R] ?
 					new Fragment(cursor[R], brack.ends[R]?.ends[R], L).disown() : undefined;
 				cursor.insRightOf(brack);
-				this.side = 0;
+				delete this.side;
 				if (rightward) this.replaces(rightward);
 				super.createLeftOf(cursor);
 				brack.remove();
@@ -1077,7 +1081,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => cl
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			brack = this, side = brack.side;
 			// If wrapping a selection, don't be one-sided.
-			if (brack.replacedFragment) brack.side = 0;
+			if (brack.replacedFragment) delete brack.side;
 			else if (cursor[side === L ? R : L]) {
 				// Auto-expand so the ghost is at the far end.
 				brack.replaces(new Fragment(cursor[side === L ? R : L], cursor.parent?.ends[side === L ? R : L], side));
@@ -1172,7 +1176,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => cl
 		}
 
 		this.delims?.[this.side === L ? 1 : 0].classList.remove('mq-ghost');
-		this.side = 0;
+		delete this.side;
 	}
 };
 
@@ -1180,7 +1184,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => cl
 // First typed as one-sided bracket with matching "ghost" bracket at
 // far end of current block, until you type an opposing one.
 export class Bracket extends BracketMixin(MathCommand) {
-	constructor(side: Direction, open: string, close: string, ctrlSeq: string, end: string) {
+	constructor(side: Direction | undefined, open: string, close: string, ctrlSeq: string, end: string) {
 		super(`\\left${ctrlSeq}`, undefined, [open, close]);
 		this.side = side;
 		this.sides = {
@@ -1386,7 +1390,7 @@ export class MathFunction extends BracketMixin(MathCommand) {
 
 	parser() {
 		// Create the other end solid.
-		this.side = 0;
+		delete this.side;
 
 		this.blocks = [ new MathBlock(), new MathBlock() ];
 		for (const block of this.blocks) {

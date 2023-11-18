@@ -212,12 +212,12 @@ export class Options {
 	static #leftRightIntoCmdGoes: 'up' | 'down' | undefined = undefined;
 	#_leftRightIntoCmdGoes?: 'up' | 'down';
 	get leftRightIntoCmdGoes() { return this.#_leftRightIntoCmdGoes ?? Options.#leftRightIntoCmdGoes; }
-	set leftRightIntoCmdGoes(updown: 'up' | 'down' | string | undefined) {
+	set leftRightIntoCmdGoes(updown: 'up' | 'down' | undefined) {
 		if (updown && updown !== 'up' && updown !== 'down') {
-			throw `"up" or "down" required for leftRightIntoCmdGoes option, got "${updown}"`;
+			throw `"up" or "down" required for leftRightIntoCmdGoes option, got "${updown as string}"`;
 		}
-		if (this instanceof Options) this.#_leftRightIntoCmdGoes = updown as 'up' | 'down' | undefined;
-		else Options.#leftRightIntoCmdGoes = updown as 'up' | 'down' | undefined;
+		if (this instanceof Options) this.#_leftRightIntoCmdGoes = updown;
+		else Options.#leftRightIntoCmdGoes = updown;
 	}
 
 	// If true then you can type '[a,b)' and '(a,b]', but if you type '[x}' or '{x)', you'll get '[{x}]' or '{(x)}'

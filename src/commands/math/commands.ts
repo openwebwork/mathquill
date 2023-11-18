@@ -373,7 +373,7 @@ LatexCmds.left = class extends MathCommand {
 							let close = (end.charAt(0) === '\\' ? end.slice(1) : end);
 							if (end == '\\rangle') { close = '&rang;'; end = `${end} `; }
 							if (end == '\\rVert') { close = '&#8741;'; end = `${end} `; }
-							const cmd = new Bracket(0, open, close, ctrlSeq, end);
+							const cmd = new Bracket(undefined, open, close, ctrlSeq, end);
 							cmd.blocks = [ block ];
 							block.adopt(cmd);
 							return cmd;
