@@ -42,10 +42,8 @@ export class Cursor extends Point {
 			if (this[R]) {
 				if (this.selection && this.selection.ends[L]?.[L] === this[L])
 					this.selection.elements.first.before(this.element);
-				else
-					this[R].elements.first.before(this.element);
-			} else
-				(this.parent as TNode).elements.firstElement.append(this.element);
+				else this[R].elements.first.before(this.element);
+			} else (this.parent as TNode).elements.firstElement.append(this.element);
 			this.parent?.focus();
 		}
 		this.intervalId = setInterval(this.blink, 500);
@@ -53,8 +51,7 @@ export class Cursor extends Point {
 	}
 
 	hide() {
-		if (this.intervalId)
-			clearInterval(this.intervalId);
+		if (this.intervalId) clearInterval(this.intervalId);
 		delete this.intervalId;
 		this.element.style.display = 'none';
 		this.element.remove();
@@ -81,9 +78,13 @@ export class Cursor extends Point {
 		return this;
 	}
 
-	insLeftOf(el: TNode) { return this.insDirOf(L, el); }
+	insLeftOf(el: TNode) {
+		return this.insDirOf(L, el);
+	}
 
-	insRightOf(el: TNode) { return this.insDirOf(R, el); }
+	insRightOf(el: TNode) {
+		return this.insDirOf(R, el);
+	}
 
 	insAtDirEnd(dir: Direction, el: TNode) {
 		prayDirection(dir);
@@ -96,9 +97,13 @@ export class Cursor extends Point {
 		return this;
 	}
 
-	insAtLeftEnd(el: TNode) { return this.insAtDirEnd(L, el); }
+	insAtLeftEnd(el: TNode) {
+		return this.insAtDirEnd(L, el);
+	}
 
-	insAtRightEnd(el: TNode) { return this.insAtDirEnd(R, el); }
+	insAtRightEnd(el: TNode) {
+		return this.insAtDirEnd(R, el);
+	}
 
 	// Jump up or down from one block TNode to another:
 	// - cache the current Point in the TNode we are jumping from
@@ -128,22 +133,23 @@ export class Cursor extends Point {
 		gramp.disown().eachChild((uncle: TNode) => {
 			if (uncle.isEmpty()) return;
 
-			uncle.children()
+			uncle
+				.children()
 				.adopt(greatgramp, leftward, rightward)
-				.each((cousin: TNode) => { gramp.elements.first.before(...cousin.elements.contents); });
+				.each((cousin: TNode) => {
+					gramp.elements.first.before(...cousin.elements.contents);
+				});
 
 			leftward = uncle.ends[R];
 		});
 
 		if (!this[R]) {
 			// Find something rightward to insert left of.
-			if (this[L])
-				this[R] = this[L]?.[R];
+			if (this[L]) this[R] = this[L]?.[R];
 			else {
 				while (!this[R]) {
 					this.parent = this.parent?.[R];
-					if (this.parent)
-						this[R] = this.parent?.ends[L];
+					if (this.parent) this[R] = this.parent?.ends[L];
 					else {
 						this[R] = gramp[R];
 						this.parent = greatgramp;
@@ -152,10 +158,8 @@ export class Cursor extends Point {
 				}
 			}
 		}
-		if (this[R])
-			this.insLeftOf(this[R]);
-		else
-			this.insAtRightEnd(greatgramp);
+		if (this[R]) this.insLeftOf(this[R]);
+		else this.insAtRightEnd(greatgramp);
 
 		gramp.elements.remove();
 
@@ -186,7 +190,8 @@ export class Cursor extends Point {
 		// Find the lowest common ancestor (`lca`), and the ancestor of the cursor
 		// whose parent is the LCA (which will be an end of the selection fragment).
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		let ancestor: Point | TNode = this, lca: TNode | null = null;
+		let ancestor: Point | TNode = this,
+			lca: TNode | null = null;
 		for (; ancestor.parent; ancestor = ancestor.parent) {
 			if (ancestor.parent.id in this.anticursor.ancestors) {
 				lca = ancestor.parent;
@@ -208,7 +213,9 @@ export class Cursor extends Point {
 		// parent and guaranteed that if both are Points, they are not the same,
 		// and we have to figure out which is the left end and which the right end
 		// of the selection.
-		let leftEnd, rightEnd, dir = R;
+		let leftEnd,
+			rightEnd,
+			dir = R;
 
 		// This is an extremely subtle algorithm.
 		// As a special case, `ancestor` could be a Point and `antiAncestor` a TNode
@@ -278,7 +285,7 @@ export class Cursor extends Point {
 		let node = this.parent;
 		let depth = 0;
 		while (node) {
-			depth += (node instanceof MathBlock) ? 1 : 0;
+			depth += node instanceof MathBlock ? 1 : 0;
 			node = node.parent;
 		}
 		return depth;

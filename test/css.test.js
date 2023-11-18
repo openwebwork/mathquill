@@ -1,7 +1,7 @@
 /* global suite, test, assert, MQ */
 
 suite('CSS', () => {
-	test('math field doesn\'t affect ancestor\'s .scrollWidth', () => {
+	test("math field doesn't affect ancestor's .scrollWidth", () => {
 		const container = document.createElement('div');
 		container.style.fontSize = '16px';
 		container.style.height = '25px'; // must be greater than font-size * 115% + 2 * 2px (padding) + 2 * 1px (border)
@@ -23,9 +23,10 @@ suite('CSS', () => {
 
 	const getHeight = (el) => {
 		const computedStyle = getComputedStyle(el);
-		return el.clientHeight
-			- parseFloat(computedStyle.paddingTop ?? 0)
-			- parseFloat(computedStyle.paddingBottom ?? 0) > 0;
+		return (
+			el.clientHeight - parseFloat(computedStyle.paddingTop ?? 0) - parseFloat(computedStyle.paddingBottom ?? 0) >
+			0
+		);
 	};
 
 	test('empty root block does not collapse', () => {
@@ -59,8 +60,10 @@ suite('CSS', () => {
 
 		const mqF = mq.el().querySelector('.mq-f');
 		const computedStyle = getComputedStyle(mqF);
-		assert.ok(parseFloat(computedStyle.marginRight ?? 0) > parseFloat(computedStyle.marginLeft ?? 0),
-			'florin right margin should be greater than left margin') ;
+		assert.ok(
+			parseFloat(computedStyle.marginRight ?? 0) > parseFloat(computedStyle.marginLeft ?? 0),
+			'florin right margin should be greater than left margin'
+		);
 	});
 
 	test('unary PlusMinus before separator', () => {

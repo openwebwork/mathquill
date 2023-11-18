@@ -25,7 +25,8 @@ export class AbstractMathQuill {
 	}
 
 	__mathquillify(...classNames: Array<string>) {
-		const root = this.__controller.root, el = this.__controller.container;
+		const root = this.__controller.root,
+			el = this.__controller.container;
 		this.__controller.createTextarea();
 
 		el.classList.add(...classNames);
@@ -37,8 +38,12 @@ export class AbstractMathQuill {
 		root.elements.add(rootEl);
 		el.append(rootEl);
 
-		this.latex(contents.reduce(
-			(ret: string, child) => child.nodeType === 8 ? ret : `${ret}${child.textContent ?? ''}`, ''));
+		this.latex(
+			contents.reduce(
+				(ret: string, child) => (child.nodeType === 8 ? ret : `${ret}${child.textContent ?? ''}`),
+				''
+			)
+		);
 
 		this.revert = () => {
 			while (el.firstChild) el.firstChild.remove();
@@ -50,12 +55,21 @@ export class AbstractMathQuill {
 		};
 	}
 
-	get options() { return this.__options; }
-	config(opts: InputOptions) { Options.config(this.__options, opts); return this; }
+	get options() {
+		return this.__options;
+	}
+	config(opts: InputOptions) {
+		Options.config(this.__options, opts);
+		return this;
+	}
 
-	el() { return this.__controller.container; }
+	el() {
+		return this.__controller.container;
+	}
 
-	text() { return this.__controller.exportText(); }
+	text() {
+		return this.__controller.exportText();
+	}
 
 	latex(latex?: string) {
 		if (typeof latex !== 'undefined') {
@@ -67,7 +81,8 @@ export class AbstractMathQuill {
 	}
 
 	html() {
-		return this.__controller.root.elements.html()
+		return this.__controller.root.elements
+			.html()
 			.replace(new RegExp(` (?:${mqBlockId}|${mqCmdId})="?\\d+"?`, 'g'), '')
 			.replace(/<span class="?mq-cursor( mq-blink)?"?>.?<\/span>/i, '')
 			.replace(/ mq-has-cursor|mq-has-cursor ?/, '')
@@ -92,16 +107,14 @@ export class EditableField extends AbstractMathQuill {
 	focus() {
 		if (document.activeElement === this.__controller.textarea)
 			this.__controller.textarea?.dispatchEvent(new FocusEvent('focus'));
-		else
-			this.__controller.textarea?.focus();
+		else this.__controller.textarea?.focus();
 		return this;
 	}
 
 	blur() {
 		if (document.activeElement !== this.__controller.textarea)
 			this.__controller.textarea?.dispatchEvent(new FocusEvent('blur'));
-		else
-			this.__controller.textarea?.blur();
+		else this.__controller.textarea?.blur();
 		return this;
 	}
 
@@ -113,7 +126,8 @@ export class EditableField extends AbstractMathQuill {
 	}
 
 	empty() {
-		const root = this.__controller.root, cursor = this.__controller.cursor;
+		const root = this.__controller.root,
+			cursor = this.__controller.cursor;
 		root.eachChild('postOrder', 'dispose');
 		delete root.ends[L];
 		delete root.ends[R];
@@ -124,7 +138,8 @@ export class EditableField extends AbstractMathQuill {
 	}
 
 	cmd(cmd: string) {
-		const ctrlr = this.__controller.notify(), cursor = ctrlr.cursor;
+		const ctrlr = this.__controller.notify(),
+			cursor = ctrlr.cursor;
 		if (/^\\[a-z]+$/i.test(cmd) && !cursor.isTooDeep()) {
 			cmd = cmd.slice(1);
 			const klass = LatexCmds[cmd];
@@ -157,8 +172,12 @@ export class EditableField extends AbstractMathQuill {
 		this.__controller.notify('move').cursor.insAtDirEnd(dir, this.__controller.root);
 		return this;
 	}
-	moveToLeftEnd() { return this.moveToDirEnd(L); }
-	moveToRightEnd() { return this.moveToDirEnd(R); }
+	moveToLeftEnd() {
+		return this.moveToDirEnd(L);
+	}
+	moveToRightEnd() {
+		return this.moveToDirEnd(R);
+	}
 
 	keystroke(keys: string) {
 		const keyList = keys.replace(/^\s+|\s+$/g, '').split(/\s+/);
@@ -178,8 +197,9 @@ export class EditableField extends AbstractMathQuill {
 	}
 
 	dropEmbedded(
-		pageX: number, pageY: number,
-		options: { text?: () => string, htmlTemplate?: string, latex?: () => string }
+		pageX: number,
+		pageY: number,
+		options: { text?: () => string; htmlTemplate?: string; latex?: () => string }
 	) {
 		const el = document.elementFromPoint(pageX - window.pageXOffset, pageY - window.pageYOffset) as HTMLElement;
 		this.__controller.seek(el, pageX);
@@ -190,7 +210,8 @@ export class EditableField extends AbstractMathQuill {
 	clickAt(clientX: number, clientY: number, target: HTMLElement | undefined) {
 		target = target || (document.elementFromPoint(clientX, clientY) as HTMLElement);
 
-		const ctrlr = this.__controller, root = ctrlr.root;
+		const ctrlr = this.__controller,
+			root = ctrlr.root;
 		if (!root.elements.firstElement.contains(target)) target = root.elements.firstElement;
 		ctrlr.seek(target, clientX + window.pageXOffset);
 		if (ctrlr.blurred) this.focus();

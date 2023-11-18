@@ -25,10 +25,10 @@ export class VNode {
 
 			const position = a.compareDocumentPosition(b);
 
-			if (position & Node.DOCUMENT_POSITION_FOLLOWING
-				|| position & Node.DOCUMENT_POSITION_CONTAINED_BY) return -1;
-			else if (position & Node.DOCUMENT_POSITION_PRECEDING
-				|| position & Node.DOCUMENT_POSITION_CONTAINS) return 1;
+			if (position & Node.DOCUMENT_POSITION_FOLLOWING || position & Node.DOCUMENT_POSITION_CONTAINED_BY)
+				return -1;
+			else if (position & Node.DOCUMENT_POSITION_PRECEDING || position & Node.DOCUMENT_POSITION_CONTAINS)
+				return 1;
 
 			return 0;
 		});
@@ -36,21 +36,21 @@ export class VNode {
 
 	// The following methods are guaranteed to return a valid Element or CharacterData object.
 	get first() {
-		return (this.contents[0] instanceof Element || this.contents[0] instanceof CharacterData)
-			? this.contents[0] : document.createElement('span');
+		return this.contents[0] instanceof Element || this.contents[0] instanceof CharacterData
+			? this.contents[0]
+			: document.createElement('span');
 	}
 	get last() {
 		const last = this.contents[this.contents.length - 1];
-		return (last instanceof Element || last instanceof CharacterData)
-			? last : document.createElement('span');
+		return last instanceof Element || last instanceof CharacterData ? last : document.createElement('span');
 	}
 
 	// These methods are guaranteed to return a valid HTMLElement object.
 	get firstElement() {
-		return (this.first instanceof HTMLElement) ? this.first : document.createElement('span');
+		return this.first instanceof HTMLElement ? this.first : document.createElement('span');
 	}
 	get lastElement() {
-		return (this.last instanceof HTMLElement) ? this.last : document.createElement('span');
+		return this.last instanceof HTMLElement ? this.last : document.createElement('span');
 	}
 
 	detach() {
@@ -72,10 +72,13 @@ export class VNode {
 	children(selector?: string) {
 		return new VNode(
 			this.contents.reduce((ret, el) => {
-				ret.push(...Array.from(el.childNodes).filter((child) => {
-					return child.nodeType !== 3 &&
-						(!selector || (child instanceof Element && child.matches(selector)));
-				}));
+				ret.push(
+					...Array.from(el.childNodes).filter((child) => {
+						return (
+							child.nodeType !== 3 && (!selector || (child instanceof Element && child.matches(selector)))
+						);
+					})
+				);
 				return ret;
 			}, [] as Array<Node>)
 		);
@@ -91,15 +94,21 @@ export class VNode {
 	}
 
 	addClass(...tokens: Array<string>) {
-		this.contents.forEach((child) => { if (child instanceof Element) child.classList.add(...tokens); });
+		this.contents.forEach((child) => {
+			if (child instanceof Element) child.classList.add(...tokens);
+		});
 	}
 
 	removeClass(...tokens: Array<string>) {
-		this.contents.forEach((child) => { if (child instanceof Element) child.classList.remove(...tokens); });
+		this.contents.forEach((child) => {
+			if (child instanceof Element) child.classList.remove(...tokens);
+		});
 	}
 
 	toggleClass(token: string, state: boolean) {
-		this.contents.forEach((child) => { if (child instanceof Element) child.classList.toggle(token, state); });
+		this.contents.forEach((child) => {
+			if (child instanceof Element) child.classList.toggle(token, state);
+		});
 	}
 
 	hasClass(token: string) {

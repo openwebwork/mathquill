@@ -55,23 +55,16 @@ export class ControllerBase {
 	}
 
 	// The textarea mixin overrides this.
-	selectionChanged() { /* do nothing */ };
+	selectionChanged() {
+		/* do nothing */
+	}
 }
 
-export class Controller extends
-	ExportText(
-		TextAreaController(
-			LatexControllerExtension(
-				FocusBlurEvents(
-					MouseEventController(
-						HorizontalScroll(
-							ControllerBase
-						)
-					)
-				)
-			)
-		)
-	) {
+export class Controller extends ExportText(
+	TextAreaController(
+		LatexControllerExtension(FocusBlurEvents(MouseEventController(HorizontalScroll(ControllerBase))))
+	)
+) {
 	constructor(root: TNode, container: HTMLElement, options: Options) {
 		super(root, container, options);
 		root.controller = this;
@@ -94,18 +87,22 @@ export class Controller extends
 
 	moveDir(dir: Direction) {
 		prayDirection(dir);
-		const cursor = this.cursor, updown = cursor.options.leftRightIntoCmdGoes as 'up' | 'down' | undefined;
+		const cursor = this.cursor,
+			updown = cursor.options.leftRightIntoCmdGoes as 'up' | 'down' | undefined;
 
 		if (cursor.selection) {
 			cursor.insDirOf(dir, cursor.selection.ends[dir] as TNode);
-		}
-		else if (cursor[dir]) cursor[dir]?.moveTowards(dir, cursor, updown);
+		} else if (cursor[dir]) cursor[dir]?.moveTowards(dir, cursor, updown);
 		else cursor.parent?.moveOutOf(dir, cursor, updown);
 
 		return this.notify('move');
 	}
-	moveLeft() { return this.moveDir(L); }
-	moveRight() { return this.moveDir(R); }
+	moveLeft() {
+		return this.moveDir(L);
+	}
+	moveRight() {
+		return this.moveDir(R);
+	}
 
 	// moveUp and moveDown have almost identical algorithms:
 	// - first check left and right, if so insAtLeft/RightEnd of them
@@ -119,7 +116,8 @@ export class Controller extends
 	//   + unless it's exactly `true`, stop bubbling
 	moveUpDown(dir: 'up' | 'down') {
 		const cursor = this.notify('upDown').cursor;
-		const dirInto: keyof TNode = `${dir}Into`, dirOutOf: keyof TNode = `${dir}OutOf`;
+		const dirInto: keyof TNode = `${dir}Into`,
+			dirOutOf: keyof TNode = `${dir}OutOf`;
 		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R]?.[dirInto] as TNode);
 		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L]?.[dirInto] as TNode);
 		else {
@@ -127,17 +125,19 @@ export class Controller extends
 				if (ancestor[dirOutOf]) {
 					if (typeof ancestor[dirOutOf] === 'function')
 						(ancestor[dirOutOf] as (cursor: Cursor) => void)(cursor);
-					if (ancestor[dirOutOf] instanceof TNode)
-						cursor.jumpUpDown(ancestor, ancestor[dirOutOf] as TNode);
-					if (ancestor[dirOutOf] !== true)
-						return false;
+					if (ancestor[dirOutOf] instanceof TNode) cursor.jumpUpDown(ancestor, ancestor[dirOutOf] as TNode);
+					if (ancestor[dirOutOf] !== true) return false;
 				}
 			});
 		}
 		return this;
 	}
-	moveUp() { return this.moveUpDown('up'); }
-	moveDown() { return this.moveUpDown('down'); }
+	moveUp() {
+		return this.moveUpDown('up');
+	}
+	moveDown() {
+		return this.moveUpDown('down');
+	}
 
 	deleteDir(dir: Direction) {
 		prayDirection(dir);
@@ -171,7 +171,7 @@ export class Controller extends
 			new Fragment(cursor.parent?.ends[L], cursor[L]).remove();
 		} else {
 			new Fragment(cursor[R], cursor.parent?.ends[R]).remove();
-		};
+		}
 		cursor.insAtDirEnd(dir, cursor.parent as TNode);
 
 		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
@@ -184,12 +184,17 @@ export class Controller extends
 		return this;
 	}
 
-	backspace() { return this.deleteDir(L); }
+	backspace() {
+		return this.deleteDir(L);
+	}
 
-	deleteForward() { return this.deleteDir(R); }
+	deleteForward() {
+		return this.deleteDir(R);
+	}
 
 	selectDir(dir: Direction) {
-		const cursor = this.notify('select').cursor, seln = cursor.selection;
+		const cursor = this.notify('select').cursor,
+			seln = cursor.selection;
 		prayDirection(dir);
 
 		if (!cursor.anticursor) cursor.startSelection();
@@ -201,15 +206,18 @@ export class Controller extends
 			// and the anticursor is *inside* that node, not just on the other side"
 			if (seln && seln?.ends[dir] === node && cursor.anticursor?.[dir === L ? R : L] !== node) {
 				node.unselectInto(dir, cursor);
-			}
-			else node.selectTowards(dir, cursor);
+			} else node.selectTowards(dir, cursor);
 		} else cursor.parent?.selectOutOf(dir, cursor);
 
 		cursor.clearSelection();
 		cursor.select() || cursor.show();
 	}
 
-	selectLeft() { return this.selectDir(L); }
+	selectLeft() {
+		return this.selectDir(L);
+	}
 
-	selectRight() { return this.selectDir(R); }
+	selectRight() {
+		return this.selectDir(R);
+	}
 }

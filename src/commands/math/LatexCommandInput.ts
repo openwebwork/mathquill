@@ -31,16 +31,14 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 
 		leftEnd.focus = () => {
 			leftEnd.parent?.elements.addClass('mq-has-cursor');
-			if (leftEnd.isEmpty())
-				leftEnd.parent?.elements.removeClass('mq-empty');
+			if (leftEnd.isEmpty()) leftEnd.parent?.elements.removeClass('mq-empty');
 
 			return leftEnd;
 		};
 
 		leftEnd.blur = () => {
 			leftEnd.parent?.elements.removeClass('mq-has-cursor');
-			if (leftEnd.isEmpty())
-				leftEnd.parent?.elements.addClass('mq-empty');
+			if (leftEnd.isEmpty()) leftEnd.parent?.elements.addClass('mq-empty');
 
 			return leftEnd;
 		};
@@ -108,8 +106,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 			cmd.replaces(latex);
 			cmd.createLeftOf(cursor);
 			cursor.insRightOf(cmd);
-			if (this._replacedFragment)
-				this._replacedFragment.remove();
+			if (this._replacedFragment) this._replacedFragment.remove();
 		}
 	}
 };

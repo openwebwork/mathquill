@@ -1,4 +1,5 @@
-.mq-root-block, .mq-math-mode .mq-root-block {
+.mq-root-block,
+.mq-math-mode .mq-root-block {
 	.inline-block;
 
 	width: 100%;
@@ -19,14 +20,17 @@
 
 	.inline-block;
 
-	.mq-non-leaf, .mq-scaled {
+	.mq-non-leaf,
+	.mq-scaled {
 		.inline-block;
 	}
 
 	// TODO: dasherize non-symbola
-	var, .mq-text-mode, .mq-non-symbola {
+	var,
+	.mq-text-mode,
+	.mq-non-symbola {
 		font-family: @times;
-		line-height: .9;
+		line-height: 0.9;
 	}
 
 	* {
@@ -55,13 +59,13 @@
 
 	.mq-text-mode {
 		display: inline-block;
-		white-space: pre;  
+		white-space: pre;
 	}
 
 	.mq-text-mode.mq-has-cursor {
-		box-shadow: inset darkgray 0 .1em .2em;
-		padding: 0 .1em;
-		margin: 0 -.1em;
+		box-shadow: inset darkgray 0 0.1em 0.2em;
+		padding: 0 0.1em;
+		margin: 0 -0.1em;
 		min-width: 1ex;
 	}
 
@@ -75,11 +79,14 @@
 	}
 
 	// TODO [Han]: Why do we have to special-case .font?
-	b, b.mq-font {
+	b,
+	b.mq-font {
 		font-weight: bolder;
 	}
 
-	var, i, i.mq-font {
+	var,
+	i,
+	i.mq-font {
 		font-style: italic;
 	}
 
@@ -99,22 +106,22 @@
 	.mq-int {
 		> big {
 			display: inline-block;
-			.transform(scaleX(.7));
+			.transform(scaleX(0.7));
 
-			vertical-align: -.16em;
+			vertical-align: -0.16em;
 		}
 
 		> .mq-supsub {
 			font-size: 80%;
 			vertical-align: -1.1em;
-			padding-right: .2em;
+			padding-right: 0.2em;
 
 			> .mq-sup > .mq-sup-inner {
 				vertical-align: 1.3em;
 			}
 
 			> .mq-sub {
-				margin-left: -.35em;
+				margin-left: -0.35em;
 			}
 		}
 	}
@@ -161,10 +168,10 @@
 	.mq-supsub {
 		text-align: left;
 		font-size: 90%;
-		vertical-align: -.5em;
+		vertical-align: -0.5em;
 
 		&.mq-sup-only {
-			vertical-align: .5em;
+			vertical-align: 0.5em;
 
 			> .mq-sup {
 				display: inline-block;
@@ -182,7 +189,7 @@
 		}
 
 		.mq-binary-operator {
-			padding: 0 .1em;
+			padding: 0 0.1em;
 		}
 
 		// special styles for fractions
@@ -195,25 +202,25 @@
 	span.mq-nthroot {
 		font-size: 60%;
 		vertical-align: 0.9em;
-		margin-right: -.9em;
-		margin-left: .2em;
-		min-width: .5em;
+		margin-right: -0.9em;
+		margin-left: 0.2em;
+		min-width: 0.5em;
 	}
 
 	////
 	// parentheses
 	.mq-paren {
-		padding: 0 .1em;
+		padding: 0 0.1em;
 		vertical-align: top;
-		transform-origin: center .06em;
+		transform-origin: center 0.06em;
 
 		&.mq-ghost {
 			color: silver;
 		}
 
 		+ span {
-			margin-top: .1em;
-			margin-bottom: .1em;
+			margin-top: 0.1em;
+			margin-bottom: 0.1em;
 		}
 	}
 
@@ -230,17 +237,18 @@
 	// non-italicized operator names
 	// like \sin, \cos, \ln, etc.
 	.mq-operator-name {
-		font-family: Symbola, "Times New Roman", serif;
-		line-height: .9;
+		font-family: Symbola, 'Times New Roman', serif;
+		line-height: 0.9;
 		font-style: normal;
 	}
 
 	var.mq-operator-name.mq-first {
-		padding-left: .2em;
+		padding-left: 0.2em;
 	}
 
-	var.mq-operator-name.mq-last, .mq-supsub.mq-after-operator-name {
-		padding-right: .2em;
+	var.mq-operator-name.mq-last,
+	.mq-supsub.mq-after-operator-name {
+		padding-right: 0.2em;
 	}
 
 	////
@@ -252,15 +260,18 @@
 	.mq-fraction {
 		font-size: 90%;
 		text-align: center;
-		vertical-align: -.4em;
-		padding: 0 .2em;
+		vertical-align: -0.4em;
+		padding: 0 0.2em;
 	}
 
-	.mq-fraction, .mq-large-operator {
+	.mq-fraction,
+	.mq-large-operator {
 		display: inline-block;
 	}
 
-	.mq-numerator, .mq-denominator, .mq-dot-recurring {
+	.mq-numerator,
+	.mq-denominator,
+	.mq-dot-recurring {
 		display: block;
 	}
 
@@ -294,16 +305,16 @@
 	.mq-sqrt-stem {
 		border-top: 1px solid;
 		margin-top: 1px;
-		padding-left: .15em;
-		padding-right: .2em;
-		margin-right: .1em;
+		padding-left: 0.15em;
+		padding-right: 0.2em;
+		margin-right: 0.1em;
 		padding-top: 1px;
 	}
 
 	.mq-diacritic-above {
 		display: block;
 		text-align: center;
-		line-height: .4em;
+		line-height: 0.4em;
 	}
 
 	.mq-diacritic-stem {
@@ -314,8 +325,8 @@
 	.mq-hat-prefix {
 		display: block;
 		text-align: center;
-		line-height: .95em;
-		margin-bottom: -.7em;
+		line-height: 0.95em;
+		margin-bottom: -0.7em;
 		transform: scaleX(1.5);
 	}
 
@@ -324,15 +335,18 @@
 	}
 
 	.mq-large-operator {
-		vertical-align: -.2em;
-		padding: .2em;
+		vertical-align: -0.2em;
+		padding: 0.2em;
 		text-align: center;
 
-		.mq-from, big, .mq-to  {
+		.mq-from,
+		big,
+		.mq-to {
 			display: block;
 		}
 
-		.mq-from, .mq-to  {
+		.mq-from,
+		.mq-to {
 			font-size: 80%;
 		}
 
@@ -342,21 +356,22 @@
 		}
 	}
 
-	&, .mq-editable-field {
+	&,
+	.mq-editable-field {
 		cursor: text;
 		font-family: @symbola;
 	}
 
 	.mq-overarc {
 		border-top: 1px solid black;
-		border-top-right-radius: 50% .3em;
-		border-top-left-radius: 50% .3em;
+		border-top-right-radius: 50% 0.3em;
+		border-top-left-radius: 50% 0.3em;
 		margin-top: 1px;
 		padding-top: 0.15em;
 	}
 
 	.mq-overarrow {
-		min-width: .5em;
+		min-width: 0.5em;
 		border-top: 1px solid black;
 		margin-top: 1px;
 		padding-top: 0.2em;
@@ -388,7 +403,7 @@
 				}
 			}
 
-			&::before{
+			&::before {
 				transform: scaleX(-1);
 				filter: fliph;
 			}
@@ -412,7 +427,7 @@
 		}
 
 		.mq-function-name {
-			font-family: Symbola, "Times New Roman", serif;
+			font-family: Symbola, 'Times New Roman', serif;
 			line-height: 0.9;
 			font-style: normal;
 		}

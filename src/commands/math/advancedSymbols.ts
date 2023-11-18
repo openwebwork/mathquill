@@ -4,71 +4,100 @@ import { R, noop, bindMixin, LatexCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElements';
 
-LatexCmds.notin = LatexCmds.cong = LatexCmds.equiv = LatexCmds.oplus = LatexCmds.otimes =
-	class extends BinaryOperator {
-		constructor(latex: string) {
-			super(`\\${latex} `, `&${latex};`);
-		}
-	};
+LatexCmds.notin =
+	LatexCmds.cong =
+	LatexCmds.equiv =
+	LatexCmds.oplus =
+	LatexCmds.otimes =
+		class extends BinaryOperator {
+			constructor(latex: string) {
+				super(`\\${latex} `, `&${latex};`);
+			}
+		};
 
 LatexCmds['\u2260'] = LatexCmds.ne = LatexCmds.neq = bindMixin(BinaryOperator, '\\ne ', '&ne;');
 
-LatexCmds['\u2217'] = LatexCmds.ast = LatexCmds.star = LatexCmds.loast = LatexCmds.lowast =
-	bindMixin(BinaryOperator, '\\ast ', '&lowast;');
+LatexCmds['\u2217'] =
+	LatexCmds.ast =
+	LatexCmds.star =
+	LatexCmds.loast =
+	LatexCmds.lowast =
+		bindMixin(BinaryOperator, '\\ast ', '&lowast;');
 
-LatexCmds.therefor = LatexCmds.therefore =
-	bindMixin(BinaryOperator, '\\therefore ', '&there4;');
+LatexCmds.therefor = LatexCmds.therefore = bindMixin(BinaryOperator, '\\therefore ', '&there4;');
 
 LatexCmds.cuz = // l33t
 	LatexCmds.because = bindMixin(BinaryOperator, '\\because ', '&#8757;');
 
 LatexCmds.prop = LatexCmds.propto = bindMixin(BinaryOperator, '\\propto ', '&prop;');
 
-LatexCmds['\u2248'] = LatexCmds.asymp = LatexCmds.approx =
-	bindMixin(BinaryOperator, '\\approx ', '&asymp;');
+LatexCmds['\u2248'] = LatexCmds.asymp = LatexCmds.approx = bindMixin(BinaryOperator, '\\approx ', '&asymp;');
 
 LatexCmds.isin = LatexCmds['in'] = bindMixin(BinaryOperator, '\\in ', '&isin;');
 
 LatexCmds.ni = LatexCmds.contains = bindMixin(BinaryOperator, '\\ni ', '&ni;');
 
-LatexCmds.notni = LatexCmds.niton = LatexCmds.notcontains = LatexCmds.doesnotcontain =
-	bindMixin(BinaryOperator, '\\not\\ni ', '&#8716;');
+LatexCmds.notni =
+	LatexCmds.niton =
+	LatexCmds.notcontains =
+	LatexCmds.doesnotcontain =
+		bindMixin(BinaryOperator, '\\not\\ni ', '&#8716;');
 
 LatexCmds.sub = LatexCmds.subset = bindMixin(BinaryOperator, '\\subset ', '&sub;');
 
-LatexCmds.sup = LatexCmds.supset = LatexCmds.superset =
-	bindMixin(BinaryOperator, '\\supset ', '&sup;');
+LatexCmds.sup = LatexCmds.supset = LatexCmds.superset = bindMixin(BinaryOperator, '\\supset ', '&sup;');
 
-LatexCmds.nsub = LatexCmds.notsub =
-	LatexCmds.nsubset = LatexCmds.notsubset =
-	bindMixin(BinaryOperator, '\\not\\subset ', '&#8836;');
+LatexCmds.nsub =
+	LatexCmds.notsub =
+	LatexCmds.nsubset =
+	LatexCmds.notsubset =
+		bindMixin(BinaryOperator, '\\not\\subset ', '&#8836;');
 
-LatexCmds.nsup = LatexCmds.notsup =
-	LatexCmds.nsupset = LatexCmds.notsupset =
-	LatexCmds.nsuperset = LatexCmds.notsuperset =
-	bindMixin(BinaryOperator, '\\not\\supset ', '&#8837;');
+LatexCmds.nsup =
+	LatexCmds.notsup =
+	LatexCmds.nsupset =
+	LatexCmds.notsupset =
+	LatexCmds.nsuperset =
+	LatexCmds.notsuperset =
+		bindMixin(BinaryOperator, '\\not\\supset ', '&#8837;');
 
-LatexCmds.sube = LatexCmds.subeq = LatexCmds.subsete = LatexCmds.subseteq =
-	bindMixin(BinaryOperator, '\\subseteq ', '&sube;');
+LatexCmds.sube =
+	LatexCmds.subeq =
+	LatexCmds.subsete =
+	LatexCmds.subseteq =
+		bindMixin(BinaryOperator, '\\subseteq ', '&sube;');
 
-LatexCmds.supe = LatexCmds.supeq =
-	LatexCmds.supsete = LatexCmds.supseteq =
-	LatexCmds.supersete = LatexCmds.superseteq =
-	bindMixin(BinaryOperator, '\\supseteq ', '&supe;');
+LatexCmds.supe =
+	LatexCmds.supeq =
+	LatexCmds.supsete =
+	LatexCmds.supseteq =
+	LatexCmds.supersete =
+	LatexCmds.superseteq =
+		bindMixin(BinaryOperator, '\\supseteq ', '&supe;');
 
-LatexCmds.nsube = LatexCmds.nsubeq =
-	LatexCmds.notsube = LatexCmds.notsubeq =
-	LatexCmds.nsubsete = LatexCmds.nsubseteq =
-	LatexCmds.notsubsete = LatexCmds.notsubseteq =
-	bindMixin(BinaryOperator, '\\not\\subseteq ', '&#8840;');
+LatexCmds.nsube =
+	LatexCmds.nsubeq =
+	LatexCmds.notsube =
+	LatexCmds.notsubeq =
+	LatexCmds.nsubsete =
+	LatexCmds.nsubseteq =
+	LatexCmds.notsubsete =
+	LatexCmds.notsubseteq =
+		bindMixin(BinaryOperator, '\\not\\subseteq ', '&#8840;');
 
-LatexCmds.nsupe = LatexCmds.nsupeq =
-	LatexCmds.notsupe = LatexCmds.notsupeq =
-	LatexCmds.nsupsete = LatexCmds.nsupseteq =
-	LatexCmds.notsupsete = LatexCmds.notsupseteq =
-	LatexCmds.nsupersete = LatexCmds.nsuperseteq =
-	LatexCmds.notsupersete = LatexCmds.notsuperseteq =
-	bindMixin(BinaryOperator, '\\not\\supseteq ', '&#8841;');
+LatexCmds.nsupe =
+	LatexCmds.nsupeq =
+	LatexCmds.notsupe =
+	LatexCmds.notsupeq =
+	LatexCmds.nsupsete =
+	LatexCmds.nsupseteq =
+	LatexCmds.notsupsete =
+	LatexCmds.notsupseteq =
+	LatexCmds.nsupersete =
+	LatexCmds.nsuperseteq =
+	LatexCmds.notsupersete =
+	LatexCmds.notsuperseteq =
+		bindMixin(BinaryOperator, '\\not\\supseteq ', '&#8841;');
 
 // The canonical sets of numbers
 LatexCmds.mathbb = class extends MathCommand {
@@ -77,45 +106,56 @@ LatexCmds.mathbb = class extends MathCommand {
 		this.createLeftOf = noop;
 	}
 
-	numBlocks() { return 1; }
+	numBlocks() {
+		return 1;
+	}
 
 	parser() {
-		return Parser.optWhitespace.then(Parser.string('{'))
-			.then(Parser.optWhitespace)
-			.then(Parser.regex(/^[NPZQRCH]/))
-			.skip(Parser.optWhitespace)
-			.skip(Parser.string('}'))
-			// Instantiate the class for the matching char
-			.map((c: string) => new LatexCmds[c]);
+		return (
+			Parser.optWhitespace
+				.then(Parser.string('{'))
+				.then(Parser.optWhitespace)
+				.then(Parser.regex(/^[NPZQRCH]/))
+				.skip(Parser.optWhitespace)
+				.skip(Parser.string('}'))
+				// Instantiate the class for the matching char
+				.map((c: string) => new LatexCmds[c]())
+		);
 	}
 };
 
-LatexCmds.N = LatexCmds.naturals = LatexCmds.Naturals =
-	bindMixin(VanillaSymbol, '\\mathbb{N}', '&#8469;');
+LatexCmds.N = LatexCmds.naturals = LatexCmds.Naturals = bindMixin(VanillaSymbol, '\\mathbb{N}', '&#8469;');
 
 LatexCmds.P =
-	LatexCmds.primes = LatexCmds.Primes =
-	LatexCmds.projective = LatexCmds.Projective =
-	LatexCmds.probability = LatexCmds.Probability =
-	bindMixin(VanillaSymbol, '\\mathbb{P}', '&#8473;');
+	LatexCmds.primes =
+	LatexCmds.Primes =
+	LatexCmds.projective =
+	LatexCmds.Projective =
+	LatexCmds.probability =
+	LatexCmds.Probability =
+		bindMixin(VanillaSymbol, '\\mathbb{P}', '&#8473;');
 
-LatexCmds.Z = LatexCmds.integers = LatexCmds.Integers =
-	bindMixin(VanillaSymbol, '\\mathbb{Z}', '&#8484;');
+LatexCmds.Z = LatexCmds.integers = LatexCmds.Integers = bindMixin(VanillaSymbol, '\\mathbb{Z}', '&#8484;');
 
-LatexCmds.Q = LatexCmds.rationals = LatexCmds.Rationals =
-	bindMixin(VanillaSymbol, '\\mathbb{Q}', '&#8474;');
+LatexCmds.Q = LatexCmds.rationals = LatexCmds.Rationals = bindMixin(VanillaSymbol, '\\mathbb{Q}', '&#8474;');
 
-LatexCmds.R = LatexCmds.reals = LatexCmds.Reals =
-	bindMixin(VanillaSymbol, '\\mathbb{R}', '&#8477;');
+LatexCmds.R = LatexCmds.reals = LatexCmds.Reals = bindMixin(VanillaSymbol, '\\mathbb{R}', '&#8477;');
 
 LatexCmds.C =
-	LatexCmds.complex = LatexCmds.Complex =
-	LatexCmds.complexes = LatexCmds.Complexes =
-	LatexCmds.complexplane = LatexCmds.Complexplane = LatexCmds.ComplexPlane =
-	bindMixin(VanillaSymbol, '\\mathbb{C}', '&#8450;');
+	LatexCmds.complex =
+	LatexCmds.Complex =
+	LatexCmds.complexes =
+	LatexCmds.Complexes =
+	LatexCmds.complexplane =
+	LatexCmds.Complexplane =
+	LatexCmds.ComplexPlane =
+		bindMixin(VanillaSymbol, '\\mathbb{C}', '&#8450;');
 
-LatexCmds.H = LatexCmds.Hamiltonian = LatexCmds.quaternions = LatexCmds.Quaternions =
-	bindMixin(VanillaSymbol, '\\mathbb{H}', '&#8461;');
+LatexCmds.H =
+	LatexCmds.Hamiltonian =
+	LatexCmds.quaternions =
+	LatexCmds.Quaternions =
+		bindMixin(VanillaSymbol, '\\mathbb{H}', '&#8461;');
 
 // spacing
 LatexCmds.quad = LatexCmds.emsp = bindMixin(VanillaSymbol, '\\quad ', '    ');
@@ -248,32 +288,38 @@ LatexCmds.hbar = bindMixin(VanillaSymbol, '\\hbar ', '&#8463;');
 // FIXME: \AA is not valid LaTeX in math mode.  Neither is \text\AA (which is what this was before).  Furthermore,
 // \text\AA does not parse correctly.  Valid LaTeX in math mode without any packages would be \textup{~\AA}, but that
 // also does not parse correctly.
-LatexCmds.AA = LatexCmds.Angstrom = LatexCmds.angstrom =
-	bindMixin(VanillaSymbol, '\\AA ', '&#8491;', '\u00C5');
+LatexCmds.AA = LatexCmds.Angstrom = LatexCmds.angstrom = bindMixin(VanillaSymbol, '\\AA ', '&#8491;', '\u00C5');
 
-LatexCmds.ring = LatexCmds.circ = LatexCmds.circle =
-	bindMixin(VanillaSymbol, '\\circ ', '&#8728;');
+LatexCmds.ring = LatexCmds.circ = LatexCmds.circle = bindMixin(VanillaSymbol, '\\circ ', '&#8728;');
 
 LatexCmds.bull = LatexCmds.bullet = bindMixin(VanillaSymbol, '\\bullet ', '&bull;');
 
-LatexCmds.setminus = LatexCmds.smallsetminus =
-	bindMixin(VanillaSymbol, '\\setminus ', '&#8726;');
+LatexCmds.setminus = LatexCmds.smallsetminus = bindMixin(VanillaSymbol, '\\setminus ', '&#8726;');
 
 LatexCmds.not = LatexCmds['\u00ac'] = LatexCmds.neg = bindMixin(VanillaSymbol, '\\neg ', '&not;');
 
-LatexCmds['\u2026'] = LatexCmds.dots = LatexCmds.ellip = LatexCmds.hellip =
-	LatexCmds.ellipsis = LatexCmds.hellipsis =
-	bindMixin(VanillaSymbol, '\\dots ', '&hellip;');
+LatexCmds['\u2026'] =
+	LatexCmds.dots =
+	LatexCmds.ellip =
+	LatexCmds.hellip =
+	LatexCmds.ellipsis =
+	LatexCmds.hellipsis =
+		bindMixin(VanillaSymbol, '\\dots ', '&hellip;');
 
 LatexCmds.converges =
-	LatexCmds.darr = LatexCmds.dnarr = LatexCmds.dnarrow = LatexCmds.downarrow =
-	bindMixin(VanillaSymbol, '\\downarrow ', '&darr;');
+	LatexCmds.darr =
+	LatexCmds.dnarr =
+	LatexCmds.dnarrow =
+	LatexCmds.downarrow =
+		bindMixin(VanillaSymbol, '\\downarrow ', '&darr;');
 
-LatexCmds.dArr = LatexCmds.dnArr = LatexCmds.dnArrow = LatexCmds.Downarrow =
-	bindMixin(VanillaSymbol, '\\Downarrow ', '&dArr;');
+LatexCmds.dArr =
+	LatexCmds.dnArr =
+	LatexCmds.dnArrow =
+	LatexCmds.Downarrow =
+		bindMixin(VanillaSymbol, '\\Downarrow ', '&dArr;');
 
-LatexCmds.diverges = LatexCmds.uarr = LatexCmds.uparrow =
-	bindMixin(VanillaSymbol, '\\uparrow ', '&uarr;');
+LatexCmds.diverges = LatexCmds.uarr = LatexCmds.uparrow = bindMixin(VanillaSymbol, '\\uparrow ', '&uarr;');
 
 LatexCmds.uArr = LatexCmds.Uparrow = bindMixin(VanillaSymbol, '\\Uparrow ', '&uArr;');
 
@@ -293,53 +339,63 @@ LatexCmds.impliedby = bindMixin(BinaryOperator, '\\Leftarrow ', '&lArr;');
 
 LatexCmds.lArr = LatexCmds.Leftarrow = bindMixin(VanillaSymbol, '\\Leftarrow ', '&lArr;');
 
-LatexCmds.harr = LatexCmds.lrarr = LatexCmds.leftrightarrow =
-	bindMixin(VanillaSymbol, '\\leftrightarrow ', '&harr;');
+LatexCmds.harr = LatexCmds.lrarr = LatexCmds.leftrightarrow = bindMixin(VanillaSymbol, '\\leftrightarrow ', '&harr;');
 
 LatexCmds.iff = bindMixin(BinaryOperator, '\\Leftrightarrow ', '&hArr;');
 
-LatexCmds.hArr = LatexCmds.lrArr = LatexCmds.Leftrightarrow =
-	bindMixin(VanillaSymbol, '\\Leftrightarrow ', '&hArr;');
+LatexCmds.hArr = LatexCmds.lrArr = LatexCmds.Leftrightarrow = bindMixin(VanillaSymbol, '\\Leftrightarrow ', '&hArr;');
 
 LatexCmds.Re = LatexCmds.Real = LatexCmds.real = bindMixin(VanillaSymbol, '\\Re ', '&real;');
 
-LatexCmds.Im = LatexCmds.imag =
-	LatexCmds.image = LatexCmds.imagin = LatexCmds.imaginary = LatexCmds.Imaginary =
-	bindMixin(VanillaSymbol, '\\Im ', '&image;');
+LatexCmds.Im =
+	LatexCmds.imag =
+	LatexCmds.image =
+	LatexCmds.imagin =
+	LatexCmds.imaginary =
+	LatexCmds.Imaginary =
+		bindMixin(VanillaSymbol, '\\Im ', '&image;');
 
 LatexCmds.part = LatexCmds.partial = bindMixin(VanillaSymbol, '\\partial ', '&part;');
 
-LatexCmds.inf = LatexCmds.infty = LatexCmds.infin = LatexCmds.infinity =
-	bindMixin(VanillaSymbol, '\\infty ', '&infin;', 'inf');
+LatexCmds.inf =
+	LatexCmds.infty =
+	LatexCmds.infin =
+	LatexCmds.infinity =
+		bindMixin(VanillaSymbol, '\\infty ', '&infin;', 'inf');
 
 LatexCmds.pounds = bindMixin(VanillaSymbol, '\\pounds ', '&pound;');
 
-LatexCmds.alef = LatexCmds.alefsym = LatexCmds.aleph = LatexCmds.alephsym =
-	bindMixin(VanillaSymbol, '\\aleph ', '&alefsym;');
+LatexCmds.alef =
+	LatexCmds.alefsym =
+	LatexCmds.aleph =
+	LatexCmds.alephsym =
+		bindMixin(VanillaSymbol, '\\aleph ', '&alefsym;');
 
 LatexCmds.xist =
-	LatexCmds.xists = LatexCmds.exist = LatexCmds.exists =
-	bindMixin(VanillaSymbol, '\\exists ', '&exist;');
+	LatexCmds.xists =
+	LatexCmds.exist =
+	LatexCmds.exists =
+		bindMixin(VanillaSymbol, '\\exists ', '&exist;');
 
-LatexCmds.nexists = LatexCmds.nexist =
-	bindMixin(VanillaSymbol, '\\nexists ', '&#8708;');
+LatexCmds.nexists = LatexCmds.nexist = bindMixin(VanillaSymbol, '\\nexists ', '&#8708;');
 
-LatexCmds.and = LatexCmds.land = LatexCmds.wedge =
-	bindMixin(BinaryOperator, '\\wedge ', '&and;');
+LatexCmds.and = LatexCmds.land = LatexCmds.wedge = bindMixin(BinaryOperator, '\\wedge ', '&and;');
 
 LatexCmds.or = LatexCmds.lor = LatexCmds.vee = bindMixin(BinaryOperator, '\\vee ', '&or;');
 
-LatexCmds.o = LatexCmds.O =
-	LatexCmds.empty = LatexCmds.emptyset =
-	LatexCmds.oslash = LatexCmds.Oslash =
-	LatexCmds.nothing = LatexCmds.varnothing =
-	bindMixin(BinaryOperator, '\\varnothing ', '&empty;');
+LatexCmds.o =
+	LatexCmds.O =
+	LatexCmds.empty =
+	LatexCmds.emptyset =
+	LatexCmds.oslash =
+	LatexCmds.Oslash =
+	LatexCmds.nothing =
+	LatexCmds.varnothing =
+		bindMixin(BinaryOperator, '\\varnothing ', '&empty;');
 
-LatexCmds.U = LatexCmds.cup = LatexCmds.union =
-	bindMixin(BinaryOperator, '\\cup ', '&cup;', 'U');
+LatexCmds.U = LatexCmds.cup = LatexCmds.union = bindMixin(BinaryOperator, '\\cup ', '&cup;', 'U');
 
-LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection =
-	bindMixin(BinaryOperator, '\\cap ', '&cap;');
+LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection = bindMixin(BinaryOperator, '\\cap ', '&cap;');
 
 // FIXME: the correct LaTeX would be ^\circ but we can't parse that
 LatexCmds.deg = LatexCmds.degree = class degree extends VanillaSymbol {

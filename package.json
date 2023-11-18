@@ -22,9 +22,11 @@
 		"serve": "webpack serve --mode development",
 		"jslint": "eslint --ext .js,.ts ./src ./test ./public --fix",
 		"csslint": "stylelint \"./src/**/*.less\" \"./public/**/*.css\" \"./public/**/*.html\" --fix",
-		"lint": "npm run jslint && npm run csslint"
+		"prettier": "prettier --write \"*.js\" \"./(src|test|public)/**/*.([jt]s|less|css)\"",
+		"lint": "npm run prettier && npm run jslint && npm run csslint"
 	},
 	"devDependencies": {
+		"@stylistic/eslint-plugin": "^1.4.1",
 		"@typescript-eslint/eslint-plugin": "^6.11.0",
 		"@typescript-eslint/parser": "^6.11.0",
 		"copy-webpack-plugin": "^11.0.0",

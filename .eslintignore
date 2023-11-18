@@ -1,7 +1,6 @@
 /dist
 /build
 /node_modules
-.eslintrc.js
 .babelrc
 package.json
 package-lock.json

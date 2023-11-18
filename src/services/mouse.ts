@@ -8,9 +8,10 @@ import type { HorizontalScroll } from 'services/scrollHoriz';
 import { Letter, Digit } from 'commands/mathElements';
 import { TextBlock } from 'commands/textElements';
 
-export const MouseEventController =
-	<TBase extends Constructor<ControllerBase> & ReturnType<typeof HorizontalScroll>>(Base: TBase) => class extends Base
-	{
+export const MouseEventController = <TBase extends Constructor<ControllerBase> & ReturnType<typeof HorizontalScroll>>(
+	Base: TBase
+) =>
+	class extends Base {
 		mouseDownHandler?: (e: MouseEvent) => void;
 
 		delegateMouseEvents() {
@@ -19,16 +20,21 @@ export const MouseEventController =
 			// Drag-to-select event handling
 			this.mouseDownHandler = (e: MouseEvent) => {
 				const rootEl = (e.target as HTMLElement).closest('.mq-root-block') as HTMLElement;
-				const root = TNode.byId[parseInt((rootEl?.getAttribute(mqBlockId)
-					|| ultimateRootEl?.getAttribute(mqBlockId)) ?? '0')];
+				const root =
+					TNode.byId[
+						parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl?.getAttribute(mqBlockId)) ?? '0')
+					];
 
 				if (!root.controller) {
 					throw 'controller undefined... what?';
 					return;
 				}
 
-				const ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
-				const textareaSpan = ctrlr.textareaSpan, textarea = ctrlr.textarea;
+				const ctrlr = root.controller,
+					cursor = ctrlr.cursor,
+					blink = cursor.blink;
+				const textareaSpan = ctrlr.textareaSpan,
+					textarea = ctrlr.textarea;
 
 				e.preventDefault();
 
@@ -43,7 +49,7 @@ export const MouseEventController =
 				const ownerDocument = (e.target as HTMLElement).ownerDocument;
 
 				let target: HTMLElement | undefined;
-				const mousemove = (e: MouseEvent) => target = e.target as HTMLElement;
+				const mousemove = (e: MouseEvent) => (target = e.target as HTMLElement);
 				const docmousemove = (e: MouseEvent) => {
 					if (!cursor.anticursor) cursor.startSelection();
 					ctrlr.seek(target as HTMLElement, e.pageX ?? 0).cursor.select();
@@ -142,8 +148,9 @@ export const MouseEventController =
 				nodeId = parseInt((target.getAttribute(mqBlockId) || target.getAttribute(mqCmdId)) ?? '0');
 				if (!nodeId) {
 					const targetParent = target.parentElement;
-					nodeId = parseInt((targetParent?.getAttribute(mqBlockId)
-						|| targetParent?.getAttribute(mqCmdId)) ?? '0');
+					nodeId = parseInt(
+						(targetParent?.getAttribute(mqBlockId) || targetParent?.getAttribute(mqCmdId)) ?? '0'
+					);
 				}
 			}
 			const node = nodeId ? TNode.byId[nodeId] : this.root;

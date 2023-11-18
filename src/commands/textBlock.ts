@@ -14,8 +14,7 @@ export class RootTextBlock extends RootMathBlock {
 
 	write(cursor: Cursor, ch: string) {
 		cursor.show().deleteSelection();
-		if (ch === '$')
-			new RootMathCommand(cursor).createLeftOf(cursor);
+		if (ch === '$') new RootMathCommand(cursor).createLeftOf(cursor);
 		else {
 			new VanillaSymbol(ch, ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : undefined).createLeftOf(cursor);
 		}

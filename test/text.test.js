@@ -5,7 +5,6 @@ import { Controller } from 'src/controller';
 import { latexMathParser } from 'commands/mathElements';
 
 suite('text', () => {
-
 	let mq, mostRecentlyReportedLatex;
 	setup(() => {
 		mostRecentlyReportedLatex = NaN; // != to everything
@@ -13,7 +12,7 @@ suite('text', () => {
 		document.getElementById('mock')?.append(el);
 		mq = MQ.MathField(el, {
 			handlers: {
-				edit: () => mostRecentlyReportedLatex = mq.latex()
+				edit: () => (mostRecentlyReportedLatex = mq.latex())
 			}
 		});
 	});
@@ -36,16 +35,14 @@ suite('text', () => {
 		if (prev) {
 			assert.ok(dom.previousSibling instanceof Text);
 			assert.equal(prev, dom.previousSibling.data, 'assertSplit failed');
-		}
-		else {
+		} else {
 			assert.ok(!dom.previousSibling);
 		}
 
 		if (next) {
 			assert.ok(dom.nextSibling instanceof Text);
 			assert.equal(next, dom.nextSibling.data, 'assertSplit failed');
-		}
-		else {
+		} else {
 			assert.ok(!dom.nextSibling);
 		}
 	};
@@ -141,7 +138,6 @@ suite('text', () => {
 			assertSplit(cursor.element, 'asfoo', 'df');
 			assertLatex('\\text{asfoodf}');
 			prayWellFormedPoint(cursor);
-
 		});
 
 		test('pasting a dollar sign', () => {
@@ -188,6 +184,5 @@ suite('text', () => {
 			assertLatex('\\text{as\\{df}');
 			prayWellFormedPoint(cursor);
 		});
-
 	});
 });

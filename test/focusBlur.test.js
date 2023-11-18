@@ -2,8 +2,10 @@
 
 suite('focusBlur', () => {
 	const assertHasFocus = (mq, name, invert) =>
-		assert.ok(!!invert ^ (mq.el().querySelector('textarea') === document.activeElement),
-			name + (invert ? ' does not have focus' : ' has focus'));
+		assert.ok(
+			!!invert ^ (mq.el().querySelector('textarea') === document.activeElement),
+			name + (invert ? ' does not have focus' : ' has focus')
+		);
 
 	suite('handlers can shift focus away', () => {
 		let mq, mq2, wasUpOutOfCalled;
@@ -26,8 +28,11 @@ suite('focusBlur', () => {
 		});
 
 		const triggerUpOutOf = (mq) => {
-			mq.el().querySelector('textarea')?.dispatchEvent(new KeyboardEvent('keydown',
-				{ key: 'ArrowUp', which: 38, keyCode: 38, bubbles: true }));
+			mq.el()
+				.querySelector('textarea')
+				?.dispatchEvent(
+					new KeyboardEvent('keydown', { key: 'ArrowUp', which: 38, keyCode: 38, bubbles: true })
+				);
 			assert.ok(wasUpOutOfCalled);
 		};
 
@@ -39,7 +44,7 @@ suite('focusBlur', () => {
 			assertHasFocus(mq2, 'mq2');
 		});
 
-		test('even if there\'s a selection', (done) => {
+		test("even if there's a selection", (done) => {
 			mq.focus();
 			assertHasFocus(mq, 'mq');
 

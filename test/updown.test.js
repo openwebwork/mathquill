@@ -15,7 +15,8 @@ suite('up/down', () => {
 
 	test('up/down in out of exponent', () => {
 		controller.renderLatexMath('x^{nm}');
-		const exp = rootBlock.ends[R], expBlock = exp.ends[L];
+		const exp = rootBlock.ends[R],
+			expBlock = exp.ends[L];
 		assert.equal(exp.latex(), '^{nm}', 'right end el is exponent');
 		assert.equal(cursor.parent, rootBlock, 'cursor is in root block');
 		assert.equal(cursor[L], exp, 'cursor is at the end of root block');
@@ -48,7 +49,8 @@ suite('up/down', () => {
 	// literally just swapped up and down, exponent with subscript, nm with 12
 	test('up/down in out of subscript', () => {
 		controller.renderLatexMath('a_{12}');
-		const sub = rootBlock.ends[R], subBlock = sub.ends[L];
+		const sub = rootBlock.ends[R],
+			subBlock = sub.ends[L];
 		assert.equal(sub.latex(), '_{12}', 'right end el is subscript');
 		assert.equal(cursor.parent, rootBlock, 'cursor is in root block');
 		assert.equal(cursor[L], sub, 'cursor is at the end of root block');
@@ -80,7 +82,9 @@ suite('up/down', () => {
 
 	test('up/down into and within fraction', () => {
 		controller.renderLatexMath('\\frac{12}{34}');
-		const frac = rootBlock.ends[L], numer = frac.ends[L], denom = frac.ends[R];
+		const frac = rootBlock.ends[L],
+			numer = frac.ends[L],
+			denom = frac.ends[R];
 		assert.equal(frac.latex(), '\\frac{12}{34}', 'fraction is in root block');
 		assert.equal(frac, rootBlock.ends[R], 'fraction is sole child of root block');
 		assert.equal(numer.latex(), '12', 'numerator is left end child of fraction');
@@ -117,7 +121,10 @@ suite('up/down', () => {
 
 	test('nested subscripts and fractions', () => {
 		controller.renderLatexMath('\\frac{d}{dx_{\\frac{24}{36}0}}\\sqrt{x}=x^{\\frac{1}{2}}');
-		const exp = rootBlock.ends[R], expBlock = exp.ends[L], half = expBlock.ends[L], halfDenom = half.ends[R];
+		const exp = rootBlock.ends[R],
+			expBlock = exp.ends[L],
+			half = expBlock.ends[L],
+			halfDenom = half.ends[R];
 
 		mq.keystroke('Left');
 		assert.equal(cursor.parent, expBlock, 'cursor left goes into exponent');
@@ -142,8 +149,11 @@ suite('up/down', () => {
 		assert.equal(cursor.parent, subBlock, 'cursor in subscript');
 
 		mq.keystroke('Up');
-		assert.equal(cursor.parent, subFracNumer,
-			'cursor up from beginning of subscript goes into subscript fraction numerator');
+		assert.equal(
+			cursor.parent,
+			subFracNumer,
+			'cursor up from beginning of subscript goes into subscript fraction numerator'
+		);
 
 		mq.keystroke('Up');
 		assert.equal(cursor.parent, dxBlock, 'cursor up from subscript fraction numerator goes out of subscript');
@@ -153,10 +163,16 @@ suite('up/down', () => {
 		assert.equal(cursor.parent, subFracDenom, 'cursor in subscript fraction denominator');
 
 		mq.keystroke('Up Up');
-		assert.equal(cursor.parent, dxBlock,
-			'cursor up up from subscript fraction denominator that\'s not at right end goes out of subscript');
-		assert.equal(cursor[R], sub,
-			'cursor up up from subscript fraction denominator that\'s not at right end goes before subscript');
+		assert.equal(
+			cursor.parent,
+			dxBlock,
+			"cursor up up from subscript fraction denominator that's not at right end goes out of subscript"
+		);
+		assert.equal(
+			cursor[R],
+			sub,
+			"cursor up up from subscript fraction denominator that's not at right end goes before subscript"
+		);
 
 		cursor.insAtRightEnd(subBlock);
 		controller.backspace();
@@ -167,10 +183,16 @@ suite('up/down', () => {
 		assert.equal(cursor.parent, subFracDenom, 'cursor in subscript fraction denominator');
 
 		mq.keystroke('Up Up');
-		assert.equal(cursor.parent, dxBlock,
-			'cursor up up from subscript fraction denominator that is at right end goes out of subscript');
-		assert.equal(cursor[L], sub,
-			'cursor up up from subscript fraction denominator that is at right end goes after subscript');
+		assert.equal(
+			cursor.parent,
+			dxBlock,
+			'cursor up up from subscript fraction denominator that is at right end goes out of subscript'
+		);
+		assert.equal(
+			cursor[L],
+			sub,
+			'cursor up up from subscript fraction denominator that is at right end goes after subscript'
+		);
 	});
 
 	test('\\MathQuillMathField{} in a fraction', () => {
