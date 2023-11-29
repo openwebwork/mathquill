@@ -158,7 +158,7 @@ export const EMBEDS: { [key: string]: (data: string) => EmbedOptions } = {};
 // MathQuill auto-unitalicizes some operator names not in that set, like 'hcf',
 // which must be exported as \operatorname{hcf}.
 // Note: over/under line/arrow \lim variants like \varlimsup are not supported.
-// Note that this no longer includes ln, log, or any of the trig functions.
+// Note that this no longer includes ln, log, exp, or any of the trig functions.
 // Those are now latex commands that are implemented by the MathFunction class.
 export const BuiltInOpNames: { [key: string]: 1 } = {};
 
@@ -167,7 +167,6 @@ for (const op of [
 	'arg',
 	'det',
 	'dim',
-	'exp',
 	'gcd',
 	'hom',
 	'ker',

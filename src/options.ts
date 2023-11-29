@@ -134,7 +134,6 @@ export class Options {
 			'arg',
 			'det',
 			'dim',
-			'exp',
 			'gcd',
 			'hom',
 			'ker',

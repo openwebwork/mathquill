@@ -265,8 +265,10 @@ for (const trigFunction of ['sin', 'cos', 'tan', 'sec', 'csc', 'cot']) {
 	}
 }
 
-LatexCmds['ln'] = bindMixin(MathFunction, '\\ln');
-LatexCmds['log'] = class extends MathFunction {
+LatexCmds.exp = bindMixin(MathFunction, '\\exp');
+
+LatexCmds.ln = bindMixin(MathFunction, '\\ln');
+LatexCmds.log = class extends MathFunction {
 	constructor() {
 		super('\\log');
 	}
