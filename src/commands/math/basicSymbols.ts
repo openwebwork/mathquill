@@ -10,6 +10,7 @@ import {
 	Symbol,
 	VanillaSymbol,
 	BinaryOperator,
+	FactorialOrNEQ,
 	Equality,
 	Inequality,
 	MathCommand,
@@ -298,11 +299,14 @@ CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot = bindMixin(BinaryOperator, '\\c
 
 const less = { ctrlSeq: '\\le ', html: '&le;', text: '<=', ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
 const greater = { ctrlSeq: '\\ge ', html: '&ge;', text: '>=', ctrlSeqStrict: '>', htmlStrict: '&gt;', textStrict: '>' };
+const neq = { ctrlSeq: '\\ne ', html: '&ne;', text: '!=', ctrlSeqStrict: '!', htmlStrict: '!', textStrict: '!' };
 
 LatexCmds['<'] = LatexCmds.lt = bindMixin(Inequality, less, true);
 LatexCmds['>'] = LatexCmds.gt = bindMixin(Inequality, greater, true);
+LatexCmds['!'] = LatexCmds.factorial = bindMixin(FactorialOrNEQ, neq, true);
 LatexCmds['\u2264'] = LatexCmds.le = LatexCmds.leq = bindMixin(Inequality, less, false);
 LatexCmds['\u2265'] = LatexCmds.ge = LatexCmds.geq = bindMixin(Inequality, greater, false);
+LatexCmds['\u2260'] = LatexCmds.ne = LatexCmds.neq = bindMixin(FactorialOrNEQ, neq, false);
 
 LatexCmds['='] = Equality;
 

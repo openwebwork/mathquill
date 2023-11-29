@@ -443,6 +443,25 @@ export class Inequality extends BinaryOperator {
 	}
 }
 
+export class FactorialOrNEQ extends Inequality {
+	constructor(data: InequalityData, strict: boolean) {
+		super(data, strict);
+		this.isUnary = strict;
+	}
+
+	swap(strict: boolean) {
+		this.isUnary = strict;
+		this.contactWeld();
+		super.swap(strict);
+	}
+
+	contactWeld() {
+		if (this.isUnary) this.elements.firstElement.className = '';
+		else this.elements.firstElement.className = 'mq-binary-operator';
+		return this;
+	}
+}
+
 export class Equality extends BinaryOperator {
 	constructor() {
 		super('=', '=');

@@ -15,8 +15,6 @@ LatexCmds.notin =
 			}
 		};
 
-LatexCmds['\u2260'] = LatexCmds.ne = LatexCmds.neq = bindMixin(BinaryOperator, '\\ne ', '&ne;');
-
 LatexCmds['\u2217'] =
 	LatexCmds.ast =
 	LatexCmds.star =
