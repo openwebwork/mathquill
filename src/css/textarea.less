@@ -1,6 +1,7 @@
-@import "./mixins/css3";
+@import './mixins/css3';
 
-.mq-editable-field, .mq-math-mode {
+.mq-editable-field,
+.mq-math-mode {
 	.mq-textarea {
 		position: relative;
 
@@ -8,7 +9,8 @@
 		.user-select(text);
 	}
 
-	.mq-textarea *, .mq-selectable {
+	.mq-textarea *,
+	.mq-selectable {
 		.user-select(text);
 
 		position: absolute; // the only way to hide the textarea *and* the

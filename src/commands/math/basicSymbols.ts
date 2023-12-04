@@ -7,7 +7,15 @@ import type { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
 import { TNode } from 'tree/node';
 import {
-	Symbol, VanillaSymbol, BinaryOperator, Equality, Inequality, MathCommand, Variable, Letter, latexMathParser
+	Symbol,
+	VanillaSymbol,
+	BinaryOperator,
+	Equality,
+	Inequality,
+	MathCommand,
+	Variable,
+	Letter,
+	latexMathParser
 } from 'commands/mathElements';
 import { MathBlock } from 'commands/mathBlock';
 
@@ -32,7 +40,7 @@ class OperatorName extends Symbol {
 	}
 }
 
-for (const fn in (new Options).autoOperatorNames) {
+for (const fn in new Options().autoOperatorNames) {
 	if (fn !== '_maxLength') {
 		LatexCmds[fn] = OperatorName;
 	}
@@ -43,10 +51,12 @@ LatexCmds.operatorname = class extends MathCommand {
 		super(ctrlSeq, htmlTemplate, textTemplate);
 		this.createLeftOf = noop;
 	}
-	numBlocks() { return 1; };
+	numBlocks() {
+		return 1;
+	}
 	parser() {
 		return latexMathParser.block.map((b: MathBlock) => b.children());
-	};
+	}
 };
 
 LatexCmds.f = class extends Letter {
@@ -78,7 +88,7 @@ class NonSymbolaSymbol extends Symbol {
 	constructor(ch: string, html?: string) {
 		super(ch, `<span class="mq-non-symbola">${html || ch}</span>`);
 	}
-};
+}
 
 LatexCmds['@'] = NonSymbolaSymbol;
 LatexCmds['&'] = bindMixin(NonSymbolaSymbol, '\\&', '&amp;');
@@ -103,57 +113,58 @@ LatexCmds.alpha =
 	LatexCmds.tau =
 	LatexCmds.chi =
 	LatexCmds.psi =
-	LatexCmds.omega = class extends Variable {
-		constructor(latex: string) {
-			super(`\\${latex} `, `&${latex};`);
-		}
-	};
+	LatexCmds.omega =
+		class extends Variable {
+			constructor(latex: string) {
+				super(`\\${latex} `, `&${latex};`);
+			}
+		};
 
 LatexCmds.phi = // W3C or Unicode?
 	bindMixin(Variable, '\\phi ', '&#981;');
 
 LatexCmds.phiv = // Elsevier and 9573-13
 	LatexCmds.varphi = // AMS and LaTeX
-	bindMixin(Variable, '\\varphi ', '&phi;');
+		bindMixin(Variable, '\\varphi ', '&phi;');
 
 LatexCmds.epsilon = // W3C or Unicode?
 	bindMixin(Variable, '\\epsilon ', '&#1013;');
 
 LatexCmds.epsiv = // Elsevier and 9573-13
 	LatexCmds.varepsilon = // AMS and LaTeX
-	bindMixin(Variable, '\\varepsilon ', '&epsilon;');
+		bindMixin(Variable, '\\varepsilon ', '&epsilon;');
 
 LatexCmds.piv = // W3C/Unicode and Elsevier and 9573-13
 	LatexCmds.varpi = // AMS and LaTeX
-	bindMixin(Variable, '\\varpi ', '&piv;');
+		bindMixin(Variable, '\\varpi ', '&piv;');
 
 LatexCmds.sigmaf = // W3C/Unicode
 	LatexCmds.sigmav = // Elsevier
 	LatexCmds.varsigma = // LaTeX
-	bindMixin(Variable, '\\varsigma ', '&sigmaf;');
+		bindMixin(Variable, '\\varsigma ', '&sigmaf;');
 
 LatexCmds.thetav = // Elsevier and 9573-13
 	LatexCmds.vartheta = // AMS and LaTeX
 	LatexCmds.thetasym = // W3C/Unicode
-	bindMixin(Variable, '\\vartheta ', '&thetasym;');
+		bindMixin(Variable, '\\vartheta ', '&thetasym;');
 
 LatexCmds.upsilon = // AMS and LaTeX and W3C/Unicode
 	LatexCmds.upsi = // Elsevier and 9573-13
-	bindMixin(Variable, '\\upsilon ', '&upsilon;');
+		bindMixin(Variable, '\\upsilon ', '&upsilon;');
 
 // These aren't even mentioned in the HTML character entity references
 LatexCmds.gammad = // Elsevier
 	LatexCmds.Gammad = // 9573-13 -- WTF, right? I dunno if this was a typo in the reference (see above)
 	LatexCmds.digamma = // LaTeX
-	bindMixin(Variable, '\\digamma ', '&#989;');
+		bindMixin(Variable, '\\digamma ', '&#989;');
 
 LatexCmds.kappav = // Elsevier
 	LatexCmds.varkappa = // AMS and LaTeX
-	bindMixin(Variable, '\\varkappa ', '&#1008;');
+		bindMixin(Variable, '\\varkappa ', '&#1008;');
 
 LatexCmds.rhov = // Elsevier and 9573-13
 	LatexCmds.varrho = // AMS and LaTeX
-	bindMixin(Variable, '\\varrho ', '&#1009;');
+		bindMixin(Variable, '\\varrho ', '&#1009;');
 
 // Greek constants, look best in non-italicized Times New Roman
 LatexCmds.pi = LatexCmds['\u03c0'] = bindMixin(NonSymbolaSymbol, '\\pi ', '&pi;');
@@ -165,8 +176,8 @@ LatexCmds.Upsilon = // LaTeX
 	LatexCmds.Upsi = // Elsevier and 9573-13
 	LatexCmds.upsih = // W3C/Unicode "upsilon with hook"
 	LatexCmds.Upsih =
-	// Symbola's 'upsilon with a hook' is a capital Y without hooks :(
-	bindMixin(Symbol, '\\Upsilon ', '<var style="font-family: serif">&upsih;</var>');
+		// Symbola's 'upsilon with a hook' is a capital Y without hooks :(
+		bindMixin(Symbol, '\\Upsilon ', '<var style="font-family: serif">&upsih;</var>');
 
 // Other symbols with the same LaTeX command and HTML character entity reference
 LatexCmds.Gamma =
@@ -179,11 +190,12 @@ LatexCmds.Gamma =
 	LatexCmds.Phi =
 	LatexCmds.Psi =
 	LatexCmds.Omega =
-	LatexCmds.forall = class extends VanillaSymbol {
-		constructor(latex: string) {
-			super(`\\${latex} `, `&${latex};`);
-		}
-	};
+	LatexCmds.forall =
+		class extends VanillaSymbol {
+			constructor(latex: string) {
+				super(`\\${latex} `, `&${latex};`);
+			}
+		};
 
 // symbols that aren't a single MathCommand, but are instead a whole
 // Fragment. Creates the Fragment from a LaTeX string
@@ -278,18 +290,14 @@ class PlusMinus extends BinaryOperator {
 LatexCmds['+'] = bindMixin(PlusMinus, '+', '+');
 // These are different dashes, I think one is an en dash and the other is a hyphen.
 LatexCmds['\u2013'] = LatexCmds['-'] = bindMixin(PlusMinus, '-', '&minus;');
-LatexCmds['\u00b1'] = LatexCmds.pm = LatexCmds.plusmn = LatexCmds.plusminus =
-	bindMixin(PlusMinus, '\\pm ', '&plusmn;');
-LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus =
-	bindMixin(PlusMinus, '\\mp ', '&#8723;');
+LatexCmds['\u00b1'] = LatexCmds.pm = LatexCmds.plusmn = LatexCmds.plusminus = bindMixin(PlusMinus, '\\pm ', '&plusmn;');
+LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus = bindMixin(PlusMinus, '\\mp ', '&#8723;');
 
 // Semantically should be &sdot;, but &middot; looks better
 CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot = bindMixin(BinaryOperator, '\\cdot ', '&middot;', '*');
 
-const less = { ctrlSeq: '\\le ', html: '&le;', text: '<=',
-	ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
-const greater = { ctrlSeq: '\\ge ', html: '&ge;', text: '>=',
-	ctrlSeqStrict: '>', htmlStrict: '&gt;', textStrict: '>' };
+const less = { ctrlSeq: '\\le ', html: '&le;', text: '<=', ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
+const greater = { ctrlSeq: '\\ge ', html: '&ge;', text: '>=', ctrlSeqStrict: '>', htmlStrict: '&gt;', textStrict: '>' };
 
 LatexCmds['<'] = LatexCmds.lt = bindMixin(Inequality, less, true);
 LatexCmds['>'] = LatexCmds.gt = bindMixin(Inequality, greater, true);
@@ -300,7 +308,10 @@ LatexCmds['='] = Equality;
 
 LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&times;', '*');
 
-LatexCmds['\u00f7'] = LatexCmds.div = LatexCmds.divide = LatexCmds.divides =
-	bindMixin(BinaryOperator, '\\div ', '&divide;', '/');
+LatexCmds['\u00f7'] =
+	LatexCmds.div =
+	LatexCmds.divide =
+	LatexCmds.divides =
+		bindMixin(BinaryOperator, '\\div ', '&divide;', '/');
 
 CharCmds['~'] = LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~');

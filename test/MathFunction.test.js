@@ -12,13 +12,17 @@ suite('MathFunction', () => {
 		mq = MQ.MathField(field);
 		mq.options.addAutoCommands(['sin', 'log']);
 	});
-	teardown(() => { mq.el().remove(); });
+	teardown(() => {
+		mq.el().remove();
+	});
 
 	const assertParsesLatex = (str, latex) => {
 		if (typeof latex === 'undefined') latex = str;
 
-		const result = latexMathParser.parse(str)
-			.postOrder('finalizeTree', mq.options).postOrder('contactWeld', mq.__controller.cursor)
+		const result = latexMathParser
+			.parse(str)
+			.postOrder('finalizeTree', mq.options)
+			.postOrder('contactWeld', mq.__controller.cursor)
 			.join('latex');
 		assert.equal(result, latex, `parsing '${str}', got '${result}', expected '${latex}'`);
 	};
@@ -45,8 +49,10 @@ suite('MathFunction', () => {
 			assertParsesLatex('\\sin 123.423', '\\sin\\left(123.423\\right)');
 			assertParsesLatex('\\sin 4.', '\\sin\\left(4.\\right)');
 			assertParsesLatex('\\sin .423', '\\sin\\left(.423\\right)');
-			assertParsesLatex('\\sinh_{3^2_4}^{y^2+z}\\left(\\pi x\\right)',
-				'\\sinh_{3_4^2}^{y^2+z}\\left(\\pi x\\right)');
+			assertParsesLatex(
+				'\\sinh_{3^2_4}^{y^2+z}\\left(\\pi x\\right)',
+				'\\sinh_{3_4^2}^{y^2+z}\\left(\\pi x\\right)'
+			);
 			assertParsesLatex('\\sinh\\left(x\\right)', '\\sinh\\left(x\\right)');
 			assertParsesLatex('\\arcsin\\left(x\\right)', '\\arcsin\\left(x\\right)');
 		});
@@ -276,8 +282,10 @@ suite('MathFunction', () => {
 			test('typing outside ghost paren solidifies ghost', () => {
 				mq.keystroke('Right').typedText('+4');
 				assert.equal(mq.latex(), '\\sin\\left(1+2\\right)+4');
-				assert.ok(!endBracket.classList.contains('mq-ghost'),
-					'right parenthesis is solid after typing to right');
+				assert.ok(
+					!endBracket.classList.contains('mq-ghost'),
+					'right parenthesis is solid after typing to right'
+				);
 
 				mq.keystroke('Backspace Backspace Backspace');
 				assert.equal(mq.latex(), '\\sin\\left(1+2\\right)');
@@ -416,6 +424,5 @@ suite('MathFunction', () => {
 			mq.keystroke('Left Left').typedText('^4');
 			assert.equal(mq.text(), '(logb(2,x))^4');
 		});
-
 	});
 });

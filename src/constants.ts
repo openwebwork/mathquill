@@ -23,9 +23,12 @@ export const mqCmdId = 'data-mathquill-command-id',
 	mqBlockId = 'data-mathquill-block-id',
 	// L = 'left', R = 'right'
 	// The contract is that they can be used as object properties and -L === R, and -R === L.
-	L = Direction.L, R = Direction.R;
+	L = Direction.L,
+	R = Direction.R;
 
-export const noop = () => { /* do nothing */ };
+export const noop = () => {
+	/* do nothing */
+};
 
 // A utility higher-order function that creates "implicit iterators"
 // from "generators": given a function that takes in a sole argument,
@@ -51,16 +54,21 @@ export const noop = () => { /* do nothing */ };
 //  the function object created by iterator() which does not have a
 //  .method() method, so that just fails silently.
 type CallableKeyOf<S, T, U, V> = keyof {
-	[P in keyof S as S[P] extends ((arg1?: U, arg2?: V) => T) ? P : never]: unknown
+	[P in keyof S as S[P] extends (arg1?: U, arg2?: V) => T ? P : never]: unknown;
 };
 
 export const iterator = <R extends object, S, T, U, V>(generator: (yield_: (obj: R) => S | undefined) => T) => {
 	return (fn: ((obj: R) => S) | string, arg1?: U, arg2?: V) => {
-		const yield_ = typeof fn === 'function' ? fn
-			: (obj: R) => {
-				if (fn in obj)
-					return (obj[fn as CallableKeyOf<R, S, U, V>] as unknown as ((arg1?: U, arg2?: V) => S))(arg1, arg2);
-			};
+		const yield_ =
+			typeof fn === 'function'
+				? fn
+				: (obj: R) => {
+						if (fn in obj)
+							return (obj[fn as CallableKeyOf<R, S, U, V>] as unknown as (arg1?: U, arg2?: V) => S)(
+								arg1,
+								arg2
+							);
+				  };
 		return generator(yield_);
 	};
 };
@@ -69,8 +77,14 @@ export type Constructor<T = object> = new (...args: Array<any>) => T;
 
 // sugar to make defining lots of commands easier.
 export const bindMixin = <TBase extends Constructor<MathCommand>>(
-	Base: TBase, ...args: Array<string | boolean | number | object>
-) => class extends Base { constructor(..._ignore_args: Array<any>) { super(...args); } };
+	Base: TBase,
+	...args: Array<string | boolean | number | object>
+) =>
+	class extends Base {
+		constructor(..._ignore_args: Array<any>) {
+			super(...args);
+		}
+	};
 
 // a development-only debug method.  This definition and all
 // calls to `pray` will be stripped from the minified
@@ -84,25 +98,33 @@ export const pray = (message: string, cond = false) => {
 	if (!cond) throw new Error(`prayer failed: ${message}`);
 };
 
-export const prayDirection = (dir: Direction) => { pray('a direction was passed', dir === L || dir === R); };
+export const prayDirection = (dir: Direction) => {
+	pray('a direction was passed', dir === L || dir === R);
+};
 
 export const prayWellFormed = (parent?: TNode, leftward?: TNode, rightward?: TNode) => {
 	pray('a parent is always present', !!parent);
-	pray('leftward is properly set up', (() => {
-		// either it's empty and `rightward` is the left end child (possibly empty)
-		if (!leftward) return parent?.ends[L] === rightward;
+	pray(
+		'leftward is properly set up',
+		(() => {
+			// either it's empty and `rightward` is the left end child (possibly empty)
+			if (!leftward) return parent?.ends[L] === rightward;
 
-		// or it's there and its [R] and .parent are properly set up
-		return leftward[R] === rightward && leftward.parent === parent;
-	})());
+			// or it's there and its [R] and .parent are properly set up
+			return leftward[R] === rightward && leftward.parent === parent;
+		})()
+	);
 
-	pray('rightward is properly set up', (() => {
-		// either it's empty and `leftward` is the right end child (possibly empty)
-		if (!rightward) return parent?.ends[R] === leftward;
+	pray(
+		'rightward is properly set up',
+		(() => {
+			// either it's empty and `leftward` is the right end child (possibly empty)
+			if (!rightward) return parent?.ends[R] === leftward;
 
-		// or it's there and its [L] and .parent are properly set up
-		return rightward[L] === leftward && rightward.parent === parent;
-	})());
+			// or it's there and its [L] and .parent are properly set up
+			return rightward[L] === leftward && rightward.parent === parent;
+		})()
+	);
 };
 
 // Registry of LaTeX commands and commands created when typing a single character.
@@ -124,11 +146,11 @@ export const OPP_BRACKS: { readonly [key: string]: string } = {
 	'\\langle ': '\\rangle ',
 	'\\rangle ': '\\langle ',
 	'|': '|',
-	'\\lVert ' : '\\rVert ',
-	'\\rVert ' : '\\lVert ',
+	'\\lVert ': '\\rVert ',
+	'\\rVert ': '\\lVert '
 };
 
-export type EmbedOptions = { text?: () => string, htmlString?: string, latex?: () => string };
+export type EmbedOptions = { text?: () => string; htmlString?: string; latex?: () => string };
 export const EMBEDS: { [key: string]: (data: string) => EmbedOptions } = {};
 
 // The set of operator names like \arg, \det, etc that are built-into LaTeX,
@@ -142,8 +164,25 @@ export const BuiltInOpNames: { [key: string]: 1 } = {};
 
 // Standard operators
 for (const op of [
-	'arg', 'det', 'dim', 'exp', 'gcd', 'hom', 'ker', 'lg', 'lim',
-	'max', 'min', 'sup', 'limsup', 'liminf', 'injlim', 'projlim', 'Pr'
-]) { BuiltInOpNames[op] = 1; }
+	'arg',
+	'det',
+	'dim',
+	'exp',
+	'gcd',
+	'hom',
+	'ker',
+	'lg',
+	'lim',
+	'max',
+	'min',
+	'sup',
+	'limsup',
+	'liminf',
+	'injlim',
+	'projlim',
+	'Pr'
+]) {
+	BuiltInOpNames[op] = 1;
+}
 
 export const TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };

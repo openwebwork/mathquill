@@ -9,13 +9,13 @@ export const saneKeyboardEvents = (() => {
 		ArrowLeft: 'Left',
 		ArrowDown: 'Down',
 		ArrowUp: 'Up',
-		' ': 'Spacebar',
+		' ': 'Spacebar'
 	};
 	const isLowercaseAlphaCharacter = (s: string) => s.length === 1 && s >= 'a' && s <= 'z';
 
 	// To the extent possible, create a normalized string representation of the key combo.
 	const stringify = (evt: KeyboardEvent) => {
-		const key = isLowercaseAlphaCharacter(evt.key) ? evt.key.toUpperCase() : (KEY_TO_MQ_VALUE[evt.key] ?? evt.key);
+		const key = isLowercaseAlphaCharacter(evt.key) ? evt.key.toUpperCase() : KEY_TO_MQ_VALUE[evt.key] ?? evt.key;
 
 		const modifiers = [];
 
@@ -81,16 +81,17 @@ export const saneKeyboardEvents = (() => {
 				if (controller.options.overrideTypedText) {
 					controller.options.overrideTypedText(text);
 				} else {
-					if (text === ' ' &&
+					if (
+						text === ' ' &&
 						sendInputSpaceKeystroke &&
 						controller.options.spaceBehavesLikeTab &&
-						controller.cursor.depth() > 1)
-					{
+						controller.cursor.depth() > 1
+					) {
 						handleKey('Spacebar', e as KeyboardEvent);
-						setTimeout(() => textarea.value = '');
+						setTimeout(() => (textarea.value = ''));
 					} else {
 						controller.typedText(text);
-						setTimeout(() => textarea.value = '');
+						setTimeout(() => (textarea.value = ''));
 					}
 				}
 			} else if (textarea.value.length > 1) textarea.select();

@@ -36,7 +36,9 @@ suite('SupSub', () => {
 				'after before'.split(' ').forEach((side, l) => {
 					const moveToSide = [
 						noop,
-						(mq) => { mq.moveToLeftEnd().keystroke('Right'); }
+						(mq) => {
+							mq.moveToLeftEnd().keystroke('Right');
+						}
 					][l];
 
 					const expected = expecteds[i].split('; ')[j].split(', ')[k].split(' ')[l];
@@ -67,15 +69,14 @@ suite('SupSub', () => {
 		const initialLatex = 'x_a x^a'.split(' ')[i];
 
 		'typed wrote'.split(' ').forEach((did, j) => {
-			const doTo = [
-				(mq) => mq.typedText('³'),
-				(mq) => mq.write('³')
-			][j];
+			const doTo = [(mq) => mq.typedText('³'), (mq) => mq.write('³')][j];
 
 			'after before'.split(' ').forEach((side, k) => {
 				const moveToSide = [
 					noop,
-					(mq) => { mq.moveToLeftEnd().keystroke('Right'); }
+					(mq) => {
+						mq.moveToLeftEnd().keystroke('Right');
+					}
 				][k];
 
 				const expected = expecteds.split('; ')[i].split(', ')[j].split(' ')[k];
@@ -99,7 +100,7 @@ suite('SupSub', () => {
 		});
 	});
 
-	test('render LaTeX with 2 SupSub\'s in a row', () => {
+	test("render LaTeX with 2 SupSub's in a row", () => {
 		mq.latex('x_a_b');
 		assert.equal(mq.latex(), 'x_{ab}');
 
@@ -119,7 +120,7 @@ suite('SupSub', () => {
 		assert.equal(mq.latex(), 'x^a');
 	});
 
-	test('render LaTeX with 3 alternating SupSub\'s in a row', () => {
+	test("render LaTeX with 3 alternating SupSub's in a row", () => {
 		mq.latex('x_a^b_c');
 		assert.equal(mq.latex(), 'x_{ac}^b');
 

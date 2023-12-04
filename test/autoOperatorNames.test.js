@@ -12,23 +12,19 @@ suite('autoOperatorNames', () => {
 
 	const assertLatex = (input, expected) => {
 		const result = mq.latex();
-		assert.equal(result, expected,
-			`${input}, got '${result}', expected '${expected}'`
-		);
+		assert.equal(result, expected, `${input}, got '${result}', expected '${expected}'`);
 	};
 
 	const assertText = (input, expected) => {
 		const result = mq.text();
-		assert.equal(result, expected,
-			`${input}, got '${result}', expected '${expected}'`
-		);
+		assert.equal(result, expected, `${input}, got '${result}', expected '${expected}'`);
 	};
 
 	test('simple LaTeX parsing, typing', () => {
 		const assertAutoOperatorNamesWork = (str, latex) => {
 			let count = 0;
 			const _autoUnItalicize = Letter.prototype.autoUnItalicize;
-			Letter.prototype.autoUnItalicize = function() {
+			Letter.prototype.autoUnItalicize = function () {
 				count += 1;
 				return _autoUnItalicize.apply(this, arguments);
 			};
@@ -69,7 +65,7 @@ suite('autoOperatorNames', () => {
 	test('deleting', () => {
 		let count = 0;
 		const _autoUnItalicize = Letter.prototype.autoUnItalicize;
-		Letter.prototype.autoUnItalicize = function() {
+		Letter.prototype.autoUnItalicize = function () {
 			count += 1;
 			return _autoUnItalicize.apply(this, arguments);
 		};
@@ -90,8 +86,10 @@ suite('autoOperatorNames', () => {
 		assert.equal(count, str.length + 2);
 
 		mq.typedText('+');
-		assertLatex('typed plus to interrupt sequence of letters',
-			'c+a\\operatorname{cac}a\\operatorname{cac}a\\operatorname{cac}');
+		assertLatex(
+			'typed plus to interrupt sequence of letters',
+			'c+a\\operatorname{cac}a\\operatorname{cac}a\\operatorname{cac}'
+		);
 		assert.equal(count, str.length + 4);
 
 		mq.keystroke('Backspace');

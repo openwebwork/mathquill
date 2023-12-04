@@ -52,7 +52,10 @@ export default class MathQuill {
 
 		MQ.saneKeyboardEvents = saneKeyboardEvents;
 
-		MQ.config = (opts: InputOptions) => { Options.config(Options.prototype, opts); return MQ; };
+		MQ.config = (opts: InputOptions) => {
+			Options.config(Options.prototype, opts);
+			return MQ;
+		};
 
 		MQ.registerEmbed = (name: string, options: (data: string) => EmbedOptions) => {
 			if (!/^[a-z][a-z0-9]*$/i.test(name)) {
@@ -66,14 +69,16 @@ export default class MathQuill {
 		// different kind (or it's not an HTML element), return undefined.
 		for (const [kind, APIClass] of Object.entries({ StaticMath, MathField, InnerMathField })) {
 			APIClasses[kind] = APIClass;
-			(MQ as MQApi)[kind as keyof Pick<MQApi, 'StaticMath' | 'MathField' | 'InnerMathField'>] =
-				(el: unknown, opts: InputOptions) => {
-					const mq = MQ(el);
-					if (mq instanceof APIClasses[kind] || !(el instanceof HTMLElement)) return mq;
-					const ctrlr = new Controller(new APIClasses[kind].RootBlock, el, new Options);
-					ctrlr.KIND_OF_MQ = kind;
-					return new APIClasses[kind](ctrlr).config(opts).__mathquillify();
-				};
+			(MQ as MQApi)[kind as keyof Pick<MQApi, 'StaticMath' | 'MathField' | 'InnerMathField'>] = (
+				el: unknown,
+				opts: InputOptions
+			) => {
+				const mq = MQ(el);
+				if (mq instanceof APIClasses[kind] || !(el instanceof HTMLElement)) return mq;
+				const ctrlr = new Controller(new APIClasses[kind].RootBlock(), el, new Options());
+				ctrlr.KIND_OF_MQ = kind;
+				return new APIClasses[kind](ctrlr).config(opts).__mathquillify();
+			};
 			Object.setPrototypeOf((MQ as MQApi)[kind as keyof MQApi], APIClasses[kind]);
 		}
 

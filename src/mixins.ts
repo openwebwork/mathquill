@@ -6,7 +6,7 @@ import type { TNode } from 'tree/node';
 import type { MathCommand, MathElement } from 'commands/mathElements';
 
 export const RootBlockMixin = (_: MathElement) => {
-	_.moveOutOf = (dir: Direction) =>  _.controller?.handle('moveOutOf', dir);
+	_.moveOutOf = (dir: Direction) => _.controller?.handle('moveOutOf', dir);
 	_.deleteOutOf = (dir: Direction) => _.controller?.handle('deleteOutOf', dir);
 	_.selectOutOf = (dir: Direction) => _.controller?.handle('selectOutOf', dir);
 	_.upOutOf = (dir: Direction) => _.controller?.handle('upOutOf', dir);
@@ -22,44 +22,45 @@ export const RootBlockMixin = (_: MathElement) => {
 // Editability methods called by the cursor for editing, cursor movements, and selection of the MathQuill tree.
 // These all take in a direction and the cursor.
 // The MathCommand and TextBlock classes use this mixin.
-export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base: TBase) => class extends Base {
-	moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
-		const updownInto = updown && this[`${updown}Into`];
-		cursor.insAtDirEnd(dir === L ? R : L, updownInto || this.ends[dir === L ? R : L] as TNode);
-	}
+export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base: TBase) =>
+	class extends Base {
+		moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
+			const updownInto = updown && this[`${updown}Into`];
+			cursor.insAtDirEnd(dir === L ? R : L, updownInto || (this.ends[dir === L ? R : L] as TNode));
+		}
 
-	deleteTowards(dir: Direction, cursor: Cursor) {
-		if (this.isEmpty()) cursor[dir] = this.remove()[dir];
-		else this.moveTowards(dir, cursor);
-	}
+		deleteTowards(dir: Direction, cursor: Cursor) {
+			if (this.isEmpty()) cursor[dir] = this.remove()[dir];
+			else this.moveTowards(dir, cursor);
+		}
 
-	selectTowards(dir: Direction, cursor: Cursor) {
-		cursor[dir === L ? R : L] = this;
-		cursor[dir] = this[dir];
-	}
-
-};
+		selectTowards(dir: Direction, cursor: Cursor) {
+			cursor[dir === L ? R : L] = this;
+			cursor[dir] = this[dir];
+		}
+	};
 
 // Use a CSS transform to scale the HTML elements,
 // or gracefully degrade to increasing the fontSize to match the vertical Y scaling factor.
 export const scale = (elts: Array<HTMLElement>, x: number, y: number) =>
-	elts.forEach((elt) => elt.style.transform = `scale(${x},${y})`);
+	elts.forEach((elt) => (elt.style.transform = `scale(${x},${y})`));
 
-export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) => class extends Base {
-	delims?: [HTMLElement, HTMLElement];
-	content?: HTMLElement;
+export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
+	class extends Base {
+		delims?: [HTMLElement, HTMLElement];
+		content?: HTMLElement;
 
-	reflow = () => {
-		const contentStyle = this.content ? getComputedStyle(this.content) : undefined;
-		const boundingRect = this.content?.getBoundingClientRect();
-		const height = (boundingRect?.height ?? 0) / parseFloat(contentStyle?.fontSize ?? '1');
-		scale(this.delims as Array<HTMLElement>, Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
+		reflow = () => {
+			const contentStyle = this.content ? getComputedStyle(this.content) : undefined;
+			const boundingRect = this.content?.getBoundingClientRect();
+			const height = (boundingRect?.height ?? 0) / parseFloat(contentStyle?.fontSize ?? '1');
+			scale(this.delims as Array<HTMLElement>, Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
+		};
+
+		addToElements(el: VNode | HTMLElement) {
+			super.addToElements(el);
+			const children = this.elements.children();
+			this.delims = [children.firstElement, children.lastElement];
+			this.content = children.contents[1] as HTMLElement;
+		}
 	};
-
-	addToElements(el: VNode | HTMLElement) {
-		super.addToElements(el);
-		const children = this.elements.children();
-		this.delims = [children.firstElement, children.lastElement];
-		this.content = children.contents[1] as HTMLElement;
-	}
-};

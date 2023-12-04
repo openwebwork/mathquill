@@ -11,7 +11,7 @@ suite('typing with auto-replaces', () => {
 		document.getElementById('mock')?.append(el);
 		mq = MQ.MathField(el, {
 			handlers: {
-				edit: () => mostRecentlyReportedLatex = mq.latex()
+				edit: () => (mostRecentlyReportedLatex = mq.latex())
 			}
 		});
 	});
@@ -56,7 +56,7 @@ suite('typing with auto-replaces', () => {
 			assertLatex('\\sin^2\\left(\\right)');
 		});
 
-		test('they\'re passed their name', () => {
+		test("they're passed their name", () => {
 			mq.cmd('\\alpha');
 			assert.equal(mq.latex(), '\\alpha');
 		});
@@ -324,8 +324,10 @@ suite('typing with auto-replaces', () => {
 			function assertParenBlockNonEmpty() {
 				const parenBlock = mq.el().querySelectorAll('.mq-paren+span');
 				assert.equal(parenBlock.length, 1, 'exactly 1 paren block');
-				assert.ok(!parenBlock[0].classList.contains('mq-empty'),
-					'paren block auto-expanded, should no longer be gray');
+				assert.ok(
+					!parenBlock[0].classList.contains('mq-empty'),
+					'paren block auto-expanded, should no longer be gray'
+				);
 			}
 
 			test('backspacing close-bracket then open-paren of 1+(]+4 (empty paren group)', () => {
@@ -378,16 +380,14 @@ suite('typing with auto-replaces', () => {
 				assertLatex('+4');
 			});
 
-			test('rendering mismatched brackets 1+(2+3]+4 from LaTeX then backspacing close-bracket then open-paren',
-				() => {
-					mq.latex('1+\\left(2+3\\right]+4');
-					assertLatex('1+\\left(2+3\\right]+4');
-					mq.keystroke('Left Left Backspace');
-					assertLatex('1+\\left(2+3+4\\right)');
-					mq.keystroke('Left Left Left Backspace');
-					assertLatex('1+2+3+4');
-				}
-			);
+			test('rendering mismatched brackets 1+(2+3]+4 from LaTeX then backspacing close-bracket then open-paren', () => {
+				mq.latex('1+\\left(2+3\\right]+4');
+				assertLatex('1+\\left(2+3\\right]+4');
+				mq.keystroke('Left Left Backspace');
+				assertLatex('1+\\left(2+3+4\\right)');
+				mq.keystroke('Left Left Left Backspace');
+				assertLatex('1+2+3+4');
+			});
 
 			test('rendering mismatched brackets 1+(2+3]+4 from LaTeX then backspacing open-paren', () => {
 				mq.latex('1+\\left(2+3\\right]+4');
@@ -583,8 +583,10 @@ suite('typing with auto-replaces', () => {
 				function assertParenBlockNonEmpty() {
 					const parenBlock = mq.el().querySelectorAll('.mq-paren+span');
 					assert.equal(parenBlock.length, 1, 'exactly 1 paren block');
-					assert.ok(!parenBlock[0].classList.contains('mq-empty'),
-						'paren block auto-expanded, should no longer be gray');
+					assert.ok(
+						!parenBlock[0].classList.contains('mq-empty'),
+						'paren block auto-expanded, should no longer be gray'
+					);
 				}
 
 				test('backspacing close-pipe then open-pipe of 1+||+4 (empty pipe pair)', () => {
@@ -653,15 +655,18 @@ suite('typing with auto-replaces', () => {
 					assertLatex('1+2+3+4');
 				});
 
-				test('rendering mismatched paren/pipe group 1+|2+3)+4 from LaTeX ' +
-					'then backspacing close-paren then open-pipe', () => {
-					mq.latex('1+\\left|2+3\\right)+4');
-					assertLatex('1+\\left|2+3\\right)+4');
-					mq.keystroke('Left Left Backspace');
-					assertLatex('1+\\left|2+3+4\\right|');
-					mq.keystroke('Left Left Left Backspace');
-					assertLatex('1+2+3+4');
-				});
+				test(
+					'rendering mismatched paren/pipe group 1+|2+3)+4 from LaTeX ' +
+						'then backspacing close-paren then open-pipe',
+					() => {
+						mq.latex('1+\\left|2+3\\right)+4');
+						assertLatex('1+\\left|2+3\\right)+4');
+						mq.keystroke('Left Left Backspace');
+						assertLatex('1+\\left|2+3+4\\right|');
+						mq.keystroke('Left Left Left Backspace');
+						assertLatex('1+2+3+4');
+					}
+				);
 
 				test('rendering mismatched paren/pipe group 1+|2+3)+4 from LaTeX then backspacing open-pipe', () => {
 					mq.latex('1+\\left|2+3\\right)+4');
@@ -670,15 +675,18 @@ suite('typing with auto-replaces', () => {
 					assertLatex('1+2+3+4');
 				});
 
-				test('rendering mismatched paren/pipe group 1+(2+3|+4 from LaTeX ' +
-					'then backspacing close-pipe then open-paren', () => {
-					mq.latex('1+\\left(2+3\\right|+4');
-					assertLatex('1+\\left(2+3\\right|+4');
-					mq.keystroke('Left Left Backspace');
-					assertLatex('1+\\left(2+3+4\\right)');
-					mq.keystroke('Left Left Left Backspace');
-					assertLatex('1+2+3+4');
-				});
+				test(
+					'rendering mismatched paren/pipe group 1+(2+3|+4 from LaTeX ' +
+						'then backspacing close-pipe then open-paren',
+					() => {
+						mq.latex('1+\\left(2+3\\right|+4');
+						assertLatex('1+\\left(2+3\\right|+4');
+						mq.keystroke('Left Left Backspace');
+						assertLatex('1+\\left(2+3+4\\right)');
+						mq.keystroke('Left Left Left Backspace');
+						assertLatex('1+2+3+4');
+					}
+				);
 
 				test('rendering mismatched paren/pipe group 1+(2+3|+4 from LaTeX then backspacing open-paren', () => {
 					mq.latex('1+\\left(2+3\\right|+4');
@@ -772,27 +780,23 @@ suite('typing with auto-replaces', () => {
 					assertLatex('0+\\left|1+\\left|2+3+4\\right|\\right|');
 				});
 
-				test('backspacing open-paren of mismatched paren/pipe group containing a one-sided pipe 0+(1+|2+3||+4',
-					() => {
-						mq.latex('0+\\left(1+2+3\\right|+4');
-						assertLatex('0+\\left(1+2+3\\right|+4');
-						mq.keystroke('Left Left Left Left Left Left').typedText('|');
-						assertLatex('0+\\left(1+\\left|2+3\\right|\\right|+4');
-						mq.keystroke('Shift-Tab Shift-Tab Delete');
-						assertLatex('0+1+\\left|2+3\\right|+4');
-					}
-				);
+				test('backspacing open-paren of mismatched paren/pipe group containing a one-sided pipe 0+(1+|2+3||+4', () => {
+					mq.latex('0+\\left(1+2+3\\right|+4');
+					assertLatex('0+\\left(1+2+3\\right|+4');
+					mq.keystroke('Left Left Left Left Left Left').typedText('|');
+					assertLatex('0+\\left(1+\\left|2+3\\right|\\right|+4');
+					mq.keystroke('Shift-Tab Shift-Tab Delete');
+					assertLatex('0+1+\\left|2+3\\right|+4');
+				});
 
-				test('backspacing open-paren of mismatched paren/pipe group inside a one-sided pipe 0+|1+(2+3|+4|',
-					() => {
-						mq.latex('0+1+\\left(2+3\\right|+4');
-						assertLatex('0+1+\\left(2+3\\right|+4');
-						mq.keystroke('Home Right Right').typedText('|');
-						assertLatex('0+\\left|1+\\left(2+3\\right|+4\\right|');
-						mq.keystroke('Right Right Delete');
-						assertLatex('0+\\left|1+2+3\\right|+4');
-					}
-				);
+				test('backspacing open-paren of mismatched paren/pipe group inside a one-sided pipe 0+|1+(2+3|+4|', () => {
+					mq.latex('0+1+\\left(2+3\\right|+4');
+					assertLatex('0+1+\\left(2+3\\right|+4');
+					mq.keystroke('Home Right Right').typedText('|');
+					assertLatex('0+\\left|1+\\left(2+3\\right|+4\\right|');
+					mq.keystroke('Right Right Delete');
+					assertLatex('0+\\left|1+2+3\\right|+4');
+				});
 			});
 		}
 
@@ -969,8 +973,9 @@ suite('typing with auto-replaces', () => {
 		test('command length less than 2', () => assert.throws(() => MQ.config({ autoCommands: 'e' })));
 
 		test('command is a built-in operator name', () => {
-			const cmds = ('Pr arg det dim exp gcd hom ker lg lim max min sup'
-				+ ' limsup liminf injlim projlim Pr').split(' ');
+			const cmds = (
+				'Pr arg det dim exp gcd hom ker lg lim max min sup' + ' limsup liminf injlim projlim Pr'
+			).split(' ');
 			for (const cmd of cmds) {
 				assert.throws(() => MQ.config({ autoCommands: cmd }), `MQ.config({ autoCommands: "${cmd}" })`);
 			}

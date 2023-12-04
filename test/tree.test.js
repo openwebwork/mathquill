@@ -173,7 +173,12 @@ suite('tree', () => {
 		});
 
 		test('directionalized constructor call', () => {
-			const ChNode = class extends TNode { constructor(ch) { super(); this.ch = ch; } };
+			const ChNode = class extends TNode {
+				constructor(ch) {
+					super();
+					this.ch = ch;
+				}
+			};
 			const parent = new TNode();
 			new ChNode('a').adopt(parent, parent.ends[R]);
 			const b = new ChNode('b').adopt(parent, parent.ends[R]);

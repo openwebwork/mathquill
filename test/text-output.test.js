@@ -15,14 +15,16 @@ suite('text() output', () => {
 			sumStartsWithNEquals: true,
 			supSubsRequireOperand: true,
 			autoCommands: ['pi', 'sqrt', 'root', 'vert', 'inf', 'union', 'abs', 'deg', 'ln', 'log']
-				.concat(['sin', 'cos', 'tan', 'sec', 'csc', 'cot'].reduce((a, t) =>
-					a.concat([t, `arc${t}`]), [])).join(' '),
+				.concat(['sin', 'cos', 'tan', 'sec', 'csc', 'cot'].reduce((a, t) => a.concat([t, `arc${t}`]), []))
+				.join(' '),
 			rootsAreExponents: true,
 			logsChangeBase: true,
 			maxDepth: 10
 		});
 	});
-	teardown(() => { mq.el().remove(); });
+	teardown(() => {
+		mq.el().remove();
+	});
 
 	// FIXME: For WeBWorK text output is extremely important. So much more of this is needed.
 

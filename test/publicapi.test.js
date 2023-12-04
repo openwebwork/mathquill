@@ -41,7 +41,6 @@ suite('Public API', () => {
 			assert.ok(rootBlock.classList.contains('mq-empty'));
 			assert.ok(!rootBlock.classList.contains('mq-has-cursor'));
 		});
-
 	});
 
 	suite('mathquill-basic', () => {
@@ -92,7 +91,7 @@ suite('Public API', () => {
 			assert.ok(!mq.__controller.cursor.selection);
 		});
 
-		test('latex while there\'s a selection', () => {
+		test("latex while there's a selection", () => {
 			mq.latex('a');
 			assert.equal(mq.latex(), 'a');
 			mq.select();
@@ -185,28 +184,31 @@ suite('Public API', () => {
 	suite('*OutOf handlers', () => {
 		const testHandlers = (title, mathFieldMaker) => {
 			test(title, () => {
-				let enterCounter = 0, upCounter = 0, moveCounter = 0, deleteCounter = 0,
+				let enterCounter = 0,
+					upCounter = 0,
+					moveCounter = 0,
+					deleteCounter = 0,
 					dir = null;
 
 				const mq = mathFieldMaker({
 					handlers: {
-						enter: function(_mq) {
+						enter: function (_mq) {
 							assert.equal(arguments.length, 1);
 							assert.equal(_mq.id, mq.id);
 							enterCounter += 1;
 						},
-						upOutOf: function(_mq) {
+						upOutOf: function (_mq) {
 							assert.equal(arguments.length, 1);
 							assert.equal(_mq.id, mq.id);
 							upCounter += 1;
 						},
-						moveOutOf: function(_dir, _mq) {
+						moveOutOf: function (_dir, _mq) {
 							assert.equal(arguments.length, 2);
 							assert.equal(_mq.id, mq.id);
 							dir = _dir;
 							moveCounter += 1;
 						},
-						deleteOutOf: function(_dir, _mq) {
+						deleteOutOf: function (_dir, _mq) {
 							assert.equal(arguments.length, 2);
 							assert.equal(_mq.id, mq.id);
 							dir = _dir;
@@ -295,13 +297,15 @@ suite('Public API', () => {
 			return MQ.StaticMath(el).config(options).innerFields[0];
 		});
 
-		testHandlers('.config() directly on a \\MathQuillMathField{} in a MQ.StaticMath using .innerFields',
+		testHandlers(
+			'.config() directly on a \\MathQuillMathField{} in a MQ.StaticMath using .innerFields',
 			(options) => {
 				const el = document.createElement('span');
 				el.textContent = '\\MathQuillMathField{}';
 				document.getElementById('mock')?.append(el);
 				return MQ.StaticMath(el).innerFields[0].config(options);
-			});
+			}
+		);
 
 		suite('global MQ.config()', () => {
 			testHandlers('a MQ.MathField', (options) => {
@@ -397,8 +401,10 @@ suite('Public API', () => {
 
 				try {
 					assert.ok(rootEl.scrollLeft > previousScrollLeft, 'scrolls on cmd');
-					assert.ok(mqEl.getBoundingClientRect().right > cursor.element.getBoundingClientRect().right,
-						'cursor right end is inside the field');
+					assert.ok(
+						mqEl.getBoundingClientRect().right > cursor.element.getBoundingClientRect().right,
+						'cursor right end is inside the field'
+					);
 				} catch (error) {
 					done(error);
 					return;
@@ -435,7 +441,7 @@ suite('Public API', () => {
 		test('space behaves like tab when spaceBehavesLikeTab is true', () => {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
-			mq = MQ.MathField(el, { 'spaceBehavesLikeTab': true });
+			mq = MQ.MathField(el, { spaceBehavesLikeTab: true });
 			rootBlock = mq.__controller.root;
 			cursor = mq.__controller.cursor;
 
@@ -478,7 +484,9 @@ suite('Public API', () => {
 			document.getElementById('mock')?.append(el);
 			mq = MQ.MathField(el, { maxDepth: 1 });
 		});
-		teardown(() => { mq.el().remove(); });
+		teardown(() => {
+			mq.el().remove();
+		});
 
 		test('prevents nested math input via .write() method', () => {
 			mq.write('1\\frac{\\frac{3}{3}}{2}');
@@ -513,7 +521,7 @@ suite('Public API', () => {
 			const assertPaste = (paste, latex) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
-				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
 				event.clipboardData.setData('text/plain', paste);
 				textarea.dispatchEvent(event);
 				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
@@ -522,12 +530,13 @@ suite('Public API', () => {
 
 			test('numbers and letters', () => assertPaste('123xyz'));
 			test('a sentence', () =>
-				assertPaste('Lorem ipsum is a placeholder text commonly used to '
-					+ 'demonstrate the graphical elements of a document or '
-					+ 'visual presentation.',
-				'Loremipsumisaplaceholdertextcommonlyusedtodemonstrate'
-					+ 'thegraphicalelementsofadocumentorvisualpresentation.')
-			);
+				assertPaste(
+					'Lorem ipsum is a placeholder text commonly used to ' +
+						'demonstrate the graphical elements of a document or ' +
+						'visual presentation.',
+					'Loremipsumisaplaceholdertextcommonlyusedtodemonstrate' +
+						'thegraphicalelementsofadocumentorvisualpresentation.'
+				));
 			test('actual LaTeX', () => {
 				assertPaste('a_nx^n+a_{n+1}x^{n+1}');
 				assertPaste('\\frac{1}{2\\sqrt{x}}');
@@ -556,7 +565,7 @@ suite('Public API', () => {
 			const assertPaste = (paste, latex) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
-				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer, bubbles: true });
+				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
 				event.clipboardData.setData('text/plain', paste);
 				textarea.dispatchEvent(event);
 				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
@@ -565,17 +574,16 @@ suite('Public API', () => {
 
 			test('numbers and letters', () => assertPaste('123xyz', '\\text{123xyz}'));
 			test('a sentence', () =>
-				assertPaste('Lorem ipsum is a placeholder text commonly used to '
-					+ 'demonstrate the graphical elements of a document or '
-					+ 'visual presentation.',
-				'\\text{Lorem ipsum is a placeholder text commonly used to '
-					+ 'demonstrate the graphical elements of a document or '
-					+ 'visual presentation.}')
-			);
+				assertPaste(
+					'Lorem ipsum is a placeholder text commonly used to ' +
+						'demonstrate the graphical elements of a document or ' +
+						'visual presentation.',
+					'\\text{Lorem ipsum is a placeholder text commonly used to ' +
+						'demonstrate the graphical elements of a document or ' +
+						'visual presentation.}'
+				));
 			test('backslashes', () =>
-				assertPaste('something pi something asdf',
-					'\\text{something pi something asdf}')
-			);
+				assertPaste('something pi something asdf', '\\text{something pi something asdf}'));
 			// TODO: braces (currently broken)
 			test('actual math LaTeX wrapped in dollar signs', () => {
 				assertPaste('$a_nx^n+a_{n+1}x^{n+1}$', 'a_nx^n+a_{n+1}x^{n+1}');
@@ -597,8 +605,7 @@ suite('Public API', () => {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				MQ.MathField(el, { leftRightIntoCmdGoes: 1 });
-			})
-		);
+			}));
 		suite('default', () => {
 			let mq;
 			setup(() => {
@@ -817,7 +824,7 @@ suite('Public API', () => {
 	});
 
 	suite('substituteTextarea', () => {
-		test('doesn\'t blow up on selection', () => {
+		test("doesn't blow up on selection", () => {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 
@@ -842,10 +849,13 @@ suite('Public API', () => {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 
-			const mq = MQ.MathField(el, { overrideKeystroke: (_key) => key = _key });
+			const mq = MQ.MathField(el, { overrideKeystroke: (_key) => (key = _key) });
 
-			mq.el().querySelector('textarea')?.dispatchEvent(new KeyboardEvent('keydown',
-				{ key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true }));
+			mq.el()
+				.querySelector('textarea')
+				?.dispatchEvent(
+					new KeyboardEvent('keydown', { key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true })
+				);
 			assert.equal(key, 'Left');
 		});
 		test('cut is NOT async (why should it be?)', () => {
@@ -853,15 +863,21 @@ suite('Public API', () => {
 			document.getElementById('mock')?.append(el);
 
 			let count = 0;
-			const mq = MQ.MathField(el, { overrideCut: () => count += 1 });
+			const mq = MQ.MathField(el, { overrideCut: () => (count += 1) });
 
-			mq.el().querySelector('textarea')?.dispatchEvent(new ClipboardEvent('cut', { bubbles: true }));
+			mq.el()
+				.querySelector('textarea')
+				?.dispatchEvent(new ClipboardEvent('cut', { bubbles: true }));
 			assert.equal(count, 1);
 
-			mq.el().querySelector('textarea')?.dispatchEvent(new InputEvent('input', { bubbles: true }));
+			mq.el()
+				.querySelector('textarea')
+				?.dispatchEvent(new InputEvent('input', { bubbles: true }));
 			assert.equal(count, 1);
 
-			mq.el().querySelector('textarea')?.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+			mq.el()
+				.querySelector('textarea')
+				?.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 			assert.equal(count, 1);
 		});
 	});
@@ -967,7 +983,8 @@ suite('Public API', () => {
 	});
 
 	test('.registerEmbed()', () => {
-		let calls = 0, data;
+		let calls = 0,
+			data;
 
 		MQ.registerEmbed('thing', (data_) => {
 			calls += 1;

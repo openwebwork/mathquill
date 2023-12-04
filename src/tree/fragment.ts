@@ -17,7 +17,7 @@ import { TNode } from 'tree/node';
 // DocumentFragment, whose contents must be detached from the visible tree
 // and have their 'parent' pointers set to the DocumentFragment).
 export class Fragment {
-	elements: VNode = new VNode;
+	elements: VNode = new VNode();
 	ends: Ends = {};
 	disowned?: boolean;
 	each = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
@@ -57,8 +57,7 @@ export class Fragment {
 
 	// like Cursor::withDirInsertAt(dir, parent, withDir, oppDir)
 	withDirAdopt(dir: Direction, parent: TNode, withDir?: TNode, oppDir?: TNode) {
-		return (dir === L ? this.adopt(parent, withDir, oppDir)
-			: this.adopt(parent, oppDir, withDir));
+		return dir === L ? this.adopt(parent, withDir, oppDir) : this.adopt(parent, oppDir, withDir);
 	}
 
 	adopt(parent: TNode, leftward?: TNode, rightward?: TNode) {
@@ -134,7 +133,9 @@ export class Fragment {
 
 	fold<T>(fold: T, fn: (fold: T, child: TNode) => T): T {
 		let ret = fold;
-		this.each((el: TNode) => { ret = fn(ret, el); });
+		this.each((el: TNode) => {
+			ret = fn(ret, el);
+		});
 		return ret;
 	}
 }

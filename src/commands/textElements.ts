@@ -26,16 +26,14 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	}
 
 	replaces(replacedText?: string | Fragment) {
-		if (replacedText instanceof Fragment)
-			this.replacedText = replacedText.remove().elements.text();
-		else if (typeof replacedText === 'string')
-			this.replacedText = replacedText;
+		if (replacedText instanceof Fragment) this.replacedText = replacedText.remove().elements.text();
+		else if (typeof replacedText === 'string') this.replacedText = replacedText;
 	}
 
 	addToElements(el: VNode) {
 		super.addToElements(el);
 		this.ends[L]?.addToElements(this.elements.first.firstChild as HTMLElement);
-	};
+	}
 
 	createLeftOf(cursor: Cursor) {
 		super.createLeftOf(cursor);
@@ -43,8 +41,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		cursor.insAtRightEnd(this);
 
 		if (this.replacedText) {
-			for (const char of this.replacedText)
-				this.write(cursor, char);
+			for (const char of this.replacedText) this.write(cursor, char);
 		}
 
 		this[R]?.siblingCreated?.(cursor.options, L);
@@ -55,7 +52,9 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	parser() {
 		// TODO: correctly parse text mode
 		return Parser.optWhitespace
-			.then(Parser.string('{')).then(Parser.regex(/^(\\}|[^}])*/)).skip(Parser.string('}'))
+			.then(Parser.string('{'))
+			.then(Parser.regex(/^(\\}|[^}])*/))
+			.skip(Parser.string('}'))
 			.map((text: string) => {
 				if (text.length === 0) return new Fragment();
 
@@ -68,7 +67,9 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		return this.foldChildren('', (text, child) => text + child.text());
 	}
 
-	text() { return this.textContents(); }
+	text() {
+		return this.textContents();
+	}
 
 	latex() {
 		const contents = this.textContents();
@@ -83,13 +84,17 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	// editability methods: called by the cursor for editing, cursor movements,
 	// and selection of the MathQuill tree, these all take in a direction and
 	// the cursor
-	moveTowards(dir: Direction, cursor: Cursor) { cursor.insAtDirEnd(dir === L ? R : L, this); }
-	moveOutOf(dir: Direction, cursor: Cursor) { cursor.insDirOf(dir, this); }
+	moveTowards(dir: Direction, cursor: Cursor) {
+		cursor.insAtDirEnd(dir === L ? R : L, this);
+	}
+	moveOutOf(dir: Direction, cursor: Cursor) {
+		cursor.insDirOf(dir, this);
+	}
 	unselectInto(dir: Direction, cursor: Cursor) {
 		cursor.insAtDirEnd(dir === L ? R : L, this);
 
 		// Split the text at the stored anticursor position, and reconstruct the anticursor.
-		const newTextPc = (cursor[dir] as TextPiece).splitRight(this.anticursorPosition);;
+		const newTextPc = (cursor[dir] as TextPiece).splitRight(this.anticursorPosition);
 		if (dir === L) cursor[L] = newTextPc;
 		cursor.anticursor = new Point(this, newTextPc[L], newTextPc);
 		cursor.anticursor.ancestors = {};
@@ -99,9 +104,10 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	}
 
 	selectOutOf(dir: Direction, cursor: Cursor) {
-		this.anticursorPosition = dir === L
-			? (cursor.selection?.elements.first.textContent?.length ?? 1) - 1
-			: this.textContents().length - (cursor.selection?.elements.first.textContent?.length ?? 1) + 1;
+		this.anticursorPosition =
+			dir === L
+				? (cursor.selection?.elements.first.textContent?.length ?? 1) - 1
+				: this.textContents().length - (cursor.selection?.elements.first.textContent?.length ?? 1) + 1;
 		cursor.insDirOf(dir, this);
 	}
 
@@ -123,7 +129,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 			new VanillaSymbol('\\$', '$').createLeftOf(cursor);
 		} else if (!cursor[R]) cursor.insRightOf(this);
 		else if (!cursor[L]) cursor.insLeftOf(this);
-		else { // split apart
+		else {
+			// split apart
 			const leftBlock = new TextBlock();
 			const leftPc = this.ends[L] as TNode;
 			leftPc.disown().elements.detach();
@@ -147,13 +154,14 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 		// Insert cursor at approx position in DOMTextNode
 		const cursorStyle = getComputedStyle(this.elements.firstElement);
-		const avgChWidth = (
-			this.elements.firstElement.getBoundingClientRect().width
-			- parseFloat(cursorStyle.paddingLeft)
-			- parseFloat(cursorStyle.paddingRight)
-		) / this.text().length;
-		const approxPosition =
-			Math.round((pageX - this.elements.firstElement.getBoundingClientRect().left) / avgChWidth);
+		const avgChWidth =
+			(this.elements.firstElement.getBoundingClientRect().width -
+				parseFloat(cursorStyle.paddingLeft) -
+				parseFloat(cursorStyle.paddingRight)) /
+			this.text().length;
+		const approxPosition = Math.round(
+			(pageX - this.elements.firstElement.getBoundingClientRect().left) / avgChWidth
+		);
 		if (approxPosition <= 0) cursor.insAtLeftEnd(this);
 		else if (approxPosition >= textPc.text().length) cursor.insAtRightEnd(this);
 		else cursor.insLeftOf(textPc.splitRight(approxPosition));
@@ -247,7 +255,9 @@ class TextPiece extends TNode {
 		this.textStr = text;
 	}
 
-	text() { return this.textStr; }
+	text() {
+		return this.textStr;
+	}
 
 	addToElements(dom: VNode | HTMLElement | Text) {
 		this.dom = dom as Text;
@@ -298,7 +308,9 @@ class TextPiece extends TNode {
 		return this.deleteTowards(dir, cursor);
 	}
 
-	latex() { return this.textStr; }
+	latex() {
+		return this.textStr;
+	}
 
 	deleteTowards(dir: Direction, cursor: Cursor) {
 		if (this.textStr.length > 1) {
@@ -345,31 +357,35 @@ class TextPiece extends TNode {
 	}
 }
 
-LatexCmds.text = LatexCmds.textnormal = LatexCmds.textrm = LatexCmds.textup = CharCmds['"'] = LatexCmds.textmd =
-	TextBlock;
+LatexCmds.text =
+	LatexCmds.textnormal =
+	LatexCmds.textrm =
+	LatexCmds.textup =
+	CharCmds['"'] =
+	LatexCmds.textmd =
+		TextBlock;
 
-const makeTextBlock = (latex: string, tagName: string, attrs: string) => class extends TextBlock {
-	htmlTemplate: string;
+const makeTextBlock = (latex: string, tagName: string, attrs: string) =>
+	class extends TextBlock {
+		htmlTemplate: string;
 
-	constructor() {
-		super();
-		this.ctrlSeq = latex;
-		this.htmlTemplate = `<${tagName} ${attrs}>&0</${tagName}>`;
-	}
-};
+		constructor() {
+			super();
+			this.ctrlSeq = latex;
+			this.htmlTemplate = `<${tagName} ${attrs}>&0</${tagName}>`;
+		}
+	};
 
-LatexCmds.em = LatexCmds.italic = LatexCmds.italics =
-	LatexCmds.emph = LatexCmds.textit = LatexCmds.textsl =
-	makeTextBlock('\\textit', 'i', 'class="mq-text-mode"');
-LatexCmds.strong = LatexCmds.bold = LatexCmds.textbf =
-	makeTextBlock('\\textbf', 'b', 'class="mq-text-mode"');
-LatexCmds.sf = LatexCmds.textsf =
-	makeTextBlock('\\textsf', 'span', 'class="mq-sans-serif mq-text-mode"');
-LatexCmds.tt = LatexCmds.texttt =
-	makeTextBlock('\\texttt', 'span', 'class="mq-monospace mq-text-mode"');
-LatexCmds.textsc =
-	makeTextBlock('\\textsc', 'span', 'style="font-variant:small-caps" class="mq-text-mode"');
-LatexCmds.uppercase =
-	makeTextBlock('\\uppercase', 'span', 'style="text-transform:uppercase" class="mq-text-mode"');
-LatexCmds.lowercase =
-	makeTextBlock('\\lowercase', 'span', 'style="text-transform:lowercase" class="mq-text-mode"');
+LatexCmds.em =
+	LatexCmds.italic =
+	LatexCmds.italics =
+	LatexCmds.emph =
+	LatexCmds.textit =
+	LatexCmds.textsl =
+		makeTextBlock('\\textit', 'i', 'class="mq-text-mode"');
+LatexCmds.strong = LatexCmds.bold = LatexCmds.textbf = makeTextBlock('\\textbf', 'b', 'class="mq-text-mode"');
+LatexCmds.sf = LatexCmds.textsf = makeTextBlock('\\textsf', 'span', 'class="mq-sans-serif mq-text-mode"');
+LatexCmds.tt = LatexCmds.texttt = makeTextBlock('\\texttt', 'span', 'class="mq-monospace mq-text-mode"');
+LatexCmds.textsc = makeTextBlock('\\textsc', 'span', 'style="font-variant:small-caps" class="mq-text-mode"');
+LatexCmds.uppercase = makeTextBlock('\\uppercase', 'span', 'style="text-transform:uppercase" class="mq-text-mode"');
+LatexCmds.lowercase = makeTextBlock('\\lowercase', 'span', 'style="text-transform:lowercase" class="mq-text-mode"');

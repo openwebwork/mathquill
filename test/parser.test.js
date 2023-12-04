@@ -102,7 +102,9 @@ suite('parser', () => {
 		});
 
 		test('with then', () => {
-			const parser = string('\\').then(() => string('y')).or(string('z'));
+			const parser = string('\\')
+				.then(() => string('y'))
+				.or(string('z'));
 
 			assert.equal(parser.parse('\\y'), 'y');
 			assert.equal(parser.parse('z'), 'z');
@@ -196,16 +198,13 @@ suite('parser', () => {
 		test('use Parser.succeed or Parser.fail to branch conditionally', () => {
 			let allowedOperator;
 
-			const parser =
-				string('x')
-					.then(string('+').or(string('*')))
-					.then((operator) => {
-						if (operator === allowedOperator) return succeed(operator);
-						else return fail(`expected ${allowedOperator}`);
-					})
-					.skip(string('y'))
-			;
-
+			const parser = string('x')
+				.then(string('+').or(string('*')))
+				.then((operator) => {
+					if (operator === allowedOperator) return succeed(operator);
+					else return fail(`expected ${allowedOperator}`);
+				})
+				.skip(string('y'));
 			allowedOperator = '+';
 			assert.equal(parser.parse('x+y'), '+');
 			assert.throws(() => parser.parse('x*y'));

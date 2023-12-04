@@ -5,15 +5,13 @@ import { Options } from 'src/options';
 import { Bracket, latexMathParser } from 'commands/mathElements';
 
 suite('latex', () => {
-	const options = new Options;
+	const options = new Options();
 
 	const assertParsesLatex = (str, latex) => {
 		if (typeof latex === 'undefined') latex = str;
 
 		const result = latexMathParser.parse(str).postOrder('finalizeTree', options).join('latex');
-		assert.equal(result, latex,
-			`parsing '${str}', got '${result}', expected '${latex}'`
-		);
+		assert.equal(result, latex, `parsing '${str}', got '${result}', expected '${latex}'`);
 	};
 
 	test('empty LaTeX', () => {
@@ -28,8 +26,10 @@ suite('latex', () => {
 	test('variables that can be mathbb', () => assertParsesLatex('PNZQRCH'));
 
 	test('can parse mathbb symbols', () => {
-		assertParsesLatex('\\P\\N\\Z\\Q\\R\\C\\H',
-			'\\mathbb{P}\\mathbb{N}\\mathbb{Z}\\mathbb{Q}\\mathbb{R}\\mathbb{C}\\mathbb{H}');
+		assertParsesLatex(
+			'\\P\\N\\Z\\Q\\R\\C\\H',
+			'\\mathbb{P}\\mathbb{N}\\mathbb{Z}\\mathbb{Q}\\mathbb{R}\\mathbb{C}\\mathbb{H}'
+		);
 		assertParsesLatex('\\mathbb{P}\\mathbb{N}\\mathbb{Z}\\mathbb{Q}\\mathbb{R}\\mathbb{C}\\mathbb{H}');
 	});
 
@@ -150,8 +150,7 @@ suite('latex', () => {
 
 	test('\\text', () => {
 		assertParsesLatex('\\text { lol! } ', '\\text{ lol! }');
-		assertParsesLatex('\\text{apples} \\ne \\text{oranges}',
-			'\\text{apples}\\ne \\text{oranges}');
+		assertParsesLatex('\\text{apples} \\ne \\text{oranges}', '\\text{apples}\\ne \\text{oranges}');
 		assertParsesLatex('\\text{}', '');
 	});
 
@@ -185,14 +184,18 @@ suite('latex', () => {
 			};
 
 			test('basic rendering', () => {
-				assertParsesLatex('x = \\frac{ -b \\pm \\sqrt{ b^2 - 4ac } }{ 2a }',
-					'x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}');
+				assertParsesLatex(
+					'x = \\frac{ -b \\pm \\sqrt{ b^2 - 4ac } }{ 2a }',
+					'x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}'
+				);
 			});
 
 			test('re-rendering', () => {
 				assertParsesLatex('a x^2 + b x + c = 0', 'ax^2+bx+c=0');
-				assertParsesLatex('x = \\frac{ -b \\pm \\sqrt{ b^2 - 4ac } }{ 2a }',
-					'x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}');
+				assertParsesLatex(
+					'x = \\frac{ -b \\pm \\sqrt{ b^2 - 4ac } }{ 2a }',
+					'x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}'
+				);
 			});
 
 			test('empty LaTeX', () => {
@@ -243,8 +246,10 @@ suite('latex', () => {
 
 					try {
 						assert.ok(rootEl.scrollLeft > previousScrollLeft, 'scrolls on write');
-						assert.ok(mqEl.getBoundingClientRect().right > cursor.element.getBoundingClientRect().right,
-							'cursor right end is inside the field');
+						assert.ok(
+							mqEl.getBoundingClientRect().right > cursor.element.getBoundingClientRect().right,
+							'cursor right end is inside the field'
+						);
 					} catch (error) {
 						done(error);
 						return;
@@ -314,7 +319,8 @@ suite('latex', () => {
 
 		test('optional inner field name', () => {
 			outer.latex(
-				'\\MathQuillMathField[mantissa]{}\\cdot\\MathQuillMathField[base]{}^{\\MathQuillMathField[exp]{}}');
+				'\\MathQuillMathField[mantissa]{}\\cdot\\MathQuillMathField[base]{}^{\\MathQuillMathField[exp]{}}'
+			);
 			assert.equal(outer.innerFields.length, 3);
 
 			const mantissa = outer.innerFields.get('mantissa');
@@ -338,28 +344,36 @@ suite('latex', () => {
 
 			outer.innerFields.get('m').makeStatic();
 			assert.equal(outer.innerFields.get('m').__controller.editable, false);
-			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
-				false);
+			assert.equal(
+				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				false
+			);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			//ensure no errors in making static field static
 			outer.innerFields.get('m').makeStatic();
 			assert.equal(outer.innerFields.get('m').__controller.editable, false);
-			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
-				false);
+			assert.equal(
+				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				false
+			);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			outer.innerFields.get('m').makeEditable();
 			assert.equal(outer.innerFields.get('m').__controller.editable, true);
-			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
-				true);
+			assert.equal(
+				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				true
+			);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 
 			//ensure no errors with making editable field editable
 			outer.innerFields.get('m').makeEditable();
 			assert.equal(outer.innerFields.get('m').__controller.editable, true);
-			assert.equal(outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
-				true);
+			assert.equal(
+				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				true
+			);
 			assert.equal(outer.innerFields.get('b').__controller.editable, true);
 		});
 
@@ -392,8 +406,10 @@ suite('latex', () => {
 		testCantParse('unmatched close brace', '}', ' 1 + 2 } ', '1 - {2 + 3} }', '\\sqrt{ x }} + \\sqrt{y}');
 		testCantParse('unmatched open brace', '{', '1 * { 2 + 3', '\\frac{ \\sqrt x }{{ \\sqrt y}');
 		testCantParse('unmatched \\left/\\right', '\\left ( 1 + 2 )', ' [ 1, 2 \\right ]');
-		testCantParse('langlerfish/ranglerfish (checking for confusion with langle/rangle)',
-			'\\left\\langlerfish 123\\right\\ranglerfish)');
+		testCantParse(
+			'langlerfish/ranglerfish (checking for confusion with langle/rangle)',
+			'\\left\\langlerfish 123\\right\\ranglerfish)'
+		);
 	});
 
 	suite('selectable span', () => {

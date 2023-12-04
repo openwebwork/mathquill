@@ -7,11 +7,15 @@ import type { HorizontalScroll } from 'services/scrollHoriz';
 import type { FocusBlurEvents } from 'services/focusBlur';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 
-export const TextAreaController =
-	<TBase extends Constructor<ControllerBase> &
-	ReturnType<typeof LatexControllerExtension> &
-	ReturnType<typeof HorizontalScroll> &
-	ReturnType<typeof FocusBlurEvents>>(Base: TBase) => class extends Base {
+export const TextAreaController = <
+	TBase extends Constructor<ControllerBase> &
+		ReturnType<typeof LatexControllerExtension> &
+		ReturnType<typeof HorizontalScroll> &
+		ReturnType<typeof FocusBlurEvents>
+>(
+	Base: TBase
+) =>
+	class extends Base {
 		textareaSelectionTimeout?: ReturnType<typeof setTimeout>;
 		selectFn?: (text: string) => void;
 
@@ -20,7 +24,7 @@ export const TextAreaController =
 			this.textareaSpan.classList.add('mq-textarea');
 			const textarea = this.options.substituteTextarea();
 			if (!textarea.nodeType) {
-				throw 'substituteTextarea() must return a DOM element, got ' + textarea.toString();
+				throw 'substituteTextarea() must return a DOM element';
 			}
 			this.textareaSpan.append(textarea);
 			this.textarea = textarea;
@@ -57,10 +61,16 @@ export const TextAreaController =
 			this.container.prepend(innerSpan);
 			this.blurred = true;
 
-			this.textarea?.addEventListener('cut', (e) => { e.stopPropagation(); e.preventDefault(); });
-			this.textarea?.addEventListener('paste', (e) => { e.stopPropagation(); e.preventDefault(); });
+			this.textarea?.addEventListener('cut', (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+			});
+			this.textarea?.addEventListener('paste', (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+			});
 			this.textarea?.addEventListener('copy', () => this.setTextareaSelection());
-			this.textarea?.addEventListener('focus', () => this.blurred = false);
+			this.textarea?.addEventListener('focus', () => (this.blurred = false));
 			this.textarea?.addEventListener('blur', () => {
 				if (this.cursor.selection) this.cursor.selection.clear();
 
@@ -95,8 +105,14 @@ export const TextAreaController =
 
 			this.blurred = true;
 
-			this.textarea?.addEventListener('cut', (e) => { e.stopPropagation(); e.preventDefault(); });
-			this.textarea?.addEventListener('paste', (e) => { e.stopPropagation(); e.preventDefault(); });
+			this.textarea?.addEventListener('cut', (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+			});
+			this.textarea?.addEventListener('paste', (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+			});
 		}
 
 		keystroke(key: string, evt: KeyboardEvent) {

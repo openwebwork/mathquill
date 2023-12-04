@@ -4,7 +4,7 @@ import { AbstractMathQuill, EditableField } from 'src/abstractFields';
 import { RootMathBlock, MathBlock } from 'commands/mathBlock';
 
 interface NamedObject {
-	name: string
+	name: string;
 }
 
 class Store<T extends NamedObject> {
@@ -36,8 +36,11 @@ export class StaticMath extends AbstractMathQuill {
 	constructor(ctrlr: Controller) {
 		super(ctrlr);
 
-		this.__controller.root.postOrder('registerInnerField',
-			this.innerFields = new Store<InnerMathField>(), InnerMathField);
+		this.__controller.root.postOrder(
+			'registerInnerField',
+			(this.innerFields = new Store<InnerMathField>()),
+			InnerMathField
+		);
 	}
 
 	__mathquillify() {
@@ -52,8 +55,11 @@ export class StaticMath extends AbstractMathQuill {
 	latex(latex?: string) {
 		const returned = super.latex(latex);
 		if (typeof latex !== 'undefined') {
-			this.__controller.root.postOrder('registerInnerField',
-				this.innerFields = new Store<InnerMathField>(), InnerMathField);
+			this.__controller.root.postOrder(
+				'registerInnerField',
+				(this.innerFields = new Store<InnerMathField>()),
+				InnerMathField
+			);
 		}
 		return returned;
 	}

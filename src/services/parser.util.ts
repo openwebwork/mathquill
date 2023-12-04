@@ -21,8 +21,9 @@ export class Parser {
 	}
 
 	parse<T>(stream?: string | number | boolean | object) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		return this.skip(Parser.eof)._(`${stream}`,
+		return this.skip(Parser.eof)._(
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+			`${stream}`,
 			(stream, result: T) => result,
 			(stream: string, message: string) => {
 				throw `Parse Error: ${message} at ${stream || 'EOF'}`;
@@ -41,14 +42,16 @@ export class Parser {
 
 	then<T>(next: Parser | ((result: T) => Parser) | (() => Parser)) {
 		return new Parser((stream, onSuccess, onFailure) =>
-			this._(stream,
+			this._(
+				stream,
 				(newStream, result: T) => {
-					const nextParser = next instanceof Parser ? next
-						: typeof next === 'function' ? next(result) : undefined;
+					const nextParser =
+						next instanceof Parser ? next : typeof next === 'function' ? next(result) : undefined;
 					pray('a parser is returned', nextParser instanceof Parser);
 					return (nextParser as Parser)._(newStream, onSuccess, onFailure);
 				},
-				onFailure)
+				onFailure
+			)
 		);
 	}
 
@@ -57,13 +60,17 @@ export class Parser {
 		return new Parser((stream, onSuccess) => {
 			const xs: Array<T> = [];
 
-			while (this._(stream,
-				(newStream, x: T) => {
-					stream = newStream;
-					xs.push(x);
-					return true;
-				},
-				() => false));
+			while (
+				this._(
+					stream,
+					(newStream, x: T) => {
+						stream = newStream;
+						xs.push(x);
+						return true;
+					},
+					() => false
+				)
+			);
 
 			return onSuccess(stream, xs);
 		});
@@ -76,7 +83,8 @@ export class Parser {
 
 			for (let i = 0; i < max && result; ++i) {
 				let failure;
-				result = this._(stream,
+				result = this._(
+					stream,
 					(newStream, x: T) => {
 						xs.push(x);
 						stream = newStream;
@@ -96,8 +104,12 @@ export class Parser {
 	}
 
 	// Higher-level combinators
-	result<T>(res: T) { return this.then(Parser.succeed(res)); }
-	atMost(n: number) { return this.times(0, n); }
+	result<T>(res: T) {
+		return this.then(Parser.succeed(res));
+	}
+	atMost(n: number) {
+		return this.times(0, n);
+	}
 	atLeast(n: number) {
 		return this.times(n).then((start: string) => this.many().map((end: string) => start.concat(end)));
 	}
