@@ -1,6 +1,7 @@
 // An abstraction layer wrapping the textarea in an object with methods to manipulate and listen to events.
 // This is an internal abstraction layer intented to handle cross-browser inconsistencies in event handlers.
 
+import { L } from 'src/constants';
 import type { Controller } from 'src/controller';
 
 export const saneKeyboardEvents = (() => {
@@ -85,7 +86,8 @@ export const saneKeyboardEvents = (() => {
 						text === ' ' &&
 						sendInputSpaceKeystroke &&
 						controller.options.spaceBehavesLikeTab &&
-						controller.cursor.depth() > 1
+						controller.cursor.depth() > 1 &&
+						controller.cursor[L]?.ctrlSeq !== ','
 					) {
 						handleKey('Spacebar', e as KeyboardEvent);
 						setTimeout(() => (textarea.value = ''));
