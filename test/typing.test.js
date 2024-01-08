@@ -1008,7 +1008,7 @@ suite('typing with auto-replaces', () => {
 			mq.keystroke('Backspace');
 			assertLatex('');
 		}
-		test('typing and backspacing <= and >=', () => {
+		test('typing and backspacing <=, >=, and !=', () => {
 			mq.typedText('<');
 			assertLatex('<');
 			mq.typedText('=');
@@ -1019,16 +1019,24 @@ suite('typing with auto-replaces', () => {
 			mq.typedText('=');
 			assertFullyFunctioningInequality('\\ge', '>');
 
-			mq.typedText('<<>>==>><<==');
-			assertLatex('<<>\\ge=>><\\le=');
+			mq.typedText('!');
+			assertLatex('!');
+			mq.typedText('=');
+			assertFullyFunctioningInequality('\\ne', '!');
+
+			mq.typedText('<<>>==>><<==!!==');
+			assertLatex('<<>\\ge=>><\\le=!\\ne=');
 		});
 
-		test('typing ≤ and ≥ chars directly', () => {
+		test('typing ≤, ≥, and ≠ chars directly', () => {
 			mq.typedText('≤');
 			assertFullyFunctioningInequality('\\le', '<');
 
 			mq.typedText('≥');
 			assertFullyFunctioningInequality('\\ge', '>');
+
+			mq.typedText('≠');
+			assertFullyFunctioningInequality('\\ne', '!');
 		});
 
 		suite('rendered from LaTeX', () => {
@@ -1038,14 +1046,20 @@ suite('typing with auto-replaces', () => {
 
 				mq.latex('\\ge');
 				assertFullyFunctioningInequality('\\ge', '>');
+
+				mq.latex('\\ne');
+				assertFullyFunctioningInequality('\\ne', '!');
 			});
 
-			test('≤ and ≥ chars', () => {
+			test('≤, ≥, and ≠ chars', () => {
 				mq.latex('≤');
 				assertFullyFunctioningInequality('\\le', '<');
 
 				mq.latex('≥');
 				assertFullyFunctioningInequality('\\ge', '>');
+
+				mq.latex('≠');
+				assertFullyFunctioningInequality('\\ne', '!');
 			});
 		});
 	});
