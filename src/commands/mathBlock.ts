@@ -79,7 +79,8 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 		if (
 			ctrlr.options.spaceBehavesLikeTab &&
 			ctrlr.cursor.depth() > 1 &&
-			(key === 'Spacebar' || key === 'Shift-Spacebar')
+			(key === 'Spacebar' || key === 'Shift-Spacebar') &&
+			ctrlr.cursor[L]?.ctrlSeq !== ','
 		) {
 			e.preventDefault();
 			ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
