@@ -1485,7 +1485,9 @@ export class MathFunction extends BracketMixin(MathCommand) {
 	}
 
 	text() {
-		return `${this.ctrlSeq.slice(1)}${this.blocks[0]?.text() ?? ''}(${this.blocks[1]?.text() ?? ''})`;
+		return `${this[L] instanceof Letter ? ' ' : ''}${this.ctrlSeq.slice(1)}${this.blocks[0]?.text() ?? ''}(${
+			this.blocks[1]?.text() ?? ''
+		})`;
 	}
 
 	parser() {
