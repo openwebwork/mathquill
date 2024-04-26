@@ -1328,6 +1328,9 @@ export class MathFunction extends BracketMixin(MathCommand) {
 	contentIndex = 1;
 
 	constructor(ctrlSeq: string) {
+		// Change asin into arcsin (and the same for the other "a" trig variants).
+		ctrlSeq = ctrlSeq.replace(/\\a(sin|cos|tan|sec|csc|cot)/, '\\arc$1');
+
 		super(ctrlSeq, undefined, [`${ctrlSeq.slice(1)}(`, ')']);
 
 		// If something is typed after the ghost, then solidify the end parenthesis.

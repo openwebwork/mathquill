@@ -260,7 +260,14 @@ LatexCmds.over = CharCmds['/'] = class extends FractionChooseCreateLeftOfMixin(F
 // Note that the non-standard variants of these are no longer supported.  Those are cosec, cotan, and ctg, and all of
 // the derived variants of those, as well as any of the ar${trigFunction}h derived variants.
 for (const trigFunction of ['sin', 'cos', 'tan', 'sec', 'csc', 'cot']) {
-	for (const trigVariant of [trigFunction, `arc${trigFunction}`, `${trigFunction}h`, `arc${trigFunction}h`]) {
+	for (const trigVariant of [
+		trigFunction,
+		`arc${trigFunction}`,
+		`a${trigFunction}`,
+		`${trigFunction}h`,
+		`arc${trigFunction}h`,
+		`a${trigFunction}h`
+	]) {
 		LatexCmds[trigVariant] = bindMixin(MathFunction, `\\${trigVariant}`);
 	}
 }
