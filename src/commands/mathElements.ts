@@ -654,12 +654,15 @@ export class Fraction extends MathCommand {
 			let needParens = false;
 			let numBlocks = 0;
 			let haveDigits = false;
+			let numPeriods = 0;
 			this.ends[dir]?.eachChild((child: TNode) => {
 				if (child instanceof Digit) haveDigits = true;
+				if (child instanceof VanillaSymbol && child.ctrlSeq === '.') ++numPeriods;
 
 				if (
 					!(
 						child instanceof Digit ||
+						(child instanceof VanillaSymbol && child.ctrlSeq === '.' && numPeriods < 2 && !numBlocks) ||
 						(child instanceof BinaryOperator && child.isUnary) ||
 						child instanceof SupSub
 					)
@@ -669,6 +672,7 @@ export class Fraction extends MathCommand {
 				if (
 					(haveDigits && numBlocks) ||
 					numBlocks > 1 ||
+					numPeriods > 1 ||
 					(child instanceof BinaryOperator && !child.isUnary) ||
 					('text' in LatexCmds && child instanceof LatexCmds.text) ||
 					child instanceof UpperLowerLimitCommand ||
@@ -702,12 +706,24 @@ export const supSubText = (prefix: string, block?: TNode) => {
 	let needParens = false;
 	let numBlocks = 0;
 	let haveDigits = false;
+	let numPeriods = 0;
 	block?.eachChild((child: TNode) => {
 		if (child instanceof Digit) haveDigits = true;
-		if (!(child instanceof Digit || (child instanceof BinaryOperator && child.isUnary))) ++numBlocks;
+		if (child instanceof VanillaSymbol && child.ctrlSeq === '.') ++numPeriods;
+
+		if (
+			!(
+				child instanceof Digit ||
+				(child instanceof VanillaSymbol && child.ctrlSeq === '.' && numPeriods < 2 && !numBlocks) ||
+				(child instanceof BinaryOperator && child.isUnary)
+			)
+		)
+			++numBlocks;
+
 		if (
 			(haveDigits && numBlocks) ||
 			numBlocks > 1 ||
+			numPeriods > 1 ||
 			(child instanceof BinaryOperator && !child.isUnary) ||
 			('text' in LatexCmds && child instanceof LatexCmds.text) ||
 			child instanceof UpperLowerLimitCommand ||
@@ -717,6 +733,7 @@ export const supSubText = (prefix: string, block?: TNode) => {
 		) {
 			needParens = true;
 		}
+
 		return !needParens;
 	});
 
