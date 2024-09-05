@@ -39,7 +39,7 @@ window.assert = (() => {
 		throws: (fn, message) => {
 			try {
 				fn();
-			} catch (e) {
+			} catch {
 				return;
 			}
 

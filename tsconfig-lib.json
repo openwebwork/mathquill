@@ -9,7 +9,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"declaration": true,
-		"target": "es6",
+		"target": "esnext",
 		"paths": {
 			"src/*": ["src/*"],
 			"tree/*": ["src/tree/*"],

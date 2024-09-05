@@ -74,6 +74,7 @@ module.exports = (env, argv) => {
 			}),
 			new MiniCssExtractPlugin(),
 			new ESLintPlugin({
+				configType: 'flat',
 				extensions: ['js', 'ts'],
 				emitError: process.env.NODE_ENV === 'production'
 			}),
@@ -109,7 +110,7 @@ module.exports = (env, argv) => {
 		config.entry['mathquill-basic'] = './src/indexBasic.ts';
 		config.resolve.alias.test = path.resolve(__dirname, 'test');
 		config.devServer = {
-			https: false,
+			server: { type: 'http' },
 			port: 9292,
 			static: [
 				path.join(__dirname, 'public'),

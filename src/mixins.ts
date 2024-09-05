@@ -26,7 +26,7 @@ export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base:
 	class extends Base {
 		moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 			const updownInto = updown && this[`${updown}Into`];
-			cursor.insAtDirEnd(dir === L ? R : L, updownInto || (this.ends[dir === L ? R : L] as TNode));
+			cursor.insAtDirEnd(dir === L ? R : L, updownInto || this.ends[dir === L ? R : L]!);
 		}
 
 		deleteTowards(dir: Direction, cursor: Cursor) {
@@ -42,7 +42,7 @@ export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base:
 
 // Use a CSS transform to scale the HTML elements,
 // or gracefully degrade to increasing the fontSize to match the vertical Y scaling factor.
-export const scale = (elts: Array<HTMLElement>, x: number, y: number) =>
+export const scale = (elts: HTMLElement[], x: number, y: number) =>
 	elts.forEach((elt) => (elt.style.transform = `scale(${x},${y})`));
 
 export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
@@ -54,7 +54,7 @@ export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase)
 			const contentStyle = this.content ? getComputedStyle(this.content) : undefined;
 			const boundingRect = this.content?.getBoundingClientRect();
 			const height = (boundingRect?.height ?? 0) / parseFloat(contentStyle?.fontSize ?? '1');
-			scale(this.delims as Array<HTMLElement>, Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
+			scale(this.delims as HTMLElement[], Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
 		};
 
 		addToElements(el: VNode | HTMLElement) {

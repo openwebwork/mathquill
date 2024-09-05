@@ -25,7 +25,7 @@ export class Fragment {
 		if (!el) return this;
 
 		for (; el !== this.ends[R]?.[R]; el = el?.[R]) {
-			if (yield_(el as TNode) === false) break;
+			if (yield_(el!) === false) break;
 		}
 
 		return this;
@@ -47,7 +47,7 @@ export class Fragment {
 		// once on the result. elements.add sorts the collection according to document order each time it is called, so
 		// building a collection by folding elements.add directly takes more than quadratic time in the number of
 		// elements.
-		const accum = this.fold<Array<Node>>([], (accum, el) => {
+		const accum = this.fold<Node[]>([], (accum, el) => {
 			accum.push(...el.elements.contents);
 			return accum;
 		});
@@ -83,7 +83,7 @@ export class Fragment {
 			parent.ends[R] = rightEnd;
 		}
 
-		(this.ends[R] as TNode)[R] = rightward;
+		this.ends[R]![R] = rightward;
 
 		this.each((el: TNode) => {
 			el[L] = leftward;
@@ -105,7 +105,7 @@ export class Fragment {
 		this.disowned = true;
 
 		const rightEnd = this.ends[R];
-		const parent = leftEnd.parent as TNode;
+		const parent = leftEnd.parent!;
 
 		prayWellFormed(parent, leftEnd[L], leftEnd);
 		prayWellFormed(parent, rightEnd, rightEnd?.[R]);

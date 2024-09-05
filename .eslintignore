@@ -1,6 +1,0 @@
-/dist
-/build
-/node_modules
-.babelrc
-package.json
-package-lock.json

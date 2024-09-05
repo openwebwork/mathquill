@@ -20,7 +20,7 @@ const prayOverridden = (name: string) => pray(`"${name}" should be overridden or
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
 export class TNode {
 	static id = 0;
-	static byId: { [key: number]: TNode } = {};
+	static byId: Record<number, TNode> = {};
 	static uniqueNodeId = () => ++TNode.id;
 
 	elements: VNode = new VNode();
@@ -105,7 +105,7 @@ export class TNode {
 		prayDirection(dir);
 		this.domify();
 		this.elements.insDirOf(dir, cursor.element);
-		cursor[dir] = this.adopt(cursor.parent as TNode, cursor[L], cursor[R]);
+		cursor[dir] = this.adopt(cursor.parent!, cursor[L], cursor[R]);
 		return this;
 	}
 
@@ -190,7 +190,7 @@ export class TNode {
 
 			// End -> move to the end of the current block.
 			case 'End':
-				ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent as TNode);
+				ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent!);
 				break;
 
 			// Ctrl-End -> move all the way to the end of the root block.
@@ -214,7 +214,7 @@ export class TNode {
 
 			// Home -> move to the start of the root block or the current block.
 			case 'Home':
-				ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent as TNode);
+				ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent!);
 				break;
 
 			// Ctrl-Home -> move to the start of the current block.

@@ -39,9 +39,9 @@ export class ControllerBase {
 
 	handle(name: keyof Handlers, dir?: Direction) {
 		const handlers = this.options.handlers;
-		if (handlers && handlers[name]) {
-			if (dir === L || dir === R) (handlers[name] as DirectionHandler)?.(dir, this.apiClass as AbstractMathQuill);
-			else (handlers[name] as Handler)?.(this.apiClass as AbstractMathQuill);
+		if (handlers?.[name]) {
+			if (dir === L || dir === R) (handlers[name] as DirectionHandler)?.(dir, this.apiClass!);
+			else (handlers[name] as Handler)?.(this.apiClass!);
 		}
 	}
 
@@ -70,7 +70,7 @@ export class Controller extends ExportText(
 		root.controller = this;
 	}
 
-	escapeDir(dir: Direction, key: string, e: KeyboardEvent) {
+	escapeDir(dir: Direction, _key: string, e: KeyboardEvent) {
 		prayDirection(dir);
 		const cursor = this.cursor;
 
@@ -88,10 +88,10 @@ export class Controller extends ExportText(
 	moveDir(dir: Direction) {
 		prayDirection(dir);
 		const cursor = this.cursor,
-			updown = cursor.options.leftRightIntoCmdGoes as 'up' | 'down' | undefined;
+			updown = cursor.options.leftRightIntoCmdGoes;
 
 		if (cursor.selection) {
-			cursor.insDirOf(dir, cursor.selection.ends[dir] as TNode);
+			cursor.insDirOf(dir, cursor.selection.ends[dir]!);
 		} else if (cursor[dir]) cursor[dir]?.moveTowards(dir, cursor, updown);
 		else cursor.parent?.moveOutOf(dir, cursor, updown);
 
@@ -118,14 +118,14 @@ export class Controller extends ExportText(
 		const cursor = this.notify('upDown').cursor;
 		const dirInto: keyof TNode = `${dir}Into`,
 			dirOutOf: keyof TNode = `${dir}OutOf`;
-		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R]?.[dirInto] as TNode);
-		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L]?.[dirInto] as TNode);
+		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R]?.[dirInto]);
+		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L]?.[dirInto]);
 		else {
 			cursor.parent?.bubble((ancestor: TNode) => {
 				if (ancestor[dirOutOf]) {
 					if (typeof ancestor[dirOutOf] === 'function')
 						(ancestor[dirOutOf] as (cursor: Cursor) => void)(cursor);
-					if (ancestor[dirOutOf] instanceof TNode) cursor.jumpUpDown(ancestor, ancestor[dirOutOf] as TNode);
+					if (ancestor[dirOutOf] instanceof TNode) cursor.jumpUpDown(ancestor, ancestor[dirOutOf]);
 					if (ancestor[dirOutOf] !== true) return false;
 				}
 			});
@@ -172,7 +172,7 @@ export class Controller extends ExportText(
 		} else {
 			new Fragment(cursor[R], cursor.parent?.ends[R]).remove();
 		}
-		cursor.insAtDirEnd(dir, cursor.parent as TNode);
+		cursor.insAtDirEnd(dir, cursor.parent!);
 
 		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
 		cursor[R]?.postOrder('contactWeld', cursor);
@@ -210,7 +210,7 @@ export class Controller extends ExportText(
 		} else cursor.parent?.selectOutOf(dir, cursor);
 
 		cursor.clearSelection();
-		cursor.select() || cursor.show();
+		if (!cursor.select()) cursor.show();
 	}
 
 	selectLeft() {

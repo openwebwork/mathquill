@@ -198,7 +198,6 @@ suite('saneKeyboardEvents', () => {
 
 		test('blur in keystroke handler', function (done) {
 			if (!document.hasFocus()) {
-				// eslint-disable-next-line no-console
 				console.warn(
 					'The test "blur in keystroke handler" needs the document to have ' +
 						'focus. Only when the document has focus does .select() on an ' +

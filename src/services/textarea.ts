@@ -88,7 +88,7 @@ export const TextAreaController = <
 		}
 
 		editablesTextareaEvents() {
-			const { select } = saneKeyboardEvents(this.textarea as HTMLTextAreaElement, this as unknown as Controller);
+			const { select } = saneKeyboardEvents(this.textarea!, this as unknown as Controller);
 			this.selectFn = (text) => select(text);
 			this.container.prepend(this.textareaSpan as HTMLElement);
 			this.focusBlurEvents();
@@ -146,7 +146,7 @@ export const TextAreaController = <
 			//  only gets in the way by \text{}-ifying pasted stuff and $-ifying
 			//  cut/copied LaTeX)
 			if (this.options.statelessClipboard) {
-				if (text.slice(0, 1) === '$' && text.slice(-1) === '$') {
+				if (text.startsWith('$') && text.endsWith('$')) {
 					text = text.slice(1, -1);
 				} else {
 					text = `\\text{${text}}`;

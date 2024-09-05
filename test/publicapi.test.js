@@ -965,8 +965,8 @@ suite('Public API', () => {
 
 			mq.typedText('mmmm/mmmm');
 			const pos = mq.el().getBoundingClientRect();
-			const mqx = pos.left + window.pageXOffset;
-			const mqy = pos.top + window.pageYOffset;
+			const mqx = pos.left + window.scrollX;
+			const mqy = pos.top + window.scrollY;
 
 			mq.el().scrollIntoView();
 

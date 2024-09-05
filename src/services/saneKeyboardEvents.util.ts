@@ -5,7 +5,7 @@ import { L } from 'src/constants';
 import type { Controller } from 'src/controller';
 
 export const saneKeyboardEvents = (() => {
-	const KEY_TO_MQ_VALUE: { [key: string]: string } = {
+	const KEY_TO_MQ_VALUE: Record<string, string> = {
 		ArrowRight: 'Right',
 		ArrowLeft: 'Left',
 		ArrowDown: 'Down',
@@ -16,7 +16,7 @@ export const saneKeyboardEvents = (() => {
 
 	// To the extent possible, create a normalized string representation of the key combo.
 	const stringify = (evt: KeyboardEvent) => {
-		const key = isLowercaseAlphaCharacter(evt.key) ? evt.key.toUpperCase() : KEY_TO_MQ_VALUE[evt.key] ?? evt.key;
+		const key = isLowercaseAlphaCharacter(evt.key) ? evt.key.toUpperCase() : (KEY_TO_MQ_VALUE[evt.key] ?? evt.key);
 
 		const modifiers = [];
 

@@ -48,7 +48,7 @@ for (const fn in new Options().autoOperatorNames) {
 }
 
 LatexCmds.operatorname = class extends MathCommand {
-	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: Array<string>) {
+	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: string[]) {
 		super(ctrlSeq, htmlTemplate, textTemplate);
 		this.createLeftOf = noop;
 	}
@@ -208,7 +208,7 @@ class LatexFragment extends MathCommand {
 
 	createLeftOf(cursor: Cursor) {
 		const block: MathCommand = latexMathParser.parse(this.latex());
-		block.children().adopt(cursor.parent as TNode, cursor[L], cursor[R]);
+		block.children().adopt(cursor.parent!, cursor[L], cursor[R]);
 		cursor[L] = block.ends[R];
 		cursor.element.before(...block.domify().contents);
 		block.finalizeInsert(cursor.options, cursor);
@@ -261,7 +261,7 @@ class PlusMinus extends BinaryOperator {
 		this.siblingCreated = this.siblingDeleted = (opts: Options, dir?: Direction) => this.contactWeld(opts, dir);
 	}
 
-	contactWeld(opts: Options, dir?: Direction) {
+	contactWeld(_opts: Options, dir?: Direction) {
 		const isUnary = (node: TNode): boolean => {
 			if (node[L]) {
 				// If the left sibling is a binary operator or a separator (comma, semicolon, colon)
@@ -270,7 +270,7 @@ class PlusMinus extends BinaryOperator {
 				if (node[L] instanceof BinaryOperator || /^[,;:([]$/.test((node[L] as BinaryOperator).ctrlSeq)) {
 					return true;
 				}
-			} else if (node.parent && node.parent.parent && node.parent.parent.isStyleBlock()) {
+			} else if (node.parent?.parent?.isStyleBlock()) {
 				// If we are in a style block at the leftmost edge, determine unary/binary based on the style block.
 				// This allows style blocks to be transparent for unary/binary purposes.
 				return isUnary(node.parent.parent);

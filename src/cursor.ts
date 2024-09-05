@@ -15,7 +15,7 @@ import { MathBlock } from 'commands/mathBlock';
 export class Cursor extends Point {
 	options: Options;
 	element: HTMLElement = document.createElement('span');
-	upDownCache: { [key: number]: Point } = {};
+	upDownCache: Record<number, Point> = {};
 	intervalId?: ReturnType<typeof setInterval>;
 	selection?: Selection;
 	anticursor?: Point;
@@ -43,7 +43,7 @@ export class Cursor extends Point {
 				if (this.selection && this.selection.ends[L]?.[L] === this[L])
 					this.selection.elements.first.before(this.element);
 				else this[R].elements.first.before(this.element);
-			} else (this.parent as TNode).elements.firstElement.append(this.element);
+			} else this.parent!.elements.firstElement.append(this.element);
 			this.parent?.focus();
 		}
 		this.intervalId = setInterval(this.blink, 500);
@@ -59,7 +59,7 @@ export class Cursor extends Point {
 	}
 
 	withDirInsertAt(dir: Direction, parent: TNode, withDir?: TNode, oppDir?: TNode) {
-		const oldParent = this.parent as TNode;
+		const oldParent = this.parent!;
 		this.parent = parent;
 		this[dir] = withDir;
 		this[dir === L ? R : L] = oppDir;
@@ -73,7 +73,7 @@ export class Cursor extends Point {
 		if (dir === L) el.elements.first.before(this.element);
 		else el.elements.last.after(this.element);
 
-		this.withDirInsertAt(dir, el.parent as TNode, el[dir], el);
+		this.withDirInsertAt(dir, el.parent!, el[dir], el);
 		this.parent?.elements.addClass('mq-has-cursor');
 		return this;
 	}
@@ -114,7 +114,8 @@ export class Cursor extends Point {
 		this.upDownCache[from.id] = Point.copy(this);
 		const cached = this.upDownCache[to.id];
 		if (cached) {
-			cached[R] ? this.insLeftOf(cached[R]) : this.insAtRightEnd(cached.parent as TNode);
+			if (cached[R]) this.insLeftOf(cached[R]);
+			else this.insAtRightEnd(cached.parent!);
 		} else {
 			to.seek(this.offset().left, this);
 		}
@@ -125,8 +126,8 @@ export class Cursor extends Point {
 	}
 
 	unwrapGramp() {
-		const gramp = this.parent?.parent as TNode;
-		const greatgramp = gramp.parent as TNode;
+		const gramp = this.parent!.parent!;
+		const greatgramp = gramp.parent!;
 		const rightward = gramp[R];
 
 		let leftward = gramp[L];
@@ -185,7 +186,7 @@ export class Cursor extends Point {
 		if (this[L] === this.anticursor?.[L] && this.parent === this.anticursor?.parent) return false;
 
 		pray('selection well formed', !!this.anticursor && !!this.anticursor.ancestors);
-		if (!this.anticursor || !this.anticursor.ancestors) return false;
+		if (!this.anticursor?.ancestors) return false;
 
 		// Find the lowest common ancestor (`lca`), and the ancestor of the cursor
 		// whose parent is the LCA (which will be an end of the selection fragment).
@@ -247,7 +248,7 @@ export class Cursor extends Point {
 		if (rightEnd instanceof Point) rightEnd = rightEnd[L];
 
 		this.hide().selection = lca?.selectChildren(leftEnd, rightEnd);
-		this.insDirOf(dir, this.selection?.ends[dir] as TNode);
+		this.insDirOf(dir, this.selection!.ends[dir]!);
 		this.selectionChanged?.();
 		return true;
 	}
