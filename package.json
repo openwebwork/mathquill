@@ -8,17 +8,22 @@
 		"url": "git+https://github.com/openwebwork/mathquill.git"
 	},
 	"homepage": "https://github.com/openwebwork/mathquill",
-	"main": "lib/publicapi.js",
-	"types": "lib/publicapi.d.ts",
+	"main": "dist/index.cjs",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.mts",
+	"exports": {
+		"import": "./dist/index.mjs",
+		"require": "./dist/index.cjs"
+	},
 	"files": [
-		"lib/**/*",
 		"dist/**/*"
 	],
 	"scripts": {
-		"build:lib": "tsc --project tsconfig-lib.json && tsconfig-replace-paths -p tsconfig-lib.json -s ./src -o ./lib",
+		"build:lib": "NODE_OPTIONS='--no-warnings=ExperimentalWarning' rollup -c",
 		"build:dev": "webpack --mode development",
 		"build:all-js": "BUILD_BASIC=true webpack --mode production",
-		"build": "webpack --mode production",
+		"build:web": "webpack --mode production",
+		"build": "npm run build:web && npm run build:lib",
 		"serve": "webpack serve --mode development",
 		"lint:eslint": "eslint ./src ./test ./public --fix",
 		"lint:stylelint": "stylelint \"./src/**/*.less\" \"./public/**/*.css\" \"./public/**/*.html\" --fix",
@@ -41,12 +46,14 @@
 		"mocha": "^10.7.3",
 		"postcss-less": "^6.0.0",
 		"prettier": "^3.3.3",
+		"rollup": "^4.21.2",
+		"rollup-plugin-dts": "^6.1.1",
+		"rollup-plugin-ts": "^3.4.5",
 		"stylelint": "^16.9.0",
 		"stylelint-config-html": "^1.1.0",
 		"stylelint-config-standard": "^36.0.1",
 		"stylelint-webpack-plugin": "^5.0.1",
 		"ts-loader": "^9.5.1",
-		"tsconfig-replace-paths": "^0.0.14",
 		"typescript": "^5.5.4",
 		"typescript-eslint": "^8.4.0",
 		"webpack": "^5.94.0",
