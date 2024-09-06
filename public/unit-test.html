@@ -1,82 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-<head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+		<!-- mocha test framework -->
+		<script src="mocha/mocha.js"></script>
+		<link rel="stylesheet" href="mocha/mocha.css">
 
-	<!-- mocha test framework -->
-	<script src="mocha/mocha.js"></script>
-	<link rel="stylesheet" href="mocha/mocha.css" />
+		<!-- home-grown assertions -->
+		<script src="support/assert.js"></script>
 
-	<!-- home-grown assertions -->
-	<script src="support/assert.js"></script>
+		<!-- configure mocha and chai -->
+		<script>
+			const post_xunit_to = new URLSearchParams(location.search).get('post_xunit_to');
+			mocha.setup({ ui: 'tdd', reporter: post_xunit_to ? 'xunit' : 'html' });
+			let xunit = '';
+			Mocha.process.stdout.write = (line) => (xunit += line);
+		</script>
 
-	<!-- configure mocha and chai -->
-	<script>
-		const post_xunit_to = new URLSearchParams(location.search).get('post_xunit_to');
-		mocha.setup({ui: 'tdd', reporter: post_xunit_to ? 'xunit' : 'html'});
-		let xunit = '';
-		Mocha.process.stdout.write = (line) => (xunit += line);
-	</script>
+		<!-- include the library with the tests inlined -->
+		<script id="mathquill" src="mathquill.test.js"></script>
 
-	<!-- include the library with the tests inlined -->
-	<script id="mathquill" src="mathquill.test.js"></script>
+		<!-- include MathQuill-basic -->
+		<link rel="stylesheet" href="mathquill.css">
+		<script src="mathquill-basic.js"></script>
+		<script>
+			MQBasic = MathQuill.noConflict().getInterface();
+			MQ = MathQuill.getInterface();
+		</script>
+	</head>
 
-	<!-- include MathQuill-basic -->
-	<link rel="stylesheet" href="mathquill.css" />
-	<script src="mathquill-basic.js"></script>
-	<script>
-		MQBasic = MathQuill.noConflict().getInterface();
-		MQ = MathQuill.getInterface();
-	</script>
-</head>
+	<body>
+		<h1>Unit Tests</h1>
+		<div id="mocha"></div>
+		<div id="mock"></div>
 
-<body>
-	<h1>Unit Tests</h1>
-	<div id="mocha"></div>
-	<div id="mock"></div>
-
-	<script>
-		teardown(() => {
-			const mock = document.getElementById('mock');
-			while (mock.firstChild) mock.firstChild.remove();
-		});
-		const runner = mocha.run();
-
-		if (post_xunit_to) {
-			// the following is based on
-			// https://github.com/saucelabs-sample-scripts/JavaScript/blob/
-			// 4946c5cf0ab7325dce5562881dba7c28e30989e5/reporting_mocha.js
-			const failedTests = [];
-			runner.on('fail', (test, err) => {
-				const flattenTitles = (test) => {
-					const titles = [];
-					while (test.parent.title) {
-						titles.push(test.parent.title);
-						test = test.parent;
-					}
-					return titles.reverse();
-				};
-
-				failedTests.push({
-					name: test.title,
-					result: false,
-					message: err.message,
-					stack: err.stack,
-					titles: flattenTitles(test),
-				});
+		<script>
+			teardown(() => {
+				const mock = document.getElementById('mock');
+				while (mock.firstChild) mock.firstChild.remove();
 			});
+			const runner = mocha.run();
 
-			runner.on('end', () => {
-				$.post(post_xunit_to, xunit).complete(() => {
-					window.mochaResults = runner.stats;
-					window.mochaResults.reports = failedTests;
+			if (post_xunit_to) {
+				// the following is based on
+				// https://github.com/saucelabs-sample-scripts/JavaScript/blob/
+				// 4946c5cf0ab7325dce5562881dba7c28e30989e5/reporting_mocha.js
+				const failedTests = [];
+				runner.on('fail', (test, err) => {
+					const flattenTitles = (test) => {
+						const titles = [];
+						while (test.parent.title) {
+							titles.push(test.parent.title);
+							test = test.parent;
+						}
+						return titles.reverse();
+					};
+
+					failedTests.push({
+						name: test.title,
+						result: false,
+						message: err.message,
+						stack: err.stack,
+						titles: flattenTitles(test)
+					});
 				});
-			});
-		}
-	</script>
-</body>
 
+				runner.on('end', () => {
+					$.post(post_xunit_to, xunit).complete(() => {
+						window.mochaResults = runner.stats;
+						window.mochaResults.reports = failedTests;
+					});
+				});
+			}
+		</script>
+	</body>
 </html>

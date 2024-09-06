@@ -18,8 +18,8 @@ const MQ = MathQuill.getInterface();
 const htmlElement = document.getElementById('some_id');
 
 const config = {
-  handlers: { edit: () => { ... } },
-  restrictMismatchedBrackets: true
+    handlers: { edit: () => { ... } },
+    restrictMismatchedBrackets: true
 };
 
 const mathField = MQ.MathField(htmlElement, config);
@@ -37,7 +37,7 @@ Most documentation for MathQuill is located on [ReadTheDocs](http://docs.mathqui
 
 ## Building MathQuill
 
-To build mathquill, you will need a node.js installation.  You can obtain it from [nodejs](http://nodejs.org/).
+To build mathquill, you will need a node.js installation. You can obtain it from [nodejs](http://nodejs.org/).
 
 To build MathQuill run:
 

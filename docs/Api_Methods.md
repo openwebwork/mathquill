@@ -3,7 +3,7 @@
 To use the MathQuill API, first get the interface:
 
 ```js
-var MQ = MathQuill.getInterface();
+const MQ = MathQuill.getInterface();
 ```
 
 By default, MathQuill overwrites the global `MathQuill` variable when loaded. If you do not want this behavior, you can
@@ -13,11 +13,11 @@ use `.noConflict()` ([similar to `jQuery.noConflict()`](http://api.jquery.com/jQ
 <script src="/path/to/first-mathquill.js"></script>
 <script src="/path/to/second-mathquill.js"></script>
 <script>
-  const secondMQ = MathQuill.noConflict().getInterface();
-  secondMQ.MathField(...);
+    const secondMQ = MathQuill.noConflict().getInterface();
+    secondMQ.MathField(...);
 
-  const firstMQ = MathQuill.getInterface();
-  firstMQ.MathField(...);
+    const firstMQ = MathQuill.getInterface();
+    firstMQ.MathField(...);
 </script>
 ```
 
@@ -49,9 +49,9 @@ If the given element is already an editable math field, this will return a new e
 ```html
 <span id="fill-in-the-blank">\sqrt{ \MathQuillMathField{x}^2 + \MathQuillMathField{y}^2 }</span>
 <script>
-  var fillInTheBlank = MQ.StaticMath(document.getElementById("fill-in-the-blank"));
-  fillInTheBlank.innerFields[0].latex(); // => 'x'
-  fillInTheBlank.innerFields[1].latex(); // => 'y'
+    const fillInTheBlank = MQ.StaticMath(document.getElementById('fill-in-the-blank'));
+    fillInTheBlank.innerFields[0].latex(); // => 'x'
+    fillInTheBlank.innerFields[1].latex(); // => 'y'
 </script>
 ```
 
@@ -109,7 +109,7 @@ Similarly, API objects for the same MathQuill instance share a `.data` object (w
 
 ```js
 MQ(mathFieldSpan).data === mathField.data; // => true
-mathField.data.foo = "bar";
+mathField.data.foo = 'bar';
 MQ(mathFieldSpan).data.foo; // => 'bar'
 ```
 
@@ -136,8 +136,8 @@ MathQuill uses computed dimensions, so if they change (because an element was ma
 visible HTML DOM, or the font size changed), then you'll need to tell MathQuill to recompute:
 
 ```js
-var mathFieldSpan = $("<span>\\sqrt{2}</span>");
-var mathField = MQ.MathField(mathFieldSpan[0]);
+const mathFieldSpan = $('<span>\\sqrt{2}</span>');
+const mathField = MQ.MathField(mathFieldSpan[0]);
 mathFieldSpan.appendTo(document.body);
 mathField.reflow();
 ```
@@ -172,7 +172,7 @@ Write the given LaTeX at the current cursor position. If the cursor does not hav
 cursor occupied in the editable field.
 
 ```js
-mathField.write(" - 1"); // writes ' - 1' to mathField at the cursor position
+mathField.write(' - 1'); // writes ' - 1' to mathField at the cursor position
 ```
 
 ### .cmd(latex_string)
@@ -181,7 +181,7 @@ Enter a LaTeX command at the current cursor position or with the current selecti
 it writes it to last position the cursor occupied in the editable field.
 
 ```js
-mathField.cmd("\\sqrt"); // writes a square root command at the cursor position
+mathField.cmd('\\sqrt'); // writes a square root command at the cursor position
 ```
 
 ### .select()
@@ -206,12 +206,12 @@ These are constants, where `MQ.L === -MQ.R` and vice versa. This function may be
 [`moveOutOf` handler](Config.md#outof-handlers).
 
 ```js
-var config = {
-  handlers: {
-    moveOutOf: function(direction) {
-      nextMathFieldOver.movetoDirEnd(-direction);
+const config = {
+    handlers: {
+        moveOutOf: function(direction) {
+          nextMathFieldOver.movetoDirEnd(-direction);
+        }
     }
-  }
 });
 ```
 
@@ -221,7 +221,7 @@ Simulates keystrokes given a string like `"Ctrl-Home Del"`, a whitespace-delimit
 [key inputs](http://www.w3.org/TR/2012/WD-DOM-Level-3-Events-20120614/#fixed-virtual-key-codes) with optional prefixes.
 
 ```js
-mathField.keystroke("Shift-Left"); // Selects character before the current cursor position
+mathField.keystroke('Shift-Left'); // Selects character before the current cursor position
 ```
 
 ### .typedText(text)
@@ -231,7 +231,7 @@ what would happen if a user were typing the text in.
 
 ```js
 // Types part of the demo from mathquill.com without delays between keystrokes
-mathField.typedText("x=-b\\pm \\sqrt b^2 -4ac");
+mathField.typedText('x=-b\\pm \\sqrt b^2 -4ac');
 ```
 
 ### .config(new_config)
@@ -244,9 +244,9 @@ Insert a custom embedded element at the given coordinates, where `options` is an
 
 ```js
 {
-  htmlString: '<span class="custom-embed"></span>',
-  text: function() { return 'custom_embed'; },
-  latex: function() { return '\\customEmbed'; }
+    htmlString: '<span class="custom-embed"></span>',
+    text: function() { return 'custom_embed'; },
+    latex: function() { return '\\customEmbed'; }
 }
 ```
 

@@ -1,299 +1,298 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+	<head>
+		<title>MathQuill Inputs Test</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-<head>
-	<title>MathQuill Inputs Test</title>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+		<link rel="stylesheet" href="mathquill.css">
+		<script src="mathquill.js"></script>
 
-	<link rel="stylesheet" href="mathquill.css" />
-	<script src="mathquill.js"></script>
+		<style>
+			.rule-container {
+				display: flex;
+				gap: 0.5rem;
+				align-items: center;
+				margin: 20px;
+				margin-bottom: 0.5rem;
+			}
 
-	<style>
-		.rule-container {
-			display: flex;
-			gap: 0.5rem;
-			align-items: center;
-			margin: 20px;
-			margin-bottom: 0.5rem;
-		}
+			.options-container {
+				display: flex;
+				gap: 0.25rem;
+				flex-direction: column;
+				margin: 20px;
+				margin-bottom: 0.5rem;
+			}
 
-		.options-container {
-			display: flex;
-			gap: 0.25rem;
-			flex-direction: column;
-			margin: 20px;
-			margin-bottom: 0.5rem;
-		}
+			.auto-options {
+				display: flex;
+				flex-direction: column;
+				gap: 0.1rem;
+				max-width: 150px;
+			}
 
-		.auto-options {
-			display: flex;
-			flex-direction: column;
-			gap: 0.1rem;
-			max-width: 150px;
-		}
+			input[type='text'] {
+				padding: 4px 6px 2px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				background-color: white;
+				font-size: 16px;
+				font-weight: normal;
+				font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+				line-height: 22px;
+			}
 
-		input[type="text"] {
-			padding: 4px 6px 2px;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-			background-color: white;
-			font-size: 16px;
-			font-weight: normal;
-			font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-			line-height: 22px;
-		}
+			input[type='text']:focus {
+				border-color: rgb(82 168 236 / 80%);
+				outline: 0;
+				box-shadow:
+					inset 0 1px 1px rgb(0 0 0 / 7.5%),
+					0 0 0 0.2rem rgb(82 168 236 / 60%);
+			}
 
-		input[type="text"]:focus {
-			border-color: rgb(82 168 236 / 80%);
-			outline: 0;
-			box-shadow: inset 0 1px 1px rgb(0 0 0 / 7.5%), 0 0 0 0.2rem rgb(82 168 236 / 60%);
-		}
+			span[id^='mq-answer'] {
+				direction: ltr;
+				padding: 4px 5px 2px;
+				border-radius: 4px !important;
+				background-color: white;
+				margin-right: 0;
+				margin-left: 0;
+			}
+		</style>
+	</head>
 
-		span[id^="mq-answer"] {
-			direction: ltr;
-			padding: 4px 5px 2px;
-			border-radius: 4px !important;
-			background-color: white;
-			margin-right: 0;
-			margin-left: 0;
-		}
-	</style>
-</head>
+	<body>
+		<div class="rule-container">
+			<input id="AnSwEr0001" type="text">
+			<span id="mq-answer-AnSwEr0001"></span>
+			<input id="MaThQuIlL_AnSwEr0001" type="text" value="">
+		</div>
 
-<body>
-	<div class="rule-container">
-		<input id="AnSwEr0001" type="text" />
-		<span id="mq-answer-AnSwEr0001"></span>
-		<input id="MaThQuIlL_AnSwEr0001" type="text" value="" />
-	</div>
+		<div class="options-container"></div>
 
-	<div class="options-container"></div>
+		<script>
+			(() => {
+				const MQ = MathQuill.getInterface();
+				const mq_answer_AnSwEr0001 = document.getElementById('mq-answer-AnSwEr0001');
 
-	<script>
-		(() => {
-			const MQ = MathQuill.getInterface();
-			const mq_answer_AnSwEr0001 = document.getElementById('mq-answer-AnSwEr0001');
+				const cfg = {
+					spaceBehavesLikeTab: true,
+					leftRightIntoCmdGoes: 'up',
+					restrictMismatchedBrackets: true,
+					sumStartsWithNEquals: true,
+					supSubsRequireOperand: true,
+					autoSubscriptNumerals: false,
+					autoCommands:
+						'pi sqrt root vert inf union abs deg AA angstrom ln log exp ' +
+						['sin', 'cos', 'tan', 'sec', 'csc', 'cot']
+							.reduce((a, t) => a.concat([t, `arc${t}`, `a${t}`]), [])
+							.join(' '),
+					rootsAreExponents: true,
+					logsChangeBase: true
+				};
 
-			const cfg = {
-				spaceBehavesLikeTab: true,
-				leftRightIntoCmdGoes: 'up',
-				restrictMismatchedBrackets: true,
-				sumStartsWithNEquals: true,
-				supSubsRequireOperand: true,
-				autoSubscriptNumerals: false,
-				autoCommands:
-					'pi sqrt root vert inf union abs deg AA angstrom ln log exp ' +
-					['sin', 'cos', 'tan', 'sec', 'csc', 'cot']
-						.reduce((a, t) => a.concat([t, `arc${t}`, `a${t}`]), [])
-						.join(' '),
-				rootsAreExponents: true,
-				logsChangeBase: true
-			};
-
-			const mathField = MQ.MathField(mq_answer_AnSwEr0001, {
-				...cfg,
-				maxDepth: 10,
-				handlers: {
-					edit: (mq) => {
-						if (mq.text() !== '') {
-							AnSwEr0001.value = mq.text();
-							MaThQuIlL_AnSwEr0001.value = mq.latex();
-						} else {
-							AnSwEr0001.value = '';
-							MaThQuIlL_AnSwEr0001.value = '';
+				const mathField = MQ.MathField(mq_answer_AnSwEr0001, {
+					...cfg,
+					maxDepth: 10,
+					handlers: {
+						edit: (mq) => {
+							if (mq.text() !== '') {
+								AnSwEr0001.value = mq.text();
+								MaThQuIlL_AnSwEr0001.value = mq.latex();
+							} else {
+								AnSwEr0001.value = '';
+								MaThQuIlL_AnSwEr0001.value = '';
+							}
 						}
-					},
+					}
+				});
+				mathField.latex(MaThQuIlL_AnSwEr0001.value);
+				mathField.moveToLeftEnd();
+				mathField.blur();
+
+				const optionsContainer = document.querySelector('.options-container');
+
+				for (const option in cfg) {
+					const optionDiv = document.createElement('div');
+					if (typeof cfg[option] === 'boolean') {
+						const input = document.createElement('input');
+						input.type = 'checkbox';
+						input.id = option;
+						if (cfg[option]) input.checked = true;
+						const label = document.createElement('label');
+						label.setAttribute('for', option);
+						label.textContent = `Enable ${option}`;
+						optionDiv.append(input, label);
+						optionsContainer.append(optionDiv);
+						input.addEventListener('change', () => {
+							mathField.options[option] = input.checked;
+							mathField.reflow();
+						});
+					}
 				}
-			});
-			mathField.latex(MaThQuIlL_AnSwEr0001.value);
-			mathField.moveToLeftEnd();
-			mathField.blur();
 
-			const optionsContainer = document.querySelector('.options-container');
-
-			for (const option in cfg) {
-				const optionDiv = document.createElement('div');
-				if (typeof cfg[option] === 'boolean') {
-					const input = document.createElement('input');
-					input.type = 'checkbox';
-					input.id = option;
-					if (cfg[option]) input.checked = true;
-					const label = document.createElement('label');
-					label.setAttribute('for', option);
-					label.textContent = `Enable ${option}`;
-					optionDiv.append(input, label);
+				// Special case for leftRightIntoCmdGoes
+				{
+					const optionDiv = document.createElement('div');
+					const upInput = document.createElement('input');
+					upInput.type = 'radio';
+					upInput.name = 'leftRightIntoCmdGoes';
+					upInput.id = 'leftRightIntoCmdGoes_up';
+					upInput.checked = true;
+					const upLabel = document.createElement('label');
+					upLabel.setAttribute('for', 'leftRightIntoCmdGoes_up');
+					upLabel.textContent = 'up';
+					const downInput = document.createElement('input');
+					downInput.type = 'radio';
+					downInput.name = 'leftRightIntoCmdGoes';
+					downInput.id = 'leftRightIntoCmdGoes_down';
+					const downLabel = document.createElement('label');
+					downLabel.setAttribute('for', 'leftRightIntoCmdGoes_down');
+					downLabel.textContent = 'down';
+					optionDiv.append('leftRightIntoCmdGoes: ', upInput, upLabel, downInput, downLabel);
 					optionsContainer.append(optionDiv);
-					input.addEventListener('change', () => {
-						mathField.options[option] = input.checked;
-						mathField.reflow();
+					upInput.addEventListener('click', () => (mathField.options.leftRightIntoCmdGoes = 'up'));
+					downInput.addEventListener('click', () => (mathField.options.leftRightIntoCmdGoes = 'down'));
+				}
+
+				// Special case for autoCommands
+				{
+					const optionDiv = document.createElement('div');
+					optionDiv.classList.add('auto-options');
+					const optionLabel = document.createElement('label');
+					optionLabel.textContent = 'autoCommands:';
+					optionLabel.for = 'currentAutoCommands';
+					const optionSelect = document.createElement('select');
+					optionSelect.id = 'currentAutoCommands';
+					optionSelect.name = 'currentAutoCommands';
+					optionSelect.multiple = 'true';
+					optionSelect.size = '10';
+
+					for (const cmd of Object.keys(mathField.options.autoCommands).sort()) {
+						if (cmd === '_maxLength') continue;
+						const cmdOption = document.createElement('option');
+						cmdOption.value = cmd;
+						cmdOption.textContent = cmd;
+						optionSelect.add(cmdOption);
+					}
+
+					const deleteButton = document.createElement('button');
+					deleteButton.type = 'button';
+					deleteButton.textContent = 'Delete Selected';
+					deleteButton.addEventListener('click', () => {
+						for (const cmd of Array.from(optionSelect.selectedOptions)) {
+							mathField.options.removeAutoCommands(cmd.value);
+							cmd.remove();
+						}
 					});
-				}
-			}
 
-			// Special case for leftRightIntoCmdGoes
-			{
-				const optionDiv = document.createElement('div');
-				const upInput = document.createElement('input');
-				upInput.type = 'radio';
-				upInput.name = 'leftRightIntoCmdGoes';
-				upInput.id = 'leftRightIntoCmdGoes_up';
-				upInput.checked = true;
-				const upLabel = document.createElement('label');
-				upLabel.setAttribute('for', 'leftRightIntoCmdGoes_up');
-				upLabel.textContent = 'up';
-				const downInput = document.createElement('input');
-				downInput.type = 'radio';
-				downInput.name = 'leftRightIntoCmdGoes';
-				downInput.id = 'leftRightIntoCmdGoes_down';
-				const downLabel = document.createElement('label');
-				downLabel.setAttribute('for', 'leftRightIntoCmdGoes_down');
-				downLabel.textContent = 'down';
-				optionDiv.append('leftRightIntoCmdGoes: ', upInput, upLabel, downInput, downLabel);
-				optionsContainer.append(optionDiv);
-				upInput.addEventListener('click', () => mathField.options.leftRightIntoCmdGoes = 'up');
-				downInput.addEventListener('click', () => mathField.options.leftRightIntoCmdGoes = 'down');
-			}
+					const optionInput = document.createElement('input');
+					optionInput.type = 'text';
+					optionInput.name = 'add-auto-command';
 
-			// Special case for autoCommands
-			{
-				const optionDiv = document.createElement('div');
-				optionDiv.classList.add('auto-options');
-				const optionLabel = document.createElement('label');
-				optionLabel.textContent = 'autoCommands:';
-				optionLabel.for = 'currentAutoCommands';
-				const optionSelect = document.createElement('select');
-				optionSelect.id = 'currentAutoCommands';
-				optionSelect.name = 'currentAutoCommands';
-				optionSelect.multiple = 'true';
-				optionSelect.size = '10';
-
-				for (const cmd of Object.keys(mathField.options.autoCommands).sort()) {
-					if (cmd === '_maxLength') continue;
-					const cmdOption = document.createElement('option');
-					cmdOption.value = cmd;
-					cmdOption.textContent = cmd;
-					optionSelect.add(cmdOption);
-				}
-
-				const deleteButton = document.createElement('button');
-				deleteButton.type = 'button';
-				deleteButton.textContent = 'Delete Selected';
-				deleteButton.addEventListener('click', () => {
-					for (const cmd of Array.from(optionSelect.selectedOptions)) {
-						mathField.options.removeAutoCommands(cmd.value);
-						cmd.remove();
-					}
-				});
-
-				const optionInput = document.createElement('input');
-				optionInput.type = 'text';
-				optionInput.name = 'add-auto-command';
-
-				const addButton = document.createElement('button');
-				addButton.type = 'button';
-				addButton.textContent = 'Add Command';
-				addButton.addEventListener('click', () => {
-					try {
-						mathField.options.addAutoCommands(optionInput.value);
-					} catch (e) {
-						alert(e);
-						return;
-					}
-					const cmdOption = document.createElement('option');
-					cmdOption.value = optionInput.value.trim();
-					cmdOption.textContent = optionInput.value.trim();
-					let added = false;
-					for (const opt of optionSelect.options) {
-						if (cmdOption.value === opt.value) {
-							added = true;
-							alert('This command has already been added.');
-							break;
-						} else if (cmdOption.value < opt.value) {
-							added = true;
-							optionSelect.add(cmdOption, opt);
-							break;
+					const addButton = document.createElement('button');
+					addButton.type = 'button';
+					addButton.textContent = 'Add Command';
+					addButton.addEventListener('click', () => {
+						try {
+							mathField.options.addAutoCommands(optionInput.value);
+						} catch (e) {
+							alert(e);
+							return;
 						}
-					}
-					if (!added) optionSelect.add(cmdOption);
-					optionInput.value = '';
-				});
+						const cmdOption = document.createElement('option');
+						cmdOption.value = optionInput.value.trim();
+						cmdOption.textContent = optionInput.value.trim();
+						let added = false;
+						for (const opt of optionSelect.options) {
+							if (cmdOption.value === opt.value) {
+								added = true;
+								alert('This command has already been added.');
+								break;
+							} else if (cmdOption.value < opt.value) {
+								added = true;
+								optionSelect.add(cmdOption, opt);
+								break;
+							}
+						}
+						if (!added) optionSelect.add(cmdOption);
+						optionInput.value = '';
+					});
 
-				optionDiv.append(optionLabel, optionSelect, deleteButton, optionInput, addButton);
-				optionsContainer.append(optionDiv);
-			}
-
-			// Special case for autoOperatorNames
-			{
-				const optionDiv = document.createElement('div');
-				optionDiv.classList.add('auto-options');
-				const optionLabel = document.createElement('label');
-				optionLabel.textContent = 'autoOperatorNames:';
-				optionLabel.for = 'currentAutoOperatorNames';
-				const optionSelect = document.createElement('select');
-				optionSelect.id = 'currentAutoOperatorNames';
-				optionSelect.name = 'currentAutoOperatorNames';
-				optionSelect.multiple = 'true';
-				optionSelect.size = '10';
-
-				for (const cmd of Object.keys(mathField.options.autoOperatorNames).sort()) {
-					if (cmd === '_maxLength') continue;
-					const cmdOption = document.createElement('option');
-					cmdOption.value = cmd;
-					cmdOption.textContent = cmd;
-					optionSelect.add(cmdOption);
+					optionDiv.append(optionLabel, optionSelect, deleteButton, optionInput, addButton);
+					optionsContainer.append(optionDiv);
 				}
 
-				const deleteButton = document.createElement('button');
-				deleteButton.type = 'button';
-				deleteButton.textContent = 'Delete Selected';
-				deleteButton.addEventListener('click', () => {
-					for (const cmd of Array.from(optionSelect.selectedOptions)) {
-						mathField.options.removeAutoOperatorNames(cmd.value);
-						cmd.remove();
-					}
-				});
+				// Special case for autoOperatorNames
+				{
+					const optionDiv = document.createElement('div');
+					optionDiv.classList.add('auto-options');
+					const optionLabel = document.createElement('label');
+					optionLabel.textContent = 'autoOperatorNames:';
+					optionLabel.for = 'currentAutoOperatorNames';
+					const optionSelect = document.createElement('select');
+					optionSelect.id = 'currentAutoOperatorNames';
+					optionSelect.name = 'currentAutoOperatorNames';
+					optionSelect.multiple = 'true';
+					optionSelect.size = '10';
 
-				const optionInput = document.createElement('input');
-				optionInput.type = 'text';
-				optionInput.name = 'add-auto-operator-name';
-
-				const addButton = document.createElement('button');
-				addButton.type = 'button';
-				addButton.textContent = 'Add Operator Name';
-				addButton.addEventListener('click', () => {
-					try {
-						mathField.options.addAutoOperatorNames(optionInput.value);
-					} catch (e) {
-						alert(e);
-						return;
+					for (const cmd of Object.keys(mathField.options.autoOperatorNames).sort()) {
+						if (cmd === '_maxLength') continue;
+						const cmdOption = document.createElement('option');
+						cmdOption.value = cmd;
+						cmdOption.textContent = cmd;
+						optionSelect.add(cmdOption);
 					}
-					const cmdOption = document.createElement('option');
-					cmdOption.value = optionInput.value.trim();
-					cmdOption.textContent = optionInput.value.trim();
-					let added = false;
-					for (const opt of optionSelect.options) {
-						if (cmdOption.value === opt.value) {
-							added = true;
-							alert('This operator name has already been added.');
-							break;
-						} else if (cmdOption.value < opt.value) {
-							added = true;
-							optionSelect.add(cmdOption, opt);
-							break;
+
+					const deleteButton = document.createElement('button');
+					deleteButton.type = 'button';
+					deleteButton.textContent = 'Delete Selected';
+					deleteButton.addEventListener('click', () => {
+						for (const cmd of Array.from(optionSelect.selectedOptions)) {
+							mathField.options.removeAutoOperatorNames(cmd.value);
+							cmd.remove();
 						}
-					}
-					if (!added) optionSelect.add(cmdOption);
-					optionInput.value = '';
-				});
+					});
 
-				optionDiv.append(optionLabel, optionSelect, deleteButton, optionInput, addButton);
-				optionsContainer.append(optionDiv);
-			}
+					const optionInput = document.createElement('input');
+					optionInput.type = 'text';
+					optionInput.name = 'add-auto-operator-name';
 
-		})();
-	</script>
-</body>
+					const addButton = document.createElement('button');
+					addButton.type = 'button';
+					addButton.textContent = 'Add Operator Name';
+					addButton.addEventListener('click', () => {
+						try {
+							mathField.options.addAutoOperatorNames(optionInput.value);
+						} catch (e) {
+							alert(e);
+							return;
+						}
+						const cmdOption = document.createElement('option');
+						cmdOption.value = optionInput.value.trim();
+						cmdOption.textContent = optionInput.value.trim();
+						let added = false;
+						for (const opt of optionSelect.options) {
+							if (cmdOption.value === opt.value) {
+								added = true;
+								alert('This operator name has already been added.');
+								break;
+							} else if (cmdOption.value < opt.value) {
+								added = true;
+								optionSelect.add(cmdOption, opt);
+								break;
+							}
+						}
+						if (!added) optionSelect.add(cmdOption);
+						optionInput.value = '';
+					});
 
+					optionDiv.append(optionLabel, optionSelect, deleteButton, optionInput, addButton);
+					optionsContainer.append(optionDiv);
+				}
+			})();
+		</script>
+	</body>
 </html>

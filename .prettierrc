@@ -4,7 +4,6 @@
 	"printWidth": 120,
 	"semi": true,
 	"singleQuote": true,
-	"tabWidth": 4,
 	"trailingComma": "none",
-	"useTabs": true
+	"plugins": ["@awmottaz/prettier-plugin-void-html"]
 }
