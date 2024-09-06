@@ -1,16 +1,3 @@
-/* @license
- * MathQuill, by Han, Jeanine, and Mary
- * http://mathquill.com | maintainers@mathquill.com
- *
- * Rewritten for the purposes of WeBWorK.
- * https://github.com/openwebwork
- *
- * This Source Code Form is subject to the terms of the
- * Mozilla Public License, v. 2.0. If a copy of the MPL
- * was not distributed with this file, You can obtain
- * one at http://mozilla.org/MPL/2.0/.
- */
-
 import type { TNode } from 'tree/node';
 import type { MathCommand } from 'commands/mathElements';
 

@@ -1,12 +1,13 @@
 {
-	"name": "mathquill",
+	"name": "@openwebwork/mathquill",
 	"description": "Easily type math in your webapp",
-	"version": "0.10.1",
+	"version": "0.11.0-beta.1",
 	"license": "MPL-2.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/mathquill/mathquill.git"
+		"url": "git+https://github.com/openwebwork/mathquill.git"
 	},
+	"homepage": "https://github.com/openwebwork/mathquill",
 	"main": "lib/publicapi.js",
 	"types": "lib/publicapi.d.ts",
 	"files": [
@@ -14,16 +15,15 @@
 		"dist/**/*"
 	],
 	"scripts": {
-		"build-lib": "tsc --project tsconfig-lib.json && tsconfig-replace-paths -p tsconfig-lib.json -s ./src -o ./lib",
-		"devbuild": "webpack --mode development",
+		"build:lib": "tsc --project tsconfig-lib.json && tsconfig-replace-paths -p tsconfig-lib.json -s ./src -o ./lib",
+		"build:dev": "webpack --mode development",
+		"build:all-js": "BUILD_BASIC=true webpack --mode production",
 		"build": "webpack --mode production",
-		"build-dist": "webpack --mode production --env outputPath=dist",
-		"build-all-js": "BUILD_BASIC=true webpack --mode production",
 		"serve": "webpack serve --mode development",
-		"jslint": "eslint ./src ./test ./public --fix",
-		"csslint": "stylelint \"./src/**/*.less\" \"./public/**/*.css\" \"./public/**/*.html\" --fix",
-		"prettier": "prettier --write .",
-		"lint": "npm run prettier && npm run jslint && npm run csslint"
+		"lint:eslint": "eslint ./src ./test ./public --fix",
+		"lint:stylelint": "stylelint \"./src/**/*.less\" \"./public/**/*.css\" \"./public/**/*.html\" --fix",
+		"lint": "npm run lint:eslint && npm run lint:stylelint",
+		"format": "prettier --write ."
 	},
 	"devDependencies": {
 		"@awmottaz/prettier-plugin-void-html": "^1.6.1",

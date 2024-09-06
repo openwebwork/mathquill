@@ -6,7 +6,7 @@ import stylistic from '@stylistic/eslint-plugin';
 
 export default [
 	{
-		ignores: ['**/dist/**', '**/build/**', '.babelrc', 'package.json', 'package-lock.json']
+		ignores: ['**/dist/**', '.babelrc', 'package.json', 'package-lock.json']
 	},
 	{ files: ['**/*.{js,mjs,cjs,ts,tsx}'] },
 	pluginJs.configs.recommended,

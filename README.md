@@ -46,7 +46,7 @@ npm install
 npm run build
 ```
 
-The resulting MathQuill build will be located in the `build` directory.
+The resulting MathQuill build will be located in the `dist` directory.
 
 ## Test Server
 

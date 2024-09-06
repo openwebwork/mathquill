@@ -9,14 +9,14 @@ const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const VERSION = require('./package.json').version;
 
-module.exports = (env, argv) => {
+module.exports = (_env, argv) => {
 	process.env.NODE_ENV = argv.mode ?? 'development';
 
 	const config = {
 		mode: process.env.NODE_ENV,
 		entry: { mathquill: './src/index.ts' },
 		output: {
-			path: path.resolve(__dirname, env.outputPath ?? 'build'),
+			path: path.resolve(__dirname, 'dist'),
 			filename: '[name].js',
 			clean: true
 		},
@@ -29,7 +29,7 @@ module.exports = (env, argv) => {
 				css: path.resolve(__dirname, 'src/css'),
 				fonts: path.resolve(__dirname, 'src/fonts')
 			},
-			extensions: ['', '.webpack.js', '.ts', '.js']
+			extensions: ['', '.ts', '.js']
 		},
 		module: {
 			rules: [
@@ -86,13 +86,7 @@ module.exports = (env, argv) => {
 		],
 		optimization: {
 			minimize: process.env.NODE_ENV === 'production',
-			minimizer: [
-				new TerserPlugin({
-					terserOptions: { format: { comments: /@license/i } },
-					extractComments: false
-				}),
-				new CssMinimizerPlugin()
-			]
+			minimizer: [new TerserPlugin({ extractComments: false }), new CssMinimizerPlugin()]
 		},
 		performance: {
 			assetFilter: (asset) => {

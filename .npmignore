@@ -1,0 +1,11 @@
+/src
+/node_modules
+/test
+/public
+/lib
+eslint.config.mjs
+tsconfig.json
+tsconfig-lib.json
+webpack-config.js
+.vim
+.vscode
