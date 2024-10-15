@@ -24,7 +24,7 @@ export class AbstractMathQuill {
 		this.id = ctrlr.id;
 	}
 
-	__mathquillify(...classNames: Array<string>) {
+	__mathquillify(...classNames: string[]) {
 		const root = this.__controller.root,
 			el = this.__controller.container;
 		this.__controller.createTextarea();
@@ -96,7 +96,7 @@ export class AbstractMathQuill {
 }
 
 export class EditableField extends AbstractMathQuill {
-	__mathquillify(...classNames: Array<string>) {
+	__mathquillify(...classNames: string[]) {
 		super.__mathquillify(...classNames);
 		this.__controller.editable = true;
 		this.__controller.delegateMouseEvents();
@@ -201,7 +201,7 @@ export class EditableField extends AbstractMathQuill {
 		pageY: number,
 		options: { text?: () => string; htmlTemplate?: string; latex?: () => string }
 	) {
-		const el = document.elementFromPoint(pageX - window.pageXOffset, pageY - window.pageYOffset) as HTMLElement;
+		const el = document.elementFromPoint(pageX - window.scrollX, pageY - window.scrollY) as HTMLElement;
 		this.__controller.seek(el, pageX);
 		const cmd = new LatexCmds.embed().setOptions(options);
 		cmd.createLeftOf(this.__controller.cursor);
@@ -213,7 +213,7 @@ export class EditableField extends AbstractMathQuill {
 		const ctrlr = this.__controller,
 			root = ctrlr.root;
 		if (!root.elements.firstElement.contains(target)) target = root.elements.firstElement;
-		ctrlr.seek(target, clientX + window.pageXOffset);
+		ctrlr.seek(target, clientX + window.scrollX);
 		if (ctrlr.blurred) this.focus();
 		return this;
 	}

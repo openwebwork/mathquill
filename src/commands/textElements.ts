@@ -111,7 +111,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		cursor.insDirOf(dir, this);
 	}
 
-	deleteOutOf(dir: Direction, cursor: Cursor) {
+	deleteOutOf(_dir: Direction, cursor: Cursor) {
 		// backspace and delete at ends of block don't unwrap
 		if (this.isEmpty()) cursor.insRightOf(this);
 	}
@@ -132,7 +132,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		else {
 			// split apart
 			const leftBlock = new TextBlock();
-			const leftPc = this.ends[L] as TNode;
+			const leftPc = this.ends[L]!;
 			leftPc.disown().elements.detach();
 			leftPc.adopt(leftBlock);
 
@@ -150,7 +150,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 	seek(pageX: number, cursor: Cursor) {
 		cursor.hide();
-		const textPc = this.fuseChildren() as TextPiece;
+		const textPc = this.fuseChildren()!;
 
 		// Insert cursor at approx position in DOMTextNode
 		const cursorStyle = getComputedStyle(this.elements.firstElement);
@@ -180,10 +180,10 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 		if (!cursor.anticursor) {
 			// About to start mouse-selecting, the anticursor is going to be placed here.
-			this.anticursorPosition = (cursor[L] && cursor[L]?.text().length) ?? 0;
+			this.anticursorPosition = cursor[L]?.text().length ?? 0;
 		} else if (cursor.anticursor.parent === this) {
 			// Mouse selecting within this TextBlock, re-insert the anticursor.
-			const cursorPosition = (cursor[L] && cursor[L]?.text().length) ?? 0;
+			const cursorPosition = cursor[L]?.text().length ?? 0;
 			if (this.anticursorPosition === cursorPosition) {
 				cursor.startSelection();
 			} else {
@@ -286,8 +286,8 @@ class TextPiece extends TNode {
 	}
 
 	splitRight(i: number) {
-		const newPc = new TextPiece(this.textStr.slice(i)).adopt(this.parent as TNode, this, this[R]);
-		newPc.addToElements(this.dom?.splitText(i) as Text);
+		const newPc = new TextPiece(this.textStr.slice(i)).adopt(this.parent!, this, this[R]);
+		newPc.addToElements(this.dom!.splitText(i));
 		this.textStr = this.textStr.slice(0, i);
 		return newPc;
 	}

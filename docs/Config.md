@@ -4,24 +4,24 @@ The configuration options object is of the following form:
 
 ```js
 {
-  spaceBehavesLikeTab: true,
-  leftRightIntoCmdGoes: 'up',
-  restrictMismatchedBrackets: true,
-  sumStartsWithNEquals: true,
-  supSubsRequireOperand: true,
-  charsThatBreakOutOfSupSub: '+-=<>',
-  autoSubscriptNumerals: true,
-  autoCommands: 'pi theta sqrt sum',
-  autoOperatorNames: 'sin cos',
-  maxDepth: 10,
-  substituteTextarea: function() {
-    return document.createElement('textarea');
-  },
-  handlers: {
-    edit: (mathField) => { ... },
-    upOutOf: (mathField) => { ... },
-    moveOutOf: (dir, mathField) => { if (dir === MQ.L) ... else ... }
-  }
+    spaceBehavesLikeTab: true,
+    leftRightIntoCmdGoes: 'up',
+    restrictMismatchedBrackets: true,
+    sumStartsWithNEquals: true,
+    supSubsRequireOperand: true,
+    charsThatBreakOutOfSupSub: '+-=<>',
+    autoSubscriptNumerals: true,
+    autoCommands: 'pi theta sqrt sum',
+    autoOperatorNames: 'sin cos',
+    maxDepth: 10,
+    substituteTextarea: function() {
+      return document.createElement('textarea');
+    },
+    handlers: {
+      edit: (mathField) => { ... },
+      upOutOf: (mathField) => { ... },
+      moveOutOf: (dir, mathField) => { if (dir === MQ.L) ... else ... }
+    }
 }
 ```
 
@@ -53,7 +53,7 @@ left into a fraction puts the cursor at the right end of the denominator, etc.
 If instead you want right to always visually go right, and left to always go visually left, you can set
 `leftRightIntoCmdGoes` to `'up'` or `'down'` so that left and right go up or down (respectively) into commands. For
 example, `'up'` means that left into a fraction goes up into the numerator and right out of the numerator skips the
-denominator and puts the cursor to the right of the fraction.  If this property is set to `'down'` instead, the
+denominator and puts the cursor to the right of the fraction. If this property is set to `'down'` instead, the
 numerator is harder to navigate to.
 
 ### restrictMismatchedBrackets
@@ -129,10 +129,14 @@ Handlers are called after a specified event.
 ```js
 const latex = '';
 const mathField = MQ.MathField(document.getElementById('mathfield'), {
-  handlers: {
-    edit: () => { latex = mathField.latex(); },
-    enter: () => { submitLatex(latex); }
-  }
+    handlers: {
+        edit: () => {
+            latex = mathField.latex();
+        },
+        enter: () => {
+            submitLatex(latex);
+        }
+    }
 });
 ```
 
@@ -166,16 +170,16 @@ For example, to style as white-on-black instead of black-on-white use:
 
 ```css
 #my-math-input {
-  color: white;
-  border-color: white;
-  background: black;
+    color: white;
+    border-color: white;
+    background: black;
 }
 
 #my-math-input .mq-matrixed {
-  background: black;
+    background: black;
 }
 
 #my-math-input .mq-matrixed-container {
-  filter: progid:DXImageTransform.Microsoft.Chroma(color='black');
+    filter: progid:DXImageTransform.Microsoft.Chroma(color='black');
 }
 ```

@@ -2,8 +2,8 @@ import { pray } from 'src/constants';
 
 type ParserBody = <SR, FR>(
 	stream: string,
-	success: (stream: string, ...args: Array<any>) => SR,
-	failure: (stream: string, ...args: Array<any>) => FR
+	success: (stream: string, ...args: any[]) => SR,
+	failure: (stream: string, ...args: any[]) => FR
 ) => SR | FR;
 
 export class Parser {
@@ -24,7 +24,7 @@ export class Parser {
 		return this.skip(Parser.eof)._(
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			`${stream}`,
-			(stream, result: T) => result,
+			(_stream, result: T) => result,
 			(stream: string, message: string) => {
 				throw `Parse Error: ${message} at ${stream || 'EOF'}`;
 			}
@@ -48,7 +48,7 @@ export class Parser {
 					const nextParser =
 						next instanceof Parser ? next : typeof next === 'function' ? next(result) : undefined;
 					pray('a parser is returned', nextParser instanceof Parser);
-					return (nextParser as Parser)._(newStream, onSuccess, onFailure);
+					return nextParser!._(newStream, onSuccess, onFailure);
 				},
 				onFailure
 			)
@@ -58,7 +58,7 @@ export class Parser {
 	// Optimized iterative combinators
 	many<T>() {
 		return new Parser((stream, onSuccess) => {
-			const xs: Array<T> = [];
+			const xs: T[] = [];
 
 			while (
 				this._(
@@ -78,7 +78,7 @@ export class Parser {
 
 	times<T>(min: number, max: number = min) {
 		return new Parser((stream, onSuccess, onFailure) => {
-			const xs: Array<T> = [];
+			const xs: T[] = [];
 			let result = true;
 
 			for (let i = 0; i < max && result; ++i) {
@@ -114,10 +114,10 @@ export class Parser {
 		return this.times(n).then((start: string) => this.many().map((end: string) => start.concat(end)));
 	}
 
-	map<R, T>(fn: ((result: R) => T) | { new (arg: R): T }) {
+	map<R, T>(fn: ((result: R) => T) | (new (arg: R) => T)) {
 		return this.then((result: R) => {
 			if (typeof fn === 'function' && /^\s*class\s+/.test(fn.toString())) {
-				return Parser.succeed(new (fn as { new (arg: R): T })(result));
+				return Parser.succeed(new (fn as new (arg: R) => T)(result));
 			} else if (typeof fn === 'function') {
 				return Parser.succeed((fn as (result: R) => T)(result));
 			}

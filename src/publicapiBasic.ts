@@ -36,7 +36,7 @@ export default class MathQuill {
 	static VERSION?: string;
 
 	static getInterface() {
-		const APIClasses: { [key: string]: AbstractMathQuillConstructor } = {};
+		const APIClasses: Record<string, AbstractMathQuillConstructor> = {};
 
 		// Function that takes an HTML element and, if it's the root HTML element of a
 		// static math or math or text field, returns an API object for it (else, undefined).

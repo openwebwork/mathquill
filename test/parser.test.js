@@ -76,7 +76,9 @@ suite('parser', () => {
 
 			assert.equal(oneParser.parse('x'), 1);
 
-			const myFn = () => {};
+			const myFn = () => {
+				/* do nothing */
+			};
 			const fnParser = string('x').result(myFn);
 
 			assert.equal(fnParser.parse('x'), myFn);

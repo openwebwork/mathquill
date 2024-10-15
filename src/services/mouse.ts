@@ -19,7 +19,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 
 			// Drag-to-select event handling
 			this.mouseDownHandler = (e: MouseEvent) => {
-				const rootEl = (e.target as HTMLElement).closest('.mq-root-block') as HTMLElement;
+				const rootEl = (e.target as HTMLElement).closest('.mq-root-block')!;
 				const root =
 					TNode.byId[
 						parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl?.getAttribute(mqBlockId)) ?? '0')
@@ -27,7 +27,6 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 
 				if (!root.controller) {
 					throw 'controller undefined... what?';
-					return;
 				}
 
 				const ctrlr = root.controller,
@@ -49,10 +48,10 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				const ownerDocument = (e.target as HTMLElement).ownerDocument;
 
 				let target: HTMLElement | undefined;
-				const mousemove = (e: MouseEvent) => (target = e.target as HTMLElement);
+				const mousemove = (e: Event) => (target = e.target as HTMLElement);
 				const docmousemove = (e: MouseEvent) => {
 					if (!cursor.anticursor) cursor.startSelection();
-					ctrlr.seek(target as HTMLElement, e.pageX ?? 0).cursor.select();
+					ctrlr.seek(target!, e.pageX ?? 0).cursor.select();
 					target = undefined;
 				};
 				// Outside rootEl, the MathQuill node corresponding to the target (if any)
@@ -123,7 +122,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				}
 
 				if (ctrlr.blurred) {
-					if (!ctrlr.editable) rootEl?.prepend(textareaSpan as HTMLSpanElement);
+					if (!ctrlr.editable) rootEl?.prepend(textareaSpan!);
 					textarea?.focus();
 				}
 

@@ -48,7 +48,10 @@ export interface InputOptions {
 	ignoreNextMousedown: (e?: MouseEvent) => boolean;
 }
 
-type NamesWLength = { [key: string]: number; _maxLength: number };
+interface NamesWLength {
+	[key: string]: number;
+	_maxLength: number;
+}
 
 export class Options {
 	static config(currentOptions: Options, newOptions: InputOptions) {
@@ -99,7 +102,7 @@ export class Options {
 		else Options.#autoCommands = dict;
 	}
 
-	addAutoCommands(cmds: string | Array<string>) {
+	addAutoCommands(cmds: string | string[]) {
 		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
 		if (!this.#_autoCommands) throw 'autoCommands setter not working';
 		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
@@ -112,7 +115,7 @@ export class Options {
 		}
 	}
 
-	removeAutoCommands(cmds: string | Array<string>) {
+	removeAutoCommands(cmds: string | string[]) {
 		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
 		if (!this.#_autoCommands) throw 'autoCommands setter not working';
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
@@ -186,7 +189,7 @@ export class Options {
 		else Options.#autoOperatorNames = dict;
 	}
 
-	addAutoOperatorNames(cmds: string | Array<string>) {
+	addAutoOperatorNames(cmds: string | string[]) {
 		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
 		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
 		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
@@ -198,7 +201,7 @@ export class Options {
 		}
 	}
 
-	removeAutoOperatorNames(cmds: string | Array<string>) {
+	removeAutoOperatorNames(cmds: string | string[]) {
 		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
 		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];

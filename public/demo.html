@@ -1,229 +1,223 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-<head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+		<title>MathQuill Demo</title>
 
-	<title>MathQuill Demo</title>
+		<link rel="stylesheet" href="support/home.css">
+		<link rel="stylesheet" href="mathquill.css">
 
-	<link rel="stylesheet" href="support/home.css" />
-	<link rel="stylesheet" href="mathquill.css" />
+		<style>
+			code span {
+				font:
+					90% Verdana,
+					sans-serif;
+			}
 
-	<style>
-		code span {
-			font: 90% Verdana, sans-serif;
-		}
+			#codecogsimg {
+				vertical-align: middle;
+				border: none;
+			}
 
-		#codecogsimg {
-			vertical-align: middle;
-			border: none;
-		}
+			.mathquill-text-field {
+				width: 100%;
+			}
 
-		.mathquill-text-field {
-			width: 100%;
-		}
+			#html-source {
+				display: none;
+				font-size: 90%;
+				white-space: pre-wrap;
+			}
 
-		#html-source {
-			display: none;
-			font-size: 90%;
-			white-space: pre-wrap;
-		}
+			.mq-math-mode .mq-editable-field {
+				min-width: 1cm;
+			}
+		</style>
+	</head>
 
-		.mq-math-mode .mq-editable-field {
-			min-width: 1cm;
-		}
-	</style>
-</head>
+	<body>
+		<div id="body">
+			<h1>MathQuill Demo <small>local test page</small></h1>
 
-<body>
-	<div id="body">
-		<a href="https://github.com/openwebwork/mathquill">
-			<img style="position: absolute; top: 0; right: 0; border: 0"
-				src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub!" />
-		</a>
+			<p>
+				Math textbox with initial LaTeX:
+				<span id="editable-math" class="mathquill-math-field">\frac{d}{dx}\sqrt{x}=</span>
+			</p>
 
-		<h1>MathQuill Demo <small>local test page</small></h1>
+			<p>
+				<small>
+					Try typing <code>1/2\sqrt x</code> and using the arrow keys to move around. Shortcut: use the tab
+					key instead of arrow keys to get &quot;out&quot; of a command, like
+					<code>a_n<span>[tab]</span>x^n</code>. Many LaTeX-style symbols and commands preceded by a backslash
+					are supported, such as <code>\forall</code> or <code>n\choose k</code>.
+				</small>
+			</p>
 
-		<p>
-			Math textbox with initial LaTeX:
-			<span id="editable-math" class="mathquill-math-field">\frac{d}{dx}\sqrt{x}=</span>
-		</p>
+			<p>Latex source: <textarea id="latex-source" style="width: 80%; vertical-align: top"></textarea></p>
 
-		<p>
-			<small>
-				Try typing <code>1/2\sqrt x</code> and using the arrow keys to move around. Shortcut: use the tab
-				key instead of arrow keys to get &quot;out&quot; of a command, like
-				<code>a_n<span>[tab]</span>x^n</code>. Many LaTeX-style symbols and commands preceded by a backslash
-				are supported, such as <code>\forall</code> or <code>n\choose k</code>.
-			</small>
-		</p>
+			<p>
+				<button id="codecogs">Render LaTeX as an image with Code Cogs</button>
+				<a id="codecogslink"><img id="codecogsimg" alt="LaTeX rendered as an image"> <span>Link</span></a>
+			</p>
 
-		<p>Latex source: <textarea id="latex-source" style="width: 80%; vertical-align: top"></textarea></p>
+			<p><a href="javascript:;" id="show-html-source">Show Semantically Meaningful HTML Source</a></p>
+			<pre id="html-source"></pre>
 
-		<p>
-			<button id="codecogs">Render LaTeX as an image with Code Cogs</button>
-			<a id="codecogslink"><img id="codecogsimg" alt="LaTeX rendered as an image" /> <span>Link</span></a>
-		</p>
+			<p>
+				You could actually just copy-and-paste this HTML into any element with
+				<code>class="mq-math-mode"</code> on a page that includes the <code>mathquill.css</code> and it would
+				render beautifully, like this:
+				<span class="mq-math-mode" id="html-transplant-example"></span>
+			</p>
 
-		<p><a href="javascript:;" id="show-html-source">Show Semantically Meaningful HTML Source</a></p>
-		<pre id="html-source"></pre>
+			<p>
+				If you simply want to display some non-interactive math, you can use MathQuill's StaticMath API:
+				<span class="mathquill-static-math">e^{i\pi}+1=0</span>. If you select and copy static math, by default
+				it will copy LaTeX source to the clipboard.
+			</p>
 
-		<p>
-			You could actually just copy-and-paste this HTML into any element with <code>class="mq-math-mode"</code>
-			on a page that includes the <code>mathquill.css</code> and it would render beautifully, like this:
-			<span class="mq-math-mode" id="html-transplant-example"></span>
-		</p>
+			<p>
+				You can also make static math non-selectable:
+				<span class="static-math-no-mouse-events">\sin^2\theta + \cos^2\theta = 1</span>.
+			</p>
 
-		<p>
-			If you simply want to display some non-interactive math, you can use MathQuill's StaticMath API:
-			<span class="mathquill-static-math">e^{i\pi}+1=0</span>. If you select and copy static math, by default
-			it will copy LaTeX source to the clipboard.
-		</p>
+			<p>
+				Note that if you're only rendering static math, <a href="http://mathjax.org">MathJax</a> supports more
+				of LaTeX and renders better.
+			</p>
 
-		<p>
-			You can also make static math non-selectable:
-			<span class="static-math-no-mouse-events">\sin^2\theta + \cos^2\theta = 1</span>.
-		</p>
+			<p>
+				In many applications, such as a chat client, you probably type mostly normal text with some math
+				interspersed, so there is also a MathQuill textbox that let's you type math between $'s:
+				<span class="mathquill-text-field">The Quadratic Equation is $x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}$</span>
+			</p>
 
-		<p>
-			Note that if you're only rendering static math, <a href="http://mathjax.org">MathJax</a> supports more
-			of LaTeX and renders better.
-		</p>
+			<p>
+				LaTeX math can also have textboxes inside:
+				<span class="mathquill-static-math">\int\MathQuillMathField{}dx</span>
+				or even
+				<span class="mathquill-static-math">\sqrt{\MathQuillMathField{x^2+y^2}}</span>
+			</p>
 
-		<p>
-			In many applications, such as a chat client, you probably type mostly normal text with some math
-			interspersed, so there is also a MathQuill textbox that let's you type math between $'s:
-			<span class="mathquill-text-field">The Quadratic Equation is $x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}$</span>
-		</p>
+			<p>
+				This button runs the JavaScript code written on it to MathQuill-ify the following
+				<code>&lt;span&gt;</code> element into an editable math textbox:
+				<button id="mathquillify-button">MathQuill-ify</button>
+				<span id="mathquillify-latex">
+					\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{\frac{1}{2}} = \frac{1}{2}x^{-\frac{1}{2}} =
+					\frac{1}{2\sqrt{x}}
+				</span>
+			</p>
+		</div>
+		<script src="mathquill.js"></script>
+		<script>
+			(() => {
+				MQ = MathQuill.getInterface();
 
-		<p>
-			LaTeX math can also have textboxes inside:
-			<span class="mathquill-static-math">\int\MathQuillMathField{}dx</span>
-			or even
-			<span class="mathquill-static-math">\sqrt{\MathQuillMathField{x^2+y^2}}</span>
-		</p>
-
-		<p>
-			This button runs the JavaScript code written on it to MathQuill-ify the following
-			<code>&lt;span&gt;</code> element into an editable math textbox:
-			<button id="mathquillify-button">MathQuill-ify</button>
-			<span id="mathquillify-latex">
-				\frac{d}{dx}\sqrt{x}
-				= \frac{d}{dx}x^{\frac{1}{2}}
-				= \frac{1}{2}x^{-\frac{1}{2}}
-				= \frac{1}{2\sqrt{x}}
-			</span>
-		</p>
-	</div>
-	<script src="mathquill.js"></script>
-	<script>
-		(() => {
-			MQ = MathQuill.getInterface();
-
-			const mathquillifyButton = document.getElementById('mathquillify-button');
-			const mathquillifyLatex = document.getElementById('mathquillify-latex');
-			mathquillifyButton.addEventListener('click', () => {
-				const mathField = MQ(mathquillifyLatex);
-				if (mathField) {
-					mathField.revert();
-					mathquillifyButton.textContent = 'MathQuill-ify';
-				} else {
-					mathquillifyButton.textContent = 'De-MathQuill-ify';
-					MQ.MathField(mathquillifyLatex);
-				}
-			});
-
-			// mathquill-ify all `<tag class="mathquill-*">latex</tag>` elements according to their CSS class.
-			document.querySelectorAll('.mathquill-static-math').forEach((el) => MQ.StaticMath(el));
-			document
-				.querySelectorAll('.static-math-no-mouse-events')
-				.forEach((el) => MQ.StaticMath(el, {mouseEvents: false}));
-			document.querySelectorAll('.mathquill-math-field').forEach((el) => MQ.MathField(el));
-			document.querySelectorAll('.mathquill-text-field').forEach((el) => MQ.TextField(el));
-
-			const showHTMLSource = document.getElementById('show-html-source');
-			showHTMLSource.addEventListener('click', () => {
-				if (showHTMLSource.textContent === 'Hide Semantically Meaningful HTML Source') {
-					showHTMLSource.textContent = 'Show Semantically Meaningful HTML Source';
-					document.getElementById('html-source').style.display = 'none';
-				} else {
-					showHTMLSource.textContent = 'Hide Semantically Meaningful HTML Source';
-					document.getElementById('html-source').style.display = 'block';
-				}
-			});
-
-			// Print the HTML source as an indented tree. TODO: syntax highlight
-			const printTree = (html) => {
-				html = html.match(/<[a-z]+|<\/[a-z]+>|./gi);
-				if (!html) return '';
-				let indent = '\n',
-					tree = [];
-				for (let i = 0; i < html.length; i += 1) {
-					let token = html[i];
-					if (token.charAt(0) === '<') {
-						if (token.charAt(1) === '/') {
-							// Reduce indentation level on close tag.
-							indent = indent.slice(0, -2);
-							// Maintain indentation level for close tags that come after other close tags.
-							if (html[i + 1] && html[i + 1].slice(0, 2) === '</') token += indent.slice(0, -2);
-						} else {
-							// Increase indentation level on open tag.
-							tree.push(indent);
-							indent += '  ';
-						}
-
-						token = token.toLowerCase();
-					}
-
-					tree.push(token);
-				}
-				return tree.join('').slice(1);
-			};
-
-			const latexSource = document.getElementById('latex-source'),
-				htmlSource = document.getElementById('html-source'),
-				htmlTransplantExample = document.getElementById('html-transplant-example'),
-				codecogsimg = document.getElementById('codecogsimg'),
-				codecogslink = document.getElementById('codecogslink');
-
-			const latexMath = MQ(document.getElementById('editable-math'), {
-				handlers: {
-					edit: () => {
-						latexSource.value = latexMath.latex();
-						htmlSource.textContent = printTree(latexMath.html());
-						htmlTransplantExample.innerHTML = latexMath.html();
-					},
-				},
-			});
-			latexMath.focus();
-
-			latexSource.value = latexMath.latex();
-			const updateLatex = () => {
-				const oldtext = latexSource.value;
-				setTimeout(() => {
-					const newtext = latexSource.value;
-					if (newtext !== oldtext) {
-						latexMath.latex(newtext);
-						htmlSource.textContent = printTree(latexMath.html());
-						htmlTransplantExample.innerHTML = latexMath.html();
+				const mathquillifyButton = document.getElementById('mathquillify-button');
+				const mathquillifyLatex = document.getElementById('mathquillify-latex');
+				mathquillifyButton.addEventListener('click', () => {
+					const mathField = MQ(mathquillifyLatex);
+					if (mathField) {
+						mathField.revert();
+						mathquillifyButton.textContent = 'MathQuill-ify';
+					} else {
+						mathquillifyButton.textContent = 'De-MathQuill-ify';
+						MQ.MathField(mathquillifyLatex);
 					}
 				});
-			};
-			latexSource.addEventListener('keydown', updateLatex);
-			latexSource.addEventListener('keypress', updateLatex);
-			latexSource.addEventListener('change', updateLatex);
 
-			htmlSource.textContent = printTree(latexMath.html());
-			htmlTransplantExample.innerHTML = latexMath.html();
+				// mathquill-ify all `<tag class="mathquill-*">latex</tag>` elements according to their CSS class.
+				document.querySelectorAll('.mathquill-static-math').forEach((el) => MQ.StaticMath(el));
+				document
+					.querySelectorAll('.static-math-no-mouse-events')
+					.forEach((el) => MQ.StaticMath(el, { mouseEvents: false }));
+				document.querySelectorAll('.mathquill-math-field').forEach((el) => MQ.MathField(el));
+				document.querySelectorAll('.mathquill-text-field').forEach((el) => MQ.TextField(el));
 
-			document.getElementById('codecogs')?.addEventListener('click', () => {
-				codecogslink.href = `http://latex.codecogs.com/gif.latex?${latexSource.value}`;
-				codecogsimg.src = `http://latex.codecogs.com/gif.latex?${latexSource.value}`;
-			});
-		})();
-	</script>
-</body>
+				const showHTMLSource = document.getElementById('show-html-source');
+				showHTMLSource.addEventListener('click', () => {
+					if (showHTMLSource.textContent === 'Hide Semantically Meaningful HTML Source') {
+						showHTMLSource.textContent = 'Show Semantically Meaningful HTML Source';
+						document.getElementById('html-source').style.display = 'none';
+					} else {
+						showHTMLSource.textContent = 'Hide Semantically Meaningful HTML Source';
+						document.getElementById('html-source').style.display = 'block';
+					}
+				});
 
+				// Print the HTML source as an indented tree. TODO: syntax highlight
+				const printTree = (html) => {
+					html = html.match(/<[a-z]+|<\/[a-z]+>|./gi);
+					if (!html) return '';
+					let indent = '\n',
+						tree = [];
+					for (let i = 0; i < html.length; i += 1) {
+						let token = html[i];
+						if (token.charAt(0) === '<') {
+							if (token.charAt(1) === '/') {
+								// Reduce indentation level on close tag.
+								indent = indent.slice(0, -2);
+								// Maintain indentation level for close tags that come after other close tags.
+								if (html[i + 1] && html[i + 1].slice(0, 2) === '</') token += indent.slice(0, -2);
+							} else {
+								// Increase indentation level on open tag.
+								tree.push(indent);
+								indent += '  ';
+							}
+
+							token = token.toLowerCase();
+						}
+
+						tree.push(token);
+					}
+					return tree.join('').slice(1);
+				};
+
+				const latexSource = document.getElementById('latex-source'),
+					htmlSource = document.getElementById('html-source'),
+					htmlTransplantExample = document.getElementById('html-transplant-example'),
+					codecogsimg = document.getElementById('codecogsimg'),
+					codecogslink = document.getElementById('codecogslink');
+
+				const latexMath = MQ(document.getElementById('editable-math'), {
+					handlers: {
+						edit: () => {
+							latexSource.value = latexMath.latex();
+							htmlSource.textContent = printTree(latexMath.html());
+							htmlTransplantExample.innerHTML = latexMath.html();
+						}
+					}
+				});
+				latexMath.focus();
+
+				latexSource.value = latexMath.latex();
+				const updateLatex = () => {
+					const oldtext = latexSource.value;
+					setTimeout(() => {
+						const newtext = latexSource.value;
+						if (newtext !== oldtext) {
+							latexMath.latex(newtext);
+							htmlSource.textContent = printTree(latexMath.html());
+							htmlTransplantExample.innerHTML = latexMath.html();
+						}
+					});
+				};
+				latexSource.addEventListener('keydown', updateLatex);
+				latexSource.addEventListener('keypress', updateLatex);
+				latexSource.addEventListener('change', updateLatex);
+
+				htmlSource.textContent = printTree(latexMath.html());
+				htmlTransplantExample.innerHTML = latexMath.html();
+
+				document.getElementById('codecogs')?.addEventListener('click', () => {
+					codecogslink.href = `http://latex.codecogs.com/gif.latex?${latexSource.value}`;
+					codecogsimg.src = `http://latex.codecogs.com/gif.latex?${latexSource.value}`;
+				});
+			})();
+		</script>
+	</body>
 </html>

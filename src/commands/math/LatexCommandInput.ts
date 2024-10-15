@@ -4,7 +4,6 @@ import { L, R, LatexCmds, CharCmds } from 'src/constants';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
 import type { Fragment } from 'tree/fragment';
-import type { TNode } from 'tree/node';
 import { VNode } from 'tree/vNode';
 import { VanillaSymbol, MathCommand } from 'commands/mathElements';
 import { TextBlock } from 'commands/textElements';
@@ -27,7 +26,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	createBlocks() {
 		super.createBlocks();
 
-		const leftEnd = this.ends[L] as TNode;
+		const leftEnd = this.ends[L]!;
 
 		leftEnd.focus = () => {
 			leftEnd.parent?.elements.addClass('mq-has-cursor');
@@ -46,7 +45,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		leftEnd.write = (cursor: Cursor, ch: string) => {
 			cursor.show().deleteSelection();
 
-			if (ch.match(/[a-z]/i)) new VanillaSymbol(ch).createLeftOf(cursor);
+			if (/[a-z]/i.exec(ch)) new VanillaSymbol(ch).createLeftOf(cursor);
 			else {
 				(leftEnd.parent as LatexCommandInput).renderCommand(cursor);
 				if (ch !== '\\' || !leftEnd.isEmpty()) cursor.parent?.write(cursor, ch);
@@ -94,7 +93,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		this.remove();
 
 		if (this[R]) cursor.insLeftOf(this[R]);
-		else cursor.insAtRightEnd(this.parent as TNode);
+		else cursor.insAtRightEnd(this.parent!);
 
 		const latex = this.ends[L]?.latex() || ' ';
 		if (latex in LatexCmds) {

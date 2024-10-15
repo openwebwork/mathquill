@@ -109,7 +109,7 @@ LatexCmds.textcolor = class extends MathCommand {
 // Usage: \class{classname}{math}
 // Note regex that whitelists valid CSS classname characters:
 // https://github.com/mathquill/mathquill/pull/191#discussion_r4327442
-LatexCmds['class'] = class extends MathCommand {
+LatexCmds.class = class extends MathCommand {
 	cls?: string;
 
 	parser() {
@@ -147,7 +147,7 @@ LatexCmds.subscript = LatexCmds._ = class extends SupSub {
 
 	finalizeTree() {
 		this.downInto = this.sub = this.ends[L];
-		(this.sub as TNode).upOutOf = insLeftOfMeUnlessAtEnd;
+		this.sub!.upOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
 };
@@ -166,7 +166,7 @@ LatexCmds.superscript =
 
 			finalizeTree() {
 				this.upInto = this.sup = this.ends[R];
-				(this.sup as TNode).downOutOf = insLeftOfMeUnlessAtEnd;
+				this.sup!.downOutOf = insLeftOfMeUnlessAtEnd;
 				super.finalizeTree();
 			}
 		};
@@ -198,7 +198,7 @@ LatexCmds['\u220f'] = LatexCmds.prod = LatexCmds.product = bindMixin(SummationNo
 LatexCmds.coprod = LatexCmds.coproduct = bindMixin(SummationNotation, '\\coprod ', '&#8720;');
 
 LatexCmds['\u222b'] =
-	LatexCmds['int'] =
+	LatexCmds.int =
 	LatexCmds.integral =
 		class extends UpperLowerLimitCommand {
 			constructor() {
@@ -385,7 +385,7 @@ class NthRoot extends SquareRoot {
 LatexCmds.root = LatexCmds.nthroot = NthRoot;
 
 class DiacriticAbove extends MathCommand {
-	constructor(ctrlSeq: string, symbol: string, textTemplate: Array<string>) {
+	constructor(ctrlSeq: string, symbol: string, textTemplate: string[]) {
 		super(
 			ctrlSeq,
 			'<span class="mq-non-leaf">' +
@@ -420,7 +420,7 @@ LatexCmds.left = class extends MathCommand {
 		return Parser.optWhitespace
 			.then(Parser.regex(/^(?:[([|]|\\\{|\\langle(?![a-zA-Z])|\\lVert(?![a-zA-Z]))/))
 			.then((ctrlSeq: string) => {
-				let open = ctrlSeq.charAt(0) === '\\' ? ctrlSeq.slice(1) : ctrlSeq;
+				let open = ctrlSeq.startsWith('\\') ? ctrlSeq.slice(1) : ctrlSeq;
 				if (ctrlSeq == '\\langle') {
 					open = '&lang;';
 					ctrlSeq = ctrlSeq + ' ';
@@ -434,7 +434,7 @@ LatexCmds.left = class extends MathCommand {
 						.skip(Parser.optWhitespace)
 						.then(Parser.regex(/^(?:[\])|]|\\\}|\\rangle(?![a-zA-Z])|\\rVert(?![a-zA-Z]))/))
 						.map((end: string) => {
-							let close = end.charAt(0) === '\\' ? end.slice(1) : end;
+							let close = end.startsWith('\\') ? end.slice(1) : end;
 							if (end == '\\rangle') {
 								close = '&rang;';
 								end = `${end} `;
@@ -503,7 +503,7 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	}
 
 	finalizeTree(options: Options) {
-		const ctrlr = new Controller(this.ends[L] as TNode, this.elements.firstElement, options);
+		const ctrlr = new Controller(this.ends[L]!, this.elements.firstElement, options);
 		ctrlr.KIND_OF_MQ = 'MathField';
 		this.field = new InnerMathField(ctrlr);
 		this.field.name = this.name;
@@ -516,7 +516,7 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	}
 
 	registerInnerField(innerFields: InnerMathFieldStore) {
-		innerFields.push(this.field as InnerMathField);
+		innerFields.push(this.field!);
 	}
 
 	latex() {

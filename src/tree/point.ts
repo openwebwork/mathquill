@@ -7,7 +7,7 @@ export class Point {
 	parent?: TNode;
 	[L]?: TNode;
 	[R]?: TNode;
-	ancestors?: { [key: number]: Point | TNode };
+	ancestors?: Record<number, Point | TNode>;
 
 	constructor(parent?: TNode, leftward?: TNode, rightward?: TNode) {
 		this.parent = parent;

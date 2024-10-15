@@ -23,6 +23,8 @@ declare global {
 	}
 }
 
+const isBrowser = Object.getPrototypeOf(Object.getPrototypeOf(globalThis)) !== Object.prototype;
+
 interface MQApi {
 	(el: unknown): AbstractMathQuill | void;
 	saneKeyboardEvents: typeof saneKeyboardEvents;
@@ -36,11 +38,11 @@ interface MQApi {
 
 // globally exported API object
 export default class MathQuill {
-	static origMathQuill?: MathQuill = window.MathQuill;
+	static origMathQuill?: MathQuill = isBrowser ? window.MathQuill : undefined;
 	static VERSION?: string;
 
 	static getInterface() {
-		const APIClasses: { [key: string]: AbstractMathQuillConstructor } = {};
+		const APIClasses: Record<string, AbstractMathQuillConstructor> = {};
 
 		// Function that takes an HTML element and, if it's the root HTML element of a
 		// static math or math or text field, returns an API object for it (else, undefined).
@@ -90,6 +92,7 @@ export default class MathQuill {
 	}
 
 	static noConflict() {
+		if (!isBrowser) return MathQuill;
 		window.MathQuill = this.origMathQuill;
 		return MathQuill;
 	}

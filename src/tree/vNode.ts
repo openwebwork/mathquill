@@ -4,9 +4,9 @@ import type { Direction } from 'src/constants';
 import { L } from 'src/constants';
 
 export class VNode {
-	contents: Array<Node> = [];
+	contents: Node[] = [];
 
-	constructor(dom?: string | Node | Array<Node> | VNode) {
+	constructor(dom?: string | Node | Node[] | VNode) {
 		if (dom instanceof VNode) this.contents.push(...dom.contents);
 		else if (dom instanceof Node) this.contents.push(dom);
 		else if (dom instanceof Array) this.contents.push(...dom);
@@ -16,7 +16,7 @@ export class VNode {
 		}
 	}
 
-	add(el: Node | Array<Node> | VNode) {
+	add(el: Node | Node[] | VNode) {
 		this.contents.push(...(el instanceof VNode ? el.contents : el instanceof Array ? el : [el]));
 
 		// Sort the contents into document order.
@@ -80,7 +80,7 @@ export class VNode {
 					})
 				);
 				return ret;
-			}, [] as Array<Node>)
+			}, [] as Node[])
 		);
 	}
 
@@ -89,17 +89,17 @@ export class VNode {
 			this.contents.reduce((ret, el) => {
 				ret.push(...(el as Element).querySelectorAll(selector));
 				return ret;
-			}, [] as Array<Node>)
+			}, [] as Node[])
 		);
 	}
 
-	addClass(...tokens: Array<string>) {
+	addClass(...tokens: string[]) {
 		this.contents.forEach((child) => {
 			if (child instanceof Element) child.classList.add(...tokens);
 		});
 	}
 
-	removeClass(...tokens: Array<string>) {
+	removeClass(...tokens: string[]) {
 		this.contents.forEach((child) => {
 			if (child instanceof Element) child.classList.remove(...tokens);
 		});

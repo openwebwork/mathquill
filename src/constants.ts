@@ -1,16 +1,3 @@
-/* @license
- * MathQuill, by Han, Jeanine, and Mary
- * http://mathquill.com | maintainers@mathquill.com
- *
- * Rewritten for the purposes of WeBWorK.
- * https://github.com/openwebwork
- *
- * This Source Code Form is subject to the terms of the
- * Mozilla Public License, v. 2.0. If a copy of the MPL
- * was not distributed with this file, You can obtain
- * one at http://mozilla.org/MPL/2.0/.
- */
-
 import type { TNode } from 'tree/node';
 import type { MathCommand } from 'commands/mathElements';
 
@@ -68,20 +55,20 @@ export const iterator = <R extends object, S, T, U, V>(generator: (yield_: (obj:
 								arg1,
 								arg2
 							);
-				  };
+					};
 		return generator(yield_);
 	};
 };
 
-export type Constructor<T = object> = new (...args: Array<any>) => T;
+export type Constructor<T = object> = new (...args: any[]) => T;
 
 // sugar to make defining lots of commands easier.
 export const bindMixin = <TBase extends Constructor<MathCommand>>(
 	Base: TBase,
-	...args: Array<string | boolean | number | object>
+	...args: (string | boolean | number | object)[]
 ) =>
 	class extends Base {
-		constructor(..._ignore_args: Array<any>) {
+		constructor(..._ignore_args: any[]) {
 			super(...args);
 		}
 	};
@@ -129,10 +116,10 @@ export const prayWellFormed = (parent?: TNode, leftward?: TNode, rightward?: TNo
 
 // Registry of LaTeX commands and commands created when typing a single character.
 // (Commands are all subclasses of tree/TNode.)
-export const LatexCmds: { [key: string]: Constructor<TNode> } = {},
-	CharCmds: { [key: string]: Constructor<TNode> } = {};
+export const LatexCmds: Record<string, Constructor<TNode>> = {},
+	CharCmds: Record<string, Constructor<TNode>> = {};
 
-export const OPP_BRACKS: { readonly [key: string]: string } = {
+export const OPP_BRACKS: Readonly<Record<string, string>> = {
 	'(': ')',
 	')': '(',
 	'[': ']',
@@ -150,8 +137,12 @@ export const OPP_BRACKS: { readonly [key: string]: string } = {
 	'\\rVert ': '\\lVert '
 };
 
-export type EmbedOptions = { text?: () => string; htmlString?: string; latex?: () => string };
-export const EMBEDS: { [key: string]: (data: string) => EmbedOptions } = {};
+export interface EmbedOptions {
+	text?: () => string;
+	htmlString?: string;
+	latex?: () => string;
+}
+export const EMBEDS: Record<string, (data: string) => EmbedOptions> = {};
 
 // The set of operator names like \arg, \det, etc that are built-into LaTeX,
 // see Section 3.15 of the Short Math Guide: http://tug.ctan.org/info/short-math-guide/short-math-guide.pdf
@@ -160,7 +151,7 @@ export const EMBEDS: { [key: string]: (data: string) => EmbedOptions } = {};
 // Note: over/under line/arrow \lim variants like \varlimsup are not supported.
 // Note that this no longer includes ln, log, exp, or any of the trig functions.
 // Those are now latex commands that are implemented by the MathFunction class.
-export const BuiltInOpNames: { [key: string]: 1 } = {};
+export const BuiltInOpNames: Record<string, 1> = {};
 
 // Standard operators
 for (const op of [

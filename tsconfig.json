@@ -8,7 +8,7 @@
 		"resolveJsonModule": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "es6",
+		"target": "es2020",
 		"paths": {
 			"src/*": ["src/*"],
 			"tree/*": ["src/tree/*"],
@@ -20,5 +20,5 @@
 		"lib": ["esnext", "dom", "dom.iterable"]
 	},
 	"include": ["src/**/*"],
-	"exclude": ["dist", "node_modules", "build"]
+	"exclude": ["dist", "node_modules"]
 }

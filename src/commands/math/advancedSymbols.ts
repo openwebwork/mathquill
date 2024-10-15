@@ -31,7 +31,7 @@ LatexCmds.prop = LatexCmds.propto = bindMixin(BinaryOperator, '\\propto ', '&pro
 
 LatexCmds['\u2248'] = LatexCmds.asymp = LatexCmds.approx = bindMixin(BinaryOperator, '\\approx ', '&asymp;');
 
-LatexCmds.isin = LatexCmds['in'] = bindMixin(BinaryOperator, '\\in ', '&isin;');
+LatexCmds.isin = LatexCmds.in = bindMixin(BinaryOperator, '\\in ', '&isin;');
 
 LatexCmds.ni = LatexCmds.contains = bindMixin(BinaryOperator, '\\ni ', '&ni;');
 
@@ -99,7 +99,7 @@ LatexCmds.nsupe =
 
 // The canonical sets of numbers
 LatexCmds.mathbb = class extends MathCommand {
-	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: Array<string>) {
+	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: string[]) {
 		super(ctrlSeq, htmlTemplate, textTemplate);
 		this.createLeftOf = noop;
 	}

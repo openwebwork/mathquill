@@ -5,9 +5,8 @@ import { L, R } from 'src/constants';
 import type { TNode } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
-import { RootMathCommand } from 'commands/mathBlock';
+import { RootMathCommand, MathBlock } from 'commands/mathBlock';
 import type { ControllerBase } from 'src/controller';
-import type { MathBlock } from 'commands/mathBlock';
 
 export const LatexControllerExtension = <TBase extends Constructor<ControllerBase>>(Base: TBase) =>
 	class extends Base {
@@ -23,13 +22,13 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 		}
 
 		renderLatexMath(latex: string) {
-			const block: MathBlock = latexMathParser.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+			const block = latexMathParser.skip(Parser.eof).or(Parser.all.result(false)).parse<MathBlock>(latex);
 
 			this.root.eachChild('postOrder', 'dispose');
 			delete this.root.ends[L];
 			delete this.root.ends[R];
 
-			if (block && block.prepareInsertionAt(this.cursor)) {
+			if (block instanceof MathBlock && block.prepareInsertionAt(this.cursor)) {
 				block.children().adopt(this.root);
 				const html = block.join('html');
 				this.root.elements.html(html);
@@ -75,7 +74,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			const escapedDollar = Parser.string('\\$').result('$');
 			const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);
 			const latexText = mathMode.or(textChar).many();
-			const commands: Array<TNode> = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+			const commands: TNode[] = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
 
 			if (commands) {
 				for (const command of commands) {

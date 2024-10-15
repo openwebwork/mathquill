@@ -1,0 +1,10 @@
+/src
+/node_modules
+/test
+/public
+eslint.config.mjs
+tsconfig.json
+webpack-config.js
+rollup.config.mjs
+.vim
+.vscode

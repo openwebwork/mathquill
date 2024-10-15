@@ -17,7 +17,7 @@ export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) 
 		chToCmd(ch: string, options: Options): TNode {
 			const cons = CharCmds[ch] || LatexCmds[ch];
 			// exclude f because it gets a dedicated command with more spacing
-			if (ch.match(/^[a-eg-zA-Z]$/)) return new Letter(ch);
+			if (/^[a-eg-zA-Z]$/.exec(ch)) return new Letter(ch);
 			else if (/^\d$/.test(ch)) return new Digit(ch);
 			else if (options && options.typingSlashWritesDivisionSymbol && ch === '/')
 				return new LatexCmds['\u00f7'](ch);
@@ -43,9 +43,9 @@ export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) 
 					cursor[L] &&
 					!cursor[R] &&
 					!cursor.selection &&
-					cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1
+					cursor.options.charsThatBreakOutOfSupSub.includes(ch)
 				) {
-					cursor.insRightOf(this.parent as TNode);
+					cursor.insRightOf(this.parent!);
 				}
 			}
 
@@ -72,7 +72,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	}
 
 	text() {
-		return this.ends[L] && this.ends[L] === this.ends[R] ? this.ends[L]?.text() ?? '' : this.join('text');
+		return this.ends[L] && this.ends[L] === this.ends[R] ? (this.ends[L]?.text() ?? '') : this.join('text');
 	}
 
 	keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
@@ -94,15 +94,15 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	// the cursor
 	moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 		const updownInto = updown && this.parent?.[`${updown}Into`];
-		if (!updownInto && this[dir]) cursor.insAtDirEnd(dir === L ? R : L, this[dir] as TNode);
-		else cursor.insDirOf(dir, this.parent as TNode);
+		if (!updownInto && this[dir]) cursor.insAtDirEnd(dir === L ? R : L, this[dir]);
+		else cursor.insDirOf(dir, this.parent!);
 	}
 
 	selectOutOf(dir: Direction, cursor: Cursor) {
-		cursor.insDirOf(dir, this.parent as TNode);
+		cursor.insDirOf(dir, this.parent!);
 	}
 
-	deleteOutOf(dir: Direction, cursor: Cursor) {
+	deleteOutOf(_dir: Direction, cursor: Cursor) {
 		cursor.unwrapGramp();
 	}
 
@@ -128,7 +128,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 		const block: MathCommand = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
 
 		if (block && !block.isEmpty() && block.prepareInsertionAt(cursor)) {
-			block.children().adopt(cursor.parent as TNode, cursor[L], cursor[R]);
+			block.children().adopt(cursor.parent!, cursor[L], cursor[R]);
 			const elements = block.domify();
 			cursor.element.before(...elements.contents);
 			cursor[L] = block.ends[R];
@@ -173,11 +173,11 @@ export class RootMathCommand extends writeMethodMixin(MathCommand) {
 		leftEnd.write = (cursor: Cursor, ch: string) => {
 			if (ch !== '$') this.write(cursor, ch);
 			else if (leftEnd.isEmpty()) {
-				cursor.insRightOf(leftEnd.parent as TNode);
+				cursor.insRightOf(leftEnd.parent!);
 				leftEnd.parent?.deleteTowards(L, cursor);
 				new VanillaSymbol('\\$', '$').createLeftOf(cursor.show());
-			} else if (!cursor[R]) cursor.insRightOf(leftEnd.parent as TNode);
-			else if (!cursor[L]) cursor.insLeftOf(leftEnd.parent as TNode);
+			} else if (!cursor[R]) cursor.insRightOf(leftEnd.parent!);
+			else if (!cursor[L]) cursor.insLeftOf(leftEnd.parent!);
 			else this.write(cursor, ch);
 		};
 	}
