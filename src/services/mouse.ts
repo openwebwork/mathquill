@@ -20,12 +20,11 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 			// Drag-to-select event handling
 			this.mouseDownHandler = (e: MouseEvent) => {
 				const rootEl = (e.target as HTMLElement).closest('.mq-root-block')!;
-				const root =
-					TNode.byId[
-						parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl?.getAttribute(mqBlockId)) ?? '0')
-					];
+				const root = TNode.byId.get(
+					parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl?.getAttribute(mqBlockId)) ?? '0')
+				);
 
-				if (!root.controller) {
+				if (!root?.controller) {
 					throw 'controller undefined... what?';
 				}
 
@@ -152,7 +151,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 					);
 				}
 			}
-			const node = nodeId ? TNode.byId[nodeId] : this.root;
+			const node = nodeId ? TNode.byId.get(nodeId) : this.root;
 			pray('nodeId is the id of some TNode that exists', !!node);
 
 			// Don't clear the selection until after getting node from target, in case
@@ -160,7 +159,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 			// seek from root, which is less accurate (e.g. fraction).
 			cursor.clearSelection().show();
 
-			node.seek(pageX, cursor);
+			node?.seek(pageX, cursor);
 
 			// Before .selectFrom when mouse-selecting, so
 			// always hits no-selection case in scrollHoriz and scrolls slower

@@ -46,7 +46,7 @@ export default class MathQuill {
 		const MQ = (el: unknown) => {
 			if (!(el instanceof HTMLElement)) return;
 			const blockId = el.querySelector('.mq-root-block')?.getAttribute(mqBlockId) ?? false;
-			const ctrlr = blockId ? TNode.byId[parseInt(blockId)].controller : undefined;
+			const ctrlr = blockId ? TNode.byId.get(parseInt(blockId))?.controller : undefined;
 			return ctrlr?.apiClass;
 		};
 

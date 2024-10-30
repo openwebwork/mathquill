@@ -20,7 +20,7 @@ const prayOverridden = (name: string) => pray(`"${name}" should be overridden or
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
 export class TNode {
 	static id = 0;
-	static byId: Record<number, TNode> = {};
+	static byId = new Map<number, TNode>();
 	static uniqueNodeId = () => ++TNode.id;
 
 	elements: VNode = new VNode();
@@ -66,11 +66,11 @@ export class TNode {
 
 	constructor() {
 		this.id = TNode.uniqueNodeId();
-		TNode.byId[this.id] = this;
+		TNode.byId.set(this.id, this);
 	}
 
 	dispose() {
-		delete TNode.byId[this.id];
+		TNode.byId.delete(this.id);
 	}
 
 	toString() {
@@ -89,8 +89,8 @@ export class TNode {
 			if (el instanceof HTMLElement) {
 				const cmdId = parseInt(el.getAttribute(mqCmdId) ?? '0');
 				const blockId = parseInt(el.getAttribute(mqBlockId) ?? '0');
-				if (cmdId) TNode.byId[cmdId].addToElements(el);
-				if (blockId) TNode.byId[blockId].addToElements(el);
+				if (cmdId) TNode.byId.get(cmdId)?.addToElements(el);
+				if (blockId) TNode.byId.get(blockId)?.addToElements(el);
 			}
 			for (let child = el.firstChild; child; child = child.nextSibling) {
 				addToElements(child);
