@@ -1,6 +1,6 @@
 // Input box to type backslash commands
 
-import { L, R, LatexCmds, CharCmds } from 'src/constants';
+import { LatexCmds, CharCmds } from 'src/constants';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
 import type { Fragment } from 'tree/fragment';
@@ -26,7 +26,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	createBlocks() {
 		super.createBlocks();
 
-		const leftEnd = this.ends[L];
+		const leftEnd = this.ends.left;
 
 		if (!leftEnd) return;
 
@@ -88,17 +88,17 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	}
 
 	latex() {
-		return '\\' + (this.ends[L]?.latex() ?? '') + ' ';
+		return '\\' + (this.ends.left?.latex() ?? '') + ' ';
 	}
 
 	renderCommand(cursor: Cursor) {
 		this.elements = new VNode(this.elements.last);
 		this.remove();
 
-		if (this[R]) cursor.insLeftOf(this[R]);
+		if (this.right) cursor.insLeftOf(this.right);
 		else if (this.parent) cursor.insAtRightEnd(this.parent);
 
-		const latex = this.ends[L]?.latex() || ' ';
+		const latex = this.ends.left?.latex() || ' ';
 		if (latex in LatexCmds) {
 			const cmd = new LatexCmds[latex](latex);
 			if (this._replacedFragment) cmd.replaces(this._replacedFragment);

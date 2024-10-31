@@ -1,6 +1,6 @@
 // Symbols for Advanced Mathematics
 
-import { R, noop, bindMixin, LatexCmds } from 'src/constants';
+import { noop, bindMixin, LatexCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, BinaryOperator, MathCommand } from 'commands/mathElements';
 
@@ -402,7 +402,7 @@ LatexCmds.deg = LatexCmds.degree = class degree extends VanillaSymbol {
 	}
 
 	text() {
-		const rightText = this[R]?.text();
+		const rightText = this.right?.text();
 		return `\u00B0${rightText && /^[^FCK]$/.test(rightText) ? ' ' : ''}`;
 	}
 };

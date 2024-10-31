@@ -5,11 +5,10 @@
 import type { Direction } from 'src/constants';
 import type { TNode } from 'tree/node';
 import { VNode } from 'tree/vNode';
-import { L } from 'src/constants';
 import { Fragment } from 'tree/fragment';
 
 export class Selection extends Fragment {
-	constructor(withDir?: TNode, oppDir?: TNode, dir: Direction = L) {
+	constructor(withDir?: TNode, oppDir?: TNode, dir: Direction = 'left') {
 		super(withDir, oppDir, dir);
 		const wrapper = document.createElement('span');
 		wrapper.classList.add('mq-selection');

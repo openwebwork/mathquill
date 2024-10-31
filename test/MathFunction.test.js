@@ -1,6 +1,5 @@
 /* global suite, test, assert, setup, teardown, MQ */
 
-import { L, R } from 'src/constants';
 import { VNode } from 'src/tree/vNode';
 import { MathFunction, latexMathParser } from 'commands/mathElements';
 
@@ -85,10 +84,10 @@ suite('MathFunction', () => {
 		test('basic latex output', () => {
 			const tree = latexMathParser.parse('\\sin_2^3\\left(x^2+3\\right)').postOrder('finalizeTree', mq.options);
 
-			assert.ok(tree.ends[L] instanceof MathFunction);
+			assert.ok(tree.ends.left instanceof MathFunction);
 
-			assert.equal(tree.ends[L].ends[L].join('latex'), '_2^3');
-			assert.equal(tree.ends[L].ends[R].join('latex'), 'x^2+3');
+			assert.equal(tree.ends.left.ends.left.join('latex'), '_2^3');
+			assert.equal(tree.ends.left.ends.right.join('latex'), 'x^2+3');
 
 			assert.equal(tree.join('latex'), '\\sin_2^3\\left(x^2+3\\right)');
 		});

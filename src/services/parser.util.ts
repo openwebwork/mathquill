@@ -25,7 +25,7 @@ export class Parser {
 			`${stream}`,
 			(_stream, result: T) => result,
 			(stream: string, message: string) => {
-				throw `Parse Error: ${message} at ${stream || 'EOF'}`;
+				throw new Error(`Parse Error: ${message} at ${stream || 'EOF'}`);
 			}
 		);
 	}

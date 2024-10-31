@@ -5,7 +5,6 @@
 // A fake cursor in the fake textbox that the math is rendered in.
 
 import type { Direction } from 'src/constants';
-import { L, R } from 'src/constants';
 import type { Options } from 'src/options';
 import { Point } from 'tree/point';
 import type { TNode } from 'tree/node';
@@ -39,10 +38,10 @@ export class Cursor extends Point {
 			clearInterval(this.intervalId);
 		} else {
 			// The cursor was hidden and removed, so insert this.element back into the DOM.
-			if (this[R]) {
-				if (this.selection && this.selection.ends[L]?.[L] === this[L])
+			if (this.right) {
+				if (this.selection && this.selection.ends.left?.left === this.left)
 					this.selection.elements.first.before(this.element);
-				else this[R].elements.first.before(this.element);
+				else this.right.elements.first.before(this.element);
 			} else this.parent?.elements.firstElement.append(this.element);
 			this.parent?.focus();
 		}
@@ -62,15 +61,15 @@ export class Cursor extends Point {
 		const oldParent = this.parent;
 		this.parent = parent;
 		this[dir] = withDir;
-		this[dir === L ? R : L] = oppDir;
+		this[dir === 'left' ? 'right' : 'left'] = oppDir;
 		// By contract blur is called after all has been said and done and the cursor has actually been moved.
 		if (oldParent !== parent && oldParent?.blur) oldParent.blur(this);
 	}
 
 	insDirOf(dir: Direction | undefined, el: TNode) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 
-		if (dir === L) el.elements.first.before(this.element);
+		if (dir === 'left') el.elements.first.before(this.element);
 		else el.elements.last.after(this.element);
 
 		if (el.parent) this.withDirInsertAt(dir, el.parent, el[dir], el);
@@ -79,17 +78,17 @@ export class Cursor extends Point {
 	}
 
 	insLeftOf(el: TNode) {
-		return this.insDirOf(L, el);
+		return this.insDirOf('left', el);
 	}
 
 	insRightOf(el: TNode) {
-		return this.insDirOf(R, el);
+		return this.insDirOf('right', el);
 	}
 
 	insAtDirEnd(dir: Direction | undefined, el: TNode) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 
-		if (dir === L) el.elements.firstElement.prepend(this.element);
+		if (dir === 'left') el.elements.firstElement.prepend(this.element);
 		else el.elements.lastElement.append(this.element);
 
 		this.withDirInsertAt(dir, el, undefined, el.ends[dir]);
@@ -98,11 +97,11 @@ export class Cursor extends Point {
 	}
 
 	insAtLeftEnd(el: TNode) {
-		return this.insAtDirEnd(L, el);
+		return this.insAtDirEnd('left', el);
 	}
 
 	insAtRightEnd(el: TNode) {
-		return this.insAtDirEnd(R, el);
+		return this.insAtDirEnd('right', el);
 	}
 
 	// Jump up or down from one block TNode to another:
@@ -114,7 +113,7 @@ export class Cursor extends Point {
 		this.upDownCache[from.id] = Point.copy(this);
 		const cached = this.upDownCache[to.id] as Point | undefined;
 		if (cached) {
-			if (cached[R]) this.insLeftOf(cached[R]);
+			if (cached.right) this.insLeftOf(cached.right);
 			else if (cached.parent) this.insAtRightEnd(cached.parent);
 		} else {
 			to.seek(this.offset().left, this);
@@ -128,9 +127,9 @@ export class Cursor extends Point {
 	unwrapGramp() {
 		const gramp = this.parent?.parent;
 		const greatgramp = gramp?.parent;
-		const rightward = gramp?.[R];
+		const rightward = gramp?.right;
 
-		let leftward = gramp?.[L];
+		let leftward = gramp?.left;
 		gramp?.disown().eachChild((uncle: TNode) => {
 			if (uncle.isEmpty()) return true;
 
@@ -143,32 +142,32 @@ export class Cursor extends Point {
 						return true;
 					});
 
-			leftward = uncle.ends[R];
+			leftward = uncle.ends.right;
 			return true;
 		});
 
-		if (!this[R]) {
+		if (!this.right) {
 			// Find something rightward to insert left of.
-			if (this[L]) this[R] = this[L][R];
+			if (this.left) this.right = this.left.right;
 			else {
-				while (!this[R]) {
-					this.parent = this.parent?.[R];
-					if (this.parent) this[R] = this.parent.ends[L];
+				while (!this.right) {
+					this.parent = this.parent?.right;
+					if (this.parent) this.right = this.parent.ends.left;
 					else {
-						this[R] = gramp?.[R];
+						this.right = gramp?.right;
 						this.parent = greatgramp;
 						break;
 					}
 				}
 			}
 		}
-		if (this[R]) this.insLeftOf(this[R]);
+		if (this.right) this.insLeftOf(this.right);
 		else if (greatgramp) this.insAtRightEnd(greatgramp);
 
 		gramp?.elements.remove();
 
-		if (gramp?.[L]?.siblingDeleted) gramp[L].siblingDeleted(this.options, R);
-		if (gramp?.[R]?.siblingDeleted) gramp[R].siblingDeleted(this.options, L);
+		if (gramp?.left?.siblingDeleted) gramp.left.siblingDeleted(this.options, 'right');
+		if (gramp?.right?.siblingDeleted) gramp.right.siblingDeleted(this.options, 'left');
 	}
 
 	startSelection() {
@@ -186,7 +185,7 @@ export class Cursor extends Point {
 	}
 
 	select() {
-		if (this[L] === this.anticursor?.[L] && this.parent === this.anticursor?.parent) return false;
+		if (this.left === this.anticursor?.left && this.parent === this.anticursor?.parent) return false;
 
 		if (!this.anticursor?.ancestors) throw new Error('selection not well formed');
 
@@ -218,7 +217,7 @@ export class Cursor extends Point {
 		// of the selection.
 		let leftEnd,
 			rightEnd,
-			dir = R;
+			dir: Direction = 'right';
 
 		// This is an extremely subtle algorithm.
 		// As a special case, `ancestor` could be a Point and `antiAncestor` a TNode
@@ -227,27 +226,27 @@ export class Cursor extends Point {
 		// - both Nodes
 		// - `ancestor` a Point and `antiAncestor` a TNode
 		// - `ancestor` a TNode and `antiAncestor` a Point
-		// `antiAncestor[R] === rightward[R]` for some `rightward` that is
+		// `antiAncestor.right === rightward.right` for some `rightward` that is
 		// `ancestor` or to its right, if and only if `antiAncestor` is to
 		// the right of `ancestor`.
-		if (ancestor[L] !== antiAncestor) {
-			for (let rightward: Point | TNode | undefined = ancestor; rightward; rightward = rightward[R]) {
-				if (rightward[R] === antiAncestor[R]) {
-					dir = L;
+		if (ancestor.left !== antiAncestor) {
+			for (let rightward: Point | TNode | undefined = ancestor; rightward; rightward = rightward.right) {
+				if (rightward.right === antiAncestor.right) {
+					dir = 'left';
 					leftEnd = ancestor;
 					rightEnd = antiAncestor;
 					break;
 				}
 			}
 		}
-		if (dir === R) {
+		if (dir === 'right') {
 			leftEnd = antiAncestor;
 			rightEnd = ancestor;
 		}
 
 		// only want to select Nodes up to Points, can't select Points themselves
-		if (leftEnd instanceof Point) leftEnd = leftEnd[R];
-		if (rightEnd instanceof Point) rightEnd = rightEnd[L];
+		if (leftEnd instanceof Point) leftEnd = leftEnd.right;
+		if (rightEnd instanceof Point) rightEnd = rightEnd.left;
 
 		this.hide().selection = lca.selectChildren(leftEnd, rightEnd);
 		const selectionEndDir = this.selection?.ends[dir];
@@ -268,8 +267,8 @@ export class Cursor extends Point {
 	deleteSelection() {
 		if (!this.selection) return;
 
-		this[L] = this.selection.ends[L]?.[L];
-		this[R] = this.selection.ends[R]?.[R];
+		this.left = this.selection.ends.left?.left;
+		this.right = this.selection.ends.right?.right;
 		this.selection.remove();
 		this.selectionChanged?.();
 		delete this.selection;
@@ -278,8 +277,8 @@ export class Cursor extends Point {
 	replaceSelection() {
 		const seln = this.selection;
 		if (seln) {
-			this[L] = seln.ends[L]?.[L];
-			this[R] = seln.ends[R]?.[R];
+			this.left = seln.ends.left?.left;
+			this.right = seln.ends.right?.right;
 			delete this.selection;
 		}
 		return seln;

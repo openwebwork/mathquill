@@ -4,8 +4,8 @@ import type { Direction } from 'src/constants';
 import { BuiltInOpNames } from 'src/constants';
 import type { AbstractMathQuill } from 'src/abstractFields';
 
-export type Handler = (mq: AbstractMathQuill) => void;
-export type DirectionHandler = (dir: Direction, mq: AbstractMathQuill) => void;
+export type Handler = (mq?: AbstractMathQuill) => void;
+export type DirectionHandler = (dir: Direction, mq?: AbstractMathQuill) => void;
 
 export interface Handlers {
 	enter?: Handler;
@@ -88,13 +88,13 @@ export class Options {
 		}
 
 		if (!/^\s*[a-z]+(?:\s+[a-z]+)*\s*$/i.test(cmds)) {
-			throw `"${cmds}" not a space-delimited list of only letters`;
+			throw new Error(`"${cmds}" not a space-delimited list of only letters`);
 		}
 		const list = cmds.trim().split(/\s+/),
 			dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
-			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
-			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
+			if (cmd.length < 2) throw new Error(`autocommand "${cmd}" not minimum length of 2`);
+			if (cmd in BuiltInOpNames) throw new Error(`"${cmd}" is a built-in operator name`);
 			dict[cmd] = 1;
 			dict._maxLength = Math.max(dict._maxLength, cmd.length);
 		}
@@ -104,12 +104,12 @@ export class Options {
 
 	addAutoCommands(cmds: string | string[]) {
 		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
-		if (!this.#_autoCommands) throw 'autoCommands setter not working';
+		if (!this.#_autoCommands) throw new Error('autoCommands setter not working');
 		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of newCmds) {
-			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw `${cmd} is not a valid autocommand name`;
-			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
-			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
+			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw new Error(`${cmd} is not a valid autocommand name`);
+			if (cmd.length < 2) throw new Error(`autocommand "${cmd}" not minimum length of 2`);
+			if (cmd in BuiltInOpNames) throw new Error(`"${cmd}" is a built-in operator name`);
 			this.#_autoCommands[cmd] = 1;
 			this.#_autoCommands._maxLength = Math.max(this.#_autoCommands._maxLength, cmd.length);
 		}
@@ -117,7 +117,7 @@ export class Options {
 
 	removeAutoCommands(cmds: string | string[]) {
 		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
-		if (!this.#_autoCommands) throw 'autoCommands setter not working';
+		if (!this.#_autoCommands) throw new Error('autoCommands setter not working');
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of removeCmds) {
 			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
@@ -177,12 +177,12 @@ export class Options {
 		}
 
 		if (!/^\s*[a-z]+(?:\s+[a-z]+)*\s*$/i.test(cmds)) {
-			throw `"${cmds}" not a space-delimited list of only letters`;
+			throw new Error(`"${cmds}" not a space-delimited list of only letters`);
 		}
 		const list = cmds.trim().split(/\s+/),
 			dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
-			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
+			if (cmd.length < 2) throw new Error(`"${cmd}" not minimum length of 2`);
 			dict[cmd] = 1;
 			dict._maxLength = Math.max(dict._maxLength, cmd.length);
 		}
@@ -192,11 +192,11 @@ export class Options {
 
 	addAutoOperatorNames(cmds: string | string[]) {
 		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
-		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
+		if (!this.#_autoOperatorNames) throw new Error('autoOperatorNames setter not working');
 		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of newCmds) {
-			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw `${cmd} is not a valid autocommand name`;
-			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
+			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw new Error(`${cmd} is not a valid autocommand name`);
+			if (cmd.length < 2) throw new Error(`"${cmd}" not minimum length of 2`);
 			this.#_autoOperatorNames[cmd] = 1;
 			this.#_autoOperatorNames._maxLength = Math.max(this.#_autoOperatorNames._maxLength, cmd.length);
 		}
@@ -204,7 +204,7 @@ export class Options {
 
 	removeAutoOperatorNames(cmds: string | string[]) {
 		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
-		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
+		if (!this.#_autoOperatorNames) throw new Error('autoOperatorNames setter not working');
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of removeCmds) {
 			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
@@ -257,7 +257,7 @@ export class Options {
 	}
 	set leftRightIntoCmdGoes(updown: 'up' | 'down' | undefined) {
 		if (updown && updown !== 'up' && (updown as string) !== 'down') {
-			throw `"up" or "down" required for leftRightIntoCmdGoes option, got "${updown as string}"`;
+			throw new Error(`"up" or "down" required for leftRightIntoCmdGoes option, got "${updown as string}"`);
 		}
 		if (this instanceof Options) this.#_leftRightIntoCmdGoes = updown;
 		else Options.#leftRightIntoCmdGoes = updown;

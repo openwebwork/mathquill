@@ -1,7 +1,6 @@
 // Controller for a MathQuill instance, on which services are registered.
 
 import type { Direction } from 'src/constants';
-import { L, R } from 'src/constants';
 import type { Handler, DirectionHandler, Handlers, Options } from 'src/options';
 import { Cursor } from 'src/cursor';
 import type { AbstractMathQuill } from 'src/abstractFields';
@@ -39,8 +38,8 @@ export class ControllerBase {
 
 	handle(name: keyof Handlers, dir?: Direction) {
 		const handlers = this.options.handlers;
-		if (handlers?.[name] && this.apiClass) {
-			if (dir === L || dir === R) (handlers[name] as DirectionHandler)(dir, this.apiClass);
+		if (handlers?.[name]) {
+			if (dir === 'left' || dir === 'right') (handlers[name] as DirectionHandler)(dir, this.apiClass);
 			else (handlers[name] as Handler)(this.apiClass);
 		}
 	}
@@ -71,7 +70,7 @@ export class Controller extends ExportText(
 	}
 
 	escapeDir(dir: Direction | undefined, _key: string, e: KeyboardEvent) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 		const cursor = this.cursor;
 
 		// only prevent default of Tab if not in the root editable
@@ -86,22 +85,23 @@ export class Controller extends ExportText(
 	}
 
 	moveDir(dir: Direction | undefined) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 		const cursor = this.cursor,
 			updown = cursor.options.leftRightIntoCmdGoes;
 
 		if (cursor.selection) {
-			if (cursor.selection.ends[dir]) cursor.insDirOf(dir, cursor.selection.ends[dir]);
+			const end = cursor.selection.ends[dir];
+			if (end) cursor.insDirOf(dir, end);
 		} else if (cursor[dir]) cursor[dir].moveTowards(dir, cursor, updown);
 		else cursor.parent?.moveOutOf(dir, cursor, updown);
 
 		return this.notify('move');
 	}
 	moveLeft() {
-		return this.moveDir(L);
+		return this.moveDir('left');
 	}
 	moveRight() {
-		return this.moveDir(R);
+		return this.moveDir('right');
 	}
 
 	// moveUp and moveDown have almost identical algorithms:
@@ -118,8 +118,8 @@ export class Controller extends ExportText(
 		const cursor = this.notify('upDown').cursor;
 		const dirInto: keyof TNode = `${dir}Into`,
 			dirOutOf: keyof TNode = `${dir}OutOf`;
-		if (cursor[R]?.[dirInto]) cursor.insAtLeftEnd(cursor[R][dirInto]);
-		else if (cursor[L]?.[dirInto]) cursor.insAtRightEnd(cursor[L][dirInto]);
+		if (cursor.right?.[dirInto]) cursor.insAtLeftEnd(cursor.right[dirInto]);
+		else if (cursor.left?.[dirInto]) cursor.insAtRightEnd(cursor.left[dirInto]);
 		else {
 			cursor.parent?.bubble((ancestor: TNode) => {
 				if (ancestor[dirOutOf]) {
@@ -128,6 +128,7 @@ export class Controller extends ExportText(
 					if (ancestor[dirOutOf] instanceof TNode) cursor.jumpUpDown(ancestor, ancestor[dirOutOf]);
 					if (ancestor[dirOutOf] !== true) return false;
 				}
+				return true;
 			});
 		}
 		return this;
@@ -140,7 +141,7 @@ export class Controller extends ExportText(
 	}
 
 	deleteDir(dir: Direction | undefined) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 		const cursor = this.cursor;
 
 		const hadSelection = cursor.selection;
@@ -151,10 +152,10 @@ export class Controller extends ExportText(
 		}
 
 		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
-		cursor[R]?.postOrder('contactWeld', cursor);
+		cursor.right?.postOrder('contactWeld', cursor);
 
-		cursor[L]?.siblingDeleted?.(cursor.options, R);
-		cursor[R]?.siblingDeleted?.(cursor.options, L);
+		cursor.left?.siblingDeleted?.(cursor.options, 'right');
+		cursor.right?.siblingDeleted?.(cursor.options, 'left');
 
 		cursor.parent?.bubble('reflow');
 
@@ -162,40 +163,40 @@ export class Controller extends ExportText(
 	}
 
 	ctrlDeleteDir(dir: Direction | undefined) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 		const cursor = this.cursor;
 		if (!cursor[dir] || cursor.selection) return this.deleteDir(dir);
 
 		this.notify('edit');
-		if (dir === L) {
-			new Fragment(cursor.parent?.ends[L], cursor[L]).remove();
+		if (dir === 'left') {
+			new Fragment(cursor.parent?.ends.left, cursor.left).remove();
 		} else {
-			new Fragment(cursor[R], cursor.parent?.ends[R]).remove();
+			new Fragment(cursor.right, cursor.parent?.ends.right).remove();
 		}
 		if (cursor.parent) cursor.insAtDirEnd(dir, cursor.parent);
 
 		// Call the contactWeld for a SupSub so that it can deal with having its base deleted.
-		cursor[R]?.postOrder('contactWeld', cursor);
+		cursor.right?.postOrder('contactWeld', cursor);
 
-		cursor[L]?.siblingDeleted?.(cursor.options, R);
-		cursor[R]?.siblingDeleted?.(cursor.options, L);
+		cursor.left?.siblingDeleted?.(cursor.options, 'right');
+		cursor.right?.siblingDeleted?.(cursor.options, 'left');
 		cursor.parent?.bubble('reflow');
 
 		return this;
 	}
 
 	backspace() {
-		return this.deleteDir(L);
+		return this.deleteDir('left');
 	}
 
 	deleteForward() {
-		return this.deleteDir(R);
+		return this.deleteDir('right');
 	}
 
 	selectDir(dir: Direction | undefined) {
 		const cursor = this.notify('select').cursor,
 			seln = cursor.selection;
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 
 		if (!cursor.anticursor) cursor.startSelection();
 
@@ -204,7 +205,7 @@ export class Controller extends ExportText(
 			// "if node we're selecting towards is inside selection (hence retracting)
 			// and is on the *far side* of the selection (hence is only node selected)
 			// and the anticursor is *inside* that node, not just on the other side"
-			if (seln && seln.ends[dir] === node && cursor.anticursor?.[dir === L ? R : L] !== node) {
+			if (seln && seln.ends[dir] === node && cursor.anticursor?.[dir === 'left' ? 'right' : 'left'] !== node) {
 				node.unselectInto(dir, cursor);
 			} else node.selectTowards(dir, cursor);
 		} else cursor.parent?.selectOutOf(dir, cursor);
@@ -214,10 +215,10 @@ export class Controller extends ExportText(
 	}
 
 	selectLeft() {
-		this.selectDir(L);
+		this.selectDir('left');
 	}
 
 	selectRight() {
-		this.selectDir(R);
+		this.selectDir('right');
 	}
 }

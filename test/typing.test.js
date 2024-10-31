@@ -1,7 +1,7 @@
 /* global suite, test, assert, setup, MQ */
 
 import { Bracket } from 'commands/mathElements';
-import { L, R, prayWellFormed } from 'src/constants';
+import { prayWellFormed } from 'src/constants';
 
 suite('typing with auto-replaces', () => {
 	let mq, mostRecentlyReportedLatex;
@@ -16,7 +16,7 @@ suite('typing with auto-replaces', () => {
 		});
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
+	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
 	const assertLatex = (latex) => {
 		prayWellFormedPoint(mq.__controller.cursor);
 		assert.equal(mostRecentlyReportedLatex, latex);
@@ -813,7 +813,7 @@ suite('typing with auto-replaces', () => {
 			test('selected and replaced by LiveFraction solidifies ghosts (1+2)/( )', () => {
 				mq.typedText('1+2)/');
 				assertLatex('\\frac{\\left(1+2\\right)}{ }');
-				const bracket = mq.__controller.cursor.parent?.parent?.ends[L]?.ends[L];
+				const bracket = mq.__controller.cursor.parent?.parent?.ends.left?.ends.left;
 				assert.ok(bracket instanceof Bracket);
 				assert.ok(!bracket.elements.children().first.classList.contains('mq-ghost'));
 				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));

@@ -1,6 +1,6 @@
 /* global suite, test, assert */
 
-import { L, R, noop } from 'src/constants';
+import { noop } from 'src/constants';
 import { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
 import { TNode } from 'tree/node';
@@ -18,18 +18,18 @@ suite('Cursor::select()', () => {
 			let count = 0;
 			lca.selectChildren = function (leftEnd, rightEnd) {
 				count += 1;
-				assert.equal(frag.ends[L], leftEnd);
-				assert.equal(frag.ends[R], rightEnd);
+				assert.equal(frag.ends.left, leftEnd);
+				assert.equal(frag.ends.right, rightEnd);
 				return TNode.prototype.selectChildren.apply(this, arguments);
 			};
 
 			cursor.parent = A.parent;
-			cursor[L] = A[L];
-			cursor[R] = A[R];
+			cursor.left = A.left;
+			cursor.right = A.right;
 			cursor.startSelection();
 			cursor.parent = B.parent;
-			cursor[L] = B[L];
-			cursor[R] = B[R];
+			cursor.left = B.left;
+			cursor.right = B.right;
 			assert.equal(cursor.select(), true);
 			assert.equal(count, 1);
 
@@ -38,9 +38,9 @@ suite('Cursor::select()', () => {
 	};
 
 	const parent = new TNode();
-	const child1 = new TNode().adopt(parent, parent.ends[R]);
-	const child2 = new TNode().adopt(parent, parent.ends[R]);
-	const child3 = new TNode().adopt(parent, parent.ends[R]);
+	const child1 = new TNode().adopt(parent, parent.ends.right);
+	const child2 = new TNode().adopt(parent, parent.ends.right);
+	const child3 = new TNode().adopt(parent, parent.ends.right);
 	const A = new Point(parent, undefined, child1);
 	const B = new Point(parent, child1, child2);
 	const C = new Point(parent, child2, child3);
@@ -88,8 +88,8 @@ suite('Cursor::select()', () => {
 
 	test('same Point', () => {
 		cursor.parent = A.parent;
-		cursor[L] = A[L];
-		cursor[R] = A[R];
+		cursor.left = A.left;
+		cursor.right = A.right;
 		cursor.startSelection();
 		assert.equal(cursor.select(), false);
 	});
@@ -98,21 +98,21 @@ suite('Cursor::select()', () => {
 		const anotherTree = new TNode();
 
 		cursor.parent = A.parent;
-		cursor[L] = A[L];
-		cursor[R] = A[R];
+		cursor.left = A.left;
+		cursor.right = A.right;
 		cursor.startSelection();
 		cursor.parent = anotherTree;
-		cursor[L] = 0;
-		cursor[R] = 0;
+		cursor.left = 0;
+		cursor.right = 0;
 		assert.throws(() => cursor.select());
 
 		cursor.parent = anotherTree;
-		cursor[L] = 0;
-		cursor[R] = 0;
+		cursor.left = 0;
+		cursor.right = 0;
 		cursor.startSelection();
 		cursor.parent = A.parent;
-		cursor[L] = A[L];
-		cursor[R] = A[R];
+		cursor.left = A.left;
+		cursor.right = A.right;
 		assert.throws(() => cursor.select());
 	});
 });

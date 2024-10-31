@@ -1,6 +1,5 @@
 /* global suite, test, assert, setup, MQ */
 
-import { L } from 'src/constants';
 import { Options } from 'src/options';
 import { Bracket, latexMathParser } from 'commands/mathElements';
 
@@ -89,8 +88,8 @@ suite('latex', () => {
 	test('parens', () => {
 		const tree = latexMathParser.parse('\\left(123\\right)');
 
-		assert.ok(tree.ends[L] instanceof Bracket);
-		const contents = tree.ends[L].ends[L].join('latex');
+		assert.ok(tree.ends.left instanceof Bracket);
+		const contents = tree.ends.left.ends.left.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left(123\\right)');
 	});
@@ -98,8 +97,8 @@ suite('latex', () => {
 	test('\\langle/\\rangle (issue #508)', () => {
 		const tree = latexMathParser.parse('\\left\\langle 123\\right\\rangle)');
 
-		assert.ok(tree.ends[L] instanceof Bracket);
-		const contents = tree.ends[L].ends[L].join('latex');
+		assert.ok(tree.ends.left instanceof Bracket);
+		const contents = tree.ends.left.ends.left.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\langle 123\\right\\rangle )');
 	});
@@ -107,8 +106,8 @@ suite('latex', () => {
 	test('\\langle/\\rangle (without whitespace)', () => {
 		const tree = latexMathParser.parse('\\left\\langle123\\right\\rangle)');
 
-		assert.ok(tree.ends[L] instanceof Bracket);
-		const contents = tree.ends[L].ends[L].join('latex');
+		assert.ok(tree.ends.left instanceof Bracket);
+		const contents = tree.ends.left.ends.left.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\langle 123\\right\\rangle )');
 	});
@@ -116,8 +115,8 @@ suite('latex', () => {
 	test('\\lVert/\\rVert', () => {
 		const tree = latexMathParser.parse('\\left\\lVert 123\\right\\rVert)');
 
-		assert.ok(tree.ends[L] instanceof Bracket);
-		const contents = tree.ends[L].ends[L].join('latex');
+		assert.ok(tree.ends.left instanceof Bracket);
+		const contents = tree.ends.left.ends.left.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\lVert 123\\right\\rVert )');
 	});
@@ -125,8 +124,8 @@ suite('latex', () => {
 	test('\\lVert/\\rVert (without whitespace)', () => {
 		const tree = latexMathParser.parse('\\left\\lVert123\\right\\rVert)');
 
-		assert.ok(tree.ends[L] instanceof Bracket);
-		const contents = tree.ends[L].ends[L].join('latex');
+		assert.ok(tree.ends.left instanceof Bracket);
+		const contents = tree.ends.left.ends.left.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\lVert 123\\right\\rVert )');
 	});

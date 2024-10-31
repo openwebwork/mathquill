@@ -55,13 +55,11 @@ export default [
 			'no-void': 'off',
 			'one-var': 'off',
 
-			'prefer-promise-reject-errors': 'off',
 			'@typescript-eslint/explicit-function-return-type': 'off',
 			'@typescript-eslint/explicit-module-boundary-types': 'off',
-			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_ignore_' }],
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 			'@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],
 			'@typescript-eslint/prefer-nullish-coalescing': 'off',
-			'@typescript-eslint/only-throw-error': 'off',
 
 			// Allow console and debugger during development only.
 			'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',

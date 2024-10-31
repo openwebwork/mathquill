@@ -1,6 +1,6 @@
 /* global suite, test, assert, setup, MQ */
 
-import { L, R, prayWellFormed } from 'src/constants';
+import { prayWellFormed } from 'src/constants';
 
 suite('backspace', () => {
 	let mq, rootBlock, controller, cursor;
@@ -13,7 +13,7 @@ suite('backspace', () => {
 		cursor = controller.cursor;
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
+	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
 	const assertLatex = (latex) => {
 		prayWellFormedPoint(mq.__controller.cursor);
 		assert.equal(mq.latex(), latex);
@@ -21,11 +21,11 @@ suite('backspace', () => {
 
 	test('backspace through exponent', () => {
 		controller.renderLatexMath('x^{nm}');
-		const exp = rootBlock.ends[R],
-			expBlock = exp.ends[L];
+		const exp = rootBlock.ends.right,
+			expBlock = exp.ends.left;
 		assert.equal(exp.latex(), '^{nm}', 'right end el is exponent');
 		assert.equal(cursor.parent, rootBlock, 'cursor is in root block');
-		assert.equal(cursor[L], exp, 'cursor is at the end of root block');
+		assert.equal(cursor.left, exp, 'cursor is at the end of root block');
 
 		mq.keystroke('Backspace');
 		assert.equal(cursor.parent, expBlock, 'cursor up goes into exponent on backspace');
@@ -203,21 +203,21 @@ suite('backspace', () => {
 
 		mq.keystroke('Backspace');
 
-		const textBlock = rootBlock.ends[R];
+		const textBlock = rootBlock.ends.right;
 		assert.equal(cursor.parent, textBlock, 'cursor is in text block');
-		assert.equal(cursor[R], undefined, 'cursor is at the end of text block');
-		assert.equal(cursor[L].text(), 'x', 'cursor is rightward of the x');
+		assert.equal(cursor.right, undefined, 'cursor is at the end of text block');
+		assert.equal(cursor.left.text(), 'x', 'cursor is rightward of the x');
 		assert.equal(mq.latex(), '\\text{x}', 'the x has been deleted');
 
 		mq.keystroke('Backspace');
 		assert.equal(cursor.parent, textBlock, 'cursor is still in text block');
-		assert.equal(cursor[R], undefined, 'cursor is at the right end of the text block');
-		assert.equal(cursor[L], undefined, 'cursor is at the left end of the text block');
+		assert.equal(cursor.right, undefined, 'cursor is at the right end of the text block');
+		assert.equal(cursor.left, undefined, 'cursor is at the left end of the text block');
 		assert.equal(mq.latex(), '', 'the x has been deleted');
 
 		mq.keystroke('Backspace');
-		assert.equal(cursor[R], undefined, 'cursor is at the right end of the root block');
-		assert.equal(cursor[L], undefined, 'cursor is at the left end of the root block');
+		assert.equal(cursor.right, undefined, 'cursor is at the right end of the root block');
+		assert.equal(cursor.left, undefined, 'cursor is at the left end of the root block');
 		assert.equal(mq.latex(), '');
 	});
 

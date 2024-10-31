@@ -1,7 +1,7 @@
 // Elements for abstract classes of text blocks
 
 import type { Direction } from 'src/constants';
-import { mqCmdId, L, R, LatexCmds, CharCmds } from 'src/constants';
+import { mqCmdId, LatexCmds, CharCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
@@ -32,7 +32,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 	addToElements(el: VNode) {
 		super.addToElements(el);
-		this.ends[L]?.addToElements(this.elements.first.firstChild as HTMLElement);
+		this.ends.left?.addToElements(this.elements.first.firstChild as HTMLElement);
 	}
 
 	createLeftOf(cursor: Cursor) {
@@ -44,8 +44,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 			for (const char of this.replacedText) this.write(cursor, char);
 		}
 
-		this[R]?.siblingCreated?.(cursor.options, L);
-		this[L]?.siblingCreated?.(cursor.options, R);
+		this.right?.siblingCreated?.(cursor.options, 'left');
+		this.left?.siblingCreated?.(cursor.options, 'right');
 		this.bubble('reflow');
 	}
 
@@ -85,18 +85,18 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	// and selection of the MathQuill tree, these all take in a direction and
 	// the cursor
 	moveTowards(dir: Direction, cursor: Cursor) {
-		cursor.insAtDirEnd(dir === L ? R : L, this);
+		cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this);
 	}
 	moveOutOf(dir: Direction, cursor: Cursor) {
 		cursor.insDirOf(dir, this);
 	}
 	unselectInto(dir: Direction, cursor: Cursor) {
-		cursor.insAtDirEnd(dir === L ? R : L, this);
+		cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this);
 
 		// Split the text at the stored anticursor position, and reconstruct the anticursor.
 		const newTextPc = (cursor[dir] as TextPiece).splitRight(this.anticursorPosition);
-		if (dir === L) cursor[L] = newTextPc;
-		cursor.anticursor = new Point(this, newTextPc[L], newTextPc);
+		if (dir === 'left') cursor.left = newTextPc;
+		cursor.anticursor = new Point(this, newTextPc.left, newTextPc);
 		cursor.anticursor.ancestors = {};
 		for (let ancestor = cursor.anticursor; ancestor.parent; ancestor = ancestor.parent) {
 			cursor.anticursor.ancestors[ancestor.parent.id] = ancestor;
@@ -105,7 +105,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 	selectOutOf(dir: Direction, cursor: Cursor) {
 		this.anticursorPosition =
-			dir === L
+			dir === 'left'
 				? (cursor.selection?.elements.first.textContent?.length ?? 1) - 1
 				: this.textContents().length - (cursor.selection?.elements.first.textContent?.length ?? 1) + 1;
 		cursor.insDirOf(dir, this);
@@ -121,18 +121,18 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 		if (ch !== '$') {
 			this.postOrder('reflow');
-			if (!cursor[L]) new TextPiece(ch).createLeftOf(cursor);
-			else (cursor[L] as unknown as TextPiece).appendText(ch);
+			if (!cursor.left) new TextPiece(ch).createLeftOf(cursor);
+			else (cursor.left as unknown as TextPiece).appendText(ch);
 			this.bubble('reflow');
 		} else if (this.isEmpty()) {
 			cursor.insRightOf(this);
 			new VanillaSymbol('\\$', '$').createLeftOf(cursor);
-		} else if (!cursor[R]) cursor.insRightOf(this);
-		else if (!cursor[L]) cursor.insLeftOf(this);
+		} else if (!cursor.right) cursor.insRightOf(this);
+		else if (!cursor.left) cursor.insLeftOf(this);
 		else {
 			// split apart
 			const leftBlock = new TextBlock();
-			const leftPc = this.ends[L];
+			const leftPc = this.ends.left;
 			leftPc?.disown().elements.detach();
 			leftPc?.adopt(leftBlock);
 
@@ -143,8 +143,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	}
 
 	writeLatex(cursor: Cursor, latex: string) {
-		if (!cursor[L]) new TextPiece(latex).createLeftOf(cursor);
-		else (cursor[L] as unknown as TextPiece).appendText(latex);
+		if (!cursor.left) new TextPiece(latex).createLeftOf(cursor);
+		else (cursor.left as unknown as TextPiece).appendText(latex);
 		this.bubble('reflow');
 	}
 
@@ -169,33 +169,35 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 		// Move towards mousedown (pageX)
 		let displ = pageX - cursor.show().offset().left; // displacement
-		const dir = displ && displ < 0 ? L : R;
-		let prevDispl = dir;
+		const dir = displ && displ < 0 ? 'left' : 'right';
+		const numericDir = dir === 'left' ? -1 : 1;
+		let prevDispl = numericDir;
 		// displ * prevDispl > 0 iff displacement direction === previous direction
 		while (cursor[dir] && displ * prevDispl > 0) {
 			cursor[dir].moveTowards(dir, cursor);
 			prevDispl = displ;
 			displ = pageX - cursor.offset().left;
 		}
-		if (dir * displ < -dir * prevDispl) cursor[dir === L ? R : L]?.moveTowards(dir === L ? R : L, cursor);
+		if (numericDir * displ < -numericDir * prevDispl)
+			cursor[dir === 'left' ? 'right' : 'left']?.moveTowards(dir === 'left' ? 'right' : 'left', cursor);
 
 		if (!cursor.anticursor) {
 			// About to start mouse-selecting, the anticursor is going to be placed here.
-			this.anticursorPosition = cursor[L]?.text().length ?? 0;
+			this.anticursorPosition = cursor.left?.text().length ?? 0;
 		} else if (cursor.anticursor.parent === this) {
 			// Mouse selecting within this TextBlock, re-insert the anticursor.
-			const cursorPosition = cursor[L]?.text().length ?? 0;
+			const cursorPosition = cursor.left?.text().length ?? 0;
 			if (this.anticursorPosition === cursorPosition) {
 				cursor.startSelection();
 			} else {
 				let newTextPc;
 				if (this.anticursorPosition < cursorPosition) {
-					newTextPc = (cursor[L] as TextPiece).splitRight(this.anticursorPosition);
-					cursor[L] = newTextPc;
+					newTextPc = (cursor.left as TextPiece).splitRight(this.anticursorPosition);
+					cursor.left = newTextPc;
 				} else {
-					newTextPc = (cursor[R] as TextPiece).splitRight(this.anticursorPosition - cursorPosition);
+					newTextPc = (cursor.right as TextPiece).splitRight(this.anticursorPosition - cursorPosition);
 				}
-				cursor.anticursor = new Point(this, newTextPc[L], newTextPc);
+				cursor.anticursor = new Point(this, newTextPc.left, newTextPc);
 				cursor.anticursor.ancestors = {};
 				for (let ancestor = cursor.anticursor; ancestor.parent; ancestor = ancestor.parent) {
 					cursor.anticursor.ancestors[ancestor.parent.id] = ancestor;
@@ -210,8 +212,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		if (!cursor) return;
 		if (this.textContents() === '') {
 			this.remove();
-			if (cursor[L] === this) cursor[L] = this[L];
-			else if (cursor[R] === this) cursor[R] = this[R];
+			if (cursor.left === this) cursor.left = this.left;
+			else if (cursor.right === this) cursor.right = this.right;
 		} else {
 			// If the text block contains the selection, then that needs to be removed before fuseChildren is called.
 			if (this.elements.find('.mq-selection').contents.length) cursor.clearSelection();
@@ -282,31 +284,31 @@ export class TextPiece extends TNode {
 	}
 
 	insTextAtDirEnd(text: string, dir: Direction | undefined) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
-		if (dir === R) this.appendText(text);
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
+		if (dir === 'right') this.appendText(text);
 		else this.prependText(text);
 	}
 
 	splitRight(i: number) {
 		const newPc = new TextPiece(this.textStr.slice(i));
-		if (this.parent) newPc.adopt(this.parent, this, this[R]);
+		if (this.parent) newPc.adopt(this.parent, this, this.right);
 		if (this.dom) newPc.addToElements(this.dom.splitText(i));
 		this.textStr = this.textStr.slice(0, i);
 		return newPc;
 	}
 
 	endChar(dir: Direction, text: string) {
-		return text.charAt(dir === L ? 0 : -1 + text.length);
+		return text.charAt(dir === 'left' ? 0 : -1 + text.length);
 	}
 
 	moveTowards(dir: Direction | undefined, cursor: Cursor) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 
-		const ch = this.endChar(dir === L ? R : L, this.textStr);
+		const ch = this.endChar(dir === 'left' ? 'right' : 'left', this.textStr);
 
-		const from = this[dir === L ? R : L] as TextPiece | undefined;
+		const from = this[dir === 'left' ? 'right' : 'left'] as TextPiece | undefined;
 		if (from) from.insTextAtDirEnd(ch, dir);
-		else new TextPiece(ch).createDir(dir === L ? R : L, cursor);
+		else new TextPiece(ch).createDir(dir === 'left' ? 'right' : 'left', cursor);
 
 		this.deleteTowards(dir, cursor);
 	}
@@ -317,7 +319,7 @@ export class TextPiece extends TNode {
 
 	deleteTowards(dir: Direction, cursor: Cursor) {
 		if (this.textStr.length > 1) {
-			if (dir === R) {
+			if (dir === 'right') {
 				this.dom?.deleteData(0, 1);
 				this.textStr = this.textStr.slice(1);
 			} else {
@@ -334,25 +336,26 @@ export class TextPiece extends TNode {
 	}
 
 	selectTowards(dir: Direction | undefined, cursor: Cursor) {
-		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 		const anticursor = cursor.anticursor;
 
-		const ch = this.endChar(dir === L ? R : L, this.textStr);
+		const ch = this.endChar(dir === 'left' ? 'right' : 'left', this.textStr);
 
 		if (anticursor?.[dir] === this) {
 			const newPc = new TextPiece(ch).createDir(dir, cursor);
 			anticursor[dir] = newPc;
 			cursor.insDirOf(dir, newPc);
 		} else {
-			const from = this[dir === L ? R : L] as TextPiece | undefined;
+			const from = this[dir === 'left' ? 'right' : 'left'] as TextPiece | undefined;
 			if (from) from.insTextAtDirEnd(ch, dir);
 			else {
-				const newPc = new TextPiece(ch).createDir(dir === L ? R : L, cursor);
-				if (cursor.selection) newPc.elements.insDirOf(dir === L ? R : L, cursor.selection.elements);
+				const newPc = new TextPiece(ch).createDir(dir === 'left' ? 'right' : 'left', cursor);
+				if (cursor.selection)
+					newPc.elements.insDirOf(dir === 'left' ? 'right' : 'left', cursor.selection.elements);
 			}
 
-			if (this.textStr.length === 1 && anticursor?.[dir === L ? R : L] === this) {
-				anticursor[dir === L ? R : L] = this[dir === L ? R : L];
+			if (this.textStr.length === 1 && anticursor?.[dir === 'left' ? 'right' : 'left'] === this) {
+				anticursor[dir === 'left' ? 'right' : 'left'] = this[dir === 'left' ? 'right' : 'left'];
 			}
 		}
 

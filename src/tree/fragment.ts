@@ -1,7 +1,7 @@
 // Fragment base classes of edit tree-related objects
 
 import type { Direction } from 'src/constants';
-import { L, R, iterator, prayWellFormed } from 'src/constants';
+import { iterator, prayWellFormed } from 'src/constants';
 import type { Ends } from 'tree/node';
 import { VNode } from 'tree/vNode';
 import { TNode } from 'tree/node';
@@ -21,10 +21,10 @@ export class Fragment {
 	ends: Ends = {};
 	disowned?: boolean;
 	each = iterator((yield_: (node: TNode) => TNode | boolean | undefined) => {
-		let el = this.ends[L];
+		let el = this.ends.left;
 		if (!el) return this;
 
-		for (; el !== this.ends[R]?.[R]; el = el[R]) {
+		for (; el !== this.ends.right?.right; el = el.right) {
 			if (!el) continue;
 			if (yield_(el) === false) break;
 		}
@@ -32,7 +32,7 @@ export class Fragment {
 		return this;
 	});
 
-	constructor(withDir?: TNode, oppDir?: TNode, dir: Direction = L) {
+	constructor(withDir?: TNode, oppDir?: TNode, dir: Direction = 'left') {
 		if (!withDir !== !oppDir) throw new Error('no half-empty fragments');
 		if (!withDir) return;
 
@@ -40,8 +40,13 @@ export class Fragment {
 		if (!(oppDir instanceof TNode)) throw new Error('oppDir must be passed to Fragment');
 		if (withDir.parent !== oppDir.parent) throw new Error('withDir and oppDir must have the same parent');
 
-		this.ends[dir] = withDir;
-		this.ends[dir === L ? R : L] = oppDir;
+		if (dir === 'left') {
+			this.ends.left = withDir;
+			this.ends.right = oppDir;
+		} else {
+			this.ends.left = oppDir;
+			this.ends.right = withDir;
+		}
 
 		// To build the html collection for a fragment, accumulate elements into an array and then call elements.add
 		// once on the result. elements.add sorts the collection according to document order each time it is called, so
@@ -57,7 +62,7 @@ export class Fragment {
 
 	// like Cursor::withDirInsertAt(dir, parent, withDir, oppDir)
 	withDirAdopt(dir: Direction, parent: TNode, withDir?: TNode, oppDir?: TNode) {
-		return dir === L ? this.adopt(parent, withDir, oppDir) : this.adopt(parent, oppDir, withDir);
+		return dir === 'left' ? this.adopt(parent, withDir, oppDir) : this.adopt(parent, oppDir, withDir);
 	}
 
 	adopt(parent: TNode, leftward?: TNode, rightward?: TNode) {
@@ -65,30 +70,30 @@ export class Fragment {
 
 		this.disowned = false;
 
-		const leftEnd = this.ends[L];
+		const leftEnd = this.ends.left;
 		if (!leftEnd) return this;
 
-		const rightEnd = this.ends[R];
+		const rightEnd = this.ends.right;
 
 		if (leftward) {
 			// NB: this is handled in the ::each() block
-			// leftward[R] = leftEnd
+			// leftward.right = leftEnd
 		} else {
-			parent.ends[L] = leftEnd;
+			parent.ends.left = leftEnd;
 		}
 
 		if (rightward) {
-			rightward[L] = rightEnd;
+			rightward.left = rightEnd;
 		} else {
-			parent.ends[R] = rightEnd;
+			parent.ends.right = rightEnd;
 		}
 
-		if (this.ends[R]) this.ends[R][R] = rightward;
+		if (this.ends.right) this.ends.right.right = rightward;
 
 		this.each((el: TNode) => {
-			el[L] = leftward;
+			el.left = leftward;
 			el.parent = parent;
-			if (leftward) leftward[R] = el;
+			if (leftward) leftward.right = el;
 
 			leftward = el;
 			return true;
@@ -98,30 +103,30 @@ export class Fragment {
 	}
 
 	disown() {
-		const leftEnd = this.ends[L];
+		const leftEnd = this.ends.left;
 
 		// guard for empty and already-disowned fragments
 		if (!leftEnd || this.disowned) return this;
 
 		this.disowned = true;
 
-		const rightEnd = this.ends[R];
+		const rightEnd = this.ends.right;
 		const parent = leftEnd.parent;
 
 		if (!parent) throw new Error('a parent must always present');
-		prayWellFormed(parent, leftEnd[L], leftEnd);
-		prayWellFormed(parent, rightEnd, rightEnd?.[R]);
+		prayWellFormed(parent, leftEnd.left, leftEnd);
+		prayWellFormed(parent, rightEnd, rightEnd?.right);
 
-		if (leftEnd[L]) {
-			leftEnd[L][R] = rightEnd?.[R];
+		if (leftEnd.left) {
+			leftEnd.left.right = rightEnd?.right;
 		} else {
-			parent.ends[L] = rightEnd?.[R];
+			parent.ends.left = rightEnd?.right;
 		}
 
-		if (rightEnd?.[R]) {
-			rightEnd[R][L] = leftEnd[L];
+		if (rightEnd?.right) {
+			rightEnd.right.left = leftEnd.left;
 		} else {
-			parent.ends[R] = leftEnd[L];
+			parent.ends.right = leftEnd.left;
 		}
 
 		return this;

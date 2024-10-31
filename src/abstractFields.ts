@@ -1,5 +1,5 @@
 import type { Direction, Constructor } from 'src/constants';
-import { L, R, noop, mqBlockId, mqCmdId, LatexCmds } from 'src/constants';
+import { noop, mqBlockId, mqCmdId, LatexCmds } from 'src/constants';
 import type { InputOptions } from 'src/options';
 import { Options } from 'src/options';
 import type { Controller } from 'src/controller';
@@ -133,10 +133,8 @@ export class EditableField extends AbstractMathQuill {
 		const root = this.__controller.root,
 			cursor = this.__controller.cursor;
 		root.eachChild('postOrder', 'dispose');
-		// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-		delete root.ends[L];
-		// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-		delete root.ends[R];
+		delete root.ends.left;
+		delete root.ends.right;
 		root.elements.empty();
 		delete cursor.selection;
 		cursor.insAtRightEnd(root);
@@ -165,7 +163,7 @@ export class EditableField extends AbstractMathQuill {
 	select() {
 		const ctrlr = this.__controller;
 		ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-		while (ctrlr.cursor[L]) ctrlr.selectLeft();
+		while (ctrlr.cursor.left) ctrlr.selectLeft();
 		return this;
 	}
 
@@ -179,10 +177,10 @@ export class EditableField extends AbstractMathQuill {
 		return this;
 	}
 	moveToLeftEnd() {
-		return this.moveToDirEnd(L);
+		return this.moveToDirEnd('left');
 	}
 	moveToRightEnd() {
-		return this.moveToDirEnd(R);
+		return this.moveToDirEnd('right');
 	}
 
 	keystroke(keys: string) {

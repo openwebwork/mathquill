@@ -1,6 +1,6 @@
 /* global suite, test, assert, setup, MQ */
 
-import { L, R, noop, prayWellFormed } from 'src/constants';
+import { noop, prayWellFormed } from 'src/constants';
 
 suite('SupSub', () => {
 	let mq;
@@ -10,7 +10,7 @@ suite('SupSub', () => {
 		mq = MQ.MathField(field);
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
+	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
 
 	let expecteds = [
 		'x_{ab} x_{ba}, x_a^b x_a^b; x_{ab} x_{ba}, x_a^b x_a^b; x_a x_a, x_a^{} x_a^{}',

@@ -1,7 +1,7 @@
 // Commands and Operators.
 
 import type { Constructor } from 'src/constants';
-import { L, R, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
+import { bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
 import type { Options } from 'src/options';
 import { Controller } from 'src/controller';
 import { Cursor } from 'src/cursor';
@@ -146,7 +146,7 @@ LatexCmds.subscript = LatexCmds._ = class extends SupSub {
 	}
 
 	finalizeTree() {
-		this.downInto = this.sub = this.ends[L];
+		this.downInto = this.sub = this.ends.left;
 		if (this.sub) this.sub.upOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
@@ -165,7 +165,7 @@ LatexCmds.superscript =
 			}
 
 			finalizeTree() {
-				this.upInto = this.sup = this.ends[R];
+				this.upInto = this.sup = this.ends.right;
 				if (this.sup) this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
 				super.finalizeTree();
 			}
@@ -222,7 +222,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 	class extends Base {
 		createLeftOf(cursor: Cursor) {
 			if (!this.replacedFragment) {
-				let leftward: TNode | undefined = cursor[L];
+				let leftward: TNode | undefined = cursor.left;
 				while (
 					leftward &&
 					!(
@@ -233,21 +233,21 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 						/^[,;:]$/.test(leftward.ctrlSeq)
 					) // lookbehind for operator
 				)
-					leftward = leftward[L];
+					leftward = leftward.left;
 
-				if (leftward instanceof UpperLowerLimitCommand && leftward[R] instanceof SupSub) {
-					leftward = leftward[R];
-					if (leftward[R] instanceof SupSub && leftward[R].ctrlSeq != leftward.ctrlSeq)
-						leftward = leftward[R];
+				if (leftward instanceof UpperLowerLimitCommand && leftward.right instanceof SupSub) {
+					leftward = leftward.right;
+					if (leftward.right instanceof SupSub && leftward.right.ctrlSeq != leftward.ctrlSeq)
+						leftward = leftward.right;
 				}
 
 				if (
-					leftward !== cursor[L] &&
+					leftward !== cursor.left &&
 					!cursor.isTooDeep(1) &&
-					!cursor[L]?.elements.hasClass('mq-operator-name')
+					!cursor.left?.elements.hasClass('mq-operator-name')
 				) {
-					this.replaces(new Fragment(leftward?.[R] || cursor.parent?.ends[L], cursor[L]));
-					cursor[L] = leftward;
+					this.replaces(new Fragment(leftward?.right || cursor.parent?.ends.left, cursor.left));
+					cursor.left = leftward;
 				}
 			}
 			super.createLeftOf(cursor);
@@ -281,16 +281,16 @@ LatexCmds.log = class extends MathFunction {
 	}
 
 	text() {
-		const base = this.blocks[0].ends[L]?.sub?.text() || '';
+		const base = this.blocks[0].ends.left?.sub?.text() || '';
 		const param = this.blocks[1].text() || '';
-		const exponent = supSubText('^', this.blocks[0].ends[L]?.sup);
+		const exponent = supSubText('^', this.blocks[0].ends.left?.sup);
 
 		if (!base) return super.text();
 		else if (base === '10') {
 			return exponent ? `(log10(${param}))${exponent}` : `log10(${param})`;
 		} else if (this.getController()?.options.logsChangeBase) {
-			let leftward = this[L];
-			for (; leftward && leftward.ctrlSeq === '\\ '; leftward = leftward[L]);
+			let leftward = this.left;
+			for (; leftward && leftward.ctrlSeq === '\\ '; leftward = leftward.left);
 			return exponent ||
 				(leftward && !(leftward instanceof BinaryOperator)) ||
 				(leftward instanceof BinaryOperator && leftward.isUnary)
@@ -314,7 +314,7 @@ class SquareRoot extends MathCommand {
 		this.textTemplate = ['sqrt(', ')'];
 
 		this.reflow = () => {
-			const block = this.ends[R]?.elements.firstElement;
+			const block = this.ends.right?.elements.firstElement;
 			if (block) {
 				scale(
 					[block.previousElementSibling as HTMLElement],
@@ -367,19 +367,19 @@ class NthRoot extends SquareRoot {
 	}
 
 	latex() {
-		return `\\sqrt[${this.ends[L]?.latex() ?? ''}]{${this.ends[R]?.latex() ?? ''}}`;
+		return `\\sqrt[${this.ends.left?.latex() ?? ''}]{${this.ends.right?.latex() ?? ''}}`;
 	}
 
 	text() {
-		const index = this.ends[L]?.text() ?? '';
-		if (index === '' || index === '2') return `sqrt(${this.ends[R]?.text() ?? ''})`;
+		const index = this.ends.left?.text() ?? '';
+		if (index === '' || index === '2') return `sqrt(${this.ends.right?.text() ?? ''})`;
 
 		if (this.getController()?.options.rootsAreExponents) {
-			const isSupR = this[R] instanceof SupSub && this[R].supsub === 'sup';
-			return `${isSupR ? '(' : ''}(${this.ends[R]?.text() ?? ''})^(1/${index})${isSupR ? ')' : ''}`;
+			const isSupR = this.right instanceof SupSub && this.right.supsub === 'sup';
+			return `${isSupR ? '(' : ''}(${this.ends.right?.text() ?? ''})^(1/${index})${isSupR ? ')' : ''}`;
 		}
 
-		return `root(${index},${this.ends[R]?.text() ?? ''})`;
+		return `root(${index},${this.ends.right?.text() ?? ''})`;
 	}
 }
 LatexCmds.root = LatexCmds.nthroot = NthRoot;
@@ -403,17 +403,17 @@ const bindCharBracketPair = (open: string, ctrlSeq?: string) => {
 	const curCtrlSeq = ctrlSeq || open,
 		close = OPP_BRACKS[open],
 		end = OPP_BRACKS[curCtrlSeq];
-	CharCmds[open] = bindMixin(Bracket, L, open, close, curCtrlSeq, end);
-	CharCmds[close] = bindMixin(Bracket, R, open, close, curCtrlSeq, end);
+	CharCmds[open] = bindMixin(Bracket, 'left', open, close, curCtrlSeq, end);
+	CharCmds[close] = bindMixin(Bracket, 'right', open, close, curCtrlSeq, end);
 };
 bindCharBracketPair('(');
 bindCharBracketPair('[');
 bindCharBracketPair('{', '\\{');
-LatexCmds.langle = bindMixin(Bracket, L, '&lang;', '&rang;', '\\langle ', '\\rangle ');
-LatexCmds.rangle = bindMixin(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ');
-LatexCmds.abs = CharCmds['|'] = bindMixin(Bracket, L, '|', '|', '|', '|');
-LatexCmds.lVert = bindMixin(Bracket, L, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
-LatexCmds.rVert = bindMixin(Bracket, R, '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
+LatexCmds.langle = bindMixin(Bracket, 'left', '&lang;', '&rang;', '\\langle ', '\\rangle ');
+LatexCmds.rangle = bindMixin(Bracket, 'right', '&lang;', '&rang;', '\\langle ', '\\rangle ');
+LatexCmds.abs = CharCmds['|'] = bindMixin(Bracket, 'left', '|', '|', '|', '|');
+LatexCmds.lVert = bindMixin(Bracket, 'left', '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
+LatexCmds.rVert = bindMixin(Bracket, 'right', '&#8741;', '&#8741;', '\\lVert ', '\\rVert ');
 
 LatexCmds.left = class extends MathCommand {
 	parser() {
@@ -503,8 +503,8 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	}
 
 	finalizeTree(options: Options) {
-		if (!this.ends[L]) throw 'Missing left end finalizing editable tree';
-		const ctrlr = new Controller(this.ends[L], this.elements.firstElement, options);
+		if (!this.ends.left) throw new Error('Missing left end finalizing editable tree');
+		const ctrlr = new Controller(this.ends.left, this.elements.firstElement, options);
 		ctrlr.KIND_OF_MQ = 'MathField';
 		this.field = new InnerMathField(ctrlr);
 		this.field.name = this.name;
@@ -517,16 +517,16 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	}
 
 	registerInnerField(innerFields: InnerMathFieldStore) {
-		if (!this.field) throw 'Unable to register editable without field';
+		if (!this.field) throw new Error('Unable to register editable without field');
 		innerFields.push(this.field);
 	}
 
 	latex() {
-		return this.ends[L]?.latex() ?? '';
+		return this.ends.left?.latex() ?? '';
 	}
 
 	text() {
-		return this.ends[L]?.text() ?? '';
+		return this.ends.left?.text() ?? '';
 	}
 };
 

@@ -24,7 +24,7 @@ export const TextAreaController = <
 			this.textareaSpan.classList.add('mq-textarea');
 			const textarea = this.options.substituteTextarea();
 			if (!textarea.nodeType) {
-				throw 'substituteTextarea() must return a DOM element';
+				throw new Error('substituteTextarea() must return a DOM element');
 			}
 			this.textareaSpan.append(textarea);
 			this.textarea = textarea;

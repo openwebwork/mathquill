@@ -1,7 +1,6 @@
 // Virtual Node class
 
 import type { Direction } from 'src/constants';
-import { L } from 'src/constants';
 
 export class VNode {
 	contents: Node[] = [];
@@ -148,13 +147,13 @@ export class VNode {
 
 	insDirOf(dir: Direction, vNode: Element | CharacterData | VNode) {
 		if (vNode instanceof VNode && !vNode.contents.length) return;
-		if (dir === L) (vNode instanceof VNode ? vNode.first : vNode).before(...this.contents);
+		if (dir === 'left') (vNode instanceof VNode ? vNode.first : vNode).before(...this.contents);
 		else (vNode instanceof VNode ? vNode.last : vNode).after(...this.contents);
 	}
 
 	insAtDirEnd(dir: Direction, vNode: Element | VNode) {
 		if (vNode instanceof VNode && !vNode.contents.length) return;
-		if (dir === L) (vNode instanceof VNode ? vNode.firstElement : vNode).prepend(...this.contents);
+		if (dir === 'left') (vNode instanceof VNode ? vNode.firstElement : vNode).prepend(...this.contents);
 		else (vNode instanceof VNode ? vNode.lastElement : vNode).append(...this.contents);
 	}
 }

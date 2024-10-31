@@ -1,7 +1,7 @@
 // Symbols for Basic Mathematics
 
 import type { Direction } from 'src/constants';
-import { noop, L, R, bindMixin, LatexCmds, CharCmds } from 'src/constants';
+import { noop, bindMixin, LatexCmds, CharCmds } from 'src/constants';
 import { Options } from 'src/options';
 import type { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
@@ -35,7 +35,7 @@ class OperatorName extends Symbol {
 	parser() {
 		const block = new MathBlock();
 		for (const char of this.ctrlSeq) {
-			new Letter(char).adopt(block, block.ends[R]);
+			new Letter(char).adopt(block, block.ends.right);
 		}
 		return Parser.succeed(block.children());
 	}
@@ -206,13 +206,13 @@ class LatexFragment extends MathCommand {
 	}
 
 	createLeftOf(cursor: Cursor) {
-		const block = latexMathParser.parse<MathCommand>(this.latex());
-		if (cursor.parent) block.children().adopt(cursor.parent, cursor[L], cursor[R]);
-		cursor[L] = block.ends[R];
+		const block: MathCommand = latexMathParser.parse<MathCommand>(this.latex());
+		if (cursor.parent) block.children().adopt(cursor.parent, cursor.left, cursor.right);
+		cursor.left = block.ends.right;
 		cursor.element.before(...block.domify().contents);
 		block.finalizeInsert(cursor.options, cursor);
-		block.ends[R]?.[R]?.siblingCreated?.(cursor.options, L);
-		block.ends[L]?.[L]?.siblingCreated?.(cursor.options, R);
+		block.ends.right?.right?.siblingCreated?.(cursor.options, 'left');
+		block.ends.left?.left?.siblingCreated?.(cursor.options, 'right');
 		cursor.parent?.bubble('reflow');
 	}
 
@@ -262,11 +262,11 @@ class PlusMinus extends BinaryOperator {
 
 	contactWeld(_opts: Options, dir?: Direction) {
 		const isUnary = (node: TNode): boolean => {
-			if (node[L]) {
+			if (node.left) {
 				// If the left sibling is a binary operator or a separator (comma, semicolon, colon)
 				// or an open bracket (open parenthesis, open square bracket)
 				// consider the operator to be unary.
-				if (node[L] instanceof BinaryOperator || /^[,;:([]$/.test((node[L] as BinaryOperator).ctrlSeq)) {
+				if (node.left instanceof BinaryOperator || /^[,;:([]$/.test((node.left as BinaryOperator).ctrlSeq)) {
 					return true;
 				}
 			} else if (node.parent?.parent?.isStyleBlock()) {
@@ -280,7 +280,7 @@ class PlusMinus extends BinaryOperator {
 			return false;
 		};
 
-		if (dir === R) return; // ignore if sibling only changed on the right
+		if (dir === 'right') return; // ignore if sibling only changed on the right
 		this.isUnary = isUnary(this);
 		this.elements.firstElement.className = this.isUnary ? '' : 'mq-binary-operator';
 		return this;

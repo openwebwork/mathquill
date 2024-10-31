@@ -1,7 +1,7 @@
 // Deals with mouse events for clicking and drag-to-select.
 
 import type { Constructor } from 'src/constants';
-import { mqCmdId, mqBlockId, noop, L, R } from 'src/constants';
+import { mqCmdId, mqBlockId, noop } from 'src/constants';
 import { TNode } from 'tree/node';
 import type { ControllerBase } from 'src/controller';
 import type { HorizontalScroll } from 'services/scrollHoriz';
@@ -19,13 +19,13 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 
 			// Drag-to-select event handling
 			this.mouseDownHandler = (e: MouseEvent) => {
-				const rootEl = e.target instanceof HTMLElement ? e.target.closest('.mq-root-block') : null;
+				const rootEl = (e.target as HTMLElement | undefined)?.closest('.mq-root-block');
 				const root = TNode.byId.get(
 					parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl.getAttribute(mqBlockId)) ?? '0')
 				);
 
 				if (!root?.controller) {
-					throw 'controller undefined... what?';
+					throw new Error('controller undefined... what?');
 				}
 
 				const ctrlr = root.controller,
@@ -72,7 +72,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				if (e.detail === 3) {
 					// If this is a triple click, then select all and return.
 					ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-					while (cursor[L]) ctrlr.selectLeft();
+					while (cursor.left) ctrlr.selectLeft();
 					mouseup();
 					return;
 				} else if (e.detail === 2) {
@@ -80,41 +80,41 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 					// Note that the interpretation of what a block is in this situation is not a true MathQuill block.
 					// Rather an attempt is made to select word like blocks.
 					ctrlr.seek(e.target as HTMLElement, e.pageX);
-					if (!cursor[R] && cursor[L]?.parent === root) ctrlr.moveLeft();
+					if (!cursor.right && cursor.left?.parent === root) ctrlr.moveLeft();
 
-					if (cursor[R] instanceof Letter) {
+					if (cursor.right instanceof Letter) {
 						// If a "Letter" is to the right of the cursor, then try to select all adjacent "Letter"s that
 						// are of the same basic ilk.  That means all "Letter"s that are part of an operator name, or
 						// all "Letter"s that are not part of an operator name.
-						const currentNode = cursor[R];
+						const currentNode = cursor.right;
 						while (
-							cursor[L] &&
-							cursor[L] instanceof Letter &&
-							cursor[L].isPartOfOperator === currentNode.isPartOfOperator
+							cursor.left &&
+							cursor.left instanceof Letter &&
+							cursor.left.isPartOfOperator === currentNode.isPartOfOperator
 						)
 							ctrlr.moveLeft();
 						cursor.startSelection();
 						while (
 							// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-							cursor[R] &&
-							cursor[R] instanceof Letter &&
-							cursor[R].isPartOfOperator === currentNode.isPartOfOperator
+							cursor.right &&
+							cursor.right instanceof Letter &&
+							cursor.right.isPartOfOperator === currentNode.isPartOfOperator
 						)
 							ctrlr.selectRight();
-					} else if (cursor[R] instanceof Digit) {
+					} else if (cursor.right instanceof Digit) {
 						// If a "Digit" is to the right of the cursor, then select all adjacent "Digit"s.
-						while (cursor[L] && cursor[L] instanceof Digit) ctrlr.moveLeft();
+						while (cursor.left && cursor.left instanceof Digit) ctrlr.moveLeft();
 						cursor.startSelection();
 						// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-						while (cursor[R] && cursor[R] instanceof Digit) ctrlr.selectRight();
+						while (cursor.right && cursor.right instanceof Digit) ctrlr.selectRight();
 					} else {
 						cursor.startSelection();
 						ctrlr.selectRight();
 					}
 
 					// If the cursor is in a text block, then select the whole text block.
-					if (cursor[L]?.parent instanceof TextBlock) {
-						cursor[L].parent.moveOutOf(L, cursor);
+					if (cursor.left?.parent instanceof TextBlock) {
+						cursor.left.parent.moveOutOf('left', cursor);
 						ctrlr.selectRight();
 					}
 

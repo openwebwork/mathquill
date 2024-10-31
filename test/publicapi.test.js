@@ -1,7 +1,5 @@
 /* global suite, test, assert, setup, teardown, MQ */
 
-import { L, R } from 'src/constants';
-
 suite('Public API', () => {
 	suite('global functions', () => {
 		test('undefined', () => {
@@ -122,14 +120,14 @@ suite('Public API', () => {
 
 		test('.moveToDirEnd(dir)', () => {
 			mq.latex('a x^2 + b x + c = 0');
-			assert.equal(mq.__controller.cursor[L].ctrlSeq, '0');
-			assert.equal(mq.__controller.cursor[R], undefined);
+			assert.equal(mq.__controller.cursor.left.ctrlSeq, '0');
+			assert.equal(mq.__controller.cursor.right, undefined);
 			mq.moveToLeftEnd();
-			assert.equal(mq.__controller.cursor[L], undefined);
-			assert.equal(mq.__controller.cursor[R].ctrlSeq, 'a');
+			assert.equal(mq.__controller.cursor.left, undefined);
+			assert.equal(mq.__controller.cursor.right.ctrlSeq, 'a');
 			mq.moveToRightEnd();
-			assert.equal(mq.__controller.cursor[L].ctrlSeq, '0');
-			assert.equal(mq.__controller.cursor[R], undefined);
+			assert.equal(mq.__controller.cursor.left.ctrlSeq, '0');
+			assert.equal(mq.__controller.cursor.right, undefined);
 		});
 
 		test('.empty()', () => {
@@ -201,11 +199,11 @@ suite('Public API', () => {
 
 				mq.keystroke('Right'); // stay at right edge
 				assert.equal(moveCounter, 1);
-				assert.equal(dir, R);
+				assert.equal(dir, 'right');
 
 				mq.keystroke('Right'); // stay at right edge
 				assert.equal(moveCounter, 2);
-				assert.equal(dir, R);
+				assert.equal(dir, 'right');
 
 				mq.keystroke('Left'); // right edge of denominator
 				assert.equal(moveCounter, 2);
@@ -227,20 +225,20 @@ suite('Public API', () => {
 
 				mq.keystroke('Left'); // stays at left edge
 				assert.equal(moveCounter, 3);
-				assert.equal(dir, L);
+				assert.equal(dir, 'left');
 				assert.equal(deleteCounter, 0);
 
 				mq.keystroke('Backspace'); // stays at left edge
 				assert.equal(deleteCounter, 1);
-				assert.equal(dir, L);
+				assert.equal(dir, 'left');
 
 				mq.keystroke('Backspace'); // stays at left edge
 				assert.equal(deleteCounter, 2);
-				assert.equal(dir, L);
+				assert.equal(dir, 'left');
 
 				mq.keystroke('Left'); // stays at left edge
 				assert.equal(moveCounter, 4);
-				assert.equal(dir, L);
+				assert.equal(dir, 'left');
 
 				const mock = document.getElementById('mock');
 				while (mock.firstChild) mock.firstChild.remove();
@@ -405,14 +403,14 @@ suite('Public API', () => {
 
 			mq.keystroke('Spacebar');
 			mq.typedText(' ');
-			assert.equal(cursor[L].ctrlSeq, '\\ ', 'left of the cursor is ' + cursor[L].ctrlSeq);
-			assert.equal(cursor[R], undefined, 'right of the cursor is ' + cursor[R]);
+			assert.equal(cursor.left.ctrlSeq, '\\ ', 'left of the cursor is ' + cursor.left.ctrlSeq);
+			assert.equal(cursor.right, undefined, 'right of the cursor is ' + cursor.right);
 			mq.keystroke('Backspace');
 
 			mq.keystroke('Shift-Spacebar');
 			mq.typedText(' ');
-			assert.equal(cursor[L].ctrlSeq, '\\ ', 'left of the cursor is ' + cursor[L].ctrlSeq);
-			assert.equal(cursor[R], undefined, 'right of the cursor is ' + cursor[R]);
+			assert.equal(cursor.left.ctrlSeq, '\\ ', 'left of the cursor is ' + cursor.left.ctrlSeq);
+			assert.equal(cursor.right, undefined, 'right of the cursor is ' + cursor.right);
 		});
 		test('space behaves like tab when spaceBehavesLikeTab is true', () => {
 			const el = document.createElement('span');
@@ -425,13 +423,13 @@ suite('Public API', () => {
 
 			mq.keystroke('Left');
 			mq.keystroke('Spacebar');
-			assert.equal(cursor[L].parent, rootBlock, 'parent of the cursor is  ' + cursor[L].ctrlSeq);
-			assert.equal(cursor[R], undefined, 'right cursor is ' + cursor[R]);
+			assert.equal(cursor.left.parent, rootBlock, 'parent of the cursor is  ' + cursor.left.ctrlSeq);
+			assert.equal(cursor.right, undefined, 'right cursor is ' + cursor.right);
 
 			mq.keystroke('Left');
 			mq.keystroke('Shift-Spacebar');
-			assert.equal(cursor[L], undefined, 'left cursor is ' + cursor[L]);
-			assert.equal(cursor[R], rootBlock.ends[L], 'parent of rootBlock is ' + cursor[R]);
+			assert.equal(cursor.left, undefined, 'left cursor is ' + cursor.left);
+			assert.equal(cursor.right, rootBlock.ends.left, 'parent of rootBlock is ' + cursor.right);
 		});
 		test('space behaves like tab when globally set to true', () => {
 			MQ.config({ spaceBehavesLikeTab: true });
@@ -447,7 +445,7 @@ suite('Public API', () => {
 			mq.keystroke('Left');
 			mq.keystroke('Spacebar');
 			assert.equal(cursor.parent, rootBlock, 'cursor in root block');
-			assert.equal(cursor[R], undefined, 'cursor at end of block');
+			assert.equal(cursor.right, undefined, 'cursor at end of block');
 
 			MQ.config({ spaceBehavesLikeTab: false });
 		});

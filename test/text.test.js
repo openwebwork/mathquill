@@ -1,6 +1,6 @@
 /* global suite, test, assert, setup, MQ */
 
-import { L, R, prayWellFormed } from 'src/constants';
+import { prayWellFormed } from 'src/constants';
 import { Controller } from 'src/controller';
 import { latexMathParser } from 'commands/mathElements';
 
@@ -17,7 +17,7 @@ suite('text', () => {
 		});
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
+	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
 	const assertLatex = (latex) => {
 		prayWellFormedPoint(mq.__controller.cursor);
 		assert.equal(mostRecentlyReportedLatex, latex, 'assertLatex failed');
@@ -104,7 +104,7 @@ suite('text', () => {
 
 			mq.keystroke('Right');
 			assertSplit(cursor.element);
-			assert.equal(cursor[L], undefined);
+			assert.equal(cursor.left, undefined);
 			assertLatex('');
 		});
 

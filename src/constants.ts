@@ -1,17 +1,10 @@
 import type { TNode } from 'tree/node';
 import type { MathCommand } from 'commands/mathElements';
 
-export const enum Direction {
-	L = -1,
-	R = 1
-}
+export type Direction = 'left' | 'right';
 
 export const mqCmdId = 'data-mathquill-command-id',
-	mqBlockId = 'data-mathquill-block-id',
-	// L = 'left', R = 'right'
-	// The contract is that they can be used as object properties and -L === R, and -R === L.
-	L = Direction.L,
-	R = Direction.R;
+	mqBlockId = 'data-mathquill-block-id';
 
 export const noop = () => {
 	/* do nothing */
@@ -65,7 +58,7 @@ export const bindMixin = <TBase extends Constructor<MathCommand>>(
 	...args: (string | boolean | number | object)[]
 ) =>
 	class extends Base {
-		constructor(..._ignore_args: any[]) {
+		constructor(..._args: any[]) {
 			super(...args);
 		}
 	};
@@ -74,18 +67,18 @@ export const prayWellFormed = (parent?: TNode, leftward?: TNode, rightward?: TNo
 	if (!parent) throw new Error('a parent must be present');
 
 	// Either leftward is empty and `rightward` is the left end child (possibly empty)
-	// or leftward is there and leftward's [R] and .parent are properly set up.
+	// or leftward is there and leftward's .right and .parent are properly set up.
 	if (
-		(!leftward && parent.ends[L] !== rightward) ||
-		(leftward && (leftward[R] !== rightward || leftward.parent !== parent))
+		(!leftward && parent.ends.left !== rightward) ||
+		(leftward && (leftward.right !== rightward || leftward.parent !== parent))
 	)
 		throw new Error('leftward is not properly set up');
 
 	// Either rightward is empty and `leftward` is the right end child (possibly empty)
-	// or rightward is there and rightward's [L] and .parent are properly set up.
+	// or rightward is there and rightward's .left and .parent are properly set up.
 	if (
-		(!rightward && parent.ends[R] !== leftward) ||
-		(rightward && (rightward[L] !== leftward || rightward.parent !== parent))
+		(!rightward && parent.ends.right !== leftward) ||
+		(rightward && (rightward.left !== leftward || rightward.parent !== parent))
 	)
 		throw new Error('rightward is not properly set up');
 };

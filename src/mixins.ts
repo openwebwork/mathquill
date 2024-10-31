@@ -1,5 +1,4 @@
 import type { Direction, Constructor } from 'src/constants';
-import { L, R } from 'src/constants';
 import type { Cursor } from 'src/cursor';
 import type { VNode } from 'tree/vNode';
 import type { TNode } from 'tree/node';
@@ -25,8 +24,8 @@ export const RootBlockMixin = (_: MathElement) => {
 export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base: TBase) =>
 	class extends Base {
 		moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
-			const nodeAtEnd = (updown && this[`${updown}Into`]) || this.ends[dir === L ? R : L];
-			if (nodeAtEnd) cursor.insAtDirEnd(dir === L ? R : L, nodeAtEnd);
+			const nodeAtEnd = (updown && this[`${updown}Into`]) || this.ends[dir === 'left' ? 'right' : 'left'];
+			if (nodeAtEnd) cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', nodeAtEnd);
 		}
 
 		deleteTowards(dir: Direction, cursor: Cursor) {
@@ -35,7 +34,7 @@ export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base:
 		}
 
 		selectTowards(dir: Direction, cursor: Cursor) {
-			cursor[dir === L ? R : L] = this;
+			cursor[dir === 'left' ? 'right' : 'left'] = this;
 			cursor[dir] = this[dir];
 		}
 	};

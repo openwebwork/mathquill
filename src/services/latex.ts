@@ -1,7 +1,6 @@
 // Latex Controller Extension
 
 import type { Constructor } from 'src/constants';
-import { L, R } from 'src/constants';
 import type { TNode } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
@@ -28,10 +27,8 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 				.parse<MathBlock | undefined>(latex);
 
 			this.root.eachChild('postOrder', 'dispose');
-			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-			delete this.root.ends[L];
-			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-			delete this.root.ends[R];
+			delete this.root.ends.left;
+			delete this.root.ends.right;
 
 			if (block instanceof MathBlock && block.prepareInsertionAt(this.cursor)) {
 				block.children().adopt(this.root);
@@ -55,10 +52,8 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 					(el as HTMLElement).remove();
 				});
 			this.root.eachChild('postOrder', 'dispose');
-			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-			delete this.root.ends[L];
-			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-			delete this.root.ends[R];
+			delete this.root.ends.left;
+			delete this.root.ends.right;
 			delete this.cursor.selection;
 			this.cursor.show().insAtRightEnd(this.root);
 
@@ -74,7 +69,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 					const rootMathCommand = new RootMathCommand(this.cursor);
 
 					rootMathCommand.createBlocks();
-					const rootMathBlock = rootMathCommand.ends[L] as MathBlock;
+					const rootMathBlock = rootMathCommand.ends.left as MathBlock;
 					block.children().adopt(rootMathBlock);
 
 					return rootMathCommand;
@@ -87,7 +82,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 
 			if (commands) {
 				for (const command of commands) {
-					command.adopt(this.root, this.root.ends[R]);
+					command.adopt(this.root, this.root.ends.right);
 				}
 
 				this.root.elements.lastElement.append(...this.root.domify().contents);

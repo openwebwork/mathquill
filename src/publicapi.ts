@@ -82,7 +82,7 @@ const mathQuill: MathQuill = {
 
 		MQ.registerEmbed = (name: string, options: (data: string) => EmbedOptions) => {
 			if (!/^[a-z][a-z0-9]*$/i.test(name)) {
-				throw 'Embed name must start with letter and be only letters and digits';
+				throw new Error('Embed name must start with letter and be only letters and digits');
 			}
 			EMBEDS[name] = options;
 		};

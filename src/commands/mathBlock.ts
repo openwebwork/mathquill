@@ -1,5 +1,5 @@
 import type { Direction, Constructor } from 'src/constants';
-import { L, R, LatexCmds, CharCmds } from 'src/constants';
+import { LatexCmds, CharCmds } from 'src/constants';
 import { RootBlockMixin } from 'src/mixins';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
@@ -41,8 +41,8 @@ export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) 
 					return;
 				}
 				if (
-					cursor[L] &&
-					!cursor[R] &&
+					cursor.left &&
+					!cursor.right &&
 					!cursor.selection &&
 					cursor.options.charsThatBreakOutOfSupSub.includes(ch) &&
 					this.parent
@@ -74,7 +74,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	}
 
 	text() {
-		return this.ends[L] && this.ends[L] === this.ends[R] ? this.ends[L].text() : this.join('text');
+		return this.ends.left && this.ends.left === this.ends.right ? this.ends.left.text() : this.join('text');
 	}
 
 	keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
@@ -82,10 +82,10 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 			ctrlr.options.spaceBehavesLikeTab &&
 			ctrlr.cursor.depth() > 1 &&
 			(key === 'Spacebar' || key === 'Shift-Spacebar') &&
-			ctrlr.cursor[L]?.ctrlSeq !== ','
+			ctrlr.cursor.left?.ctrlSeq !== ','
 		) {
 			e.preventDefault();
-			ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
+			ctrlr.escapeDir(key === 'Shift-Spacebar' ? 'left' : 'right', key, e);
 			return;
 		}
 		super.keystroke(key, e, ctrlr);
@@ -96,7 +96,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	// the cursor
 	moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 		const updownInto = updown && this.parent?.[`${updown}Into`];
-		if (!updownInto && this[dir]) cursor.insAtDirEnd(dir === L ? R : L, this[dir]);
+		if (!updownInto && this[dir]) cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this[dir]);
 		else if (this.parent) cursor.insDirOf(dir, this.parent);
 	}
 
@@ -109,17 +109,17 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	}
 
 	seek(pageX: number, cursor: Cursor) {
-		let node = this.ends[R];
+		let node = this.ends.right;
 		const rect = node?.elements.firstElement.getBoundingClientRect() ?? undefined;
 		if (!node || (rect?.left ?? 0) + (rect?.width ?? 0) < pageX) {
 			cursor.insAtRightEnd(this);
 			return;
 		}
-		if (pageX < (this.ends[L]?.elements.firstElement.getBoundingClientRect().left ?? 0)) {
+		if (pageX < (this.ends.left?.elements.firstElement.getBoundingClientRect().left ?? 0)) {
 			cursor.insAtLeftEnd(this);
 			return;
 		}
-		while (pageX < (node?.elements.firstElement.getBoundingClientRect().left ?? 0)) node = node?.[L];
+		while (pageX < (node?.elements.firstElement.getBoundingClientRect().left ?? 0)) node = node?.left;
 		node?.seek(pageX, cursor);
 	}
 
@@ -130,13 +130,13 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 		const block = latexMathParser.skip(eof).or(all.result(false)).parse<MathCommand | undefined>(latex);
 
 		if (block && !block.isEmpty() && block.prepareInsertionAt(cursor)) {
-			if (cursor.parent) block.children().adopt(cursor.parent, cursor[L], cursor[R]);
+			if (cursor.parent) block.children().adopt(cursor.parent, cursor.left, cursor.right);
 			const elements = block.domify();
 			cursor.element.before(...elements.contents);
-			cursor[L] = block.ends[R];
+			cursor.left = block.ends.right;
 			block.finalizeInsert(cursor.options, cursor);
-			block.ends[R]?.[R]?.siblingCreated?.(cursor.options, L);
-			block.ends[L]?.[L]?.siblingCreated?.(cursor.options, R);
+			block.ends.right?.right?.siblingCreated?.(cursor.options, 'left');
+			block.ends.left?.left?.siblingCreated?.(cursor.options, 'right');
 			cursor.parent?.bubble('reflow');
 		}
 	}
@@ -171,20 +171,20 @@ export class RootMathCommand extends writeMethodMixin(MathCommand) {
 	createBlocks() {
 		super.createBlocks();
 
-		const leftEnd = this.ends[L] as RootMathCommand;
+		const leftEnd = this.ends.left as RootMathCommand;
 		leftEnd.write = (cursor: Cursor, ch: string) => {
 			if (ch !== '$') this.write(cursor, ch);
 			else if (leftEnd.isEmpty()) {
 				if (leftEnd.parent) cursor.insRightOf(leftEnd.parent);
-				leftEnd.parent?.deleteTowards(L, cursor);
+				leftEnd.parent?.deleteTowards('left', cursor);
 				new VanillaSymbol('\\$', '$').createLeftOf(cursor.show());
-			} else if (!cursor[R] && leftEnd.parent) cursor.insRightOf(leftEnd.parent);
-			else if (!cursor[L] && leftEnd.parent) cursor.insLeftOf(leftEnd.parent);
+			} else if (!cursor.right && leftEnd.parent) cursor.insRightOf(leftEnd.parent);
+			else if (!cursor.left && leftEnd.parent) cursor.insLeftOf(leftEnd.parent);
 			else this.write(cursor, ch);
 		};
 	}
 
 	latex() {
-		return `$${this.ends[L]?.latex() ?? ''}$`;
+		return `$${this.ends.left?.latex() ?? ''}$`;
 	}
 }
