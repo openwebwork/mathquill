@@ -1,4 +1,4 @@
-/* global suite, test, assert, setup, MQ, MQBasic */
+/* global suite, test, assert, setup, MQ */
 
 import { Bracket } from 'commands/mathElements';
 import { L, R, prayWellFormed } from 'src/constants';
@@ -34,14 +34,6 @@ suite('typing with auto-replaces', () => {
 			assertLatex('1+\\frac{2}{ }');
 			mq.latex('').typedText('1 2/3');
 			assertLatex('1\\ \\frac{2}{3}');
-		});
-
-		test('mathquill-basic', () => {
-			const el = document.createElement('span');
-			document.getElementById('mock')?.append(el);
-			const mq_basic = MQBasic.MathField(el);
-			mq_basic.typedText('1/2');
-			assert.equal(mq_basic.latex(), '\\frac{1}{2}');
 		});
 	});
 

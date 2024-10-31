@@ -101,7 +101,6 @@ module.exports = (_env, argv) => {
 
 		config.devtool = 'source-map';
 		config.entry['mathquill.test'] = './test/index.js';
-		config.entry['mathquill-basic'] = './src/indexBasic.ts';
 		config.resolve.alias.test = path.resolve(__dirname, 'test');
 		config.devServer = {
 			server: { type: 'http' },
@@ -118,8 +117,6 @@ module.exports = (_env, argv) => {
 	} else {
 		// eslint-disable-next-line no-console
 		console.log('Using production mode.');
-
-		if (process.env.BUILD_BASIC) config.entry['mathquill-basic'] = './src/indexBasic.ts';
 	}
 
 	return config;

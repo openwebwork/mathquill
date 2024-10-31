@@ -36,13 +36,19 @@ interface MQApi {
 	TextField: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
 }
 
-// globally exported API object
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export default class MathQuill {
-	static origMathQuill: MathQuill | undefined = isBrowser ? window.MathQuill : undefined;
-	static VERSION = '0.0.1';
+interface MathQuill {
+	origMathQuill: MathQuill | undefined;
+	VERSION: string;
+	getInterface(): MQApi;
+	noConflict(): MathQuill;
+}
 
-	static getInterface() {
+// globally exported API object
+const mathQuill: MathQuill = {
+	origMathQuill: isBrowser ? window.MathQuill : undefined,
+	VERSION: '0.0.1',
+
+	getInterface() {
 		const APIClasses: Record<string, AbstractMathQuillConstructor> = {};
 
 		// Function that takes an HTML element and, if it's the root HTML element of a
@@ -90,11 +96,13 @@ export default class MathQuill {
 		}
 
 		return MQ as MQApi;
-	}
+	},
 
-	static noConflict() {
-		if (!isBrowser) return MathQuill;
+	noConflict() {
+		if (!isBrowser) return mathQuill;
 		window.MathQuill = this.origMathQuill;
-		return MathQuill;
+		return mathQuill;
 	}
-}
+};
+
+export default mathQuill;

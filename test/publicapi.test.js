@@ -1,4 +1,4 @@
-/* global suite, test, assert, setup, teardown, MQ, MQBasic */
+/* global suite, test, assert, setup, teardown, MQ */
 
 import { L, R } from 'src/constants';
 
@@ -40,30 +40,6 @@ suite('Public API', () => {
 			const rootBlock = el.querySelector('.mq-root-block');
 			assert.ok(rootBlock.classList.contains('mq-empty'));
 			assert.ok(!rootBlock.classList.contains('mq-has-cursor'));
-		});
-	});
-
-	suite('mathquill-basic', () => {
-		let mq;
-		setup(() => {
-			const el = document.createElement('span');
-			document.getElementById('mock')?.append(el);
-			mq = MQBasic.MathField(el);
-		});
-
-		test('typing \\', () => {
-			mq.typedText('\\');
-			assert.equal(mq.latex(), '\\backslash');
-		});
-
-		test('typing $', () => {
-			mq.typedText('$');
-			assert.equal(mq.latex(), '\\$');
-		});
-
-		test('parsing of advanced symbols', () => {
-			mq.latex('\\oplus');
-			assert.equal(mq.latex(), ''); // TODO: better LaTeX parse error behavior
 		});
 	});
 
