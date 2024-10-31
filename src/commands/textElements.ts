@@ -1,7 +1,7 @@
 // Elements for abstract classes of text blocks
 
 import type { Direction } from 'src/constants';
-import { mqCmdId, L, R, pray, prayDirection, LatexCmds, CharCmds } from 'src/constants';
+import { mqCmdId, L, R, LatexCmds, CharCmds } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
@@ -78,7 +78,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	}
 
 	html() {
-		return `<span class="mq-text-mode" ${mqCmdId}=${this.id}>${this.textContents()}</span>`;
+		return `<span class="mq-text-mode" ${mqCmdId}=${this.id.toString()}>${this.textContents()}</span>`;
 	}
 
 	// editability methods: called by the cursor for editing, cursor movements,
@@ -132,9 +132,9 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		else {
 			// split apart
 			const leftBlock = new TextBlock();
-			const leftPc = this.ends[L]!;
-			leftPc.disown().elements.detach();
-			leftPc.adopt(leftBlock);
+			const leftPc = this.ends[L];
+			leftPc?.disown().elements.detach();
+			leftPc?.adopt(leftBlock);
 
 			cursor.insLeftOf(this);
 			super.createLeftOf.call(leftBlock, cursor); // micro-optimization, not for correctness
@@ -150,7 +150,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 
 	seek(pageX: number, cursor: Cursor) {
 		cursor.hide();
-		const textPc = this.fuseChildren()!;
+		const textPc = this.fuseChildren();
+		if (!textPc) return;
 
 		// Insert cursor at approx position in DOMTextNode
 		const cursorStyle = getComputedStyle(this.elements.firstElement);
@@ -172,7 +173,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		let prevDispl = dir;
 		// displ * prevDispl > 0 iff displacement direction === previous direction
 		while (cursor[dir] && displ * prevDispl > 0) {
-			cursor[dir]?.moveTowards(dir, cursor);
+			cursor[dir].moveTowards(dir, cursor);
 			prevDispl = displ;
 			displ = pageX - cursor.offset().left;
 		}
@@ -217,17 +218,18 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 			this.fuseChildren();
 		}
 
-		this?.getController()?.handle('textBlockExit');
+		this.getController()?.handle('textBlockExit');
 	}
 
 	fuseChildren() {
 		this.elements.first.normalize();
 
-		const textPcDom = this.elements.first.firstChild as Text;
+		const textPcDom = this.elements.first.firstChild as Text | undefined;
 		if (!textPcDom) return;
-		pray('only node in TextBlock span is Text node', textPcDom.nodeType === 3);
+
 		// nodeType === 3 is a text node.
-		// https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
+		// See https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType.
+		if (textPcDom.nodeType !== 3) throw new Error('only node in TextBlock span must be a Text node');
 
 		const textPc = new TextPiece(textPcDom.data);
 		textPc.addToElements(textPcDom);
@@ -279,15 +281,16 @@ class TextPiece extends TNode {
 		this.dom?.insertData(0, text);
 	}
 
-	insTextAtDirEnd(text: string, dir: Direction) {
-		prayDirection(dir);
+	insTextAtDirEnd(text: string, dir: Direction | undefined) {
+		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
 		if (dir === R) this.appendText(text);
 		else this.prependText(text);
 	}
 
 	splitRight(i: number) {
-		const newPc = new TextPiece(this.textStr.slice(i)).adopt(this.parent!, this, this[R]);
-		newPc.addToElements(this.dom!.splitText(i));
+		const newPc = new TextPiece(this.textStr.slice(i));
+		if (this.parent) newPc.adopt(this.parent, this, this[R]);
+		if (this.dom) newPc.addToElements(this.dom.splitText(i));
 		this.textStr = this.textStr.slice(0, i);
 		return newPc;
 	}
@@ -296,16 +299,16 @@ class TextPiece extends TNode {
 		return text.charAt(dir === L ? 0 : -1 + text.length);
 	}
 
-	moveTowards(dir: Direction, cursor: Cursor) {
-		prayDirection(dir);
+	moveTowards(dir: Direction | undefined, cursor: Cursor) {
+		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
 
 		const ch = this.endChar(dir === L ? R : L, this.textStr);
 
-		const from = this[dir === L ? R : L] as TextPiece;
+		const from = this[dir === L ? R : L] as TextPiece | undefined;
 		if (from) from.insTextAtDirEnd(ch, dir);
 		else new TextPiece(ch).createDir(dir === L ? R : L, cursor);
 
-		return this.deleteTowards(dir, cursor);
+		this.deleteTowards(dir, cursor);
 	}
 
 	latex() {
@@ -330,8 +333,8 @@ class TextPiece extends TNode {
 		}
 	}
 
-	selectTowards(dir: Direction, cursor: Cursor) {
-		prayDirection(dir);
+	selectTowards(dir: Direction | undefined, cursor: Cursor) {
+		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
 		const anticursor = cursor.anticursor;
 
 		const ch = this.endChar(dir === L ? R : L, this.textStr);
@@ -341,7 +344,7 @@ class TextPiece extends TNode {
 			anticursor[dir] = newPc;
 			cursor.insDirOf(dir, newPc);
 		} else {
-			const from = this[dir === L ? R : L] as TextPiece;
+			const from = this[dir === L ? R : L] as TextPiece | undefined;
 			if (from) from.insTextAtDirEnd(ch, dir);
 			else {
 				const newPc = new TextPiece(ch).createDir(dir === L ? R : L, cursor);
@@ -353,7 +356,7 @@ class TextPiece extends TNode {
 			}
 		}
 
-		return this.deleteTowards(dir, cursor);
+		this.deleteTowards(dir, cursor);
 	}
 }
 

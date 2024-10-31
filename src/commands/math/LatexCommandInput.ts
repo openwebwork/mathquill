@@ -26,7 +26,9 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	createBlocks() {
 		super.createBlocks();
 
-		const leftEnd = this.ends[L]!;
+		const leftEnd = this.ends[L];
+
+		if (!leftEnd) return;
 
 		leftEnd.focus = () => {
 			leftEnd.parent?.elements.addClass('mq-has-cursor');
@@ -58,7 +60,8 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 				e.preventDefault();
 				return;
 			}
-			return super.keystroke(key, e, ctrlr);
+			super.keystroke(key, e, ctrlr);
+			return;
 		};
 	}
 
@@ -93,7 +96,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		this.remove();
 
 		if (this[R]) cursor.insLeftOf(this[R]);
-		else cursor.insAtRightEnd(this.parent!);
+		else if (this.parent) cursor.insAtRightEnd(this.parent);
 
 		const latex = this.ends[L]?.latex() || ' ';
 		if (latex in LatexCmds) {

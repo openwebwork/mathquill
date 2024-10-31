@@ -1,6 +1,6 @@
 // Symbols for Basic Mathematics
 
-import type { Direction } from 'src/constants';
+import type { Direction, Constructor } from 'src/constants';
 import { noop, L, R, bindMixin, LatexCmds, CharCmds } from 'src/constants';
 import { Options } from 'src/options';
 import type { Cursor } from 'src/cursor';
@@ -80,7 +80,7 @@ LatexCmds["'"] = LatexCmds.prime = bindMixin(VanillaSymbol, "'", '&prime;');
 // LatexCmds['\u2033'] = LatexCmds.dprime = bindMixin(VanillaSymbol, '\u2033', '&Prime;');
 
 LatexCmds.backslash = bindMixin(VanillaSymbol, '\\backslash ', '\\');
-if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
+if (!(CharCmds['\\'] as Constructor<TNode> | undefined)) CharCmds['\\'] = LatexCmds.backslash;
 
 LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
 
@@ -208,7 +208,7 @@ class LatexFragment extends MathCommand {
 
 	createLeftOf(cursor: Cursor) {
 		const block: MathCommand = latexMathParser.parse(this.latex());
-		block.children().adopt(cursor.parent!, cursor[L], cursor[R]);
+		if (cursor.parent) block.children().adopt(cursor.parent, cursor[L], cursor[R]);
 		cursor[L] = block.ends[R];
 		cursor.element.before(...block.domify().contents);
 		block.finalizeInsert(cursor.options, cursor);

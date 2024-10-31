@@ -1,7 +1,7 @@
 // Deals with mouse events for clicking and drag-to-select.
 
 import type { Constructor } from 'src/constants';
-import { mqCmdId, mqBlockId, noop, pray, L, R } from 'src/constants';
+import { mqCmdId, mqBlockId, noop, L, R } from 'src/constants';
 import { TNode } from 'tree/node';
 import type { ControllerBase } from 'src/controller';
 import type { HorizontalScroll } from 'services/scrollHoriz';
@@ -19,9 +19,9 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 
 			// Drag-to-select event handling
 			this.mouseDownHandler = (e: MouseEvent) => {
-				const rootEl = (e.target as HTMLElement).closest('.mq-root-block')!;
+				const rootEl = e.target instanceof HTMLElement ? e.target.closest('.mq-root-block') : null;
 				const root = TNode.byId.get(
-					parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl?.getAttribute(mqBlockId)) ?? '0')
+					parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl.getAttribute(mqBlockId)) ?? '0')
 				);
 
 				if (!root?.controller) {
@@ -50,7 +50,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				const mousemove = (e: Event) => (target = e.target as HTMLElement);
 				const docmousemove = (e: MouseEvent) => {
 					if (!cursor.anticursor) cursor.startSelection();
-					ctrlr.seek(target!, e.pageX ?? 0).cursor.select();
+					ctrlr.seek(target, e.pageX).cursor.select();
 					target = undefined;
 				};
 				// Outside rootEl, the MathQuill node corresponding to the target (if any)
@@ -79,7 +79,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 					// If this is a double click, then select the block that is to the right of the cursor, and return.
 					// Note that the interpretation of what a block is in this situation is not a true MathQuill block.
 					// Rather an attempt is made to select word like blocks.
-					ctrlr.seek(e.target as HTMLElement, e.pageX ?? 0);
+					ctrlr.seek(e.target as HTMLElement, e.pageX);
 					if (!cursor[R] && cursor[L]?.parent === root) ctrlr.moveLeft();
 
 					if (cursor[R] instanceof Letter) {
@@ -95,6 +95,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 							ctrlr.moveLeft();
 						cursor.startSelection();
 						while (
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 							cursor[R] &&
 							cursor[R] instanceof Letter &&
 							cursor[R].isPartOfOperator === currentNode.isPartOfOperator
@@ -104,6 +105,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 						// If a "Digit" is to the right of the cursor, then select all adjacent "Digit"s.
 						while (cursor[L] && cursor[L] instanceof Digit) ctrlr.moveLeft();
 						cursor.startSelection();
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 						while (cursor[R] && cursor[R] instanceof Digit) ctrlr.selectRight();
 					} else {
 						cursor.startSelection();
@@ -121,12 +123,12 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				}
 
 				if (ctrlr.blurred) {
-					if (!ctrlr.editable) rootEl?.prepend(textareaSpan!);
+					if (!ctrlr.editable && textareaSpan) rootEl?.prepend(textareaSpan);
 					textarea?.focus();
 				}
 
 				cursor.blink = noop;
-				ctrlr.seek(e.target as HTMLElement, e.pageX ?? 0).cursor.startSelection();
+				ctrlr.seek(e.target as HTMLElement, e.pageX).cursor.startSelection();
 
 				rootEl?.addEventListener('mousemove', mousemove);
 				ownerDocument.addEventListener('mousemove', docmousemove);
@@ -138,7 +140,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 			this.container.addEventListener('mousedown', this.mouseDownHandler);
 		}
 
-		seek(target: HTMLElement, pageX: number) {
+		seek(target: HTMLElement | undefined, pageX: number) {
 			const cursor = this.notify('select').cursor;
 
 			let nodeId = 0;
@@ -152,14 +154,14 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				}
 			}
 			const node = nodeId ? TNode.byId.get(nodeId) : this.root;
-			pray('nodeId is the id of some TNode that exists', !!node);
+			if (!node) throw new Error('nodeId is not the id of a TNode that exists');
 
 			// Don't clear the selection until after getting node from target, in case
 			// target was selection span.  Otherwise target will have no parent and will
 			// seek from root, which is less accurate (e.g. fraction).
 			cursor.clearSelection().show();
 
-			node?.seek(pageX, cursor);
+			node.seek(pageX, cursor);
 
 			// Before .selectFrom when mouse-selecting, so
 			// always hits no-selection case in scrollHoriz and scrolls slower

@@ -21,19 +21,20 @@ declare global {
 }
 
 interface MQApi {
-	(el: unknown): AbstractMathQuill | void;
+	(el: unknown): AbstractMathQuill | undefined;
 	saneKeyboardEvents: typeof saneKeyboardEvents;
 	config: (opts: InputOptions) => MQApi;
 	registerEmbed: (name: string, options: (data: string) => EmbedOptions) => void;
-	StaticMath: (el: unknown, opts: InputOptions) => AbstractMathQuill | void;
-	MathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | void;
-	InnerMathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | void;
+	StaticMath: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
+	MathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
+	InnerMathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
 }
 
 // globally exported API object
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export default class MathQuill {
-	static origMathQuill?: MathQuill = window.MathQuill;
-	static VERSION?: string;
+	static origMathQuill: MathQuill | undefined = window.MathQuill;
+	static VERSION = '0.0.1';
 
 	static getInterface() {
 		const APIClasses: Record<string, AbstractMathQuillConstructor> = {};
@@ -74,12 +75,12 @@ export default class MathQuill {
 				opts: InputOptions
 			) => {
 				const mq = MQ(el);
-				if (mq instanceof APIClasses[kind] || !(el instanceof HTMLElement)) return mq;
-				const ctrlr = new Controller(new APIClasses[kind].RootBlock(), el, new Options());
+				if (mq instanceof APIClass || !(el instanceof HTMLElement)) return mq;
+				const ctrlr = new Controller(new APIClass.RootBlock(), el, new Options());
 				ctrlr.KIND_OF_MQ = kind;
-				return new APIClasses[kind](ctrlr).config(opts).__mathquillify();
+				return new APIClass(ctrlr).config(opts).__mathquillify();
 			};
-			Object.setPrototypeOf((MQ as MQApi)[kind as keyof MQApi], APIClasses[kind]);
+			Object.setPrototypeOf((MQ as MQApi)[kind as keyof MQApi], APIClass);
 		}
 
 		return MQ as MQApi;

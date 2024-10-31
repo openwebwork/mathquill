@@ -54,7 +54,9 @@ export class VNode {
 	}
 
 	detach() {
-		this.contents.forEach((child) => (child as Element).remove());
+		this.contents.forEach((child) => {
+			(child as Element).remove();
+		});
 	}
 
 	remove() {
@@ -71,7 +73,7 @@ export class VNode {
 
 	children(selector?: string) {
 		return new VNode(
-			this.contents.reduce((ret, el) => {
+			this.contents.reduce<Node[]>((ret, el) => {
 				ret.push(
 					...Array.from(el.childNodes).filter((child) => {
 						return (
@@ -80,16 +82,16 @@ export class VNode {
 					})
 				);
 				return ret;
-			}, [] as Node[])
+			}, [])
 		);
 	}
 
 	find(selector: string) {
 		return new VNode(
-			this.contents.reduce((ret, el) => {
+			this.contents.reduce<Node[]>((ret, el) => {
 				ret.push(...(el as Element).querySelectorAll(selector));
 				return ret;
-			}, [] as Node[])
+			}, [])
 		);
 	}
 
@@ -118,21 +120,21 @@ export class VNode {
 		return false;
 	}
 
-	html(contents: string): VNode;
+	html(contents: string): this;
 	html(): string;
-	html(contents?: string): string | VNode {
+	html(contents?: string): string | this {
 		if (typeof contents === 'string') {
 			this.contents.forEach((elt) => {
 				if (elt instanceof Element) elt.innerHTML = contents;
 			});
 			return this;
 		}
-		return this.firstElement?.innerHTML ?? '';
+		return this.firstElement.innerHTML;
 	}
 
-	text(contents: string): VNode;
+	text(contents: string): this;
 	text(): string;
-	text(contents?: string): string | VNode {
+	text(contents?: string): string | this {
 		if (contents) {
 			this.contents.forEach((elt) => {
 				if (elt instanceof Element) elt.textContent = contents;

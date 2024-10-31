@@ -53,6 +53,8 @@ export class AbstractMathQuill {
 			el.append(...contents);
 			return el;
 		};
+
+		return this;
 	}
 
 	get options() {
@@ -106,7 +108,7 @@ export class EditableField extends AbstractMathQuill {
 
 	focus() {
 		if (document.activeElement === this.__controller.textarea)
-			this.__controller.textarea?.dispatchEvent(new FocusEvent('focus'));
+			this.__controller.textarea.dispatchEvent(new FocusEvent('focus'));
 		else this.__controller.textarea?.focus();
 		return this;
 	}
@@ -114,7 +116,7 @@ export class EditableField extends AbstractMathQuill {
 	blur() {
 		if (document.activeElement !== this.__controller.textarea)
 			this.__controller.textarea?.dispatchEvent(new FocusEvent('blur'));
-		else this.__controller.textarea?.blur();
+		else this.__controller.textarea.blur();
 		return this;
 	}
 
@@ -129,7 +131,9 @@ export class EditableField extends AbstractMathQuill {
 		const root = this.__controller.root,
 			cursor = this.__controller.cursor;
 		root.eachChild('postOrder', 'dispose');
+		// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 		delete root.ends[L];
+		// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 		delete root.ends[R];
 		root.elements.empty();
 		delete cursor.selection;
@@ -142,7 +146,7 @@ export class EditableField extends AbstractMathQuill {
 			cursor = ctrlr.cursor;
 		if (/^\\[a-z]+$/i.test(cmd) && !cursor.isTooDeep()) {
 			cmd = cmd.slice(1);
-			const klass = LatexCmds[cmd];
+			const klass = LatexCmds[cmd] as Constructor<TNode> | undefined;
 			if (klass) {
 				const newCmd = new klass(cmd);
 				if (cursor.selection) newCmd.replaces(cursor.replaceSelection());

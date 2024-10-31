@@ -120,6 +120,7 @@ export class Options {
 		if (!this.#_autoCommands) throw 'autoCommands setter not working';
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of removeCmds) {
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.#_autoCommands[cmd];
 		}
 		this.#_autoCommands._maxLength = Object.keys(this.#_autoCommands).reduce(
@@ -206,6 +207,7 @@ export class Options {
 		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of removeCmds) {
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.#_autoOperatorNames[cmd];
 		}
 		this.#_autoOperatorNames._maxLength = Object.keys(this.#_autoOperatorNames).reduce(
@@ -254,7 +256,7 @@ export class Options {
 		return this.#_leftRightIntoCmdGoes ?? Options.#leftRightIntoCmdGoes;
 	}
 	set leftRightIntoCmdGoes(updown: 'up' | 'down' | undefined) {
-		if (updown && updown !== 'up' && updown !== 'down') {
+		if (updown && updown !== 'up' && (updown as string) !== 'down') {
 			throw `"up" or "down" required for leftRightIntoCmdGoes option, got "${updown as string}"`;
 		}
 		if (this instanceof Options) this.#_leftRightIntoCmdGoes = updown;

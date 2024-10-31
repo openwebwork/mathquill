@@ -16,7 +16,7 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 				if (!this.cursor.parent) this.cursor.insAtRightEnd(this.root);
 				if (this.cursor.selection) {
 					this.cursor.selection.elements.removeClass('mq-blur');
-					this.selectionChanged?.(); // Re-select textarea contents after tabbing away and back.
+					this.selectionChanged(); // Re-select textarea contents after tabbing away and back.
 				} else this.cursor.show();
 			};
 

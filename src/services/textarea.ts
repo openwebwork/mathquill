@@ -29,7 +29,9 @@ export const TextAreaController = <
 			this.textareaSpan.append(textarea);
 			this.textarea = textarea;
 
-			this.cursor.selectionChanged = () => this.selectionChanged();
+			this.cursor.selectionChanged = () => {
+				this.selectionChanged();
+			};
 		}
 
 		selectionChanged() {
@@ -37,7 +39,9 @@ export const TextAreaController = <
 			// and/or calling textarea.select() can have anomalously bad performance:
 			// https://github.com/mathquill/mathquill/issues/43#issuecomment-1399080
 			if (!this.textareaSelectionTimeout) {
-				this.textareaSelectionTimeout = setTimeout(() => this.setTextareaSelection());
+				this.textareaSelectionTimeout = setTimeout(() => {
+					this.setTextareaSelection();
+				});
 			}
 		}
 
@@ -69,7 +73,9 @@ export const TextAreaController = <
 				e.stopPropagation();
 				e.preventDefault();
 			});
-			this.textarea?.addEventListener('copy', () => this.setTextareaSelection());
+			this.textarea?.addEventListener('copy', () => {
+				this.setTextareaSelection();
+			});
 			this.textarea?.addEventListener('focus', () => (this.blurred = false));
 			this.textarea?.addEventListener('blur', () => {
 				if (this.cursor.selection) this.cursor.selection.clear();
@@ -88,8 +94,12 @@ export const TextAreaController = <
 		}
 
 		editablesTextareaEvents() {
-			const { select } = saneKeyboardEvents(this.textarea!, this as unknown as Controller);
-			this.selectFn = (text) => select(text);
+			if (this.textarea) {
+				const { select } = saneKeyboardEvents(this.textarea, this as unknown as Controller);
+				this.selectFn = (text) => {
+					select(text);
+				};
+			}
 			this.container.prepend(this.textareaSpan as HTMLElement);
 			this.focusBlurEvents();
 		}
@@ -120,7 +130,10 @@ export const TextAreaController = <
 		}
 
 		typedText(ch: string) {
-			if (ch === '\n') return this.handle('enter');
+			if (ch === '\n') {
+				this.handle('enter');
+				return;
+			}
 			const cursor = this.notify().cursor;
 			cursor.parent?.write(cursor, ch);
 			this.scrollHoriz();

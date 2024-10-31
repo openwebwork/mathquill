@@ -1,7 +1,7 @@
 // Fragment base classes of edit tree-related objects
 
 import type { Direction } from 'src/constants';
-import { L, R, iterator, pray, prayWellFormed } from 'src/constants';
+import { L, R, iterator, prayWellFormed } from 'src/constants';
 import type { Ends } from 'tree/node';
 import { VNode } from 'tree/vNode';
 import { TNode } from 'tree/node';
@@ -20,25 +20,25 @@ export class Fragment {
 	elements: VNode = new VNode();
 	ends: Ends = {};
 	disowned?: boolean;
-	each = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
+	each = iterator((yield_: (node: TNode) => TNode | boolean | undefined) => {
 		let el = this.ends[L];
 		if (!el) return this;
 
-		for (; el !== this.ends[R]?.[R]; el = el?.[R]) {
-			if (yield_(el!) === false) break;
+		for (; el !== this.ends[R]?.[R]; el = el[R]) {
+			if (!el) continue;
+			if (yield_(el) === false) break;
 		}
 
 		return this;
 	});
 
 	constructor(withDir?: TNode, oppDir?: TNode, dir: Direction = L) {
-		pray('no half-empty fragments', !withDir === !oppDir);
-
+		if (!withDir !== !oppDir) throw new Error('no half-empty fragments');
 		if (!withDir) return;
 
-		pray('withDir is passed to Fragment', withDir instanceof TNode);
-		pray('oppDir is passed to Fragment', oppDir instanceof TNode);
-		pray('withDir and oppDir have the same parent', withDir.parent === oppDir?.parent);
+		if (!(withDir instanceof TNode)) throw new Error('withDir must be passed to Fragment');
+		if (!(oppDir instanceof TNode)) throw new Error('oppDir must be passed to Fragment');
+		if (withDir.parent !== oppDir.parent) throw new Error('withDir and oppDir must have the same parent');
 
 		this.ends[dir] = withDir;
 		this.ends[dir === L ? R : L] = oppDir;
@@ -83,7 +83,7 @@ export class Fragment {
 			parent.ends[R] = rightEnd;
 		}
 
-		this.ends[R]![R] = rightward;
+		if (this.ends[R]) this.ends[R][R] = rightward;
 
 		this.each((el: TNode) => {
 			el[L] = leftward;
@@ -91,6 +91,7 @@ export class Fragment {
 			if (leftward) leftward[R] = el;
 
 			leftward = el;
+			return true;
 		});
 
 		return this;
@@ -105,8 +106,9 @@ export class Fragment {
 		this.disowned = true;
 
 		const rightEnd = this.ends[R];
-		const parent = leftEnd.parent!;
+		const parent = leftEnd.parent;
 
+		if (!parent) throw new Error('a parent must always present');
 		prayWellFormed(parent, leftEnd[L], leftEnd);
 		prayWellFormed(parent, rightEnd, rightEnd?.[R]);
 
@@ -135,6 +137,7 @@ export class Fragment {
 		let ret = fold;
 		this.each((el: TNode) => {
 			ret = fn(ret, el);
+			return true;
 		});
 		return ret;
 	}

@@ -10,7 +10,7 @@ export default [
 	},
 	{ files: ['**/*.{js,mjs,cjs,ts,tsx}'] },
 	pluginJs.configs.recommended,
-	...tseslint.configs.recommendedTypeChecked,
+	...tseslint.configs.strictTypeChecked,
 	...tseslint.configs.stylisticTypeChecked,
 	{
 		languageOptions: {

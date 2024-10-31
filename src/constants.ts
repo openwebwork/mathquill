@@ -40,21 +40,18 @@ export const noop = () => {
 //  Note that the for-in loop will yield 'each', but 'each' maps to
 //  the function object created by iterator() which does not have a
 //  .method() method, so that just fails silently.
-type CallableKeyOf<S, T, U, V> = keyof {
-	[P in keyof S as S[P] extends (arg1?: U, arg2?: V) => T ? P : never]: unknown;
+type CallableKeyOf<S, T> = keyof {
+	[P in keyof S as S[P] extends (arg1?: unknown, arg2?: unknown) => T ? P : never]: unknown;
 };
 
-export const iterator = <R extends object, S, T, U, V>(generator: (yield_: (obj: R) => S | undefined) => T) => {
-	return (fn: ((obj: R) => S) | string, arg1?: U, arg2?: V) => {
+export const iterator = <R extends object, S, T>(generator: (yield_: (obj: R) => S | undefined) => T) => {
+	return (fn: ((obj: R) => S) | string, ...args: unknown[]) => {
 		const yield_ =
 			typeof fn === 'function'
 				? fn
 				: (obj: R) => {
 						if (fn in obj)
-							return (obj[fn as CallableKeyOf<R, S, U, V>] as unknown as (arg1?: U, arg2?: V) => S)(
-								arg1,
-								arg2
-							);
+							return (obj[fn as CallableKeyOf<R, S>] as unknown as (...args: unknown[]) => S)(...args);
 					};
 		return generator(yield_);
 	};
@@ -73,45 +70,24 @@ export const bindMixin = <TBase extends Constructor<MathCommand>>(
 		}
 	};
 
-// a development-only debug method.  This definition and all
-// calls to `pray` will be stripped from the minified
-// build of mathquill.
-//
-// This function must be called by name to be removed
-// at compile time.  Do not define another function
-// with the same name, and only call this function by
-// name.
-export const pray = (message: string, cond = false) => {
-	if (!cond) throw new Error(`prayer failed: ${message}`);
-};
-
-export const prayDirection = (dir: Direction) => {
-	pray('a direction was passed', dir === L || dir === R);
-};
-
 export const prayWellFormed = (parent?: TNode, leftward?: TNode, rightward?: TNode) => {
-	pray('a parent is always present', !!parent);
-	pray(
-		'leftward is properly set up',
-		(() => {
-			// either it's empty and `rightward` is the left end child (possibly empty)
-			if (!leftward) return parent?.ends[L] === rightward;
+	if (!parent) throw new Error('a parent must be present');
 
-			// or it's there and its [R] and .parent are properly set up
-			return leftward[R] === rightward && leftward.parent === parent;
-		})()
-	);
+	// Either leftward is empty and `rightward` is the left end child (possibly empty)
+	// or leftward is there and leftward's [R] and .parent are properly set up.
+	if (
+		(!leftward && parent.ends[L] !== rightward) ||
+		(leftward && (leftward[R] !== rightward || leftward.parent !== parent))
+	)
+		throw new Error('leftward is not properly set up');
 
-	pray(
-		'rightward is properly set up',
-		(() => {
-			// either it's empty and `leftward` is the right end child (possibly empty)
-			if (!rightward) return parent?.ends[R] === leftward;
-
-			// or it's there and its [L] and .parent are properly set up
-			return rightward[L] === leftward && rightward.parent === parent;
-		})()
-	);
+	// Either rightward is empty and `leftward` is the right end child (possibly empty)
+	// or rightward is there and rightward's [L] and .parent are properly set up.
+	if (
+		(!rightward && parent.ends[R] !== leftward) ||
+		(rightward && (rightward[L] !== leftward || rightward.parent !== parent))
+	)
+		throw new Error('rightward is not properly set up');
 };
 
 // Registry of LaTeX commands and commands created when typing a single character.

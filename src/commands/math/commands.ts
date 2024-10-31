@@ -147,7 +147,7 @@ LatexCmds.subscript = LatexCmds._ = class extends SupSub {
 
 	finalizeTree() {
 		this.downInto = this.sub = this.ends[L];
-		this.sub!.upOutOf = insLeftOfMeUnlessAtEnd;
+		if (this.sub) this.sub.upOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
 };
@@ -166,7 +166,7 @@ LatexCmds.superscript =
 
 			finalizeTree() {
 				this.upInto = this.sup = this.ends[R];
-				this.sup!.downOutOf = insLeftOfMeUnlessAtEnd;
+				if (this.sup) this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
 				super.finalizeTree();
 			}
 		};
@@ -237,7 +237,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 
 				if (leftward instanceof UpperLowerLimitCommand && leftward[R] instanceof SupSub) {
 					leftward = leftward[R];
-					if (leftward && leftward[R] instanceof SupSub && leftward[R]?.ctrlSeq != leftward.ctrlSeq)
+					if (leftward[R] instanceof SupSub && leftward[R].ctrlSeq != leftward.ctrlSeq)
 						leftward = leftward[R];
 				}
 
@@ -503,7 +503,8 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	}
 
 	finalizeTree(options: Options) {
-		const ctrlr = new Controller(this.ends[L]!, this.elements.firstElement, options);
+		if (!this.ends[L]) throw 'Missing left end finalizing editable tree';
+		const ctrlr = new Controller(this.ends[L], this.elements.firstElement, options);
 		ctrlr.KIND_OF_MQ = 'MathField';
 		this.field = new InnerMathField(ctrlr);
 		this.field.name = this.name;
@@ -516,7 +517,8 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	}
 
 	registerInnerField(innerFields: InnerMathFieldStore) {
-		innerFields.push(this.field!);
+		if (!this.field) throw 'Unable to register editable without field';
+		innerFields.push(this.field);
 	}
 
 	latex() {

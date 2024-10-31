@@ -1,7 +1,7 @@
 // TNode base class of edit tree-related objects
 
 import type { Direction } from 'src/constants';
-import { L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
+import { L, R, iterator, mqCmdId, mqBlockId } from 'src/constants';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
@@ -14,7 +14,9 @@ export interface Ends {
 	[R]?: TNode;
 }
 
-const prayOverridden = (name: string) => pray(`"${name}" should be overridden or never called on this node`);
+const prayOverridden = (name: string) => {
+	throw new Error(`"${name}" should be overridden or never called on this node`);
+};
 
 // MathQuill virtual-DOM tree-node abstract base class
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
@@ -46,19 +48,22 @@ export class TNode {
 
 	reflow?: () => void;
 
-	bubble = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		for (let ancestor: TNode | undefined = this; ancestor; ancestor = ancestor.parent) {
-			if (yield_(ancestor) === false) break;
+	bubble = iterator<TNode, TNode | boolean | undefined, TNode>(
+		(yield_: (node: TNode) => TNode | boolean | undefined) => {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			for (let ancestor: TNode | undefined = this; ancestor; ancestor = ancestor.parent) {
+				if (yield_(ancestor) === false) break;
+			}
+
+			return this;
 		}
+	);
 
-		return this;
-	});
-
-	postOrder = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
+	postOrder = iterator((yield_: (node: TNode) => TNode | boolean | undefined) => {
 		(function recurse(descendant: TNode) {
 			descendant.eachChild(recurse);
 			yield_(descendant);
+			return true;
 		})(this);
 
 		return this;
@@ -74,7 +79,7 @@ export class TNode {
 	}
 
 	toString() {
-		return `{{ MathQuill TNode #${this.id} }}`;
+		return `{{ MathQuill TNode #${this.id.toString()} }}`;
 	}
 
 	addToElements(el: VNode | HTMLElement) {
@@ -97,15 +102,17 @@ export class TNode {
 			}
 		};
 
-		localVNode.contents.forEach((element) => addToElements(element));
+		localVNode.contents.forEach((element) => {
+			addToElements(element);
+		});
 		return localVNode;
 	}
 
-	createDir(dir: Direction, cursor: Cursor) {
-		prayDirection(dir);
+	createDir(dir: Direction | undefined, cursor: Cursor) {
+		if (dir !== L && dir !== R) throw new Error('a direction was not passed');
 		this.domify();
 		this.elements.insDirOf(dir, cursor.element);
-		cursor[dir] = this.adopt(cursor.parent!, cursor[L], cursor[R]);
+		if (cursor.parent) cursor[dir] = this.adopt(cursor.parent, cursor[L], cursor[R]);
 		return this;
 	}
 
@@ -129,7 +136,7 @@ export class TNode {
 		return new Fragment(this.ends[L], this.ends[R]);
 	}
 
-	eachChild(method: 'postOrder' | ((node: TNode) => boolean) | ((node: TNode) => void), order?: string) {
+	eachChild(method: 'postOrder' | ((node: TNode) => boolean), order?: string) {
 		const children = this.children();
 		children.each(method, order);
 		return this;
@@ -190,7 +197,7 @@ export class TNode {
 
 			// End -> move to the end of the current block.
 			case 'End':
-				ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent!);
+				if (cursor.parent) ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent);
 				break;
 
 			// Ctrl-End -> move all the way to the end of the root block.
@@ -214,7 +221,7 @@ export class TNode {
 
 			// Home -> move to the start of the root block or the current block.
 			case 'Home':
-				ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent!);
+				if (cursor.parent) ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent);
 				break;
 
 			// Ctrl-Home -> move to the start of the current block.
@@ -263,6 +270,7 @@ export class TNode {
 
 			case 'Shift-Up':
 				if (cursor[L]) {
+					// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 					while (cursor[L]) ctrlr.selectLeft();
 				} else {
 					ctrlr.selectLeft();
@@ -271,6 +279,7 @@ export class TNode {
 
 			case 'Shift-Down':
 				if (cursor[R]) {
+					// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 					while (cursor[R]) ctrlr.selectRight();
 				} else {
 					ctrlr.selectRight();
@@ -339,7 +348,7 @@ export class TNode {
 		return this;
 	}
 	chToCmd(_ignore_ch: string, _ignore_options: Options): TNode {
-		return this;
+		return this as TNode;
 	}
 
 	getController() {

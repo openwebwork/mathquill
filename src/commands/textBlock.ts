@@ -9,7 +9,8 @@ import { RootMathCommand } from 'commands/mathBlock';
 export class RootTextBlock extends RootMathBlock {
 	keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
 		if (key === 'Spacebar' || key === 'Shift-Spacebar') return;
-		return super.keystroke(key, e, ctrlr);
+		super.keystroke(key, e, ctrlr);
+		return;
 	}
 
 	write(cursor: Cursor, ch: string) {

@@ -22,10 +22,15 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 		}
 
 		renderLatexMath(latex: string) {
-			const block = latexMathParser.skip(Parser.eof).or(Parser.all.result(false)).parse<MathBlock>(latex);
+			const block: MathBlock | undefined = latexMathParser
+				.skip(Parser.eof)
+				.or(Parser.all.result(false))
+				.parse(latex);
 
 			this.root.eachChild('postOrder', 'dispose');
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.root.ends[L];
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.root.ends[R];
 
 			if (block instanceof MathBlock && block.prepareInsertionAt(this.cursor)) {
@@ -46,9 +51,13 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			this.root.elements
 				.children()
 				.contents.slice(1)
-				.forEach((el) => (el as HTMLElement).remove());
+				.forEach((el) => {
+					(el as HTMLElement).remove();
+				});
 			this.root.eachChild('postOrder', 'dispose');
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.root.ends[L];
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.root.ends[R];
 			delete this.cursor.selection;
 			this.cursor.show().insAtRightEnd(this.root);
@@ -74,7 +83,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			const escapedDollar = Parser.string('\\$').result('$');
 			const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);
 			const latexText = mathMode.or(textChar).many();
-			const commands: TNode[] = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+			const commands: TNode[] | undefined = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
 
 			if (commands) {
 				for (const command of commands) {
