@@ -29,7 +29,7 @@ export class Selection extends Fragment {
 		return this;
 	}
 
-	join(methodName: keyof Pick<TNode, 'text' | 'latex' | 'html'>) {
-		return this.fold('', (fold, child) => fold + child[methodName]());
+	join(methodName: keyof Pick<TNode, 'text' | 'latex' | 'html' | 'mathspeak'>, separator = '') {
+		return this.fold('', (fold, child) => fold + separator + child[methodName]());
 	}
 }

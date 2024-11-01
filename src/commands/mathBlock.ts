@@ -38,6 +38,7 @@ export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) 
 					if (cmd.isSymbol) cursor.deleteSelection();
 					else cursor.clearSelection().insRightOf(this.parent);
 					cmd.createLeftOf(cursor.show());
+					cursor.controller.aria.queue('Baseline').alert(cmd.mathspeak({ createdLeftOf: cursor }));
 					return;
 				}
 				if (
@@ -48,12 +49,18 @@ export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) 
 					this.parent
 				) {
 					cursor.insRightOf(this.parent);
+					cursor.controller.aria.queue('Baseline');
 				}
 			}
 
 			const cmd = this.chToCmd(ch, cursor.options);
 			if (cursor.selection) cmd.replaces(cursor.replaceSelection());
-			if (!cursor.isTooDeep()) cmd.createLeftOf(cursor.show());
+			if (!cursor.isTooDeep()) {
+				cmd.createLeftOf(cursor.show());
+				// There is a special case for the slash so that fractions are voiced while typing.
+				if (ch === '/') cursor.controller.aria.alert('over');
+				else cursor.controller.aria.alert(cmd.mathspeak({ createdLeftOf: cursor }));
+			}
 		}
 	};
 
@@ -61,7 +68,9 @@ export const writeMethodMixin = <TBase extends Constructor<TNode>>(Base: TBase) 
 // symbols and operators that descend (in the Math DOM tree) from
 // ancestor operators.
 export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
-	join(methodName: keyof Pick<TNode, 'text' | 'latex' | 'html'>) {
+	ariaLabel = 'block';
+
+	join(methodName: keyof Pick<TNode, 'text' | 'latex' | 'html' | 'mathspeak'>) {
 		return this.foldChildren('', (fold, child) => fold + child[methodName]());
 	}
 
@@ -75,6 +84,45 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 
 	text() {
 		return this.ends.left && this.ends.left === this.ends.right ? this.ends.left.text() : this.join('text');
+	}
+
+	mathspeak() {
+		let tempOp = '';
+		const autoOps = this.controller ? this.controller.options.autoOperatorNames : { _maxLength: 0 };
+		return (
+			this.foldChildren<string[]>([], (speechArray, cmd) => {
+				if (cmd instanceof Letter && cmd.isPartOfOperator) {
+					tempOp += cmd.mathspeak();
+				} else {
+					if (tempOp !== '') {
+						if (autoOps._maxLength > 0) {
+							const x = autoOps[tempOp.toLowerCase()];
+							if (typeof x === 'string') tempOp = x;
+						}
+						speechArray.push(tempOp + ' ');
+						tempOp = '';
+					}
+					let mathspeakText = cmd.mathspeak();
+					const cmdText = cmd.ctrlSeq;
+					if (
+						isNaN(cmdText as unknown as number) && // TODO - revisit this to improve the isNumber() check
+						cmdText !== '.' &&
+						(!cmd.parent?.parent || !(cmd.parent.parent instanceof LatexCmds.mathrm))
+					) {
+						mathspeakText = ' ' + mathspeakText + ' ';
+					}
+					speechArray.push(mathspeakText);
+				}
+				return speechArray;
+			})
+				.join('')
+				.replace(/ +(?= )/g, '')
+				// For Apple devices in particular, split out digits after a decimal point so they aren't read aloud as
+				// whole words.  Not doing so makes 123.456 potentially spoken as "one hundred twenty three point four
+				// hundred fifty six." Instead, add spaces so it is spoken as "one hundred twenty three point four five
+				// six."
+				.replace(/(\.)([0-9]+)/g, (_match, p1: string, p2: string) => p1 + p2.split('').join(' ').trim())
+		);
 	}
 
 	keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
@@ -96,8 +144,14 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	// the cursor
 	moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 		const updownInto = updown && this.parent?.[`${updown}Into`];
-		if (!updownInto && this[dir]) cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this[dir]);
-		else if (this.parent) cursor.insDirOf(dir, this.parent);
+		if (!updownInto && this[dir]) {
+			cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this[dir]);
+			if (cursor.parent)
+				cursor.controller.aria.queueDirEndOf(dir === 'left' ? 'right' : 'left').queue(cursor.parent, true);
+		} else if (this.parent) {
+			cursor.insDirOf(dir, this.parent);
+			cursor.controller.aria.queueDirOf(dir).queue(this.parent);
+		}
 	}
 
 	selectOutOf(dir: Direction, cursor: Cursor) {

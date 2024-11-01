@@ -6,7 +6,7 @@ import { Parser } from 'services/parser.util';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
 import { VNode } from 'tree/vNode';
-import { TNode } from 'tree/node';
+import { TNode, MathspeakOptions } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { VanillaSymbol } from 'commands/mathElements';
 import { deleteSelectTowardsMixin } from 'src/mixins';
@@ -19,10 +19,12 @@ import { BlockFocusBlur } from 'services/focusBlur';
 export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	replacedText?: string;
 	anticursorPosition = 0;
+	mathspeakTemplate = ['StartText', 'EndText'];
 
 	constructor() {
 		super();
 		this.ctrlSeq = '\\text';
+		this.ariaLabel = 'Text';
 	}
 
 	replaces(replacedText?: string | Fragment) {
@@ -81,15 +83,28 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		return `<span class="mq-text-mode" ${mqCmdId}=${this.id.toString()}>${this.textContents()}</span>`;
 	}
 
+	mathspeak(opts?: MathspeakOptions) {
+		if (opts?.ignoreShorthand) {
+			return `${this.mathspeakTemplate[0]}, ${this.textContents()}, ${this.mathspeakTemplate[1]}`;
+		} else {
+			return this.textContents();
+		}
+	}
+
 	// editability methods: called by the cursor for editing, cursor movements,
 	// and selection of the MathQuill tree, these all take in a direction and
 	// the cursor
 	moveTowards(dir: Direction, cursor: Cursor) {
 		cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this);
+		if (cursor.parent)
+			cursor.controller.aria.queueDirEndOf(dir === 'left' ? 'right' : 'left').queue(cursor.parent, true);
 	}
+
 	moveOutOf(dir: Direction, cursor: Cursor) {
 		cursor.insDirOf(dir, this);
+		cursor.controller.aria.queueDirOf(dir).queue(this);
 	}
+
 	unselectInto(dir: Direction, cursor: Cursor) {
 		cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this);
 
@@ -140,6 +155,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 			super.createLeftOf.call(leftBlock, cursor); // micro-optimization, not for correctness
 		}
 		this.bubble('reflow');
+		cursor.controller.aria.alert(ch);
 	}
 
 	writeLatex(cursor: Cursor, latex: string) {
@@ -319,19 +335,24 @@ export class TextPiece extends TNode {
 
 	deleteTowards(dir: Direction, cursor: Cursor) {
 		if (this.textStr.length > 1) {
+			let deletedChar;
 			if (dir === 'right') {
 				this.dom?.deleteData(0, 1);
+				deletedChar = this.textStr[0];
 				this.textStr = this.textStr.slice(1);
 			} else {
 				// Note that the order of these 2 lines is important.
 				// (the second line mutates this.textStr.length)
 				this.dom?.deleteData(-1 + this.textStr.length, 1);
+				deletedChar = this.textStr[this.textStr.length - 1];
 				this.textStr = this.textStr.slice(0, -1);
 			}
+			cursor.controller.aria.queue(deletedChar);
 		} else {
 			this.remove();
 			this.elements.remove();
 			cursor[dir] = this[dir];
+			cursor.controller.aria.queue(this.textStr);
 		}
 	}
 
@@ -361,6 +382,10 @@ export class TextPiece extends TNode {
 
 		this.deleteTowards(dir, cursor);
 	}
+
+	mathspeak() {
+		return this.textStr;
+	}
 }
 
 LatexCmds.text =
@@ -371,7 +396,7 @@ LatexCmds.text =
 	LatexCmds.textmd =
 		TextBlock;
 
-const makeTextBlock = (latex: string, tagName: string, attrs: string) =>
+const makeTextBlock = (latex: string, tagName: string, attrs: string, ariaLabel: string) =>
 	class extends TextBlock {
 		htmlTemplate: string;
 
@@ -379,6 +404,7 @@ const makeTextBlock = (latex: string, tagName: string, attrs: string) =>
 			super();
 			this.ctrlSeq = latex;
 			this.htmlTemplate = `<${tagName} ${attrs}>&0</${tagName}>`;
+			this.ariaLabel = ariaLabel;
 		}
 	};
 
@@ -388,10 +414,35 @@ LatexCmds.em =
 	LatexCmds.emph =
 	LatexCmds.textit =
 	LatexCmds.textsl =
-		makeTextBlock('\\textit', 'i', 'class="mq-text-mode"');
-LatexCmds.strong = LatexCmds.bold = LatexCmds.textbf = makeTextBlock('\\textbf', 'b', 'class="mq-text-mode"');
-LatexCmds.sf = LatexCmds.textsf = makeTextBlock('\\textsf', 'span', 'class="mq-sans-serif mq-text-mode"');
-LatexCmds.tt = LatexCmds.texttt = makeTextBlock('\\texttt', 'span', 'class="mq-monospace mq-text-mode"');
-LatexCmds.textsc = makeTextBlock('\\textsc', 'span', 'style="font-variant:small-caps" class="mq-text-mode"');
-LatexCmds.uppercase = makeTextBlock('\\uppercase', 'span', 'style="text-transform:uppercase" class="mq-text-mode"');
-LatexCmds.lowercase = makeTextBlock('\\lowercase', 'span', 'style="text-transform:lowercase" class="mq-text-mode"');
+		makeTextBlock('\\textit', 'i', 'class="mq-text-mode"', 'Italic');
+LatexCmds.strong = LatexCmds.bold = LatexCmds.textbf = makeTextBlock('\\textbf', 'b', 'class="mq-text-mode"', 'Bold');
+LatexCmds.sf = LatexCmds.textsf = makeTextBlock(
+	'\\textsf',
+	'span',
+	'class="mq-sans-serif mq-text-mode"',
+	'Sans serif font'
+);
+LatexCmds.tt = LatexCmds.texttt = makeTextBlock(
+	'\\texttt',
+	'span',
+	'class="mq-monospace mq-text-mode"',
+	'Mono space font'
+);
+LatexCmds.textsc = makeTextBlock(
+	'\\textsc',
+	'span',
+	'style="font-variant:small-caps" class="mq-text-mode"',
+	'Variable font'
+);
+LatexCmds.uppercase = makeTextBlock(
+	'\\uppercase',
+	'span',
+	'style="text-transform:uppercase" class="mq-text-mode"',
+	'Uppercase'
+);
+LatexCmds.lowercase = makeTextBlock(
+	'\\lowercase',
+	'span',
+	'style="text-transform:lowercase" class="mq-text-mode"',
+	'Lowercase'
+);

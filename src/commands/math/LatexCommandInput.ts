@@ -47,16 +47,21 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		leftEnd.write = (cursor: Cursor, ch: string) => {
 			cursor.show().deleteSelection();
 
-			if (/[a-z]/i.exec(ch)) new VanillaSymbol(ch).createLeftOf(cursor);
-			else {
-				(leftEnd.parent as LatexCommandInput).renderCommand(cursor);
+			if (/[a-z]/i.exec(ch)) {
+				new VanillaSymbol(ch).createLeftOf(cursor);
+				cursor.controller.aria.alert(ch);
+			} else {
+				const cmd = (leftEnd.parent as LatexCommandInput).renderCommand(cursor);
+				cursor.controller.aria.queue(cmd.mathspeak({ createdLeftOf: cursor }));
 				if (ch !== '\\' || !leftEnd.isEmpty()) cursor.parent?.write(cursor, ch);
+				else cursor.controller.aria.alert();
 			}
 		};
 
 		leftEnd.keystroke = (key: string, e: KeyboardEvent, ctrlr: Controller) => {
 			if (key === 'Tab' || key === 'Enter' || key === 'Spacebar') {
-				(leftEnd.parent as LatexCommandInput).renderCommand(ctrlr.cursor);
+				const cmd = (leftEnd.parent as LatexCommandInput).renderCommand(ctrlr.cursor);
+				ctrlr.aria.alert(cmd.mathspeak({ createdLeftOf: ctrlr.cursor }));
 				e.preventDefault();
 				return;
 			}
@@ -103,12 +108,14 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 			const cmd = new LatexCmds[latex](latex);
 			if (this._replacedFragment) cmd.replaces(this._replacedFragment);
 			cmd.createLeftOf(cursor);
+			return cmd;
 		} else {
 			const cmd = new TextBlock();
 			cmd.replaces(latex);
 			cmd.createLeftOf(cursor);
 			cursor.insRightOf(cmd);
 			if (this._replacedFragment) this._replacedFragment.remove();
+			return cmd;
 		}
 	}
 };

@@ -19,3 +19,4 @@ import 'test/focusBlur.test';
 import 'test/SupSub.test';
 import 'test/MathFunction.test';
 import 'test/text-output.test';
+import 'test/aria.test';

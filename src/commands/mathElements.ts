@@ -1,7 +1,16 @@
 // Abstract classes of math blocks and commands.
 
 import type { Direction, Constructor } from 'src/constants';
-import { noop, mqCmdId, mqBlockId, LatexCmds, OPP_BRACKS, BuiltInOpNames, TwoWordOpNames } from 'src/constants';
+import {
+	noop,
+	mqCmdId,
+	mqBlockId,
+	LatexCmds,
+	OPP_BRACKS,
+	BRACKET_NAMES,
+	BuiltInOpNames,
+	TwoWordOpNames
+} from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { Selection } from 'src/selection';
 import { deleteSelectTowardsMixin, DelimsMixin } from 'src/mixins';
@@ -9,7 +18,7 @@ import type { Options } from 'src/options';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
 import { VNode } from 'tree/vNode';
-import { TNode } from 'tree/node';
+import { TNode, MathspeakOptions } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import { MathBlock } from 'commands/mathBlock';
 
@@ -80,6 +89,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 	contentIndex = 0;
 	htmlTemplate: string;
 	textTemplate: string[];
+	mathspeakTemplate: string[] = [''];
 	replacedFragment?: Fragment;
 
 	constructor(ctrlSeq?: string, htmlTemplate?: string, textTemplate?: string[]) {
@@ -326,16 +336,30 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 			return text + child_text + (this.textTemplate[i] || '');
 		});
 	}
+
+	mathspeak() {
+		let i = 0;
+		return this.foldChildren(
+			`${this.mathspeakTemplate[i] || `Start${this.ctrlSeq.replace(/^\\/, '')}`} `,
+			(speech, block) => {
+				++i;
+				return `${speech} ${block.mathspeak()} ${
+					this.mathspeakTemplate[i] || `End${this.ctrlSeq.replace(/^\\/, '')}`
+				} `;
+			}
+		);
+	}
 }
 
 // Lightweight command without blocks or children.
 export class Symbol extends MathCommand {
-	constructor(ctrlSeq?: string, html?: string, text?: string) {
+	constructor(ctrlSeq?: string, html?: string, text?: string, mathspeak?: string) {
 		const textTemplate = text ? text : ctrlSeq && ctrlSeq.length > 1 ? ctrlSeq.slice(1) : (ctrlSeq ?? '');
 		super(ctrlSeq, html, [textTemplate]);
 
 		this.createBlocks = noop;
 		this.isSymbol = true;
+		this.mathspeakName = mathspeak || text || ctrlSeq?.replace(/^\\/, '');
 	}
 
 	parser() {
@@ -356,6 +380,8 @@ export class Symbol extends MathCommand {
 
 		cursor[dir === 'left' ? 'right' : 'left'] = this;
 		cursor[dir] = this[dir];
+
+		cursor.controller.aria.queue(this);
 	}
 
 	deleteTowards(dir: Direction, cursor: Cursor) {
@@ -384,19 +410,23 @@ export class Symbol extends MathCommand {
 	isEmpty() {
 		return true;
 	}
+
+	mathspeak() {
+		return this.mathspeakName || '';
+	}
 }
 
 export class VanillaSymbol extends Symbol {
-	constructor(ch: string, html?: string, text?: string) {
-		super(ch, `<span>${html || ch}</span>`, text);
+	constructor(ch: string, html?: string, text?: string, mathspeak?: string) {
+		super(ch, `<span>${html || ch}</span>`, text, mathspeak);
 	}
 }
 
 export class BinaryOperator extends Symbol {
 	isUnary = false;
 
-	constructor(ctrlSeq: string, html?: string, text?: string, useRawHtml = false) {
-		super(ctrlSeq, useRawHtml ? html : `<span class="mq-binary-operator">${html ?? ''}</span>`, text);
+	constructor(ctrlSeq: string, html?: string, text?: string, mathspeak?: string, useRawHtml = false) {
+		super(ctrlSeq, useRawHtml ? html : `<span class="mq-binary-operator">${html ?? ''}</span>`, text, mathspeak);
 	}
 }
 
@@ -404,9 +434,11 @@ export interface InequalityData {
 	ctrlSeq: string;
 	html: string;
 	text: string;
+	mathspeak: string;
 	ctrlSeqStrict: string;
 	htmlStrict: string;
 	textStrict: string;
+	mathspeakStrict: string;
 }
 
 export class Inequality extends BinaryOperator {
@@ -415,7 +447,12 @@ export class Inequality extends BinaryOperator {
 
 	constructor(data: InequalityData, strict: boolean) {
 		const strictness = strict ? 'Strict' : '';
-		super(data[`ctrlSeq${strictness}`], data[`html${strictness}`], data[`text${strictness}`]);
+		super(
+			data[`ctrlSeq${strictness}`],
+			data[`html${strictness}`],
+			data[`text${strictness}`],
+			data[`mathspeak${strictness}`]
+		);
 		this.data = data;
 		this.strict = strict;
 	}
@@ -426,6 +463,7 @@ export class Inequality extends BinaryOperator {
 		this.ctrlSeq = this.data[`ctrlSeq${strictness}`];
 		this.elements.html(this.data[`html${strictness}`]);
 		this.textTemplate = [this.data[`text${strictness}`]];
+		this.mathspeakName = this.data[`mathspeak${strictness}`];
 	}
 
 	deleteTowards(dir: Direction, cursor: Cursor) {
@@ -459,7 +497,7 @@ export class FactorialOrNEQ extends Inequality {
 
 export class Equality extends BinaryOperator {
 	constructor() {
-		super('=', '=');
+		super('=', '=', '=', 'equals');
 	}
 
 	createLeftOf(cursor: Cursor) {
@@ -634,6 +672,24 @@ export function insLeftOfMeUnlessAtEnd(this: SupSub, cursor: Cursor) {
 	cursor.insRightOf(cmd);
 }
 
+// This test is used to determine whether an item may be treated as a whole number
+// for shortening the verbalized (mathspeak) forms of some fractions and superscripts.
+export const intRgx = /^[+-]?[\d]+$/;
+
+// Traverses the passed block's children and returns the concatenation of their ctrlSeq properties.
+// Used in shortened mathspeak computations as a block's .text() method can be potentially expensive.
+export const getCtrlSeqsFromBlock = (block: TNode | undefined): string => {
+	if (!block) return '';
+
+	let chars = '';
+	block.eachChild((child) => {
+		chars += child.ctrlSeq;
+		return true;
+	});
+
+	return chars;
+};
+
 export class Fraction extends MathCommand {
 	constructor() {
 		super();
@@ -700,9 +756,77 @@ export class Fraction extends MathCommand {
 
 	finalizeTree() {
 		this.upInto = this.ends.left;
-		if (this.ends.right) this.ends.right.upOutOf = this.ends.left;
+		if (this.ends.right) {
+			this.ends.right.upOutOf = this.ends.left;
+			this.ends.right.ariaLabel = 'denominator';
+		}
 		this.downInto = this.ends.right;
-		if (this.ends.left) this.ends.left.downOutOf = this.ends.right;
+		if (this.ends.left) {
+			this.ends.left.downOutOf = this.ends.right;
+			this.ends.left.ariaLabel = 'numerator';
+		}
+
+		const fracDepth = this.getFracDepth();
+		if (fracDepth > 2) {
+			this.mathspeakTemplate = [
+				`StartDepth${fracDepth.toString()}Fraction,`,
+				`Depth${fracDepth.toString()}Over`,
+				`, EndDepth${fracDepth.toString()}Fraction`
+			];
+		} else if (fracDepth > 1) {
+			this.mathspeakTemplate = ['StartNestedFraction,', 'NestedOver', ', EndNestedFraction'];
+		} else {
+			this.mathspeakTemplate = ['StartFraction,', 'Over', ', EndFraction'];
+		}
+	}
+
+	mathspeak(opts?: MathspeakOptions) {
+		if (opts?.createdLeftOf) {
+			const cursor = opts.createdLeftOf;
+			return cursor.parent?.mathspeak() ?? '';
+		}
+
+		const numText = getCtrlSeqsFromBlock(this.ends.left);
+		const denText = getCtrlSeqsFromBlock(this.ends.right);
+
+		// Shorten mathspeak value for whole number fractions whose denominator is less than 10.
+		if (!opts?.ignoreShorthand && intRgx.test(numText) && intRgx.test(denText)) {
+			const isSingular = numText === '1' || numText === '-1';
+			let newDenSpeech = '';
+			if (denText === '2') newDenSpeech = isSingular ? 'half' : 'halves';
+			else if (denText === '3') newDenSpeech = isSingular ? 'third' : 'thirds';
+			else if (denText === '4') newDenSpeech = isSingular ? 'fourth' : 'fourths';
+			else if (denText === '5') newDenSpeech = isSingular ? 'fifth' : 'fifths';
+			else if (denText === '6') newDenSpeech = isSingular ? 'sixth' : 'sixths';
+			else if (denText === '7') newDenSpeech = isSingular ? 'seventh' : 'sevenths';
+			else if (denText === '8') newDenSpeech = isSingular ? 'eighth' : 'eighths';
+			else if (denText === '9') newDenSpeech = isSingular ? 'ninth' : 'ninths';
+
+			if (newDenSpeech !== '') {
+				// Handle the case of an integer followed by a simplified fraction such as 1\frac{1}{2}.  Such
+				// combinations should be spoken aloud as "1 and 1 half."
+				let precededByInteger = false;
+				for (let sibling = this.left; sibling; sibling = sibling.left) {
+					// Ignore whitespace
+					if (sibling.ctrlSeq === '\\ ') continue;
+					else if (intRgx.test(sibling.ctrlSeq)) precededByInteger = true;
+					else break;
+				}
+				return `${precededByInteger ? 'and ' : ''}${this.ends.left?.mathspeak() ?? ''} ${newDenSpeech}`;
+			}
+		}
+
+		return super.mathspeak();
+	}
+
+	getFracDepth() {
+		const level = 0;
+		const walkUp = function (item: TNode, level: number): number {
+			if (item instanceof Fraction) ++level;
+			if (item.parent) return walkUp(item.parent, level);
+			else return level;
+		};
+		return walkUp(this, level);
 	}
 }
 
@@ -1056,6 +1180,14 @@ export class UpperLowerLimitCommand extends MathCommand {
 		return `${operand}(${this.ends.left?.text() ?? ''},${this.ends.right?.text() ?? ''})`;
 	}
 
+	mathspeak() {
+		return `Start ${
+			this.ariaLabel ?? this.ctrlSeq.replace(/^\\/, '')
+		} from ${this.ends.left?.mathspeak() ?? ''} to ${
+			this.ends.right?.mathspeak() ?? ''
+		}, End ${this.ariaLabel ?? this.ctrlSeq.replace(/^\\/, '')}, `;
+	}
+
 	parser() {
 		const blocks = (this.blocks = [new MathBlock(), new MathBlock()]);
 		for (const block of blocks) {
@@ -1078,8 +1210,14 @@ export class UpperLowerLimitCommand extends MathCommand {
 	finalizeTree() {
 		this.downInto = this.ends.left;
 		this.upInto = this.ends.right;
-		if (this.ends.left) this.ends.left.upOutOf = this.ends.right;
-		if (this.ends.right) this.ends.right.downOutOf = this.ends.left;
+		if (this.ends.left) {
+			this.ends.left.upOutOf = this.ends.right;
+			this.ends.left.ariaLabel = 'lower bound';
+		}
+		if (this.ends.right) {
+			this.ends.right.downOutOf = this.ends.left;
+			this.ends.right.ariaLabel = 'upper bound';
+		}
 	}
 }
 
@@ -1352,6 +1490,21 @@ export class Bracket extends BracketMixin(MathCommand) {
 	text() {
 		return `${this.sides.left.ch}${this.ends.left?.text() ?? ''}${this.sides.right.ch}`;
 	}
+
+	mathspeak(opts?: MathspeakOptions) {
+		const open = this.sides.left.ch,
+			close = this.sides.right.ch;
+		if (open === '|' && close === '|') {
+			this.mathspeakTemplate = ['StartAbsoluteValue,', ', EndAbsoluteValue'];
+			this.ariaLabel = 'absolute value';
+		} else if (opts?.createdLeftOf && this.side) {
+			return `${this.side} ${BRACKET_NAMES[this.side === 'left' ? this.textTemplate[0] : this.textTemplate[1]]}`;
+		} else {
+			this.mathspeakTemplate = ['left ' + BRACKET_NAMES[open] + ',', ', right ' + BRACKET_NAMES[close]];
+			this.ariaLabel = BRACKET_NAMES[open] + ' block';
+		}
+		return super.mathspeak();
+	}
 }
 
 export class MathFunction extends BracketMixin(MathCommand) {
@@ -1373,6 +1526,29 @@ export class MathFunction extends BracketMixin(MathCommand) {
 		this.siblingDeleted = () => {
 			this.updateFirst();
 		};
+
+		this.setAriaLabel();
+	}
+
+	setAriaLabel() {
+		const baseName = this.ctrlSeq.slice(1).replace(/^arc/, '').replace(/h$/, '');
+		this.ariaLabel =
+			(this.ctrlSeq.endsWith('h') ? 'hyperbolic ' : '') +
+			(this.ctrlSeq.startsWith('\\arc') ? 'arc' : '') +
+			(
+				{
+					sin: 'sine',
+					cos: 'cosine',
+					tan: 'tangent',
+					sec: 'secant',
+					csc: 'cosecant',
+					cot: 'cotangent',
+					exp: 'natural exponential',
+					ln: 'natural logarithm',
+					log: 'logarithm'
+				} as Record<string, string>
+			)[baseName];
+		if (this.ends.right) this.ends.right.ariaLabel = `${this.ariaLabel ?? ''} parameter`;
 	}
 
 	// Add or remove padding depending on what is before the function name.
@@ -1422,6 +1598,7 @@ export class MathFunction extends BracketMixin(MathCommand) {
 					MathFunction
 			) {
 				this.ctrlSeq = `${this.ctrlSeq}${ch}`;
+				this.setAriaLabel();
 				this.elements.children().first.textContent = (this.elements.children().first.textContent ?? '') + ch;
 				this.bubble('reflow');
 				return true;
@@ -1483,10 +1660,15 @@ export class MathFunction extends BracketMixin(MathCommand) {
 				tmpBase.remove();
 			}
 
+			cursor.controller.aria.queue(this.ariaLabel ?? this.ctrlSeq.slice(1));
 			this.remove();
 			if (supsub) cursor.insLeftOf(supsub);
 			else if (brack) cursor.insLeftOf(brack);
-		} else super.deleteSide(side, outward, cursor);
+		} else {
+			if (side === 'left') cursor.controller.aria.queue(this);
+			else cursor.controller.aria.queue('right parenthesis');
+			super.deleteSide(side, outward, cursor);
+		}
 	}
 
 	finalizeTree() {
@@ -1502,7 +1684,9 @@ export class MathFunction extends BracketMixin(MathCommand) {
 					(LatexCmds[this.ctrlSeq.slice(1, -1)] as Constructor<TNode> | undefined)?.prototype instanceof
 						MathFunction
 				) {
+					cursor.controller.aria.queue(this.ctrlSeq.slice(-1));
 					this.ctrlSeq = this.ctrlSeq.slice(0, -1);
+					this.setAriaLabel();
 					this.elements.children().first.textContent = this.ctrlSeq.slice(1);
 					this.bubble('reflow');
 					return;
@@ -1520,6 +1704,8 @@ export class MathFunction extends BracketMixin(MathCommand) {
 			};
 		}
 
+		if (this.ends.right) this.ends.right.ariaLabel = `${this.ariaLabel ?? ''} parameter`;
+
 		this.updateFirst();
 	}
 
@@ -1531,6 +1717,12 @@ export class MathFunction extends BracketMixin(MathCommand) {
 		return `${this.left instanceof Letter ? ' ' : ''}${this.ctrlSeq.slice(1)}${this.blocks[0]?.text() ?? ''}(${
 			this.blocks[1]?.text() ?? ''
 		})`;
+	}
+
+	mathspeak() {
+		return `${
+			this.ariaLabel ?? ''
+		} ${this.blocks[0].mathspeak()} left parenthesis, ${this.blocks[1].mathspeak()}, right parenthesis`;
 	}
 
 	parser() {

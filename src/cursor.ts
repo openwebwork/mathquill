@@ -10,8 +10,10 @@ import { Point } from 'tree/point';
 import type { TNode } from 'tree/node';
 import type { Selection } from 'src/selection';
 import { MathBlock } from 'commands/mathBlock';
+import { ControllerBase } from './controller';
 
 export class Cursor extends Point {
+	controller: ControllerBase;
 	options: Options;
 	element: HTMLElement = document.createElement('span');
 	upDownCache: Record<number, Point> = {};
@@ -23,8 +25,9 @@ export class Cursor extends Point {
 	// Closured for setInterval
 	blink: () => void = () => this.element.classList.toggle('mq-blink');
 
-	constructor(initParent: TNode, options: Options) {
+	constructor(initParent: TNode, options: Options, controller: ControllerBase) {
 		super(initParent);
+		this.controller = controller;
 		this.options = options;
 		this.element.classList.add('mq-cursor');
 		this.element.textContent = '\u200B';
@@ -118,6 +121,7 @@ export class Cursor extends Point {
 		} else {
 			to.seek(this.offset().left, this);
 		}
+		this.controller.aria.queue(to, true);
 	}
 
 	offset() {

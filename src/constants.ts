@@ -106,6 +106,18 @@ export const OPP_BRACKS: Readonly<Record<string, string>> = {
 	'\\rVert ': '\\lVert '
 };
 
+export const BRACKET_NAMES: Readonly<Record<string, string>> = {
+	'&lang;': 'angle-bracket',
+	'&rang;': 'angle-bracket',
+	'|': 'pipe',
+	'(': 'parenthesis',
+	')': 'parenthesis',
+	'[': 'bracket',
+	']': 'bracket',
+	'{': 'brace',
+	'}': 'brace'
+};
+
 export interface EmbedOptions {
 	text?: () => string;
 	htmlString?: string;

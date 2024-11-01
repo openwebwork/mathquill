@@ -35,6 +35,7 @@ export class AbstractMathQuill {
 		const rootEl = document.createElement('span');
 		rootEl.classList.add('mq-root-block');
 		rootEl.setAttribute(mqBlockId, root.id.toString());
+		rootEl.setAttribute('aria-hidden', 'true');
 		root.elements.add(rootEl);
 		el.append(rootEl);
 
@@ -96,6 +97,19 @@ export class AbstractMathQuill {
 	reflow() {
 		this.__controller.root.postOrder('reflow');
 		return this;
+	}
+
+	setAriaLabel(ariaLabel: string) {
+		this.__controller.setAriaLabel(ariaLabel);
+		return this;
+	}
+
+	getAriaLabel() {
+		return this.__controller.getAriaLabel();
+	}
+
+	mathspeak() {
+		return this.__controller.exportMathSpeak();
 	}
 }
 
@@ -161,9 +175,7 @@ export class EditableField extends AbstractMathQuill {
 	}
 
 	select() {
-		const ctrlr = this.__controller;
-		ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-		while (ctrlr.cursor.left) ctrlr.selectLeft();
+		this.__controller.selectAll();
 		return this;
 	}
 
@@ -225,5 +237,13 @@ export class EditableField extends AbstractMathQuill {
 	ignoreNextMousedown(fn: (e?: MouseEvent) => boolean) {
 		this.__controller.cursor.options.ignoreNextMousedown = fn;
 		return this;
+	}
+
+	setAriaPostLabel(ariaPostLabel: string, timeout?: number) {
+		this.__controller.setAriaPostLabel(ariaPostLabel, timeout);
+		return this;
+	}
+	getAriaPostLabel() {
+		return this.__controller.getAriaPostLabel();
 	}
 }

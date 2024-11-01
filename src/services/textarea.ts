@@ -79,29 +79,25 @@ export const TextAreaController = <
 			this.textarea?.addEventListener('focus', () => (this.blurred = false));
 			this.textarea?.addEventListener('blur', () => {
 				if (this.cursor.selection) this.cursor.selection.clear();
-
-				// Detaching during blur explodes in WebKit
-				setTimeout(() => {
-					this.textareaSpan?.remove();
-					this.blurred = true;
-				});
+				this.blurred = true;
 			});
 
 			this.selectFn = (text) => {
 				if (this.textarea) this.textarea.value = text;
 				if (text) this.textarea?.select();
 			};
+
+			this.container.prepend(this.textareaSpan as HTMLElement);
 		}
 
 		editablesTextareaEvents() {
 			if (this.textarea) {
 				const { select } = saneKeyboardEvents(this.textarea, this as unknown as Controller);
-				this.selectFn = (text) => {
-					select(text);
-				};
+				this.selectFn = select;
 			}
 			this.container.prepend(this.textareaSpan as HTMLElement);
 			this.focusBlurEvents();
+			this.updateMathspeak();
 		}
 
 		unbindEditablesEvents() {
@@ -167,5 +163,40 @@ export const TextAreaController = <
 			}
 			// FIXME: this always inserts math or a TextBlock, even in a RootTextBlock
 			this.writeLatex(text).cursor.show();
+		}
+
+		setupStaticField() {
+			this.mathspeakSpan = document.createElement('span');
+			this.mathspeakSpan.classList.add('mq-mathspeak');
+			this.container.prepend(this.mathspeakSpan);
+			this.updateMathspeak();
+			this.blurred = true;
+			this.cursor.hide().parent?.blur(this.cursor);
+		}
+
+		updateMathspeak(emptyContent = false) {
+			// If the controller's ARIA label doesn't end with a punctuation mark, add a colon by default to better
+			// separate it from mathspeak.
+			const ariaLabel = this.getAriaLabel();
+			const labelWithSuffix = /[A-Za-z0-9]$/.test(ariaLabel) ? ariaLabel + ':' : ariaLabel;
+			const mathspeak = this.root.mathspeak().trim();
+			this.aria.clear(emptyContent);
+
+			// For static math, provide mathspeak in a visually hidden span to allow screen readers and other AT to
+			// traverse the content.  For editable math, assign the mathspeak to the textarea's ARIA label (AT can use
+			// text navigation to interrogate the content).  Be certain to include the mathspeak for only one of these,
+			// though, as we don't want to include outdated labels if a field's editable state changes.  By design, also
+			// take careful note that the ariaPostLabel is meant to exist only for editable math (e.g. to serve as an
+			// evaluation or error message) so it is not included for static math mathspeak calculations.  The
+			// mathspeakSpan should exist only for static math, so we use its presence to decide which approach to take.
+			if (this.mathspeakSpan) {
+				this.textarea?.setAttribute('aria-label', '');
+				this.mathspeakSpan.textContent = (labelWithSuffix + ' ' + mathspeak).trim();
+			} else {
+				this.textarea?.setAttribute(
+					'aria-label',
+					(labelWithSuffix + ' ' + mathspeak + ' ' + this.ariaPostLabel).trim()
+				);
+			}
 		}
 	};

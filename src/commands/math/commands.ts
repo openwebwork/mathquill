@@ -7,7 +7,7 @@ import { Controller } from 'src/controller';
 import { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
 import { RootBlockMixin, scale, DelimsMixin } from 'src/mixins';
-import type { TNode } from 'tree/node';
+import type { TNode, MathspeakOptions } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import type { InnerMathFieldStore } from 'commands/math';
 import { InnerMathField } from 'commands/math';
@@ -26,38 +26,73 @@ import {
 	Bracket,
 	latexMathParser,
 	supSubText,
-	MathFunction
+	MathFunction,
+	intRgx,
+	getCtrlSeqsFromBlock
 } from 'commands/mathElements';
 
 class Style extends MathCommand {
-	constructor(ctrlSeq: string, tagName: string, attrs: string) {
+	shouldNotSpeakDelimiters: boolean | undefined;
+
+	constructor(
+		ctrlSeq: string,
+		tagName: string,
+		attrs: string,
+		ariaLabel?: string,
+		shouldNotSpeakDelimiters?: boolean
+	) {
 		super(ctrlSeq, `<${tagName} ${attrs}>&0</${tagName}>`);
+		this.ariaLabel = ariaLabel || ctrlSeq.replace(/^\\/, '');
+		this.mathspeakTemplate = [`Start${this.ariaLabel},`, `End${this.ariaLabel}`];
+
+		// In most cases, mathspeak should announce the start and end of style blocks.
+		// There is one exception currently (mathrm).
+		this.shouldNotSpeakDelimiters = shouldNotSpeakDelimiters;
+	}
+
+	mathspeak(opts?: MathspeakOptions) {
+		if (!this.shouldNotSpeakDelimiters || opts?.ignoreShorthand) return super.mathspeak();
+		return this.foldChildren('', (speech, block) => `${speech} ${block.mathspeak(opts)}`).trim();
 	}
 }
 
 // fonts
-LatexCmds.mathrm = bindMixin(Style, '\\mathrm', 'span', 'class="mq-roman mq-font"');
-LatexCmds.mathit = bindMixin(Style, '\\mathit', 'i', 'class="mq-font"');
-LatexCmds.mathbf = bindMixin(Style, '\\mathbf', 'b', 'class="mq-font"');
-LatexCmds.mathsf = bindMixin(Style, '\\mathsf', 'span', 'class="mq-sans-serif mq-font"');
-LatexCmds.mathtt = bindMixin(Style, '\\mathtt', 'span', 'class="mq-monospace mq-font"');
+LatexCmds.mathrm = bindMixin(Style, '\\mathrm', 'span', 'class="mq-roman mq-font"', 'Roman Font', true);
+LatexCmds.mathit = bindMixin(Style, '\\mathit', 'i', 'class="mq-font"', 'Italic Font');
+LatexCmds.mathbf = bindMixin(Style, '\\mathbf', 'b', 'class="mq-font"', 'Bold Font');
+LatexCmds.mathsf = bindMixin(Style, '\\mathsf', 'span', 'class="mq-sans-serif mq-font"', 'Serif Font');
+LatexCmds.mathtt = bindMixin(Style, '\\mathtt', 'span', 'class="mq-monospace mq-font"', 'Math Text');
 // text-decoration
-LatexCmds.underline = bindMixin(Style, '\\underline', 'span', 'class="mq-non-leaf mq-underline"');
-LatexCmds.overline = LatexCmds.bar = bindMixin(Style, '\\overline', 'span', 'class="mq-non-leaf mq-overline"');
+LatexCmds.underline = bindMixin(Style, '\\underline', 'span', 'class="mq-non-leaf mq-underline"', 'Underline');
+LatexCmds.overline = LatexCmds.bar = bindMixin(
+	Style,
+	'\\overline',
+	'span',
+	'class="mq-non-leaf mq-overline"',
+	'Overline'
+);
 LatexCmds.overrightarrow = bindMixin(
 	Style,
 	'\\overrightarrow',
 	'span',
-	'class="mq-non-leaf mq-overarrow mq-arrow-right"'
+	'class="mq-non-leaf mq-overarrow mq-arrow-right"',
+	'Over Right Arrow'
 );
-LatexCmds.overleftarrow = bindMixin(Style, '\\overleftarrow', 'span', 'class="mq-non-leaf mq-overarrow mq-arrow-left"');
+LatexCmds.overleftarrow = bindMixin(
+	Style,
+	'\\overleftarrow',
+	'span',
+	'class="mq-non-leaf mq-overarrow mq-arrow-left"',
+	'Over Left Arrow'
+);
 LatexCmds.overleftrightarrow = bindMixin(
 	Style,
 	'\\overleftrightarrow',
 	'span',
-	'class="mq-non-leaf mq-overarrow mq-arrow-both"'
+	'class="mq-non-leaf mq-overarrow mq-arrow-both"',
+	'Over Left and Right Arrow'
 );
-LatexCmds.overarc = bindMixin(Style, '\\overarc', 'span', 'class="mq-non-leaf mq-overarc"');
+LatexCmds.overarc = bindMixin(Style, '\\overarc', 'span', 'class="mq-non-leaf mq-overarc"', 'Over Arc');
 LatexCmds.dot = class extends MathCommand {
 	constructor() {
 		super(
@@ -70,19 +105,15 @@ LatexCmds.dot = class extends MathCommand {
 	}
 };
 
-// `\textcolor{color}{math}` will apply a color to the given math content, where
-// `color` is any valid CSS Color Value (see [SitePoint docs][] (recommended),
-// [Mozilla docs][], or [W3C spec][]).
-//
-// [SitePoint docs]: http://reference.sitepoint.com/css/colorvalues
-// [Mozilla docs]: https://developer.mozilla.org/en-US/docs/CSS/color_value#Values
-// [W3C spec]: http://dev.w3.org/csswg/css3-color/#colorunits
+// `\textcolor{color}{math}` will apply a color to the given math content, where `color` is any valid CSS Color Value.
 LatexCmds.textcolor = class extends MathCommand {
 	color?: string;
 
 	setColor(color: string) {
 		this.color = color;
 		this.htmlTemplate = `<span class="mq-textcolor" style="color:${color}">&0</span>`;
+		this.ariaLabel = color.replace(/^\\/, '');
+		this.mathspeakTemplate = [`Start ${this.ariaLabel},`, `End ${this.ariaLabel}`];
 	}
 
 	latex() {
@@ -120,6 +151,8 @@ LatexCmds.class = class extends MathCommand {
 			.then((cls: string) => {
 				this.cls = cls || '';
 				this.htmlTemplate = `<span class="mq-class ${cls}">&0</span>`;
+				this.ariaLabel = cls + ' class';
+				this.mathspeakTemplate = [`Start ${this.ariaLabel},`, `End ${this.ariaLabel}`];
 				return super.parser();
 			});
 	}
@@ -143,6 +176,8 @@ LatexCmds.subscript = LatexCmds._ = class extends SupSub {
 			'<span style="display:inline-block;width:0">&#8203;</span>' +
 			'</span>';
 		this.textTemplate = ['_'];
+		this.mathspeakTemplate = ['Subscript,', ', Baseline'];
+		this.ariaLabel = 'subscript';
 	}
 
 	finalizeTree() {
@@ -162,6 +197,40 @@ LatexCmds.superscript =
 				this.htmlTemplate =
 					'<span class="mq-supsub mq-non-leaf mq-sup-only">' + '<span class="mq-sup">&0</span>' + '</span>';
 				this.textTemplate = ['^(', ')'];
+				this.ariaLabel = 'superscript';
+				this.mathspeakTemplate = ['Superscript,', ', Baseline'];
+			}
+
+			mathspeak(opts?: MathspeakOptions) {
+				// Simplify basic exponent speech for common whole numbers.
+				const child = this.upInto;
+				if (child) {
+					// Calculate this item's inner text to determine whether to shorten the returned speech.  Do not
+					// calculate its inner mathspeak until it is known that the speech is to be truncated.  Since the
+					// mathspeak computation is recursive, it should be called only once in this function to avoid
+					// performance bottlenecks.
+					const innerText = getCtrlSeqsFromBlock(child);
+					// If the superscript is a whole number, shorten the speech that is returned.
+					if (!opts?.ignoreShorthand && intRgx.test(innerText)) {
+						// Simple cases
+						if (innerText === '0') return 'to the power of 0';
+						if (innerText === '1') return 'to the first power';
+						else if (innerText === '2') return 'squared';
+						else if (innerText === '3') return 'cubed';
+
+						// More complex cases.
+						let suffix = '';
+						// Limit suffix addition to exponents < 1000.
+						if (/^[+-]?\d{1,3}$/.test(innerText)) {
+							if (/(11|12|13|4|5|6|7|8|9|0)$/.test(innerText)) suffix = 'th';
+							else if (innerText.endsWith('1')) suffix = 'st';
+							else if (innerText.endsWith('2')) suffix = 'nd';
+							else if (innerText.endsWith('3')) suffix = 'rd';
+						}
+						return `to the ${typeof child === 'object' ? child.mathspeak() : innerText}${suffix} power`;
+					}
+				}
+				return super.mathspeak();
 			}
 
 			finalizeTree() {
@@ -172,7 +241,7 @@ LatexCmds.superscript =
 		};
 
 class SummationNotation extends UpperLowerLimitCommand {
-	constructor(ch: string, html: string) {
+	constructor(ch: string, html: string, ariaLabel?: string) {
 		super(
 			ch,
 			'<span class="mq-large-operator mq-non-leaf">' +
@@ -182,6 +251,7 @@ class SummationNotation extends UpperLowerLimitCommand {
 				'</span>',
 			[ch.length > 1 ? ch.slice(1) : ch]
 		);
+		this.ariaLabel = ariaLabel || ch.replace(/^\\/, '');
 	}
 
 	createLeftOf(cursor: Cursor) {
@@ -194,8 +264,8 @@ class SummationNotation extends UpperLowerLimitCommand {
 }
 
 LatexCmds['\u2211'] = LatexCmds.sum = LatexCmds.summation = bindMixin(SummationNotation, '\\sum ', '&sum;');
-LatexCmds['\u220f'] = LatexCmds.prod = LatexCmds.product = bindMixin(SummationNotation, '\\prod ', '&prod;');
-LatexCmds.coprod = LatexCmds.coproduct = bindMixin(SummationNotation, '\\coprod ', '&#8720;');
+LatexCmds['\u220f'] = LatexCmds.prod = LatexCmds.product = bindMixin(SummationNotation, '\\prod ', '&prod;', 'product');
+LatexCmds.coprod = LatexCmds.coproduct = bindMixin(SummationNotation, '\\coprod ', '&#8720;', 'coproduct');
 
 LatexCmds['\u222b'] =
 	LatexCmds.int =
@@ -213,6 +283,7 @@ LatexCmds['\u222b'] =
 						'</span>' +
 						'</span>'
 				);
+				this.ariaLabel = 'integral';
 			}
 		};
 
@@ -312,6 +383,8 @@ class SquareRoot extends MathCommand {
 			'<span class="mq-non-leaf mq-sqrt-stem">&0</span>' +
 			'</span>';
 		this.textTemplate = ['sqrt(', ')'];
+		this.mathspeakTemplate = ['StartSquareRoot,', ', EndSquareRoot'];
+		this.ariaLabel = 'square root';
 
 		this.reflow = () => {
 			const block = this.ends.right?.elements.firstElement;
@@ -364,6 +437,7 @@ class NthRoot extends SquareRoot {
 			'<span class="mq-sqrt-stem mq-non-leaf">&1</span>' +
 			'</span>';
 		this.textTemplate = ['root(', ',', ')'];
+		this.ariaLabel = 'root';
 	}
 
 	latex() {
@@ -380,6 +454,15 @@ class NthRoot extends SquareRoot {
 		}
 
 		return `root(${index},${this.ends.right?.text() ?? ''})`;
+	}
+
+	mathspeak() {
+		const indexMathspeak = this.ends.left?.mathspeak() ?? '';
+		const radicandMathspeak = this.ends.right?.mathspeak() ?? '';
+		if (this.ends.left) this.ends.left.ariaLabel = 'Index';
+		if (this.ends.right) this.ends.right.ariaLabel = 'Radicand';
+		if (indexMathspeak === '3') return `Start Cube Root, ${radicandMathspeak}, End Cube Root`;
+		else return `Root Index ${indexMathspeak}, Start Root, ${radicandMathspeak}, End Root`;
 	}
 }
 LatexCmds.root = LatexCmds.nthroot = NthRoot;
@@ -475,6 +558,21 @@ class Binomial extends DelimsMixin(MathCommand) {
 				'</span>',
 			['choose(', ',', ')']
 		);
+		this.mathspeakTemplate = ['StartBinomial,', 'Choose', ', EndBinomial'];
+		this.ariaLabel = 'binomial';
+	}
+
+	finalizeTree() {
+		this.upInto = this.ends.left;
+		this.downInto = this.ends.right;
+		if (this.ends.right) {
+			this.ends.right.upOutOf = this.ends.left;
+			this.ends.right.ariaLabel = 'lower index';
+		}
+		if (this.ends.left) {
+			this.ends.left.downOutOf = this.ends.right;
+			this.ends.left.ariaLabel = 'upper index';
+		}
 	}
 }
 LatexCmds.binom = LatexCmds.binomial = Binomial;
@@ -489,7 +587,7 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 	constructor() {
 		super(
 			'\\MathQuillMathField',
-			'<span class="mq-editable-field">' + '<span class="mq-root-block">&0</span>' + '</span>'
+			'<span class="mq-editable-field">' + '<span class="mq-root-block" aria-hidden="true">&0</span>' + '</span>'
 		);
 	}
 
@@ -513,6 +611,37 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 		ctrlr.editablesTextareaEvents();
 		ctrlr.cursor.insAtRightEnd(ctrlr.root);
 		RootBlockMixin(ctrlr.root as MathElement);
+
+		// MathQuill applies aria-hidden to .mq-root-block containers because these contain math notation that screen
+		// readers can't interpret directly. MathQuill uses an aria-live region as a sibling of these block containers
+		// to provide an alternative representation for screen readers.
+		//
+		// MathQuillMathFields have their own focusable text aria and aria live region, so it is incorrect for any
+		// parent of the editable field to have an aria-hidden property.
+		//
+		// https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-hidden
+		//
+		// Handle this by recursively walking the parents of this element until we hit a root block, and if we hit any
+		// parent with aria-hidden="true", removing the property from the parent and pushing it down to each of the
+		// parents children. This should result in no parent of this node having aria-hidden="true", but should keep as
+		// much of what was previously hidden hidden as possible while obeying this constraint.
+		const pushDownAriaHidden = (node: Node | null) => {
+			if (node?.parentNode && node instanceof Element && !node.classList.contains('mq-root-block')) {
+				pushDownAriaHidden(node.parentNode);
+			}
+			if (node instanceof Element) {
+				if (node.getAttribute('aria-hidden') === 'true') {
+					node.removeAttribute('aria-hidden');
+					node.childNodes.forEach((child) => {
+						if (child instanceof Element) child.setAttribute('aria-hidden', 'true');
+					});
+				}
+			}
+		};
+
+		pushDownAriaHidden(this.elements.first.parentNode);
+		this.elements.removeClass('aria-hidden');
+
 		this.field.blur();
 	}
 

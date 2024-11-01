@@ -31,8 +31,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				const ctrlr = root.controller,
 					cursor = ctrlr.cursor,
 					blink = cursor.blink;
-				const textareaSpan = ctrlr.textareaSpan,
-					textarea = ctrlr.textarea;
+				const textarea = ctrlr.textarea;
 
 				e.preventDefault();
 
@@ -52,6 +51,11 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 					if (!cursor.anticursor) cursor.startSelection();
 					ctrlr.seek(target, e.pageX).cursor.select();
 					target = undefined;
+					if (cursor.selection)
+						ctrlr.aria
+							.clear()
+							.queue(cursor.selection.join('mathspeak') + ' selected')
+							.alert();
 				};
 				// Outside rootEl, the MathQuill node corresponding to the target (if any)
 				// won't be inside this root.  So don't mislead Controller::seek with it.
@@ -59,8 +63,10 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				const mouseup = () => {
 					cursor.blink = blink;
 					if (!cursor.selection) {
-						if (ctrlr.editable) cursor.show();
-						else textareaSpan?.remove();
+						if (ctrlr.editable) {
+							cursor.show();
+							if (cursor.parent) ctrlr.aria.queue(cursor.parent).alert();
+						}
 					}
 
 					// Delete the mouse handlers now that the drag has ended.
@@ -71,8 +77,8 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 
 				if (e.detail === 3) {
 					// If this is a triple click, then select all and return.
-					ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-					while (cursor.left) ctrlr.selectLeft();
+					ctrlr.selectAll();
+					ctrlr.aria.alert();
 					mouseup();
 					return;
 				} else if (e.detail === 2) {
@@ -82,50 +88,50 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 					ctrlr.seek(e.target as HTMLElement, e.pageX);
 					if (!cursor.right && cursor.left?.parent === root) ctrlr.moveLeft();
 
-					if (cursor.right instanceof Letter) {
-						// If a "Letter" is to the right of the cursor, then try to select all adjacent "Letter"s that
-						// are of the same basic ilk.  That means all "Letter"s that are part of an operator name, or
-						// all "Letter"s that are not part of an operator name.
-						const currentNode = cursor.right;
-						while (
-							cursor.left &&
-							cursor.left instanceof Letter &&
-							cursor.left.isPartOfOperator === currentNode.isPartOfOperator
-						)
-							ctrlr.moveLeft();
-						cursor.startSelection();
-						while (
+					ctrlr.withIncrementalSelection((selectDir) => {
+						if (cursor.right instanceof Letter) {
+							// If a "Letter" is to the right of the cursor, then try to select all adjacent "Letter"s
+							// that are of the same basic ilk.  That means all "Letter"s that are part of an operator
+							// name, or all "Letter"s that are not part of an operator name.
+							const currentNode = cursor.right;
+							while (
+								cursor.left &&
+								cursor.left instanceof Letter &&
+								cursor.left.isPartOfOperator === currentNode.isPartOfOperator
+							)
+								ctrlr.moveLeft();
+							cursor.startSelection();
+							while (
+								// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+								cursor.right &&
+								cursor.right instanceof Letter &&
+								cursor.right.isPartOfOperator === currentNode.isPartOfOperator
+							)
+								selectDir('right');
+						} else if (cursor.right instanceof Digit) {
+							// If a "Digit" is to the right of the cursor, then select all adjacent "Digit"s.
+							while (cursor.left && cursor.left instanceof Digit) ctrlr.moveLeft();
+							cursor.startSelection();
 							// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-							cursor.right &&
-							cursor.right instanceof Letter &&
-							cursor.right.isPartOfOperator === currentNode.isPartOfOperator
-						)
-							ctrlr.selectRight();
-					} else if (cursor.right instanceof Digit) {
-						// If a "Digit" is to the right of the cursor, then select all adjacent "Digit"s.
-						while (cursor.left && cursor.left instanceof Digit) ctrlr.moveLeft();
-						cursor.startSelection();
-						// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-						while (cursor.right && cursor.right instanceof Digit) ctrlr.selectRight();
-					} else {
-						cursor.startSelection();
-						ctrlr.selectRight();
-					}
+							while (cursor.right && cursor.right instanceof Digit) selectDir('right');
+						} else {
+							cursor.startSelection();
+							selectDir('right');
+						}
 
-					// If the cursor is in a text block, then select the whole text block.
-					if (cursor.left?.parent instanceof TextBlock) {
-						cursor.left.parent.moveOutOf('left', cursor);
-						ctrlr.selectRight();
-					}
+						// If the cursor is in a text block, then select the whole text block.
+						if (cursor.left?.parent instanceof TextBlock) {
+							cursor.left.parent.moveOutOf('left', cursor);
+							selectDir('right');
+						}
+					});
 
+					ctrlr.aria.alert();
 					mouseup();
 					return;
 				}
 
-				if (ctrlr.blurred) {
-					if (!ctrlr.editable && textareaSpan) rootEl?.prepend(textareaSpan);
-					textarea?.focus();
-				}
+				if (ctrlr.blurred) textarea?.focus();
 
 				cursor.blink = noop;
 				ctrlr.seek(e.target as HTMLElement, e.pageX).cursor.startSelection();

@@ -45,6 +45,7 @@ export class StaticMath extends AbstractMathQuill {
 
 	__mathquillify() {
 		super.__mathquillify('mq-math-mode');
+		this.__controller.setupStaticField();
 		if (this.__options.mouseEvents) {
 			this.__controller.delegateMouseEvents();
 			this.__controller.staticMathTextareaEvents();
@@ -62,6 +63,8 @@ export class StaticMath extends AbstractMathQuill {
 				(this.innerFields = new Store<InnerMathField>()),
 				InnerMathField
 			);
+			// Force an ARIA label update to remain in sync with the new LaTeX value.
+			this.__controller.updateMathspeak();
 		}
 		return returned;
 	}

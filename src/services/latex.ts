@@ -41,6 +41,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			}
 
 			delete this.cursor.selection;
+			this.updateMathspeak();
 			this.cursor.insAtRightEnd(this.root);
 		}
 

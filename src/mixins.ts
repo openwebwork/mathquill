@@ -26,6 +26,8 @@ export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base:
 		moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 			const nodeAtEnd = (updown && this[`${updown}Into`]) || this.ends[dir === 'left' ? 'right' : 'left'];
 			if (nodeAtEnd) cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', nodeAtEnd);
+			if (cursor.parent)
+				cursor.controller.aria.queueDirEndOf(dir === 'left' ? 'right' : 'left').queue(cursor.parent, true);
 		}
 
 		deleteTowards(dir: Direction, cursor: Cursor) {

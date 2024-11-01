@@ -14,6 +14,11 @@ export interface Ends {
 	right?: TNode;
 }
 
+export interface MathspeakOptions {
+	createdLeftOf?: Cursor;
+	ignoreShorthand?: boolean;
+}
+
 const prayOverridden = (name: string) => {
 	throw new Error(`"${name}" should be overridden or never called on this node`);
 };
@@ -40,6 +45,10 @@ export class TNode {
 	sup?: TNode;
 	isSymbol?: boolean;
 	isSupSubLeft?: boolean;
+
+	ariaLabel?: string;
+	mathspeakName?: string;
+	mathspeakTemplate?: string[];
 
 	upInto?: TNode;
 	downInto?: TNode;
@@ -195,50 +204,50 @@ export class TNode {
 
 			// End -> move to the end of the current block.
 			case 'End':
-				if (cursor.parent) ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent);
+				if (cursor.parent) {
+					ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent);
+					ctrlr.aria.queue('end of').queue(cursor.parent, true);
+				}
 				break;
 
 			// Ctrl-End -> move all the way to the end of the root block.
 			case 'Ctrl-End':
 				ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
+				ctrlr.aria.queue('end of').queue(ctrlr.ariaLabel).queue(ctrlr.root).queue(ctrlr.ariaPostLabel);
 				break;
 
 			// Shift-End -> select to the end of the current block.
 			case 'Shift-End':
-				while (cursor.right) {
-					ctrlr.selectRight();
-				}
+				ctrlr.selectToBlockEndInDir('right');
 				break;
 
 			// Ctrl-Shift-End -> select to the end of the root block.
 			case 'Ctrl-Shift-End':
-				while (cursor.right || cursor.parent !== ctrlr.root) {
-					ctrlr.selectRight();
-				}
+				ctrlr.selectToRootEndInDir('right');
 				break;
 
 			// Home -> move to the start of the root block or the current block.
 			case 'Home':
-				if (cursor.parent) ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent);
+				if (cursor.parent) {
+					ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent);
+					ctrlr.aria.queue('beginning of').queue(cursor.parent, true);
+				}
 				break;
 
 			// Ctrl-Home -> move to the start of the current block.
 			case 'Ctrl-Home':
 				ctrlr.notify('move').cursor.insAtLeftEnd(ctrlr.root);
+				ctrlr.aria.queue('beginning of').queue(ctrlr.ariaLabel).queue(ctrlr.root).queue(ctrlr.ariaPostLabel);
 				break;
 
 			// Shift-Home -> select to the start of the current block.
 			case 'Shift-Home':
-				while (cursor.left) {
-					ctrlr.selectLeft();
-				}
+				ctrlr.selectToBlockEndInDir('left');
 				break;
 
 			// Ctrl-Shift-Home -> move to the start of the root block.
 			case 'Ctrl-Shift-Home':
-				while (cursor.left || cursor.parent !== ctrlr.root) {
-					ctrlr.selectLeft();
-				}
+				ctrlr.selectToRootEndInDir('left');
 				break;
 
 			case 'Left':
@@ -267,21 +276,25 @@ export class TNode {
 				break;
 
 			case 'Shift-Up':
-				if (cursor.left) {
-					// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-					while (cursor.left) ctrlr.selectLeft();
-				} else {
-					ctrlr.selectLeft();
-				}
+				ctrlr.withIncrementalSelection((selectDir) => {
+					if (cursor.left) {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+						while (cursor.left) selectDir('left');
+					} else {
+						selectDir('left');
+					}
+				});
 				break;
 
 			case 'Shift-Down':
-				if (cursor.right) {
-					// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-					while (cursor.right) ctrlr.selectRight();
-				} else {
-					ctrlr.selectRight();
-				}
+				ctrlr.withIncrementalSelection((selectDir) => {
+					if (cursor.right) {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+						while (cursor.right) selectDir('right');
+					} else {
+						selectDir('right');
+					}
+				});
 				break;
 
 			case 'Ctrl-Up':
@@ -301,13 +314,53 @@ export class TNode {
 
 			case 'Meta-A':
 			case 'Ctrl-A':
-				ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-				while (cursor.left) ctrlr.selectLeft();
+				ctrlr.selectAll();
+				break;
+
+			// The remaining key strokes are only of benefit to screen reader users.
+
+			// speak parent block that has focus
+			case 'Ctrl-Alt-Up':
+				if (cursor.parent?.parent && cursor.parent.parent instanceof TNode)
+					ctrlr.aria.queue(cursor.parent.parent);
+				else ctrlr.aria.queue('nothing above');
+				break;
+
+			// speak current block that has focus
+			case 'Ctrl-Alt-Down':
+				if (cursor.parent && cursor.parent instanceof TNode) ctrlr.aria.queue(cursor.parent);
+				else ctrlr.aria.queue('block is empty');
+				break;
+
+			// speak left-adjacent block
+			case 'Ctrl-Alt-Left':
+				if (cursor.parent?.parent?.ends.left) ctrlr.aria.queue(cursor.parent.parent.ends.left);
+				else ctrlr.aria.queue('nothing to the left');
+				break;
+
+			// speak right-adjacent block
+			case 'Ctrl-Alt-Right':
+				if (cursor.parent?.parent?.ends.right) ctrlr.aria.queue(cursor.parent.parent.ends.right);
+				else ctrlr.aria.queue('nothing to the right');
+				break;
+
+			// speak selection
+			case 'Ctrl-Alt-Shift-Down':
+				if (cursor.selection) ctrlr.aria.queue(cursor.selection.join('mathspeak', ' ').trim() + ' selected');
+				else ctrlr.aria.queue('nothing selected');
+				break;
+
+			// speak ARIA post label (evaluation or error)
+			case 'Ctrl-Alt-=':
+			case 'Ctrl-Alt-Shift-Right':
+				if (ctrlr.ariaPostLabel.length) ctrlr.aria.queue(ctrlr.ariaPostLabel);
+				else ctrlr.aria.queue('no answer');
 				break;
 
 			default:
 				return;
 		}
+		ctrlr.aria.alert();
 		e.preventDefault();
 		ctrlr.scrollHoriz();
 	}
@@ -347,6 +400,9 @@ export class TNode {
 	}
 	chToCmd(_ch: string, _options: Options): TNode {
 		return this as TNode;
+	}
+	mathspeak(_options?: MathspeakOptions) {
+		return '';
 	}
 
 	getController() {
