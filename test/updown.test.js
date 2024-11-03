@@ -1,8 +1,8 @@
-/* global suite, test, assert, setup, MQ */
+/* global assert, MQ */
 
-suite('up/down', () => {
+suite('up/down', function () {
 	let mq, rootBlock, controller, cursor;
-	setup(() => {
+	setup(function () {
 		const el = document.createElement('span');
 		document.getElementById('mock')?.append(el);
 		mq = MQ.MathField(el);
@@ -11,7 +11,7 @@ suite('up/down', () => {
 		cursor = controller.cursor;
 	});
 
-	test('up/down in out of exponent', () => {
+	test('up/down in out of exponent', function () {
 		controller.renderLatexMath('x^{nm}');
 		const exp = rootBlock.ends.right,
 			expBlock = exp.ends.left;
@@ -45,7 +45,7 @@ suite('up/down', () => {
 	});
 
 	// literally just swapped up and down, exponent with subscript, nm with 12
-	test('up/down in out of subscript', () => {
+	test('up/down in out of subscript', function () {
 		controller.renderLatexMath('a_{12}');
 		const sub = rootBlock.ends.right,
 			subBlock = sub.ends.left;
@@ -78,7 +78,7 @@ suite('up/down', () => {
 		assert.equal(cursor.right, sub, 'cursor up in middle of subscript puts cursor before subscript');
 	});
 
-	test('up/down into and within fraction', () => {
+	test('up/down into and within fraction', function () {
 		controller.renderLatexMath('\\frac{12}{34}');
 		const frac = rootBlock.ends.left,
 			numer = frac.ends.left,
@@ -117,7 +117,7 @@ suite('up/down', () => {
 		assert.equal(cursor.left, undefined, 'cursor down from left of fraction inserts at left end of denominator');
 	});
 
-	test('nested subscripts and fractions', () => {
+	test('nested subscripts and fractions', function () {
 		controller.renderLatexMath('\\frac{d}{dx_{\\frac{24}{36}0}}\\sqrt{x}=x^{\\frac{1}{2}}');
 		const exp = rootBlock.ends.right,
 			expBlock = exp.ends.left,
@@ -193,7 +193,7 @@ suite('up/down', () => {
 		);
 	});
 
-	test('\\MathQuillMathField{} in a fraction', () => {
+	test('\\MathQuillMathField{} in a fraction', function () {
 		const el = document.createElement('span');
 		el.textContent = '\\frac{\\MathQuillMathField{n}}{2}';
 		document.getElementById('mock')?.append(el);

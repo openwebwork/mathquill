@@ -1,12 +1,12 @@
-/* global suite, test, assert, setup, MQ */
+/* global assert, MQ */
 
 import { prayWellFormed } from 'src/constants';
 import { Controller } from 'src/controller';
 import { latexMathParser } from 'commands/mathElements';
 
-suite('text', () => {
+suite('text', function () {
 	let mq, mostRecentlyReportedLatex;
-	setup(() => {
+	setup(function () {
 		mostRecentlyReportedLatex = NaN; // != to everything
 		const el = document.createElement('span');
 		document.getElementById('mock')?.append(el);
@@ -47,7 +47,7 @@ suite('text', () => {
 		}
 	};
 
-	test('changes the text nodes as the cursor moves around', () => {
+	test('changes the text nodes as the cursor moves around', function () {
 		const block = fromLatex('\\text{abc}');
 		const ctrlr = new Controller(block, 0, 0);
 		const cursor = ctrlr.cursor.insAtRightEnd(block);
@@ -74,7 +74,7 @@ suite('text', () => {
 		assertSplit(cursor.element, 'abc', null);
 	});
 
-	test('does not change latex as the cursor moves around', () => {
+	test('does not change latex as the cursor moves around', function () {
 		const block = fromLatex('\\text{x}');
 		const ctrlr = new Controller(block, 0, 0);
 		ctrlr.cursor.insAtRightEnd(block);
@@ -86,8 +86,8 @@ suite('text', () => {
 		assert.equal(block.latex(), '\\text{x}');
 	});
 
-	suite('typing', () => {
-		test('stepping out of an empty block deletes it', () => {
+	suite('typing', function () {
+		test('stepping out of an empty block deletes it', function () {
 			const controller = mq.__controller;
 			const cursor = controller.cursor;
 
@@ -108,7 +108,7 @@ suite('text', () => {
 			assertLatex('');
 		});
 
-		test('typing $ in a textblock splits it', () => {
+		test('typing $ in a textblock splits it', function () {
 			const controller = mq.__controller;
 			const cursor = controller.cursor;
 
@@ -124,8 +124,8 @@ suite('text', () => {
 		});
 	});
 
-	suite('pasting', () => {
-		test('sanity', () => {
+	suite('pasting', function () {
+		test('sanity', function () {
 			const controller = mq.__controller;
 			const cursor = controller.cursor;
 
@@ -140,7 +140,7 @@ suite('text', () => {
 			prayWellFormedPoint(cursor);
 		});
 
-		test('pasting a dollar sign', () => {
+		test('pasting a dollar sign', function () {
 			const controller = mq.__controller;
 			const cursor = controller.cursor;
 
@@ -155,7 +155,7 @@ suite('text', () => {
 			prayWellFormedPoint(cursor);
 		});
 
-		test('pasting a backslash', () => {
+		test('pasting a backslash', function () {
 			const controller = mq.__controller;
 			const cursor = controller.cursor;
 
@@ -170,7 +170,7 @@ suite('text', () => {
 			prayWellFormedPoint(cursor);
 		});
 
-		test('pasting a curly brace', () => {
+		test('pasting a curly brace', function () {
 			const controller = mq.__controller;
 			const cursor = controller.cursor;
 

@@ -1,10 +1,10 @@
-/* global suite, test, assert, setup, MQ */
+/* global assert, MQ */
 
 import { prayWellFormed } from 'src/constants';
 
-suite('backspace', () => {
+suite('backspace', function () {
 	let mq, rootBlock, controller, cursor;
-	setup(() => {
+	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
 		mq = MQ.MathField(field);
@@ -19,7 +19,7 @@ suite('backspace', () => {
 		assert.equal(mq.latex(), latex);
 	};
 
-	test('backspace through exponent', () => {
+	test('backspace through exponent', function () {
 		controller.renderLatexMath('x^{nm}');
 		const exp = rootBlock.ends.right,
 			expBlock = exp.ends.left;
@@ -44,7 +44,7 @@ suite('backspace', () => {
 		assertLatex('x');
 	});
 
-	test('backspace through complex fraction', () => {
+	test('backspace through complex fraction', function () {
 		controller.renderLatexMath('1+\\frac{1}{\\frac{1}{2}+\\frac{2}{3}}');
 
 		//first backspace moves to denominator
@@ -81,7 +81,7 @@ suite('backspace', () => {
 		assertLatex('1+1');
 	});
 
-	test('backspace through compound subscript', () => {
+	test('backspace through compound subscript', function () {
 		mq.latex('x_{2_2}');
 
 		//first backspace goes into the subscript
@@ -105,7 +105,7 @@ suite('backspace', () => {
 		assert.equal(mq.latex(), 'x');
 	});
 
-	test('backspace through simple subscript', () => {
+	test('backspace through simple subscript', function () {
 		mq.latex('x_{2+3}');
 
 		assert.equal(cursor.parent, rootBlock, 'start in the root block');
@@ -123,7 +123,7 @@ suite('backspace', () => {
 		assert.equal(mq.latex(), 'x');
 	});
 
-	test('backspace through subscript & superscript', () => {
+	test('backspace through subscript & superscript', function () {
 		mq.latex('x_2^{32}');
 
 		//first backspace takes us into the exponent
@@ -159,7 +159,7 @@ suite('backspace', () => {
 		assert.equal(mq.latex(), '');
 	});
 
-	test('backspace through nthroot', () => {
+	test('backspace through nthroot', function () {
 		mq.latex('\\sqrt[3]{x}');
 
 		//first backspace takes us inside the nthroot
@@ -178,7 +178,7 @@ suite('backspace', () => {
 		assert.equal(mq.latex(), '');
 	});
 
-	test('backspace through large operator', () => {
+	test('backspace through large operator', function () {
 		mq.latex('\\sum_{n=1}^3x');
 
 		//first backspace takes out the argument
@@ -198,7 +198,7 @@ suite('backspace', () => {
 		assert.equal(mq.latex(), 'n=1');
 	});
 
-	test('backspace through text block', () => {
+	test('backspace through text block', function () {
 		mq.latex('\\text{x}');
 
 		mq.keystroke('Backspace');
@@ -221,20 +221,20 @@ suite('backspace', () => {
 		assert.equal(mq.latex(), '');
 	});
 
-	suite('empties', () => {
-		test('backspace empty exponent', () => {
+	suite('empties', function () {
+		test('backspace empty exponent', function () {
 			mq.latex('x^{}');
 			mq.keystroke('Backspace');
 			assert.equal(mq.latex(), 'x');
 		});
 
-		test('backspace empty sqrt', () => {
+		test('backspace empty sqrt', function () {
 			mq.latex('1+\\sqrt{}');
 			mq.keystroke('Backspace');
 			assert.equal(mq.latex(), '1+');
 		});
 
-		test('backspace empty fraction', () => {
+		test('backspace empty fraction', function () {
 			mq.latex('1+\\frac{}{}');
 			mq.keystroke('Backspace');
 			assert.equal(mq.latex(), '1+');

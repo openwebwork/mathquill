@@ -1,7 +1,7 @@
-/* global suite, test, assert, MQ */
+/* global assert, MQ */
 
-suite('CSS', () => {
-	test("math field doesn't affect ancestor's .scrollWidth", () => {
+suite('CSS', function () {
+	test("math field doesn't affect ancestor's .scrollWidth", function () {
 		const container = document.createElement('div');
 		container.style.fontSize = '16px';
 		container.style.height = '25px'; // must be greater than font-size * 115% + 2 * 2px (padding) + 2 * 1px (border)
@@ -29,7 +29,7 @@ suite('CSS', () => {
 		);
 	};
 
-	test('empty root block does not collapse', () => {
+	test('empty root block does not collapse', function () {
 		const testEl = document.createElement('span');
 		document.getElementById('mock')?.append(testEl);
 
@@ -40,7 +40,7 @@ suite('CSS', () => {
 		assert.ok(getHeight(rootEl) > 0, 'Empty root block height should be above 0.');
 	});
 
-	test('empty block does not collapse', () => {
+	test('empty block does not collapse', function () {
 		const testEl = document.createElement('span');
 		testEl.textContent = '\\frac{}{}';
 		document.getElementById('mock')?.append(testEl);
@@ -51,7 +51,7 @@ suite('CSS', () => {
 		assert.ok(getHeight(numeratorEl) > 0, 'Empty numerator height should be above 0.');
 	});
 
-	test('test florin spacing', () => {
+	test('test florin spacing', function () {
 		const span = document.createElement('span');
 		document.getElementById('mock')?.append(span);
 
@@ -66,7 +66,7 @@ suite('CSS', () => {
 		);
 	});
 
-	test('unary PlusMinus before separator', () => {
+	test('unary PlusMinus before separator', function () {
 		const span = document.createElement('span');
 		document.getElementById('mock')?.append(span);
 		const mq = MQ.MathField(span);
@@ -93,7 +93,7 @@ suite('CSS', () => {
 		assertBinaryOperator(33, '(-1,-1-1)-1,(+1;+1+1)+1,(\\pm1,\\pm1\\pm1)\\pm');
 	});
 
-	test('proper unary/binary within style block', () => {
+	test('proper unary/binary within style block', function () {
 		const span = document.createElement('span');
 		document.getElementById('mock')?.append(span);
 		const mq = MQ.MathField(span);
@@ -125,7 +125,7 @@ suite('CSS', () => {
 		assertBinaryOperator(6, '\\textcolor{red}{\\class{dummy}{-}}2\\textcolor{green}{\\class{dummy}{+}}');
 	});
 
-	test('operator name spacing, e.g., ker x', () => {
+	test('operator name spacing, e.g., ker x', function () {
 		const span = document.createElement('span');
 		document.getElementById('mock')?.append(span);
 		const mq = MQ.MathField(span);

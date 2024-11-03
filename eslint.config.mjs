@@ -3,6 +3,7 @@ import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import stylistic from '@stylistic/eslint-plugin';
+import mochaPlugin from 'eslint-plugin-mocha';
 
 export default [
 	{
@@ -30,6 +31,7 @@ export default [
 		languageOptions: { parserOptions: { project: false, program: null, projectService: false } },
 		rules: { ...tseslint.configs.disableTypeChecked.rules, '@typescript-eslint/no-require-imports': 'off' }
 	},
+	{ files: ['**/test/*.test.js'], ...mochaPlugin.configs.flat.recommended },
 	eslintConfigPrettier,
 	{
 		plugins: { '@stylistic': stylistic },
@@ -60,6 +62,8 @@ export default [
 			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 			'@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],
 			'@typescript-eslint/prefer-nullish-coalescing': 'off',
+
+			'mocha/no-setup-in-describe': 'off',
 
 			// Allow console and debugger during development only.
 			'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',

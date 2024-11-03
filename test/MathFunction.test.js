@@ -1,17 +1,17 @@
-/* global suite, test, assert, setup, teardown, MQ */
+/* global assert, MQ */
 
 import { VNode } from 'src/tree/vNode';
 import { MathFunction, latexMathParser } from 'commands/mathElements';
 
-suite('MathFunction', () => {
+suite('MathFunction', function () {
 	let mq;
-	setup(() => {
+	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
 		mq = MQ.MathField(field);
 		mq.options.addAutoCommands(['sin', 'log']);
 	});
-	teardown(() => {
+	teardown(function () {
 		mq.el().remove();
 	});
 
@@ -26,8 +26,8 @@ suite('MathFunction', () => {
 		assert.equal(result, latex, `parsing '${str}', got '${result}', expected '${latex}'`);
 	};
 
-	suite('parsing', () => {
-		test('general', () => {
+	suite('parsing', function () {
+		test('general', function () {
 			assertParsesLatex('\\sin', '\\sin\\left(\\right)');
 			assertParsesLatex('\\sin x', '\\sin\\left(x\\right)');
 			assertParsesLatex('(\\sin)', '(\\sin\\left(\\right))');
@@ -56,7 +56,7 @@ suite('MathFunction', () => {
 			assertParsesLatex('\\arcsin\\left(x\\right)', '\\arcsin\\left(x\\right)');
 		});
 
-		test('with whitespace', () => {
+		test('with whitespace', function () {
 			assertParsesLatex(' \\sin x ', '\\sin\\left(x\\right)');
 			assertParsesLatex('\\sin x + 3 ', '\\sin\\left(x\\right)+3');
 			assertParsesLatex('  \\sin  x ^2 + 3', '\\sin\\left(x\\right)^2+3');
@@ -66,8 +66,8 @@ suite('MathFunction', () => {
 		});
 	});
 
-	suite('latex rendering', () => {
-		test('render with latex multiple sup subs', () => {
+	suite('latex rendering', function () {
+		test('render with latex multiple sup subs', function () {
 			mq.latex('\\sin_2^3_4^5\\left(x\\right)');
 			assert.equal(mq.latex(), '\\sin_{24}^{35}\\left(x\\right)');
 
@@ -81,7 +81,7 @@ suite('MathFunction', () => {
 			assert.equal(mq.latex(), '\\sin_4^2\\left(x\\right)');
 		});
 
-		test('basic latex output', () => {
+		test('basic latex output', function () {
 			const tree = latexMathParser.parse('\\sin_2^3\\left(x^2+3\\right)').postOrder('finalizeTree', mq.options);
 
 			assert.ok(tree.ends.left instanceof MathFunction);
@@ -93,8 +93,8 @@ suite('MathFunction', () => {
 		});
 	});
 
-	suite('deleting subscript and superscript', () => {
-		test('backspacing out of and then re-typing subscript', () => {
+	suite('deleting subscript and superscript', function () {
+		test('backspacing out of and then re-typing subscript', function () {
 			mq.latex('\\sin_a^b');
 			assert.equal(mq.latex(), '\\sin_a^b\\left(\\right)');
 
@@ -114,7 +114,7 @@ suite('MathFunction', () => {
 			assert.equal(mq.latex(), '\\sin_a^b\\left(c\\right)');
 		});
 
-		test('backspacing out of and then re-typing superscript', () => {
+		test('backspacing out of and then re-typing superscript', function () {
 			mq.latex('\\sin_a^b');
 			assert.equal(mq.latex(), '\\sin_a^b\\left(\\right)');
 
@@ -135,8 +135,8 @@ suite('MathFunction', () => {
 		});
 	});
 
-	suite('extending, shortening, and deleting function name', () => {
-		test('sin to sinh to sin', () => {
+	suite('extending, shortening, and deleting function name', function () {
+		test('sin to sinh to sin', function () {
 			mq.typedText('sin');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
 
@@ -154,7 +154,7 @@ suite('MathFunction', () => {
 			assert.equal(mq.latex(), '\\sinh\\left(x\\right)');
 		});
 
-		test('deleting function name with empty contents', () => {
+		test('deleting function name with empty contents', function () {
 			mq.typedText('sin');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
 
@@ -168,7 +168,7 @@ suite('MathFunction', () => {
 			assert.equal(mq.latex(), '');
 		});
 
-		test('deleting function name with contents', () => {
+		test('deleting function name with contents', function () {
 			mq.typedText('sinx');
 			assert.equal(mq.latex(), '\\sin\\left(x\\right)');
 
@@ -183,8 +183,8 @@ suite('MathFunction', () => {
 		});
 	});
 
-	suite('typing in supsub block', () => {
-		test('typing underscore starts subscript', () => {
+	suite('typing in supsub block', function () {
+		test('typing underscore starts subscript', function () {
 			const cursor = mq.__controller.cursor;
 
 			mq.typedText('sin');
@@ -202,7 +202,7 @@ suite('MathFunction', () => {
 			assert.equal(cursor.parent?.parent.blocks[0], cursor.parent);
 		});
 
-		test('typing caret start superscript', () => {
+		test('typing caret start superscript', function () {
 			const cursor = mq.__controller.cursor;
 
 			mq.typedText('sin');
@@ -220,7 +220,7 @@ suite('MathFunction', () => {
 			assert.equal(cursor.parent?.parent.blocks[0], cursor.parent);
 		});
 
-		test('typing space or anything other than ^ or _ inserts into content block', () => {
+		test('typing space or anything other than ^ or _ inserts into content block', function () {
 			const cursor = mq.__controller.cursor;
 
 			mq.typedText('sin');
@@ -252,7 +252,7 @@ suite('MathFunction', () => {
 			assert.equal(cursor.parent?.parent.blocks[1], cursor.parent);
 		});
 
-		test('typing start parenthesis moves to content block without adding additional parentheses', () => {
+		test('typing start parenthesis moves to content block without adding additional parentheses', function () {
 			const cursor = mq.__controller.cursor;
 
 			mq.typedText('sin');
@@ -265,10 +265,10 @@ suite('MathFunction', () => {
 		});
 	});
 
-	suite('behavior as a left bracket', () => {
-		suite('as initial left bracket', () => {
+	suite('behavior as a left bracket', function () {
+		suite('as initial left bracket', function () {
 			let endBracket;
-			setup(() => {
+			setup(function () {
 				mq.typedText('sin1+2');
 				assert.equal(mq.latex(), '\\sin\\left(1+2\\right)');
 				const fcn = mq.__controller.cursor.parent?.parent;
@@ -278,7 +278,7 @@ suite('MathFunction', () => {
 				assert.ok(endBracket.classList.contains('mq-ghost'), 'right parenthesis is ghost initially');
 			});
 
-			test('typing outside ghost paren solidifies ghost', () => {
+			test('typing outside ghost paren solidifies ghost', function () {
 				mq.keystroke('Right').typedText('+4');
 				assert.equal(mq.latex(), '\\sin\\left(1+2\\right)+4');
 				assert.ok(
@@ -291,7 +291,7 @@ suite('MathFunction', () => {
 				assert.ok(endBracket.classList.contains('mq-ghost'), 'right parenthesis is ghost again');
 			});
 
-			test('close math function parentheses by typing end parenthesis', () => {
+			test('close math function parentheses by typing end parenthesis', function () {
 				mq.typedText(')');
 				assert.equal(mq.latex(), '\\sin\\left(1+2\\right)');
 				assert.ok(!endBracket.classList.contains('mq-ghost'));
@@ -305,7 +305,7 @@ suite('MathFunction', () => {
 				assert.ok(!endBracket.classList.contains('mq-ghost'));
 			});
 
-			test('typing non-parenthesis bracket at end does not match and creates new "Bracket"', () => {
+			test('typing non-parenthesis bracket at end does not match and creates new "Bracket"', function () {
 				mq.typedText(']');
 				assert.equal(mq.latex(), '\\sin\\left(\\left[1+2\\right]\\right)');
 				assert.ok(endBracket.classList.contains('mq-ghost'));
@@ -319,13 +319,13 @@ suite('MathFunction', () => {
 				assert.ok(!endBracket.classList.contains('mq-ghost'));
 			});
 
-			test('typing "^" at end solidifies function parenthesis', () => {
+			test('typing "^" at end solidifies function parenthesis', function () {
 				mq.keystroke('Right').typedText('^');
 				assert.equal(mq.latex(), '\\sin\\left(1+2\\right)^{ }');
 				assert.ok(!endBracket.classList.contains('mq-ghost'));
 			});
 
-			test('existing content to right is adopted', () => {
+			test('existing content to right is adopted', function () {
 				mq.keystroke('Backspace Backspace Backspace Backspace Backspace');
 				mq.typedText('x^2').keystroke('Tab').typedText('+3x-4');
 				assert.equal(mq.latex(), 'x^2+3x-4');
@@ -336,29 +336,29 @@ suite('MathFunction', () => {
 			});
 		});
 
-		suite('adding to left of parentheses', () => {
-			test('typing left of right solid parentheses with left ghost', () => {
+		suite('adding to left of parentheses', function () {
+			test('typing left of right solid parentheses with left ghost', function () {
 				mq.typedText('x+3)');
 				assert.equal(mq.latex(), '\\left(x+3\\right)');
 				mq.keystroke('Left').typedText('sin');
 				assert.equal(mq.latex(), 'x+3\\sin\\left(\\right)');
 			});
 
-			test('typing amid content of right solid parentheses with left ghost', () => {
+			test('typing amid content of right solid parentheses with left ghost', function () {
 				mq.typedText('x+3)');
 				assert.equal(mq.latex(), '\\left(x+3\\right)');
 				mq.keystroke('Left Left').typedText('sin');
 				assert.equal(mq.latex(), 'x+\\sin\\left(3\\right)');
 			});
 
-			test('typing right of left ghost parenthesis with right solid parentheses', () => {
+			test('typing right of left ghost parenthesis with right solid parentheses', function () {
 				mq.typedText('x+3)');
 				assert.equal(mq.latex(), '\\left(x+3\\right)');
 				mq.keystroke('Left Left Left Left').typedText('sin');
 				assert.equal(mq.latex(), '\\sin\\left(x+3\\right)');
 			});
 
-			test('typing left of parentheses', () => {
+			test('typing left of parentheses', function () {
 				mq.typedText('x+3)');
 				assert.equal(mq.latex(), '\\left(x+3\\right)');
 				mq.keystroke('Left Left Left Left Left').typedText('sin');
@@ -367,8 +367,8 @@ suite('MathFunction', () => {
 		});
 	});
 
-	suite('text output', () => {
-		test('function without supsubs', () => {
+	suite('text output', function () {
+		test('function without supsubs', function () {
 			mq.typedText('sin');
 			assert.equal(mq.text(), 'sin()');
 
@@ -379,7 +379,7 @@ suite('MathFunction', () => {
 			assert.equal(mq.text(), 'sin(x+3)');
 		});
 
-		test('function with supsubs', () => {
+		test('function with supsubs', function () {
 			mq.typedText('sin');
 			assert.equal(mq.text(), 'sin()');
 
@@ -393,7 +393,7 @@ suite('MathFunction', () => {
 			assert.equal(mq.text(), 'sin_5^3(x)');
 		});
 
-		test('extended function name', () => {
+		test('extended function name', function () {
 			mq.typedText('sin');
 			assert.equal(mq.text(), 'sin()');
 
@@ -410,7 +410,7 @@ suite('MathFunction', () => {
 			assert.equal(mq.text(), 'sin^5(x)');
 		});
 
-		test('log with base', () => {
+		test('log with base', function () {
 			mq.typedText('log');
 			assert.equal(mq.text(), 'log()');
 

@@ -1,10 +1,10 @@
-/* global suite, test, assert */
+/* global assert */
 
 import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 
-suite('tree', () => {
-	suite('adopt', () => {
+suite('tree', function () {
+	suite('adopt', function () {
 		const assertTwoChildren = (parent, one, two) => {
 			assert.equal(one.parent, parent, 'one.parent is set');
 			assert.equal(two.parent, parent, 'two.parent is set');
@@ -18,7 +18,7 @@ suite('tree', () => {
 			assert.equal(parent.ends.right, two, 'parent.ends.right is two');
 		};
 
-		test('the empty case', () => {
+		test('the empty case', function () {
 			const parent = new TNode();
 			const child = new TNode();
 
@@ -32,7 +32,7 @@ suite('tree', () => {
 			assert.equal(parent.ends.right, child, 'child is parent.ends.right');
 		});
 
-		test('with two children from the left', () => {
+		test('with two children from the left', function () {
 			const parent = new TNode();
 			const one = new TNode();
 			const two = new TNode();
@@ -43,7 +43,7 @@ suite('tree', () => {
 			assertTwoChildren(parent, one, two);
 		});
 
-		test('with two children from the right', () => {
+		test('with two children from the right', function () {
 			const parent = new TNode();
 			const one = new TNode();
 			const two = new TNode();
@@ -54,7 +54,7 @@ suite('tree', () => {
 			assertTwoChildren(parent, one, two);
 		});
 
-		test('adding one in the middle', () => {
+		test('adding one in the middle', function () {
 			const parent = new TNode();
 			const leftward = new TNode();
 			const rightward = new TNode();
@@ -76,7 +76,7 @@ suite('tree', () => {
 		});
 	});
 
-	suite('disown', () => {
+	suite('disown', function () {
 		const assertSingleChild = (parent, child) => {
 			assert.equal(parent.ends.left, child, 'parent.ends.left is child');
 			assert.equal(parent.ends.right, child, 'parent.ends.right is child');
@@ -84,7 +84,7 @@ suite('tree', () => {
 			assert.ok(!child.right, 'child has nothing rightward');
 		};
 
-		test('the empty case', () => {
+		test('the empty case', function () {
 			const parent = new TNode();
 			const child = new TNode();
 
@@ -95,7 +95,7 @@ suite('tree', () => {
 			assert.ok(!parent.ends.right, 'parent has no right end child');
 		});
 
-		test('disowning the right end child', () => {
+		test('disowning the right end child', function () {
 			const parent = new TNode();
 			const one = new TNode();
 			const two = new TNode();
@@ -113,7 +113,7 @@ suite('tree', () => {
 			assert.throws(() => two.disown(), 'disown fails on a malformed tree');
 		});
 
-		test('disowning the left end child', () => {
+		test('disowning the left end child', function () {
 			const parent = new TNode();
 			const one = new TNode();
 			const two = new TNode();
@@ -131,7 +131,7 @@ suite('tree', () => {
 			assert.throws(() => one.disown(), 'disown fails on a malformed tree');
 		});
 
-		test('disowning the middle', () => {
+		test('disowning the middle', function () {
 			const parent = new TNode();
 			const leftward = new TNode();
 			const rightward = new TNode();
@@ -156,8 +156,8 @@ suite('tree', () => {
 		});
 	});
 
-	suite('fragments', () => {
-		test('an empty fragment', () => {
+	suite('fragments', function () {
+		test('an empty fragment', function () {
 			const empty = new Fragment();
 			let count = 0;
 
@@ -166,12 +166,12 @@ suite('tree', () => {
 			assert.equal(count, 0, 'each is a noop on an empty fragment');
 		});
 
-		test('half-empty fragments are disallowed', () => {
+		test('half-empty fragments are disallowed', function () {
 			assert.throws(() => new Fragment(new TNode(), 0), 'half-empty on the right');
 			assert.throws(() => new Fragment(0, new TNode()), 'half-empty on the left');
 		});
 
-		test('directionalized constructor call', () => {
+		test('directionalized constructor call', function () {
 			const ChNode = class extends TNode {
 				constructor(ch) {
 					super();
@@ -193,7 +193,7 @@ suite('tree', () => {
 			assert.throws(() => new Fragment(b, d, 'right'));
 		});
 
-		test('disown is idempotent', () => {
+		test('disown is idempotent', function () {
 			const parent = new TNode();
 			const one = new TNode().adopt(parent);
 			const two = new TNode().adopt(parent, one);

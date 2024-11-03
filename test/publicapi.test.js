@@ -1,8 +1,8 @@
-/* global suite, test, assert, setup, teardown, MQ */
+/* global assert, MQ */
 
-suite('Public API', () => {
-	suite('global functions', () => {
-		test('undefined', () => {
+suite('Public API', function () {
+	suite('global functions', function () {
+		test('undefined', function () {
 			assert.equal(MQ(), undefined);
 			assert.equal(MQ(0), undefined);
 			assert.equal(MQ('<span/>'), undefined);
@@ -12,14 +12,14 @@ suite('Public API', () => {
 			assert.equal(MQ.MathField('<span/>'), undefined);
 		});
 
-		test('MQ.MathField()', () => {
+		test('MQ.MathField()', function () {
 			const el = document.createElement('span');
 			el.textContent = 'x^2';
 			const mathField = MQ.MathField(el);
 			assert.ok(mathField instanceof MQ.MathField);
 		});
 
-		test('identity of API object returned by MQ()', () => {
+		test('identity of API object returned by MQ()', function () {
 			const mathFieldSpan = document.createElement('span');
 			const mathField = MQ.MathField(mathFieldSpan);
 
@@ -32,7 +32,7 @@ suite('Public API', () => {
 			assert.equal(MQ(mathFieldSpan).data, MQ(mathFieldSpan).data);
 		});
 
-		test('blurred when created', () => {
+		test('blurred when created', function () {
 			const el = document.createElement('span');
 			MQ.MathField(el);
 			const rootBlock = el.querySelector('.mq-root-block');
@@ -41,22 +41,22 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('basic API methods', () => {
+	suite('basic API methods', function () {
 		let mq;
-		setup(() => {
+		setup(function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			mq = MQ.MathField(el);
 		});
 
-		test('.revert()', () => {
+		test('.revert()', function () {
 			const el = document.createElement('span');
 			el.innerHTML = 'some <code>HTML</code>';
 			const mq = MQ.MathField(el);
 			assert.equal(mq.revert().innerHTML, 'some <code>HTML</code>');
 		});
 
-		test('select, clearSelection', () => {
+		test('select, clearSelection', function () {
 			mq.latex('n+\\frac{n}{2}');
 			assert.ok(!mq.__controller.cursor.selection);
 			mq.select();
@@ -65,7 +65,7 @@ suite('Public API', () => {
 			assert.ok(!mq.__controller.cursor.selection);
 		});
 
-		test("latex while there's a selection", () => {
+		test("latex while there's a selection", function () {
 			mq.latex('a');
 			assert.equal(mq.latex(), 'a');
 			mq.select();
@@ -76,12 +76,12 @@ suite('Public API', () => {
 			assert.equal(mq.latex(), 'bc');
 		});
 
-		test('.html() trivial case', () => {
+		test('.html() trivial case', function () {
 			mq.latex('x+y');
 			assert.equal(mq.html(), '<var>x</var><span class="mq-binary-operator">+</span><var>y</var>');
 		});
 
-		test('.text() with incomplete commands', () => {
+		test('.text() with incomplete commands', function () {
 			assert.equal(mq.text(), '');
 			mq.typedText('\\');
 			assert.equal(mq.text(), '\\');
@@ -91,7 +91,7 @@ suite('Public API', () => {
 			assert.equal(mq.text(), '\\sqrt');
 		});
 
-		test('.text() with complete commands', () => {
+		test('.text() with complete commands', function () {
 			mq.latex('\\sqrt{}');
 			assert.equal(mq.text(), 'sqrt()');
 			mq.latex('\\nthroot[]{}');
@@ -118,7 +118,7 @@ suite('Public API', () => {
 			assert.equal(mq.text(), '*2*3***4');
 		});
 
-		test('.moveToDirEnd(dir)', () => {
+		test('.moveToDirEnd(dir)', function () {
 			mq.latex('a x^2 + b x + c = 0');
 			assert.equal(mq.__controller.cursor.left.ctrlSeq, '0');
 			assert.equal(mq.__controller.cursor.right, undefined);
@@ -130,14 +130,14 @@ suite('Public API', () => {
 			assert.equal(mq.__controller.cursor.right, undefined);
 		});
 
-		test('.empty()', () => {
+		test('.empty()', function () {
 			mq.latex('xyz');
 			mq.empty();
 			assert.equal(mq.latex(), '');
 		});
 	});
 
-	test('edit handler interface versioning', () => {
+	test('edit handler interface versioning', function () {
 		let count = 0;
 
 		const el = document.createElement('span');
@@ -155,9 +155,9 @@ suite('Public API', () => {
 		assert.equal(count, 2); // sigh, once for postOrder and once for bubble
 	});
 
-	suite('*OutOf handlers', () => {
+	suite('*OutOf handlers', function () {
 		const testHandlers = (title, mathFieldMaker) => {
-			test(title, () => {
+			test(title, function () {
 				let enterCounter = 0,
 					upCounter = 0,
 					moveCounter = 0,
@@ -281,7 +281,7 @@ suite('Public API', () => {
 			}
 		);
 
-		suite('global MQ.config()', () => {
+		suite('global MQ.config()', function () {
 			testHandlers('a MQ.MathField', (options) => {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
@@ -297,12 +297,14 @@ suite('Public API', () => {
 				return MQ.StaticMath(el).innerFields[0];
 			});
 
-			teardown(() => MQ.config({ handlers: undefined }));
+			teardown(function () {
+				MQ.config({ handlers: undefined });
+			});
 		});
 	});
 
-	suite('edit handler', () => {
-		test('fires when closing a bracket expression', () => {
+	suite('edit handler', function () {
+		test('fires when closing a bracket expression', function () {
 			let count = 0;
 
 			const el = document.createElement('span');
@@ -316,16 +318,16 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('.cmd(...)', () => {
+	suite('.cmd(...)', function () {
 		let mq;
 
-		setup(() => {
+		setup(function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			mq = MQ.MathField(el);
 		});
 
-		test('basic', () => {
+		test('basic', function () {
 			mq.cmd('x');
 			assert.equal(mq.latex(), 'x');
 			mq.cmd('y');
@@ -340,27 +342,27 @@ suite('Public API', () => {
 			assert.equal(mq.latex(), '\\sqrt{xy^2\\cdot2\\cdot\\cdot}');
 		});
 
-		test('backslash commands are passed their name', () => {
+		test('backslash commands are passed their name', function () {
 			mq.cmd('\\alpha');
 			assert.equal(mq.latex(), '\\alpha');
 		});
 
-		test('replaces selection', () => {
+		test('replaces selection', function () {
 			mq.typedText('49').select().cmd('\\sqrt');
 			assert.equal(mq.latex(), '\\sqrt{49}');
 		});
 
-		test('operator name', () => {
+		test('operator name', function () {
 			mq.cmd('\\ker');
 			assert.equal(mq.latex(), '\\ker');
 		});
 
-		test('nonexistent LaTeX command is noop', () => {
+		test('nonexistent LaTeX command is noop', function () {
 			mq.typedText('49').select().cmd('\\asdf').cmd('\\sqrt');
 			assert.equal(mq.latex(), '\\sqrt{49}');
 		});
 
-		test('overflow triggers automatic horizontal scroll', (done) => {
+		test('overflow triggers automatic horizontal scroll', function (done) {
 			const mqEl = mq.el();
 			const rootEl = mq.__controller.root.elements.first;
 			const cursor = mq.__controller.cursor;
@@ -389,9 +391,9 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('spaceBehavesLikeTab', () => {
+	suite('spaceBehavesLikeTab', function () {
 		let mq, rootBlock, cursor;
-		test('space behaves like tab with default opts', () => {
+		test('space behaves like tab with default opts', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			mq = MQ.MathField(el);
@@ -412,7 +414,7 @@ suite('Public API', () => {
 			assert.equal(cursor.left.ctrlSeq, '\\ ', 'left of the cursor is ' + cursor.left.ctrlSeq);
 			assert.equal(cursor.right, undefined, 'right of the cursor is ' + cursor.right);
 		});
-		test('space behaves like tab when spaceBehavesLikeTab is true', () => {
+		test('space behaves like tab when spaceBehavesLikeTab is true', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			mq = MQ.MathField(el, { spaceBehavesLikeTab: true });
@@ -431,7 +433,7 @@ suite('Public API', () => {
 			assert.equal(cursor.left, undefined, 'left cursor is ' + cursor.left);
 			assert.equal(cursor.right, rootBlock.ends.left, 'parent of rootBlock is ' + cursor.right);
 		});
-		test('space behaves like tab when globally set to true', () => {
+		test('space behaves like tab when globally set to true', function () {
 			MQ.config({ spaceBehavesLikeTab: true });
 
 			const el = document.createElement('span');
@@ -451,42 +453,42 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('maxDepth option', () => {
+	suite('maxDepth option', function () {
 		let mq;
-		setup(() => {
+		setup(function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			mq = MQ.MathField(el, { maxDepth: 1 });
 		});
-		teardown(() => {
+		teardown(function () {
 			mq.el().remove();
 		});
 
-		test('prevents nested math input via .write() method', () => {
+		test('prevents nested math input via .write() method', function () {
 			mq.write('1\\frac{\\frac{3}{3}}{2}');
 			assert.equal(mq.latex(), '1\\frac{ }{ }');
 		});
 
-		test('prevents nested math input via keyboard input', () => {
+		test('prevents nested math input via keyboard input', function () {
 			mq.cmd('/').write('x');
 			assert.equal(mq.latex(), '\\frac{ }{ }');
 		});
 
-		test('stops new fraction moving content into numerator', () => {
+		test('stops new fraction moving content into numerator', function () {
 			mq.write('x').cmd('/');
 			assert.equal(mq.latex(), 'x\\frac{ }{ }');
 		});
 
-		test('prevents nested math input via replacedFragment', () => {
+		test('prevents nested math input via replacedFragment', function () {
 			mq.cmd('(').keystroke('Left').cmd('(');
 			assert.equal(mq.latex(), '\\left(\\right)');
 		});
 	});
 
-	suite('statelessClipboard option', () => {
-		suite('default', () => {
+	suite('statelessClipboard option', function () {
+		suite('default', function () {
 			let mq, textarea;
-			setup(() => {
+			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				mq = MQ.MathField(el);
@@ -502,25 +504,28 @@ suite('Public API', () => {
 				assert.equal(mq.latex(), latex);
 			};
 
-			test('numbers and letters', () => assertPaste('123xyz'));
-			test('a sentence', () =>
+			test('numbers and letters', function () {
+				assertPaste('123xyz');
+			});
+			test('a sentence', function () {
 				assertPaste(
 					'Lorem ipsum is a placeholder text commonly used to ' +
 						'demonstrate the graphical elements of a document or ' +
 						'visual presentation.',
 					'Loremipsumisaplaceholdertextcommonlyusedtodemonstrate' +
 						'thegraphicalelementsofadocumentorvisualpresentation.'
-				));
-			test('actual LaTeX', () => {
+				);
+			});
+			test('actual LaTeX', function () {
 				assertPaste('a_nx^n+a_{n+1}x^{n+1}');
 				assertPaste('\\frac{1}{2\\sqrt{x}}');
 			});
-			test('\\text{...}', () => {
+			test('\\text{...}', function () {
 				assertPaste('\\text{lol}');
 				assertPaste('1+\\text{lol}+2');
 				assertPaste('\\frac{\\text{apples}}{\\text{oranges}}');
 			});
-			test('selection', (done) => {
+			test('selection', function (done) {
 				mq.latex('x^2').select();
 				setTimeout(() => {
 					assert.equal(textarea.value, 'x^2');
@@ -528,9 +533,9 @@ suite('Public API', () => {
 				});
 			});
 		});
-		suite('statelessClipboard set to true', () => {
+		suite('statelessClipboard set to true', function () {
 			let mq, textarea;
-			setup(() => {
+			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				mq = MQ.MathField(el, { statelessClipboard: true });
@@ -546,8 +551,10 @@ suite('Public API', () => {
 				assert.equal(mq.latex(), latex);
 			};
 
-			test('numbers and letters', () => assertPaste('123xyz', '\\text{123xyz}'));
-			test('a sentence', () =>
+			test('numbers and letters', function () {
+				assertPaste('123xyz', '\\text{123xyz}');
+			});
+			test('a sentence', function () {
 				assertPaste(
 					'Lorem ipsum is a placeholder text commonly used to ' +
 						'demonstrate the graphical elements of a document or ' +
@@ -555,15 +562,17 @@ suite('Public API', () => {
 					'\\text{Lorem ipsum is a placeholder text commonly used to ' +
 						'demonstrate the graphical elements of a document or ' +
 						'visual presentation.}'
-				));
-			test('backslashes', () =>
-				assertPaste('something pi something asdf', '\\text{something pi something asdf}'));
+				);
+			});
+			test('backslashes', function () {
+				assertPaste('something pi something asdf', '\\text{something pi something asdf}');
+			});
 			// TODO: braces (currently broken)
-			test('actual math LaTeX wrapped in dollar signs', () => {
+			test('actual math LaTeX wrapped in dollar signs', function () {
 				assertPaste('$a_nx^n+a_{n+1}x^{n+1}$', 'a_nx^n+a_{n+1}x^{n+1}');
 				assertPaste('$\\frac{1}{2\\sqrt{x}}$', '\\frac{1}{2\\sqrt{x}}');
 			});
-			test('selection', (done) => {
+			test('selection', function (done) {
 				mq.latex('x^2').select();
 				setTimeout(() => {
 					assert.equal(textarea.value, '$x^2$');
@@ -573,22 +582,23 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('leftRightIntoCmdGoes: "up"/"down"', () => {
-		test('"up" or "down" required', () =>
+	suite('leftRightIntoCmdGoes: "up"/"down"', function () {
+		test('"up" or "down" required', function () {
 			assert.throws(() => {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				MQ.MathField(el, { leftRightIntoCmdGoes: 1 });
-			}));
-		suite('default', () => {
+			});
+		});
+		suite('default', function () {
 			let mq;
-			setup(() => {
+			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				mq = MQ.MathField(el);
 			});
 
-			test('fractions', () => {
+			test('fractions', function () {
 				mq.latex('\\frac{1}{x}+\\frac{\\frac{1}{2}}{\\frac{3}{4}}');
 				assert.equal(mq.latex(), '\\frac{1}{x}+\\frac{\\frac{1}{2}}{\\frac{3}{4}}');
 
@@ -632,7 +642,7 @@ suite('Public API', () => {
 				assert.equal(mq.latex(), 'a\\frac{b1}{cx}d+\\frac{e\\frac{f1}{g2}h}{i\\frac{j3}{k4}l}m');
 			});
 
-			test('supsub', () => {
+			test('supsub', function () {
 				mq.latex('x_a+y^b+z_a^b+w');
 				assert.equal(mq.latex(), 'x_a+y^b+z_a^b+w');
 
@@ -661,7 +671,7 @@ suite('Public API', () => {
 				assert.equal(mq.latex(), '1x_{2a}3+y^{4b}5+z_{6a}^{7b}8+w');
 			});
 
-			test('nthroot', () => {
+			test('nthroot', function () {
 				mq.latex('\\sqrt[n]{x}');
 				assert.equal(mq.latex(), '\\sqrt[n]{x}');
 
@@ -679,15 +689,15 @@ suite('Public API', () => {
 			});
 		});
 
-		suite('"up"', () => {
+		suite('"up"', function () {
 			let mq;
-			setup(() => {
+			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				mq = MQ.MathField(el, { leftRightIntoCmdGoes: 'up' });
 			});
 
-			test('fractions', () => {
+			test('fractions', function () {
 				mq.latex('\\frac{1}{x}+\\frac{\\frac{1}{2}}{\\frac{3}{4}}');
 				assert.equal(mq.latex(), '\\frac{1}{x}+\\frac{\\frac{1}{2}}{\\frac{3}{4}}');
 
@@ -713,7 +723,7 @@ suite('Public API', () => {
 				assert.equal(mq.latex(), 'a\\frac{b1}{x}c+\\frac{d\\frac{e1}{2}f}{\\frac{3}{4}}g');
 			});
 
-			test('supsub', () => {
+			test('supsub', function () {
 				mq.latex('x_a+y^b+z_a^b+w');
 				assert.equal(mq.latex(), 'x_a+y^b+z_a^b+w');
 
@@ -739,7 +749,7 @@ suite('Public API', () => {
 				assert.equal(mq.latex(), '1x_{2a}3+y^{4b}5+z_a^{6b}7+w');
 			});
 
-			test('nthroot', () => {
+			test('nthroot', function () {
 				mq.latex('\\sqrt[n]{x}');
 				assert.equal(mq.latex(), '\\sqrt[n]{x}');
 
@@ -758,8 +768,8 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('sumStartsWithNEquals', () => {
-		test('sum defaults to empty limits', () => {
+	suite('sumStartsWithNEquals', function () {
+		test('sum defaults to empty limits', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			const mq = MQ.MathField(el);
@@ -771,7 +781,7 @@ suite('Public API', () => {
 			mq.cmd('n');
 			assert.equal(mq.latex(), '\\sum_n^{ }', 'cursor in lower limit');
 		});
-		test('sum starts with `n=`', () => {
+		test('sum starts with `n=`', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			const mq = MQ.MathField(el, { sumStartsWithNEquals: true });
@@ -783,7 +793,7 @@ suite('Public API', () => {
 			mq.cmd('0');
 			assert.equal(mq.latex(), '\\sum_{n=0}^{ }', 'cursor after the `n=`');
 		});
-		test('integral still has empty limits', () => {
+		test('integral still has empty limits', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			const mq = MQ.MathField(el, { sumStartsWithNEquals: true });
@@ -797,8 +807,8 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('substituteTextarea', () => {
-		test("doesn't blow up on selection", () => {
+	suite('substituteTextarea', function () {
+		test("doesn't blow up on selection", function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 
@@ -816,8 +826,8 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('keyboard event overrides', () => {
-		test('can intercept key events', () => {
+	suite('keyboard event overrides', function () {
+		test('can intercept key events', function () {
 			let key;
 
 			const el = document.createElement('span');
@@ -832,7 +842,7 @@ suite('Public API', () => {
 				);
 			assert.equal(key, 'Left');
 		});
-		test('cut is NOT async (why should it be?)', () => {
+		test('cut is NOT async (why should it be?)', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 
@@ -856,8 +866,8 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('clickAt', () => {
-		test('inserts at coordinates', () => {
+	suite('clickAt', function () {
+		test('inserts at coordinates', function () {
 			// Insert filler to make the page taller than the window so that this test is deterministic.
 			const filler = document.createElement('div');
 			filler.style.height = `${window.offsetHeight}px`;
@@ -883,7 +893,7 @@ suite('Public API', () => {
 			assert.equal(mq.latex(), '\\frac{mmmm}{mmxmm}');
 		});
 
-		test('target is optional', () => {
+		test('target is optional', function () {
 			// Insert filler to make the page taller than the window so that this test is deterministic.
 			const filler = document.createElement('div');
 			filler.style.height = `${window.offsetHeight}px`;
@@ -909,8 +919,8 @@ suite('Public API', () => {
 		});
 	});
 
-	suite('dropEmbedded', () => {
-		test('inserts into empty', () => {
+	suite('dropEmbedded', function () {
+		test('inserts into empty', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
 			const mq = MQ.MathField(el);
@@ -925,7 +935,7 @@ suite('Public API', () => {
 			assert.equal(mq.latex(), 'embedded latex');
 		});
 
-		test('inserts at coordinates', () => {
+		test('inserts at coordinates', function () {
 			// Insert filler to make the page taller than the window so that this test is deterministic.
 			const filler = document.createElement('div');
 			filler.style.height = `${window.offsetHeight}px`;
@@ -956,7 +966,7 @@ suite('Public API', () => {
 		});
 	});
 
-	test('.registerEmbed()', () => {
+	test('.registerEmbed()', function () {
 		let calls = 0,
 			data;
 

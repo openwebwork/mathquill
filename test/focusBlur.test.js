@@ -1,15 +1,15 @@
-/* global suite, test, assert, setup, MQ */
+/* global assert, MQ */
 
-suite('focusBlur', () => {
+suite('focusBlur', function () {
 	const assertHasFocus = (mq, name, invert) =>
 		assert.ok(
 			!!invert ^ (mq.el().querySelector('textarea') === document.activeElement),
 			name + (invert ? ' does not have focus' : ' has focus')
 		);
 
-	suite('handlers can shift focus away', () => {
+	suite('handlers can shift focus away', function () {
 		let mq, mq2, wasUpOutOfCalled;
-		setup(() => {
+		setup(function () {
 			const mock = document.getElementById('mock');
 			const span = document.createElement('span');
 			mock?.append(span);
@@ -36,7 +36,7 @@ suite('focusBlur', () => {
 			assert.ok(wasUpOutOfCalled);
 		};
 
-		test('normally', () => {
+		test('normally', function () {
 			mq.focus();
 			assertHasFocus(mq, 'mq');
 
@@ -44,7 +44,7 @@ suite('focusBlur', () => {
 			assertHasFocus(mq2, 'mq2');
 		});
 
-		test("even if there's a selection", (done) => {
+		test("even if there's a selection", function (done) {
 			mq.focus();
 			assertHasFocus(mq, 'mq');
 
@@ -62,7 +62,7 @@ suite('focusBlur', () => {
 		});
 	});
 
-	test('select behaves normally after blurring and re-focusing', (done) => {
+	test('select behaves normally after blurring and re-focusing', function (done) {
 		const span = document.createElement('span');
 		document.getElementById('mock')?.append(span);
 		const mq = MQ.MathField(span);
@@ -94,7 +94,7 @@ suite('focusBlur', () => {
 		});
 	});
 
-	test('blur event fired when math field loses focus', (done) => {
+	test('blur event fired when math field loses focus', function (done) {
 		const mock = document.getElementById('mock');
 		const span = document.createElement('span');
 		mock?.append(span);

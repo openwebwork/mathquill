@@ -1,4 +1,4 @@
-/* global suite, test, assert */
+/* global assert */
 
 import { noop } from 'src/constants';
 import { Cursor } from 'src/cursor';
@@ -6,7 +6,7 @@ import { Point } from 'tree/point';
 import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 
-suite('Cursor::select()', () => {
+suite('Cursor::select()', function () {
 	const cursor = new Cursor();
 	cursor.selectionChanged = noop;
 
@@ -49,19 +49,19 @@ suite('Cursor::select()', () => {
 	const pt2 = new Point(child2);
 	const pt3 = new Point(child3);
 
-	test('same parent, one TNode', () => {
+	test('same parent, one TNode', function () {
 		assertSelection(A, B, child1);
 		assertSelection(B, C, child2);
 		assertSelection(C, D, child3);
 	});
 
-	test('same Parent, many Nodes', () => {
+	test('same Parent, many Nodes', function () {
 		assertSelection(A, C, child1, child2);
 		assertSelection(A, D, child1, child3);
 		assertSelection(B, D, child2, child3);
 	});
 
-	test('Point next to parent of other Point', () => {
+	test('Point next to parent of other Point', function () {
 		assertSelection(A, pt1, child1);
 		assertSelection(B, pt1, child1);
 
@@ -72,13 +72,13 @@ suite('Cursor::select()', () => {
 		assertSelection(D, pt3, child3);
 	});
 
-	test("Points' parents are siblings", () => {
+	test("Points' parents are siblings", function () {
 		assertSelection(pt1, pt2, child1, child2);
 		assertSelection(pt2, pt3, child2, child3);
 		assertSelection(pt1, pt3, child1, child3);
 	});
 
-	test('Point is sibling of parent of other Point', () => {
+	test('Point is sibling of parent of other Point', function () {
 		assertSelection(A, pt2, child1, child2);
 		assertSelection(A, pt3, child1, child3);
 		assertSelection(B, pt3, child2, child3);
@@ -86,7 +86,7 @@ suite('Cursor::select()', () => {
 		assertSelection(pt1, C, child1, child2);
 	});
 
-	test('same Point', () => {
+	test('same Point', function () {
 		cursor.parent = A.parent;
 		cursor.left = A.left;
 		cursor.right = A.right;
@@ -94,7 +94,7 @@ suite('Cursor::select()', () => {
 		assert.equal(cursor.select(), false);
 	});
 
-	test('different trees', () => {
+	test('different trees', function () {
 		const anotherTree = new TNode();
 
 		cursor.parent = A.parent;
