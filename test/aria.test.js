@@ -15,17 +15,78 @@ suite('aria', function () {
 
 	test('mathfield has aria-hidden on mq-root-block', function () {
 		mathField.latex('1+\\frac{1}{x}');
+		// There will be two hidden children: the raw text of the field, and its mathspeak representation.  The internal
+		// aria-labelledby attribute of the focusable text will still cause the mathspeak to be read aloud, while the
+		// visual math remains viewable.
 		const ariaHiddenChildren = container.querySelectorAll('[aria-hidden="true"]');
-		assert.equal(ariaHiddenChildren.length, 1, '1 aria-hidden elements');
-		assert.ok(ariaHiddenChildren[0].classList.contains('mq-root-block'), 'aria-hidden is set on mq-root-block');
+		assert.equal(ariaHiddenChildren.length, 2, '2 aria-hidden elements');
+		assert.ok(ariaHiddenChildren[1].classList.contains('mq-root-block'), 'aria-hidden is set on mq-root-block');
 	});
 
 	test('static math aria-hidden', function () {
 		const staticMath = MQ.StaticMath(container);
 		staticMath.latex('1+\\frac{1}{x}');
 		const ariaHiddenChildren = container.querySelectorAll('[aria-hidden="true"]');
-		assert.equal(ariaHiddenChildren.length, 1, '1 aria-hidden element');
-		assert.ok(ariaHiddenChildren[0].classList.contains('mq-root-block'), 'aria-hidden is set on mq-root-block');
+		assert.equal(ariaHiddenChildren.length, 2, '2 aria-hidden elements');
+		assert.ok(ariaHiddenChildren[1].classList.contains('mq-root-block'), 'aria-hidden is set on mq-root-block');
+	});
+
+	test('Tabbable static math aria-hidden', function () {
+		const staticMath = MQ.StaticMath(container, { tabbable: true });
+		staticMath.latex('1+\\frac{1}{x}');
+		const ariaHiddenChildren = container.querySelectorAll('[aria-hidden="true"]');
+		// There will be two hidden children: the raw text of the field, and its mathspeak representation.  The internal
+		// aria-labelledby attribute of the focusable text will still cause the mathspeak to be read aloud, while the
+		// visual math remains viewable.
+		assert.equal(ariaHiddenChildren.length, 2, '2 aria-hidden elements');
+		assert.ok(ariaHiddenChildren[1].classList.contains('mq-root-block'), 'aria-hidden is set on mq-root-block');
+		const mathspeak = document.querySelectorAll('.mq-mathspeak');
+		assert.equal(mathspeak.length, 1, 'One mathspeak region');
+		assert.ok(mathspeak[0].id, 'mathspeak element assigned an id');
+		const textarea = document.querySelectorAll('textarea');
+		assert.equal(textarea.length, 1, 'One textarea');
+		assert.equal(
+			textarea[0].getAttribute('aria-labelledby'),
+			mathspeak[0].id,
+			'textarea is aria-labelledby mathspeak region'
+		);
+	});
+
+	test('MathQuillMathField aria-hidden', function () {
+		const staticMath = MQ.StaticMath(container);
+		staticMath.latex('1+\\sqrt{\\MathQuillMathField{x^2+y^2}}+\\frac{1}{x}');
+		assert.equal(container.querySelectorAll('textarea').length, 2, 'Two text area for inner editable field');
+		assert.equal(
+			document.querySelectorAll('textarea[tabindex="-1"]').length,
+			1,
+			'The static math textarea is not tabbable.'
+		);
+		const textArea = container.querySelector('textarea');
+		assert.ok(textArea.closest('[aria-hidden="true"]'), 'Textarea has an aria-hidden parent');
+		const mathSpeak = container.querySelectorAll('.mq-mathspeak');
+		assert.equal(mathSpeak.length, 2, 'Two mathspeak regions');
+		assert.ok(mathSpeak[1].closest('[aria-hidden="true"]'), 'Mathspeak has an aria-hidden parent');
+		let nHiddenTexts = 0;
+		for (const elt of container.querySelectorAll('*')) {
+			if (
+				elt.textContent === '' ||
+				elt.classList.contains('mq-mathspeak') ||
+				elt.closest('.mq-textarea') ||
+				(elt.classList.contains('mq-root-block') && elt.parentElement === container)
+			)
+				continue;
+
+			if (elt.getAttribute('aria-hidden') === 'true' || elt.closest('[aria-hidden="true"]')) {
+				nHiddenTexts += 1;
+				continue;
+			}
+
+			assert.ok(
+				false,
+				'All children with text content are aria-hidden, have an aria-hidden parent, or are part of mathspeak'
+			);
+		}
+		assert.ok(nHiddenTexts > 0, 'At least one element with text content is aria-hidden');
 	});
 
 	test('typing and backspacing over simple expression', function () {
@@ -167,7 +228,7 @@ suite('aria', function () {
 			mathField.blur();
 			setTimeout(() => {
 				assert.equal(
-					mathField.__controller.textarea.getAttribute('aria-label'),
+					mathField.__controller.mathspeakSpan.textContent,
 					'Math Input: StartSquareRoot, x , EndSquareRoot'
 				);
 				done();

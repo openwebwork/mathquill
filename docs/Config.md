@@ -122,6 +122,13 @@ Nested content in latex rendered during initialization or pasted into mathquill 
 Overwriting this may be useful for hacks like suppressing built-in virtual keyboards. It defaults to
 `<textarea autocorrect=off .../>`.
 
+### tabbable
+
+For static and editable math fields, when `tabbable` is false, the math field is not part of the page's tab order.
+Despite that, the math field can still be focused when selected by a mouse.
+
+Static math fields default to `tabbable: false`, Editable math fields default to `tabbable: true`.
+
 ## Handlers
 
 Handlers are called after a specified event.

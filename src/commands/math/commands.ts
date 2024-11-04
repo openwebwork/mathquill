@@ -626,17 +626,14 @@ LatexCmds.editable = LatexCmds.MathQuillMathField = class extends MathCommand {
 		// parents children. This should result in no parent of this node having aria-hidden="true", but should keep as
 		// much of what was previously hidden hidden as possible while obeying this constraint.
 		const pushDownAriaHidden = (node: Node | null) => {
-			if (node?.parentNode && node instanceof Element && !node.classList.contains('mq-root-block')) {
-				pushDownAriaHidden(node.parentNode);
+			if (!(node instanceof Element)) return;
+			if (node.getAttribute('aria-hidden') === 'true') {
+				node.removeAttribute('aria-hidden');
+				node.childNodes.forEach((child) => {
+					if (child instanceof Element) child.setAttribute('aria-hidden', 'true');
+				});
 			}
-			if (node instanceof Element) {
-				if (node.getAttribute('aria-hidden') === 'true') {
-					node.removeAttribute('aria-hidden');
-					node.childNodes.forEach((child) => {
-						if (child instanceof Element) child.setAttribute('aria-hidden', 'true');
-					});
-				}
-			}
+			if (node.parentNode && !node.classList.contains('mq-root-block')) pushDownAriaHidden(node.parentNode);
 		};
 
 		pushDownAriaHidden(this.elements.first.parentNode);

@@ -1,7 +1,7 @@
 // Focus and Blur events
 
 import type { Constructor } from 'src/constants';
-import type { ControllerBase } from 'src/controller';
+import type { ControllerBase, Controller } from 'src/controller';
 import type { TNode } from 'tree/node';
 
 export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base: TBase) =>
@@ -9,7 +9,7 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 		focusHandler?: () => void;
 		blurHandler?: () => void;
 
-		focusBlurEvents() {
+		addEditableFocusBlurEvents() {
 			this.focusHandler = () => {
 				this.updateMathspeak();
 				this.blurred = false;
@@ -37,11 +37,31 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 			this.cursor.hide().parent?.blur();
 		}
 
-		unbindFocusBlurEvents() {
+		unbindEditableFocusBlurEvents() {
 			if (this.focusHandler) this.textarea?.removeEventListener('focus', this.focusHandler);
 			if (this.blurHandler) this.textarea?.removeEventListener('blur', this.blurHandler);
 			delete this.focusHandler;
 			delete this.blurHandler;
+		}
+
+		addStaticFocusBlurEvents() {
+			this.focusHandler = () => {
+				if (!this.cursor.selection) (this as unknown as Controller).selectAll();
+				this.blurred = false;
+			};
+
+			this.textarea?.addEventListener('focus', this.focusHandler);
+
+			this.blurHandler = () => {
+				this.cursor.selection?.clear();
+				this.cursor.clearSelection();
+				this.updateMathspeak(true);
+			};
+
+			this.textarea?.addEventListener('blur', this.blurHandler);
+
+			this.blurred = true;
+			this.cursor.hide().parent?.blur();
 		}
 	};
 

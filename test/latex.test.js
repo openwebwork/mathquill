@@ -422,19 +422,4 @@ suite('latex', function () {
 			'\\left\\langlerfish 123\\right\\ranglerfish)'
 		);
 	});
-
-	suite('selectable span', function () {
-		setup(function () {
-			const field = document.createElement('span');
-			field.innerHTML = '2&lt;x';
-			document.getElementById('mock')?.append(field);
-			MQ.StaticMath(field);
-		});
-
-		const selectableContent = () => document.querySelector('#mock .mq-selectable').textContent;
-
-		test('escapes < in textContent', function () {
-			assert.equal(selectableContent(), '$2<x$');
-		});
-	});
 });

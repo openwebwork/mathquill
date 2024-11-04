@@ -28,6 +28,7 @@ export class ControllerBase {
 	textareaSpan?: HTMLSpanElement;
 	textarea?: HTMLTextAreaElement;
 	mathspeakSpan?: HTMLElement;
+	mathspeakId?: string | undefined;
 	aria: Aria;
 	ariaLabel: string;
 	ariaPostLabel: string;

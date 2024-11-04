@@ -38,7 +38,7 @@ export interface InputOptions {
 	autoSubscriptNumerals?: boolean;
 	typingSlashWritesDivisionSymbol?: boolean;
 	typingAsteriskWritesTimesSymbol?: boolean;
-	substituteTextarea?: () => HTMLElement;
+	substituteTextarea?: (tabbable?: boolean) => HTMLElement;
 	handlers?: Handlers;
 	overridePaste?: () => void;
 	overrideCut?: () => void;
@@ -46,6 +46,7 @@ export interface InputOptions {
 	overrideTypedText?: (text: string) => void;
 	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
 	ignoreNextMousedown?: (e?: MouseEvent) => boolean;
+	tabbable?: boolean;
 }
 
 interface NamesWLength {
@@ -368,11 +369,12 @@ export class Options {
 
 	handlers?: Handlers;
 
-	substituteTextarea() {
+	substituteTextarea(tabbable?: boolean) {
 		const textarea = document.createElement('textarea');
 		textarea.setAttribute('autocapitalize', 'off');
 		textarea.setAttribute('autocomplete', 'off');
 		textarea.setAttribute('spellcheck', 'false');
+		textarea.tabIndex = tabbable ? 0 : -1;
 		return textarea;
 	}
 
@@ -385,4 +387,14 @@ export class Options {
 	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => {
 		return false;
 	};
+
+	static #tabbable: boolean | undefined;
+	#_tabbable?: boolean;
+	get tabbable(): boolean | undefined {
+		return typeof this.#_tabbable === 'boolean' ? this.#_tabbable : Options.#tabbable;
+	}
+	set tabbable(tabbable) {
+		if (this instanceof Options) this.#_tabbable = tabbable;
+		else Options.#tabbable = tabbable;
+	}
 }

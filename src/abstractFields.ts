@@ -99,6 +99,20 @@ export class AbstractMathQuill {
 		return this;
 	}
 
+	focus() {
+		if (document.activeElement === this.__controller.textarea)
+			this.__controller.textarea.dispatchEvent(new FocusEvent('focus'));
+		else this.__controller.textarea?.focus();
+		return this;
+	}
+
+	blur() {
+		if (document.activeElement !== this.__controller.textarea)
+			this.__controller.textarea?.dispatchEvent(new FocusEvent('blur'));
+		else this.__controller.textarea.blur();
+		return this;
+	}
+
 	setAriaLabel(ariaLabel: string) {
 		this.__controller.setAriaLabel(ariaLabel);
 		return this;
@@ -119,20 +133,6 @@ export class EditableField extends AbstractMathQuill {
 		this.__controller.editable = true;
 		this.__controller.delegateMouseEvents();
 		this.__controller.editablesTextareaEvents();
-		return this;
-	}
-
-	focus() {
-		if (document.activeElement === this.__controller.textarea)
-			this.__controller.textarea.dispatchEvent(new FocusEvent('focus'));
-		else this.__controller.textarea?.focus();
-		return this;
-	}
-
-	blur() {
-		if (document.activeElement !== this.__controller.textarea)
-			this.__controller.textarea?.dispatchEvent(new FocusEvent('blur'));
-		else this.__controller.textarea.blur();
 		return this;
 	}
 
