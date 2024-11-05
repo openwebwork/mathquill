@@ -190,14 +190,12 @@ export class TNode {
 				ctrlr.backspace();
 				break;
 
-			// Tab or Esc -> go one block right if it exists, else escape right.
+			// Esc -> go one block right if it exists, else escape right.
 			case 'Escape':
-			case 'Tab':
 				ctrlr.escapeDir('right', key, e);
 				return;
 
-			// Shift-Tab -> go one block left if it exists, else escape left.
-			case 'Shift-Tab':
+			// Shift-Escape -> go one block left if it exists, else escape left.
 			case 'Shift-Escape':
 				ctrlr.escapeDir('left', key, e);
 				return;

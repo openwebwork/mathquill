@@ -34,8 +34,8 @@ export const saneKeyboardEvents = (() => {
 	return (textarea: HTMLTextAreaElement, controller: Controller) => {
 		// Virtual keyboards on touch screen devices send 'Unidentified' for almost all keys in the 'keydown' event. As
 		// a result the keystroke handler called in that event handler passes 'Unidentified' for the key.  This makes
-		// the spaceBehavesLikeTab option fail on these devices.  So this flag detects the 'Unidentified' key, and calls
-		// the keystroke handler again passing 'Spacebar' for the key, when a space is typed.
+		// the enableSpaceNavigation option fail on these devices.  So this flag detects the 'Unidentified' key, and
+		// calls the keystroke handler again passing 'Spacebar' for the key, when a space is typed.
 		let sendInputSpaceKeystroke = false;
 
 		// Public methods
@@ -84,7 +84,7 @@ export const saneKeyboardEvents = (() => {
 					if (
 						text === ' ' &&
 						sendInputSpaceKeystroke &&
-						controller.options.spaceBehavesLikeTab &&
+						controller.options.enableSpaceNavigation &&
 						controller.cursor.depth() > 1 &&
 						controller.cursor.left?.ctrlSeq !== ','
 					) {

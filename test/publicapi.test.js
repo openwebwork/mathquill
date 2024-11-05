@@ -391,7 +391,7 @@ suite('Public API', function () {
 		});
 	});
 
-	suite('spaceBehavesLikeTab', function () {
+	suite('enableSpaceNavigation', function () {
 		let mq, rootBlock, cursor;
 		test('space behaves like tab with default opts', function () {
 			const el = document.createElement('span');
@@ -414,10 +414,10 @@ suite('Public API', function () {
 			assert.equal(cursor.left.ctrlSeq, '\\ ', 'left of the cursor is ' + cursor.left.ctrlSeq);
 			assert.equal(cursor.right, undefined, 'right of the cursor is ' + cursor.right);
 		});
-		test('space behaves like tab when spaceBehavesLikeTab is true', function () {
+		test('space behaves like tab when enableSpaceNavigation is true', function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
-			mq = MQ.MathField(el, { spaceBehavesLikeTab: true });
+			mq = MQ.MathField(el, { enableSpaceNavigation: true });
 			rootBlock = mq.__controller.root;
 			cursor = mq.__controller.cursor;
 
@@ -434,7 +434,7 @@ suite('Public API', function () {
 			assert.equal(cursor.right, rootBlock.ends.left, 'parent of rootBlock is ' + cursor.right);
 		});
 		test('space behaves like tab when globally set to true', function () {
-			MQ.config({ spaceBehavesLikeTab: true });
+			MQ.config({ enableSpaceNavigation: true });
 
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
@@ -449,7 +449,7 @@ suite('Public API', function () {
 			assert.equal(cursor.parent, rootBlock, 'cursor in root block');
 			assert.equal(cursor.right, undefined, 'cursor at end of block');
 
-			MQ.config({ spaceBehavesLikeTab: false });
+			MQ.config({ enableSpaceNavigation: false });
 		});
 	});
 

@@ -327,7 +327,7 @@ suite('MathFunction', function () {
 
 			test('existing content to right is adopted', function () {
 				mq.keystroke('Backspace Backspace Backspace Backspace Backspace');
-				mq.typedText('x^2').keystroke('Tab').typedText('+3x-4');
+				mq.typedText('x^2').keystroke('Escape').typedText('+3x-4');
 				assert.equal(mq.latex(), 'x^2+3x-4');
 
 				mq.__controller.cursor.insAtLeftEnd(mq.__controller.root);

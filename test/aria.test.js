@@ -124,7 +124,7 @@ suite('aria', function () {
 		// While editing, however, the slightly longer form (but unambiguous) form of the item should be spoken.
 		// In this case, we would shorten the fraction 1/2 to "1 half" when reading,
 		// but navigating around the equation should result in "StartFraction, 1 Over 2, EndFraction."
-		mathField.keystroke('Tab');
+		mathField.keystroke('Escape');
 		assertAriaEqual('after StartFraction, 1 Over 2 , EndFraction');
 
 		mathField.keystroke('Backspace');
@@ -159,7 +159,7 @@ suite('aria', function () {
 		mathField.typedText('2');
 		assertAriaEqual('2');
 
-		mathField.keystroke('Tab');
+		mathField.keystroke('Escape');
 		assertAriaEqual('after StartBinomial, 1 Choose 2 , EndBinomial');
 
 		mathField.keystroke('Backspace');

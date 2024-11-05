@@ -27,7 +27,7 @@ export interface InputOptions {
 	autoOperatorNames?: string;
 	charsThatBreakOutOfSupSub?: string;
 	statelessClipboard?: boolean;
-	spaceBehavesLikeTab?: boolean;
+	enableSpaceNavigation?: boolean;
 	leftRightIntoCmdGoes?: 'up' | 'down';
 	restrictMismatchedBrackets?: boolean;
 	sumStartsWithNEquals?: boolean;
@@ -46,6 +46,7 @@ export interface InputOptions {
 	overrideTypedText?: (text: string) => void;
 	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
 	ignoreNextMousedown?: (e?: MouseEvent) => boolean;
+	preventBlur?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
 	tabbable?: boolean;
 }
 
@@ -240,14 +241,14 @@ export class Options {
 	}
 
 	// If true then space will behave like tab escaping from the current block instead of inserting a space.
-	static #spaceBehavesLikeTab = false;
-	#_spaceBehavesLikeTab?: boolean;
-	get spaceBehavesLikeTab() {
-		return this.#_spaceBehavesLikeTab ?? Options.#spaceBehavesLikeTab;
+	static #enableSpaceNavigation = false;
+	#_enableSpaceNavigation?: boolean;
+	get enableSpaceNavigation() {
+		return this.#_enableSpaceNavigation ?? Options.#enableSpaceNavigation;
 	}
-	set spaceBehavesLikeTab(spaceBehavesLikeTab) {
-		if (this instanceof Options) this.#_spaceBehavesLikeTab = spaceBehavesLikeTab;
-		else Options.#spaceBehavesLikeTab = spaceBehavesLikeTab;
+	set enableSpaceNavigation(enableSpaceNavigation) {
+		if (this instanceof Options) this.#_enableSpaceNavigation = enableSpaceNavigation;
+		else Options.#enableSpaceNavigation = enableSpaceNavigation;
 	}
 
 	// Set to 'up' or 'down' so that left and right go up or down (respectively) into commands.
@@ -387,6 +388,8 @@ export class Options {
 	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => {
 		return false;
 	};
+
+	preventBlur?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
 
 	static #tabbable: boolean | undefined;
 	#_tabbable?: boolean;

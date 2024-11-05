@@ -59,7 +59,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		};
 
 		leftEnd.keystroke = (key: string, e: KeyboardEvent, ctrlr: Controller) => {
-			if (key === 'Tab' || key === 'Enter' || key === 'Spacebar') {
+			if (key === 'Tab' || key === 'Shift-Tab' || key === 'Enter' || key === 'Spacebar') {
 				const cmd = (leftEnd.parent as LatexCommandInput).renderCommand(ctrlr.cursor);
 				ctrlr.aria.alert(cmd.mathspeak({ createdLeftOf: ctrlr.cursor }));
 				e.preventDefault();

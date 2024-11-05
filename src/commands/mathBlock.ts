@@ -127,7 +127,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 
 	keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
 		if (
-			ctrlr.options.spaceBehavesLikeTab &&
+			ctrlr.options.enableSpaceNavigation &&
 			ctrlr.cursor.depth() > 1 &&
 			(key === 'Spacebar' || key === 'Shift-Spacebar') &&
 			ctrlr.cursor.left?.ctrlSeq !== ','

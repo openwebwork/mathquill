@@ -9,7 +9,7 @@ suite('text() output', function () {
 		// Note that these are the default configuration settings used by webwork,
 		// and should be kept up to date with those settings.
 		mq = MQ.MathField(el, {
-			spaceBehavesLikeTab: true,
+			enableSpaceNavigation: true,
 			leftRightIntoCmdGoes: 'up',
 			restrictMismatchedBrackets: true,
 			sumStartsWithNEquals: true,

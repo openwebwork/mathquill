@@ -4,7 +4,7 @@ The configuration options object is of the following form:
 
 ```js
 {
-    spaceBehavesLikeTab: true,
+    enableSpaceNavigation: true,
     leftRightIntoCmdGoes: 'up',
     restrictMismatchedBrackets: true,
     sumStartsWithNEquals: true,
@@ -35,10 +35,10 @@ Global defaults may be set with [`MQ.config(global_config)`](Api_Methods.md#mqco
 
 The following configuration options are available.
 
-### spacesBehavesLikeTab
+### enableSpaceNavigation
 
-If `spaceBehavesLikeTab` is true the keystrokes `{Shift-,}Spacebar` will behave like `{Shift-,}Tab` escaping from the
-current block (as opposed to the default behavior of inserting a Space character).
+If `enableSpaceNavigation` is true the keystrokes `{Shift-,}Spacebar` will behave like `{Shift-,}Escape` escaping from
+the current block (as opposed to the default behavior of inserting a Space character).
 
 ### leftRightIntoCmdGoes
 
@@ -77,9 +77,9 @@ be exponentiated or subscripted. Prevents the especially confusing typo `x^^2`, 
 `charsThatBreakOutOfSupSub` takes a string of the chars that when typed, "break out" of superscripts and subscripts.
 
 Normally, to get out of a superscript or subscript, a user has to navigate out of it with the directional keys, a mouse
-click, tab, or Space if [`spaceBehavesLikeTab`](#spacesbehavesliketab) is true. For example, typing `x^2n+y` normally
-results in the LaTeX `x^{2n+y}`. If you wanted to get the LaTeX `x^{2n}+y`, the user would have to manually move the
-cursor out of the exponent.
+click, or Space if `enableSpaceNavigation` is true. For example, typing `x^2n+y` normally results in the LaTeX
+`x^{2n+y}`. If you wanted to get the LaTeX `x^{2n}+y`, the user would have to manually move the cursor out of the
+exponent.
 
 If this option was set to `'+-'`, `+` and `-` would "break out" of the exponent. This doesn't apply to the first
 character in a superscript or subscript, so typing `x^-6` still results in `x^{-6}`. The downside to setting this option

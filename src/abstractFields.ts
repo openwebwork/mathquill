@@ -230,7 +230,10 @@ export class EditableField extends AbstractMathQuill {
 			root = ctrlr.root;
 		if (!root.elements.firstElement.contains(target)) target = root.elements.firstElement;
 		ctrlr.seek(target, clientX + window.scrollX);
+		// Force blurred window behavior to prevention selection of all content.
+		this.__controller.windowBlurred = true;
 		if (ctrlr.blurred) this.focus();
+		this.__controller.windowBlurred = false;
 		return this;
 	}
 

@@ -148,7 +148,7 @@ suite('CSS', function () {
 		const supsub = mq.el().querySelector('.mq-supsub');
 		assert.ok(supsub.classList.contains('mq-after-operator-name'));
 
-		mq.typedText('2').keystroke('Tab').typedText('(');
+		mq.typedText('2').keystroke('Escape').typedText('(');
 		assert.ok(!supsub.classList.contains('mq-after-operator-name'));
 
 		mq.keystroke('Delete Left Left Left Backspace');
