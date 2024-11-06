@@ -1,7 +1,6 @@
 // Commands and Operators.
 
-import type { Constructor } from 'src/constants';
-import { bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
+import { type Constructor, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
 import type { Options } from 'src/options';
 import { Controller } from 'src/controller';
 import { Cursor } from 'src/cursor';

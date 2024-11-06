@@ -4,7 +4,7 @@
 // many such textboxes, so any one JS environment could actually contain many instances.
 // A fake cursor in the fake textbox that the math is rendered in.
 
-import type { Direction } from 'src/constants';
+import { type Direction, otherDir } from 'src/constants';
 import type { Options } from 'src/options';
 import { Point } from 'tree/point';
 import type { TNode } from 'tree/node';
@@ -64,7 +64,7 @@ export class Cursor extends Point {
 		const oldParent = this.parent;
 		this.parent = parent;
 		this[dir] = withDir;
-		this[dir === 'left' ? 'right' : 'left'] = oppDir;
+		this[otherDir(dir)] = oppDir;
 		// By contract blur is called after all has been said and done and the cursor has actually been moved.
 		if (oldParent !== parent && oldParent?.blur) oldParent.blur(this);
 	}

@@ -1,7 +1,6 @@
 // Options for the API objects
 
-import type { Direction } from 'src/constants';
-import { BuiltInOpNames } from 'src/constants';
+import { type Direction, BuiltInOpNames } from 'src/constants';
 import type { AbstractMathQuill } from 'src/abstractFields';
 
 export type Handler = (mq?: AbstractMathQuill) => void;

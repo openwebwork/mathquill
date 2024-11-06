@@ -1,7 +1,6 @@
 // Elements for abstract classes of text blocks
 
-import type { Direction } from 'src/constants';
-import { mqCmdId, LatexCmds, CharCmds } from 'src/constants';
+import { type Direction, mqCmdId, LatexCmds, CharCmds, otherDir } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import type { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
@@ -95,9 +94,8 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	// and selection of the MathQuill tree, these all take in a direction and
 	// the cursor
 	moveTowards(dir: Direction, cursor: Cursor) {
-		cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this);
-		if (cursor.parent)
-			cursor.controller.aria.queueDirEndOf(dir === 'left' ? 'right' : 'left').queue(cursor.parent, true);
+		cursor.insAtDirEnd(otherDir(dir), this);
+		if (cursor.parent) cursor.controller.aria.queueDirEndOf(otherDir(dir)).queue(cursor.parent, true);
 	}
 
 	moveOutOf(dir: Direction, cursor: Cursor) {
@@ -106,7 +104,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	}
 
 	unselectInto(dir: Direction, cursor: Cursor) {
-		cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this);
+		cursor.insAtDirEnd(otherDir(dir), this);
 
 		// Split the text at the stored anticursor position, and reconstruct the anticursor.
 		const newTextPc = (cursor[dir] as TextPiece).splitRight(this.anticursorPosition);
@@ -194,8 +192,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 			prevDispl = displ;
 			displ = pageX - cursor.offset().left;
 		}
-		if (numericDir * displ < -numericDir * prevDispl)
-			cursor[dir === 'left' ? 'right' : 'left']?.moveTowards(dir === 'left' ? 'right' : 'left', cursor);
+		if (numericDir * displ < -numericDir * prevDispl) cursor[otherDir(dir)]?.moveTowards(otherDir(dir), cursor);
 
 		if (!cursor.anticursor) {
 			// About to start mouse-selecting, the anticursor is going to be placed here.
@@ -320,11 +317,11 @@ export class TextPiece extends TNode {
 	moveTowards(dir: Direction | undefined, cursor: Cursor) {
 		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 
-		const ch = this.endChar(dir === 'left' ? 'right' : 'left', this.textStr);
+		const ch = this.endChar(otherDir(dir), this.textStr);
 
-		const from = this[dir === 'left' ? 'right' : 'left'] as TextPiece | undefined;
+		const from = this[otherDir(dir)] as TextPiece | undefined;
 		if (from) from.insTextAtDirEnd(ch, dir);
-		else new TextPiece(ch).createDir(dir === 'left' ? 'right' : 'left', cursor);
+		else new TextPiece(ch).createDir(otherDir(dir), cursor);
 
 		this.deleteTowards(dir, cursor);
 	}
@@ -360,23 +357,22 @@ export class TextPiece extends TNode {
 		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 		const anticursor = cursor.anticursor;
 
-		const ch = this.endChar(dir === 'left' ? 'right' : 'left', this.textStr);
+		const ch = this.endChar(otherDir(dir), this.textStr);
 
 		if (anticursor?.[dir] === this) {
 			const newPc = new TextPiece(ch).createDir(dir, cursor);
 			anticursor[dir] = newPc;
 			cursor.insDirOf(dir, newPc);
 		} else {
-			const from = this[dir === 'left' ? 'right' : 'left'] as TextPiece | undefined;
+			const from = this[otherDir(dir)] as TextPiece | undefined;
 			if (from) from.insTextAtDirEnd(ch, dir);
 			else {
-				const newPc = new TextPiece(ch).createDir(dir === 'left' ? 'right' : 'left', cursor);
-				if (cursor.selection)
-					newPc.elements.insDirOf(dir === 'left' ? 'right' : 'left', cursor.selection.elements);
+				const newPc = new TextPiece(ch).createDir(otherDir(dir), cursor);
+				if (cursor.selection) newPc.elements.insDirOf(otherDir(dir), cursor.selection.elements);
 			}
 
-			if (this.textStr.length === 1 && anticursor?.[dir === 'left' ? 'right' : 'left'] === this) {
-				anticursor[dir === 'left' ? 'right' : 'left'] = this[dir === 'left' ? 'right' : 'left'];
+			if (this.textStr.length === 1 && anticursor?.[otherDir(dir)] === this) {
+				anticursor[otherDir(dir)] = this[otherDir(dir)];
 			}
 		}
 

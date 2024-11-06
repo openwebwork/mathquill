@@ -1,7 +1,6 @@
 // Symbols for Basic Mathematics
 
-import type { Direction } from 'src/constants';
-import { noop, bindMixin, LatexCmds, CharCmds } from 'src/constants';
+import { type Direction, noop, bindMixin, LatexCmds, CharCmds } from 'src/constants';
 import { Options } from 'src/options';
 import type { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';

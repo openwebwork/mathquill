@@ -3,6 +3,8 @@ import type { MathCommand } from 'commands/mathElements';
 
 export type Direction = 'left' | 'right';
 
+export const otherDir = (dir?: Direction): Direction => (dir === 'left' ? 'right' : 'left');
+
 export const mqCmdId = 'data-mathquill-command-id',
 	mqBlockId = 'data-mathquill-block-id';
 

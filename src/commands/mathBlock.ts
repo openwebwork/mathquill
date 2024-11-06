@@ -1,5 +1,4 @@
-import type { Direction, Constructor } from 'src/constants';
-import { LatexCmds, CharCmds } from 'src/constants';
+import { type Direction, type Constructor, LatexCmds, CharCmds, otherDir } from 'src/constants';
 import { RootBlockMixin } from 'src/mixins';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
@@ -145,9 +144,8 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 	moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
 		const updownInto = updown && this.parent?.[`${updown}Into`];
 		if (!updownInto && this[dir]) {
-			cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this[dir]);
-			if (cursor.parent)
-				cursor.controller.aria.queueDirEndOf(dir === 'left' ? 'right' : 'left').queue(cursor.parent, true);
+			cursor.insAtDirEnd(otherDir(dir), this[dir]);
+			if (cursor.parent) cursor.controller.aria.queueDirEndOf(otherDir(dir)).queue(cursor.parent, true);
 		} else if (this.parent) {
 			cursor.insDirOf(dir, this.parent);
 			cursor.controller.aria.queueDirOf(dir).queue(this.parent);

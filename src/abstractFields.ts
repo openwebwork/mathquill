@@ -1,7 +1,5 @@
-import type { Direction, Constructor } from 'src/constants';
-import { noop, mqBlockId, mqCmdId, LatexCmds } from 'src/constants';
-import type { InputOptions } from 'src/options';
-import { Options } from 'src/options';
+import { type Direction, type Constructor, noop, mqBlockId, mqCmdId, LatexCmds } from 'src/constants';
+import { type InputOptions, Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { TNode } from 'tree/node';
 

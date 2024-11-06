@@ -1,9 +1,7 @@
 // The publicly exposed MathQuill API.
 
-import type { EmbedOptions } from 'src/constants';
-import { mqBlockId, EMBEDS } from 'src/constants';
-import type { InputOptions } from 'src/options';
-import { Options } from 'src/options';
+import { type EmbedOptions, mqBlockId, EMBEDS } from 'src/constants';
+import { type InputOptions, Options } from 'src/options';
 import { TNode } from 'tree/node';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 import { Controller } from 'src/controller';

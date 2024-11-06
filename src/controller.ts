@@ -1,6 +1,6 @@
 // Controller for a MathQuill instance, on which services are registered.
 
-import type { Direction } from 'src/constants';
+import { type Direction, otherDir } from 'src/constants';
 import type { Handler, DirectionHandler, Handlers, Options } from 'src/options';
 import { Cursor } from 'src/cursor';
 import type { AbstractMathQuill } from 'src/abstractFields';
@@ -223,7 +223,7 @@ export class Controller extends ExportText(
 				if (cursor[dir].parent) {
 					this.aria.queue(
 						cursor[dir].parent
-							.chToCmd(cursor[dir].sides[dir === 'left' ? 'right' : 'left'].ch, cursor.options)
+							.chToCmd(cursor[dir].sides[otherDir(dir)].ch, cursor.options)
 							.mathspeak({ createdLeftOf: cursor })
 					);
 				}
@@ -342,7 +342,7 @@ export class Controller extends ExportText(
 			// if node we're selecting towards is inside selection (hence retracting)
 			// and is on the *far side* of the selection (hence is only node selected)
 			// and the anticursor is *inside* that node, not just on the other side
-			if (seln && seln.ends[dir] === node && cursor.anticursor?.[dir === 'left' ? 'right' : 'left'] !== node) {
+			if (seln && seln.ends[dir] === node && cursor.anticursor?.[otherDir(dir)] !== node) {
 				node.unselectInto(dir, cursor);
 			} else node.selectTowards(dir, cursor);
 		} else cursor.parent?.selectOutOf(dir, cursor);

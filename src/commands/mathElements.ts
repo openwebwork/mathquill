@@ -1,7 +1,8 @@
 // Abstract classes of math blocks and commands.
 
-import type { Direction, Constructor } from 'src/constants';
 import {
+	type Direction,
+	type Constructor,
 	noop,
 	mqCmdId,
 	mqBlockId,
@@ -9,7 +10,8 @@ import {
 	OPP_BRACKS,
 	BRACKET_NAMES,
 	BuiltInOpNames,
-	TwoWordOpNames
+	TwoWordOpNames,
+	otherDir
 } from 'src/constants';
 import { Parser } from 'services/parser.util';
 import { Selection } from 'src/selection';
@@ -163,7 +165,7 @@ export class MathCommand extends deleteSelectTowardsMixin(MathElement) {
 	}
 
 	unselectInto(dir: Direction, cursor: Cursor) {
-		cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', cursor.anticursor?.ancestors?.[this.id] as TNode);
+		cursor.insAtDirEnd(otherDir(dir), cursor.anticursor?.ancestors?.[this.id] as TNode);
 	}
 
 	seek(pageX: number, cursor: Cursor) {
@@ -378,7 +380,7 @@ export class Symbol extends MathCommand {
 		if (dir === 'left') this.elements.first.before(cursor.element);
 		else this.elements.last.after(cursor.element);
 
-		cursor[dir === 'left' ? 'right' : 'left'] = this;
+		cursor[otherDir(dir)] = this;
 		cursor[dir] = this[dir];
 
 		cursor.controller.aria.queue(this);
@@ -963,13 +965,13 @@ export class SupSub extends MathCommand {
 					if (!dest) this[dir].addBlock(src.disown());
 					else if (!src.isEmpty()) {
 						// Insert src children at -dir end of dest
-						src.elements.children().insAtDirEnd(dir === 'left' ? 'right' : 'left', dest.elements);
+						src.elements.children().insAtDirEnd(otherDir(dir), dest.elements);
 						const children = src.children().disown();
 						pt = new Point(dest, children.ends.right, dest.ends.left);
 						if (dir === 'left') children.adopt(dest, dest.ends.right);
 						else children.adopt(dest, undefined, dest.ends.left);
 					} else pt = new Point(dest, undefined, dest.ends.left);
-					this.placeCursor = (cursor) => cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', dest || src);
+					this.placeCursor = (cursor) => cursor.insAtDirEnd(otherDir(dir), dest || src);
 				}
 				this.remove();
 				if (cursor) {
@@ -1040,14 +1042,14 @@ export class SupSub extends MathCommand {
 
 	deleteTowards(dir: Direction, cursor: Cursor) {
 		if (cursor.options.autoSubscriptNumerals && this.sub) {
-			const cmd = this.sub.ends[dir === 'left' ? 'right' : 'left'];
+			const cmd = this.sub.ends[otherDir(dir)];
 			if (cmd instanceof Symbol) cmd.remove();
-			else if (cmd) cmd.deleteTowards(dir, cursor.insAtDirEnd(dir === 'left' ? 'right' : 'left', this.sub));
+			else if (cmd) cmd.deleteTowards(dir, cursor.insAtDirEnd(otherDir(dir), this.sub));
 
 			// TODO: factor out a .removeBlock() or something
 			if (this.sub.isEmpty()) {
 				this.sub.deleteOutOf('left', cursor.insAtLeftEnd(this.sub));
-				if (this.sup) cursor.insDirOf(dir === 'left' ? 'right' : 'left', this);
+				if (this.sup) cursor.insDirOf(otherDir(dir), this);
 				// Note `-dir` because in e.g. x_1^2| want backspacing (leftward)
 				// to delete the 1 but to end up rightward of x^2; with non-negated
 				// `dir` (try it), the cursor appears to have gone "through" the ^2.
@@ -1110,7 +1112,7 @@ export class SupSub extends MathCommand {
 				// This sets that up when the second sup or sub is created (or when parsing and both exist).
 				thisSupsub.deleteOutOf = (dir: Direction, cursor: Cursor) => {
 					if (thisSupsub.isEmpty()) {
-						cursor[dir === 'left' ? 'right' : 'left'] = thisSupsub.ends[dir];
+						cursor[otherDir(dir)] = thisSupsub.ends[dir];
 						this.supsub = oppositeSupsub;
 						if (supsub === 'sup') delete this.sup;
 						else delete this.sub;
@@ -1128,28 +1130,21 @@ export class SupSub extends MathCommand {
 						}
 						thisSupsub.remove();
 					}
-					if (thisSupsub.parent)
-						cursor.insDirOf(thisSupsub[dir] ? (dir === 'left' ? 'right' : 'left') : dir, thisSupsub.parent);
+					if (thisSupsub.parent) cursor.insDirOf(thisSupsub[dir] ? otherDir(dir) : dir, thisSupsub.parent);
 				};
 			} else {
 				thisSupsub.deleteOutOf = (dir: Direction, cursor: Cursor) => {
-					if (thisSupsub.parent)
-						cursor.insDirOf(thisSupsub[dir] ? (dir === 'left' ? 'right' : 'left') : dir, thisSupsub.parent);
+					if (thisSupsub.parent) cursor.insDirOf(thisSupsub[dir] ? otherDir(dir) : dir, thisSupsub.parent);
 					if (!thisSupsub.isEmpty()) {
 						const end = thisSupsub.ends[dir];
 						if (cursor.parent) {
 							thisSupsub
 								.children()
 								.disown()
-								.withDirAdopt(
-									dir,
-									cursor.parent,
-									cursor[dir],
-									cursor[dir === 'left' ? 'right' : 'left']
-								)
-								.elements.insDirOf(dir === 'left' ? 'right' : 'left', cursor.element);
+								.withDirAdopt(dir, cursor.parent, cursor[dir], cursor[otherDir(dir)])
+								.elements.insDirOf(otherDir(dir), cursor.element);
 						}
-						cursor[dir === 'left' ? 'right' : 'left'] = end;
+						cursor[otherDir(dir)] = end;
 					}
 					this.supsub = oppositeSupsub;
 					if (supsub === 'sup') delete this.sup;
@@ -1273,7 +1268,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 						this.matchBrack(opts, 'left', cursor.left) ||
 						this.matchBrack(opts, undefined, cursor.parent?.parent);
 				} else {
-					const otherSide = this.side === 'left' ? 'right' : 'left';
+					const otherSide = otherDir(this.side);
 					brack =
 						this.matchBrack(opts, otherSide, cursor[otherSide]) ||
 						this.matchBrack(opts, otherSide, cursor.parent?.parent);
@@ -1281,13 +1276,13 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 			}
 			if (brack) {
 				// brack may be an absolute value with .side not yet set
-				side = this.side = brack.side === 'left' ? 'right' : 'left';
+				side = this.side = otherDir(brack.side);
 
 				// Move the stuff between this bracket and the ghost of the other bracket outside.
 				if (brack === cursor.parent?.parent && cursor[side] && brack.parent) {
-					new Fragment(cursor[side], cursor.parent.ends[side], side === 'left' ? 'right' : 'left')
+					new Fragment(cursor[side], cursor.parent.ends[side], otherDir(side))
 						.disown()
-						.withDirAdopt(side === 'left' ? 'right' : 'left', brack.parent, brack, brack[side])
+						.withDirAdopt(otherDir(side), brack.parent, brack, brack[side])
 						.elements.insDirOf(side, brack.elements);
 				}
 
@@ -1333,15 +1328,9 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 				side = brack.side;
 				// If wrapping a selection, don't be one-sided.
 				if (brack.replacedFragment) delete brack.side;
-				else if (cursor[side === 'left' ? 'right' : 'left']) {
+				else if (cursor[otherDir(side)]) {
 					// Auto-expand so the ghost is at the far end.
-					brack.replaces(
-						new Fragment(
-							cursor[side === 'left' ? 'right' : 'left'],
-							cursor.parent?.ends[side === 'left' ? 'right' : 'left'],
-							side
-						)
-					);
+					brack.replaces(new Fragment(cursor[otherDir(side)], cursor.parent?.ends[otherDir(side)], side));
 					if (side === 'left') delete cursor.right;
 					else delete cursor.left;
 				}
@@ -1367,13 +1356,13 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 			if (side === this.side) {
 				// If deleting a non-ghost of a one-sided bracket, then unwrap the bracket.
 				this.unwrap();
-				if (sib) cursor.insDirOf(side === 'left' ? 'right' : 'left', sib);
+				if (sib) cursor.insDirOf(otherDir(side), sib);
 				else if (parent) cursor.insAtDirEnd(side, parent);
 				return;
 			}
 
 			const wasSolid = !this.side;
-			this.side = side === 'left' ? 'right' : 'left';
+			this.side = otherDir(side);
 			// If deleting a like, outer close-brace of [(1+2)+3} where the inner open-paren
 			// is a ghost then become [1+2)+3.
 			if (this.matchBrack(cursor.options, side, this.blocks[this.contentIndex].ends[this.side])) {
@@ -1381,7 +1370,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 				const origEnd = this.blocks[this.contentIndex].ends[side];
 				this.unwrap();
 				origEnd?.siblingCreated?.(cursor.options, side);
-				if (sib) cursor.insDirOf(side === 'left' ? 'right' : 'left', sib);
+				if (sib) cursor.insDirOf(otherDir(side), sib);
 				else if (parent) cursor.insAtDirEnd(side, parent);
 			} else {
 				// If deleting a like, inner close-brace of ([1+2}+3) where the outer open-paren is a ghost,
@@ -1392,7 +1381,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 				} else if (outward && wasSolid) {
 					// If deleting outward from a solid pair, unwrap.
 					this.unwrap();
-					if (sib) cursor.insDirOf(side === 'left' ? 'right' : 'left', sib);
+					if (sib) cursor.insDirOf(otherDir(side), sib);
 					else if (parent) cursor.insAtDirEnd(side, parent);
 					return;
 				} else {
@@ -1413,12 +1402,12 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 					// Auto-expand so the ghost is at the far end.
 					const origEnd = this.blocks[this.contentIndex].ends[side];
 					this.blocks[this.contentIndex].elements.removeClass('mq-empty');
-					new Fragment(sib, farEnd, side === 'left' ? 'right' : 'left')
+					new Fragment(sib, farEnd, otherDir(side))
 						.disown()
-						.withDirAdopt(side === 'left' ? 'right' : 'left', this.blocks[this.contentIndex], origEnd)
+						.withDirAdopt(otherDir(side), this.blocks[this.contentIndex], origEnd)
 						.elements.insAtDirEnd(side, this.blocks[this.contentIndex].elements);
 					origEnd?.siblingCreated?.(cursor.options, side);
-					cursor.insDirOf(side === 'left' ? 'right' : 'left', sib);
+					cursor.insDirOf(otherDir(side), sib);
 				} else {
 					// Otherwise the cursor goes just outside or just inside the parentheses.
 					if (outward) cursor.insDirOf(side, this);
@@ -1428,7 +1417,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 		}
 
 		deleteTowards(dir: Direction, cursor: Cursor) {
-			this.deleteSide(dir === 'left' ? 'right' : 'left', false, cursor);
+			this.deleteSide(otherDir(dir), false, cursor);
 		}
 
 		finalizeTree() {
@@ -1460,7 +1449,7 @@ export class Bracket extends BracketMixin(MathCommand) {
 
 		// If something is typed between the ghost and the far end of its block, then solidify the ghost.
 		this.siblingCreated = (_opts: Options, dir?: Direction) => {
-			if (dir === (this.side === 'left' ? 'right' : 'left')) this.finalizeTree();
+			if (dir === otherDir(this.side)) this.finalizeTree();
 		};
 	}
 

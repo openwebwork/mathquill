@@ -1,7 +1,6 @@
 // TNode base class of edit tree-related objects
 
-import type { Direction } from 'src/constants';
-import { iterator, mqCmdId, mqBlockId } from 'src/constants';
+import { type Direction, iterator, mqCmdId, mqBlockId } from 'src/constants';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';

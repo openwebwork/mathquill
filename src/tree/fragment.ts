@@ -1,10 +1,8 @@
 // Fragment base classes of edit tree-related objects
 
-import type { Direction } from 'src/constants';
-import { iterator, prayWellFormed } from 'src/constants';
-import type { Ends } from 'tree/node';
+import { type Direction, iterator, prayWellFormed } from 'src/constants';
 import { VNode } from 'tree/vNode';
-import { TNode } from 'tree/node';
+import { type Ends, TNode } from 'tree/node';
 
 // An entity outside the virtual tree with one-way pointers (so it's only a
 // "view" of part of the tree, not an actual node/entity in the tree) that
