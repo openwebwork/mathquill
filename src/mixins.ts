@@ -8,14 +8,9 @@ export const RootBlockMixin = (_: MathElement) => {
 	_.moveOutOf = (dir: Direction) => _.controller?.handle('moveOutOf', dir);
 	_.deleteOutOf = (dir: Direction) => _.controller?.handle('deleteOutOf', dir);
 	_.selectOutOf = (dir: Direction) => _.controller?.handle('selectOutOf', dir);
-	_.upOutOf = (dir: Direction) => _.controller?.handle('upOutOf', dir);
-	_.downOutOf = (dir: Direction) => _.controller?.handle('downOutOf', dir);
-
-	_.reflow = () => {
-		_.controller?.handle('reflow');
-		_.controller?.handle('edited');
-		_.controller?.handle('edit');
-	};
+	_.upOutOf = () => _.controller?.handle('upOutOf');
+	_.downOutOf = () => _.controller?.handle('downOutOf');
+	_.reflow = () => _.controller?.handle('edit');
 };
 
 // Editability methods called by the cursor for editing, cursor movements, and selection of the MathQuill tree.

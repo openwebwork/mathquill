@@ -122,12 +122,45 @@ Nested content in latex rendered during initialization or pasted into mathquill 
 Overwriting this may be useful for hacks like suppressing built-in virtual keyboards. It defaults to
 `<textarea autocorrect=off .../>`.
 
+### mouseEvents
+
+If `mouseEvents` is true then mouse events are active for static math fieds. This is true by default.
+
+### autoSubscriptNumerals
+
+If `autoSubscriptNumerals` is true then a number typed after a letter will automatically be put into a subscript.
+
+### typingSlashWritesDivisionSymbol
+
+If `typingSlashWritesDivisionSymbol` true then typing a slash gives the division symbol instead of a live fraction.
+
+### typingAsteriskWritesTimesSymbol
+
+If `typingAsteriskWritesTimesSymbol` is true then typing an asterisk gives the times symbol instead of a `\cdot`.
+
+### rootsAreExponents
+
+If `rootsAreExponents` is true, then the text output of an nth root will be `x^(1/n)`. Otherwise it will be `root(n,x)`.
+
+### logsChangeBase
+
+If `logsChangeBase` is true then the text output for the logarithm with base b of x will be `log(x)/log(b)`. Otherwise
+the output will be `logb(b,x)`. Note that this option does not affect base 10 output. That is always `log10(x)`.
+
 ### tabbable
 
 For static and editable math fields, when `tabbable` is false, the math field is not part of the page's tab order.
 Despite that, the math field can still be focused when selected by a mouse.
 
 Static math fields default to `tabbable: false`, Editable math fields default to `tabbable: true`.
+
+### preventBlur
+
+This is a method with the signature `(e: FocusEvent, mq?: AbstractMathQuill) => boolean`. If provided, this method will
+be called anytime an editable math field loses focus (for example if the "Tab" key is pressed or the window loses
+focus). If the method returns true, then the field will not be "blurred". This means that if there is a selection in
+the field, it will not be cleared, and the blur styles will not be applied. This gives the appearance of the field
+still having focus (even though technically focus is lost). This is useful for implementing a toolbar.
 
 ## Handlers
 
@@ -166,7 +199,13 @@ Called whenever Enter is pressed.
 This is called when the contents of the field might have been changed. This will be called with any edit, such as
 something being typed, deleted, or written with the API. Note that this may be called when nothing has actually changed.
 
-Deprecated aliases: `edited`, `reflow`.
+### textBlockEnter(mathField)
+
+This is called whenever a text block is started.
+
+### textBlockExit(mathField)
+
+This is called whenver a text block is ended.
 
 ## Changing Colors
 

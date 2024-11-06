@@ -9,15 +9,13 @@ export type DirectionHandler = (dir: Direction, mq?: AbstractMathQuill) => void;
 export interface Handlers {
 	enter?: Handler;
 	edit?: Handler;
-	edited?: Handler;
-	reflow?: Handler;
 	textBlockEnter?: Handler;
 	textBlockExit?: Handler;
 	moveOutOf?: DirectionHandler;
 	deleteOutOf?: DirectionHandler;
 	selectOutOf?: DirectionHandler;
-	upOutOf?: DirectionHandler;
-	downOutOf?: DirectionHandler;
+	upOutOf?: Handler;
+	downOutOf?: Handler;
 }
 
 export interface InputOptions {

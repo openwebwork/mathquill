@@ -117,15 +117,6 @@ export const TextAreaController = <
 			this.unbindEditableFocusBlurEvents();
 
 			this.blurred = true;
-
-			this.textarea?.addEventListener('cut', (e) => {
-				e.stopPropagation();
-				e.preventDefault();
-			});
-			this.textarea?.addEventListener('paste', (e) => {
-				e.stopPropagation();
-				e.preventDefault();
-			});
 		}
 
 		keystroke(key: string, evt: KeyboardEvent) {
