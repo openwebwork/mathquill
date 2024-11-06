@@ -70,18 +70,25 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 		addStaticFocusBlurEvents() {
 			this.focusHandler = () => {
 				if (!this.cursor.selection) (this as unknown as Controller).selectAll();
+				this.cursor.selection?.elements.removeClass('mq-blur');
 				this.blurred = false;
 			};
-
 			this.textarea?.addEventListener('focus', this.focusHandler);
 
 			this.blurHandler = () => {
-				this.cursor.selection?.clear();
-				this.cursor.clearSelection();
+				if (document.hasFocus()) {
+					this.cursor.selection?.clear();
+					this.cursor.clearSelection();
+				} else if (this.cursor.selection) this.cursor.selection.elements.addClass('mq-blur');
+
 				this.updateMathspeak(true);
 			};
-
 			this.textarea?.addEventListener('blur', this.blurHandler);
+
+			this.windowFocusHandler = () => {
+				if (document.activeElement !== this.textarea) this.cursor.clearSelection().endSelection();
+			};
+			window.addEventListener('focus', this.windowFocusHandler);
 
 			this.blurred = true;
 			this.cursor.hide().parent?.blur();
