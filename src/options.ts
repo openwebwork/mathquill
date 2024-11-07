@@ -43,7 +43,7 @@ export interface InputOptions {
 	overrideTypedText?: (text: string) => void;
 	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
 	ignoreNextMousedown?: (e?: MouseEvent) => boolean;
-	preventBlur?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
+	blurWithCursor?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
 	tabbable?: boolean;
 }
 
@@ -382,11 +382,9 @@ export class Options {
 	overrideTypedText?: (text: string) => void;
 	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
 
-	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => {
-		return false;
-	};
+	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => false;
 
-	preventBlur?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
+	blurWithCursor?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
 
 	static #tabbable: boolean | undefined;
 	#_tabbable?: boolean;

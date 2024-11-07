@@ -154,13 +154,14 @@ Despite that, the math field can still be focused when selected by a mouse.
 
 Static math fields default to `tabbable: false`, Editable math fields default to `tabbable: true`.
 
-### preventBlur
+### blurWithCursor
 
 This is a method with the signature `(e: FocusEvent, mq?: AbstractMathQuill) => boolean`. If provided, this method will
 be called anytime an editable math field loses focus (for example if the "Tab" key is pressed or the window loses
-focus). If the method returns true, then the field will not be "blurred". This means that if there is a selection in
-the field, it will not be cleared, and the blur styles will not be applied. This gives the appearance of the field
-still having focus (even though technically focus is lost). This is useful for implementing a toolbar.
+focus). If the method returns true, then the field will be blurred with the cursor left visible. This means that if
+there is a selection in the field, it will not be cleared but will be given an inactive gray styling, and if there is
+not a selection then the cursor will remain in the field but will stop blinking. This gives the appearance of no longer
+being active but gives indicators as to where the cursor is. This is useful for implementing a toolbar.
 
 ## Handlers
 

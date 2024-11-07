@@ -11,38 +11,58 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 		windowFocusHandler?: () => void;
 		windowBlurHandler?: () => void;
 		windowBlurred = !document.hasFocus();
+		blurredWithCursor = false;
 
 		addEditableFocusBlurEvents() {
+			const blink = this.cursor.blink;
+
 			this.focusHandler = () => {
-				this.updateMathspeak();
-				if (!this.blurred) return;
 				this.blurred = false;
+				this.updateMathspeak();
 				this.container.classList.add('mq-focused');
+				this.cursor.blink = blink;
 				if (!this.cursor.parent) this.cursor.insAtRightEnd(this.root);
 				if (this.cursor.selection) {
 					this.cursor.selection.elements.removeClass('mq-blur');
 					this.selectionChanged();
-				} else if (!this.windowBlurred) (this as unknown as Controller).selectAll();
+				} else if (!this.blurredWithCursor && !this.windowBlurred) (this as unknown as Controller).selectAll();
 				else this.cursor.show();
 			};
 			this.textarea?.addEventListener('focus', this.focusHandler);
 
 			this.blurHandler = (e) => {
-				if (this.options.preventBlur?.(e, this.apiClass)) {
-					this.updateMathspeak(true);
-					return;
-				}
 				this.blurred = true;
+				this.blurredWithCursor = this.options.blurWithCursor?.(e, this.apiClass) ?? false;
 				this.container.classList.remove('mq-focused');
-				this.cursor.hide().parent?.blur();
-				if (document.hasFocus()) this.cursor.clearSelection().endSelection();
-				else if (this.cursor.selection) this.cursor.selection.elements.addClass('mq-blur');
+				if (this.blurredWithCursor) {
+					if (this.cursor.selection) this.cursor.selection.elements.addClass('mq-blur');
+					else {
+						// FIXME: This special blink method is a bit of a hack. When focus is regained with a mouse
+						// click, then the mouse down handler caches the cursor blink method which will be the method
+						// defined below. Then the focus handler above is called and resets the cursor blink method to
+						// the default cursor blink method cached here at initialization. But then the mouse up handler
+						// occurs, and sets the cursor blink method back to its cached blink method which is this one.
+						// So if the noop is used here, then that is what ends up being in effect, and that means no
+						// cursor blink. The problem is that the mouse handlers changing the blink method is also a
+						// hack. Instead the cursor show method should accept an optional argument that determines if
+						// the cursor is blinking or not. That will take some work to implement and get right for all of
+						// the places that show is called.
+						this.cursor.blink = () => {
+							if (!this.blurred) blink();
+						};
+						this.cursor.show();
+					}
+				} else {
+					this.cursor.hide().parent?.blur();
+					if (document.hasFocus()) this.cursor.clearSelection().endSelection();
+					else if (this.cursor.selection) this.cursor.selection.elements.addClass('mq-blur');
+				}
 				this.updateMathspeak(true);
 			};
 			this.textarea?.addEventListener('blur', this.blurHandler);
 
 			this.windowFocusHandler = () => {
-				if (this.blurred && document.activeElement !== this.textarea)
+				if (!this.blurredWithCursor && this.blurred && document.activeElement !== this.textarea)
 					this.cursor.clearSelection().endSelection();
 				// A timeout is used to delay setting this.windowBlurred to false until after the focus handler has run.
 				setTimeout(() => (this.windowBlurred = false));

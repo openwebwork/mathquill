@@ -83,8 +83,9 @@ suite('focusBlur', function () {
 
 			assertHasFocus(mq, 'mq', 'not');
 
-			// There is different behavior if the window is focused or not.
-			// Javascript can not remove focus from the window, so the test just has to deal with the current state.
+			// There is different behavior if the window is focused or not.  Ideally this test would run in both states.
+			// However, javascript can not remove focus from the window, so the test just has to deal with the current
+			// state. Also, the test can not complete properly at all if the document is not visible.
 			if (document.hasFocus()) {
 				setTimeout(() => {
 					assert.equal(textarea?.value, '');
@@ -98,7 +99,7 @@ suite('focusBlur', function () {
 						done();
 					});
 				}, 100);
-			} else {
+			} else if (document.visibilityState === 'visible') {
 				setTimeout(() => {
 					assert.equal(textarea?.value, 'f');
 
@@ -111,6 +112,12 @@ suite('focusBlur', function () {
 						done();
 					});
 				}, 100);
+			} else {
+				console.warn(
+					'The test "select behaves correctly after blurring and re-focusing" needs the ' +
+						'document to at least be visible to properly complete.\n'
+				);
+				done();
 			}
 		});
 	});
