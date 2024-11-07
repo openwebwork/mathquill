@@ -295,7 +295,6 @@ export class TNode {
 				break;
 
 			case 'Ctrl-Up':
-				break;
 			case 'Ctrl-Down':
 				break;
 

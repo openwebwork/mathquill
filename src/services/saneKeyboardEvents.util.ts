@@ -76,6 +76,12 @@ export const saneKeyboardEvents = (() => {
 
 		const onInput = (e: Event) => {
 			if ((e as InputEvent).inputType === 'insertFromPaste') return;
+
+			if ((e as InputEvent).inputType === 'insertLineBreak') {
+				controller.typedText('\n');
+				return;
+			}
+
 			const text = (e as InputEvent).data ?? '';
 			if (text.length === 1) {
 				if (controller.options.overrideTypedText) {

@@ -128,6 +128,22 @@ suite('saneKeyboardEvents', function () {
 		el.dispatchEvent(new KeyboardEvent('keypress', { key: 'Backspace', which: 8, keyCode: 8, bubbles: true }));
 	});
 
+	test('enter handler', function () {
+		let counter = 0;
+
+		const ctrlr = new Controller(new MathField.RootBlock(), el, new Options());
+		ctrlr.options.handlers = {
+			enter(...args) {
+				assert.equal(args.length, 1);
+				counter += 1;
+			}
+		};
+		saneKeyboardEvents(el, ctrlr);
+
+		el.dispatchEvent(new InputEvent('input', { inputType: 'insertLineBreak', bubbles: true }));
+		assert.equal(counter, 1);
+	});
+
 	suite('select', function () {
 		test("select populates the textarea but doesn't call .typedText()", function () {
 			const ctrlr = new Controller(new MathField.RootBlock(), el, new Options());

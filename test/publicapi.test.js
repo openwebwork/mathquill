@@ -166,26 +166,26 @@ suite('Public API', function () {
 
 				const mq = mathFieldMaker({
 					handlers: {
-						enter: function (_mq) {
-							assert.equal(arguments.length, 1);
-							assert.equal(_mq.id, mq.id);
+						enter(...args) {
+							assert.equal(args.length, 1);
+							assert.equal(args[0].id, mq.id);
 							enterCounter += 1;
 						},
-						upOutOf: function (_mq) {
-							assert.equal(arguments.length, 1);
-							assert.equal(_mq.id, mq.id);
+						upOutOf(...args) {
+							assert.equal(args.length, 1);
+							assert.equal(args[0].id, mq.id);
 							upCounter += 1;
 						},
-						moveOutOf: function (_dir, _mq) {
-							assert.equal(arguments.length, 2);
-							assert.equal(_mq.id, mq.id);
-							dir = _dir;
+						moveOutOf(...args) {
+							assert.equal(args.length, 2);
+							assert.equal(args[1].id, mq.id);
+							dir = args[0];
 							moveCounter += 1;
 						},
-						deleteOutOf: function (_dir, _mq) {
-							assert.equal(arguments.length, 2);
-							assert.equal(_mq.id, mq.id);
-							dir = _dir;
+						deleteOutOf(...args) {
+							assert.equal(args.length, 2);
+							assert.equal(args[1].id, mq.id);
+							dir = args[0];
 							deleteCounter += 1;
 						}
 					}
