@@ -46,10 +46,8 @@ export class StaticMath extends AbstractMathQuill {
 	__mathquillify() {
 		super.__mathquillify('mq-math-mode');
 		this.__controller.setupStaticField();
-		if (this.__options.mouseEvents) {
-			this.__controller.delegateMouseEvents();
-			this.__controller.staticMathTextareaEvents();
-		}
+		if (this.__options.mouseEvents) this.__controller.delegateMouseEvents();
+		this.__controller.staticMathTextareaEvents();
 		return this;
 	}
 
