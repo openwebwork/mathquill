@@ -1,11 +1,20 @@
 // Commands and Operators.
 
-import { type Constructor, bindMixin, LatexCmds, CharCmds, OPP_BRACKS, EMBEDS, EmbedOptions } from 'src/constants';
+import {
+	type Constructor,
+	bindMixin,
+	LatexCmds,
+	CharCmds,
+	OPP_BRACKS,
+	SVG_SYMBOLS,
+	EMBEDS,
+	EmbedOptions
+} from 'src/constants';
 import type { Options } from 'src/options';
 import { Controller } from 'src/controller';
 import { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
-import { RootBlockMixin, scale, DelimsMixin } from 'src/mixins';
+import { RootBlockMixin, DelimsMixin } from 'src/mixins';
 import type { TNode, MathspeakOptions } from 'tree/node';
 import { Fragment } from 'tree/fragment';
 import type { InnerMathFieldStore } from 'commands/math';
@@ -377,24 +386,15 @@ class SquareRoot extends MathCommand {
 		super();
 		this.ctrlSeq = '\\sqrt';
 		this.htmlTemplate =
-			'<span class="mq-non-leaf">' +
-			'<span class="mq-scaled mq-sqrt-prefix">&radic;</span>' +
+			'<span class="mq-non-leaf mq-sqrt-container">' +
+			'<span class="mq-scaled mq-sqrt-prefix">' +
+			SVG_SYMBOLS.sqrt.html +
+			'</span>' +
 			'<span class="mq-non-leaf mq-sqrt-stem">&0</span>' +
 			'</span>';
 		this.textTemplate = ['sqrt(', ')'];
 		this.mathspeakTemplate = ['StartSquareRoot,', ', EndSquareRoot'];
 		this.ariaLabel = 'square root';
-
-		this.reflow = () => {
-			const block = this.ends.right?.elements.firstElement;
-			if (block) {
-				scale(
-					[block.previousElementSibling as HTMLElement],
-					1,
-					block.getBoundingClientRect().height / parseFloat(getComputedStyle(block).fontSize) - 0.1
-				);
-			}
-		};
 	}
 
 	parser() {
@@ -430,10 +430,14 @@ class NthRoot extends SquareRoot {
 	constructor() {
 		super();
 		this.htmlTemplate =
+			'<span class="mq-nthroot-container mq-non-leaf">' +
 			'<span class="mq-nthroot mq-non-leaf">&0</span>' +
-			'<span class="mq-scaled">' +
-			'<span class="mq-sqrt-prefix mq-scaled">&radic;</span>' +
+			'<span class="mq-scaled mq-sqrt-container">' +
+			'<span class="mq-scaled mq-sqrt-prefix">' +
+			SVG_SYMBOLS.sqrt.html +
+			'</span>' +
 			'<span class="mq-sqrt-stem mq-non-leaf">&1</span>' +
+			'</span>' +
 			'</span>';
 		this.textTemplate = ['root(', ',', ')'];
 		this.ariaLabel = 'root';
@@ -545,15 +549,21 @@ class Binomial extends DelimsMixin(MathCommand) {
 	constructor() {
 		super(
 			'\\binom',
-			'<span class="mq-non-leaf">' +
-				'<span class="mq-paren mq-scaled">(</span>' +
-				'<span class="mq-non-leaf">' +
+			'<span class="mq-bracket-container mq-non-leaf">' +
+				`<span class="mq-paren mq-bracket-l mq-scaled" style="width:${SVG_SYMBOLS['('].width}">` +
+				SVG_SYMBOLS['('].html +
+				'</span>' +
+				`<span class="mq-bracket-middle mq-non-leaf" style="margin-left:${
+					SVG_SYMBOLS['('].width
+				};margin-right:${SVG_SYMBOLS[')'].width}">` +
 				'<span class="mq-array mq-non-leaf">' +
 				'<span>&0</span>' +
 				'<span>&1</span>' +
 				'</span>' +
 				'</span>' +
-				'<span class="mq-paren mq-scaled">)</span>' +
+				`<span class="mq-paren mq-bracket-r mq-scaled" style="width:${SVG_SYMBOLS[')'].width}">` +
+				SVG_SYMBOLS[')'].html +
+				'</span>' +
 				'</span>',
 			['choose(', ',', ')']
 		);

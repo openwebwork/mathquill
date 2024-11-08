@@ -35,25 +35,10 @@ export const deleteSelectTowardsMixin = <TBase extends Constructor<TNode>>(Base:
 		}
 	};
 
-// Use a CSS transform to scale the HTML elements,
-// or gracefully degrade to increasing the fontSize to match the vertical Y scaling factor.
-export const scale = (elts: HTMLElement[], x: number, y: number) => {
-	elts.forEach((elt) => {
-		elt.style.transform = `scale(${x.toString()},${y.toString()})`;
-	});
-};
-
 export const DelimsMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 	class extends Base {
 		delims?: [HTMLElement, HTMLElement];
 		content?: HTMLElement;
-
-		reflow = () => {
-			const contentStyle = this.content ? getComputedStyle(this.content) : undefined;
-			const boundingRect = this.content?.getBoundingClientRect();
-			const height = (boundingRect?.height ?? 0) / parseFloat(contentStyle?.fontSize ?? '1');
-			scale(this.delims as HTMLElement[], Math.min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
-		};
 
 		addToElements(el: VNode | HTMLElement) {
 			super.addToElements(el);

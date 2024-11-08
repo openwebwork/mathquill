@@ -9,6 +9,7 @@ import {
 	LatexCmds,
 	OPP_BRACKS,
 	BRACKET_NAMES,
+	SVG_SYMBOLS,
 	BuiltInOpNames,
 	TwoWordOpNames,
 	otherDir
@@ -1251,7 +1252,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 			const delim = brack.delims?.[this.side === 'left' ? 0 : 1];
 			if (delim) {
 				delim.classList.remove('mq-ghost');
-				delim.innerHTML = this.sides[this.side].ch;
+				this.replaceBracket(delim, this.side);
 			}
 		}
 
@@ -1394,7 +1395,7 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 						delim.classList.remove('mq-ghost');
 						if (index === (side === 'left' ? 0 : 1)) {
 							delim.classList.add('mq-ghost');
-							delim.innerHTML = this.sides[side].ch;
+							this.replaceBracket(delim, side);
 						}
 					});
 				}
@@ -1414,6 +1415,31 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 					else cursor.insAtDirEnd(side, this.blocks[this.contentIndex]);
 				}
 			}
+		}
+
+		replaceBracket(brackFrag: HTMLElement, side: Direction) {
+			if (!(this instanceof Bracket) && !(this instanceof MathFunction))
+				throw new Error('can only replace bracket for a Bracket or MathFunction');
+			const symbol = this.getSymbol(side);
+
+			brackFrag.innerHTML = symbol.html;
+			brackFrag.style.width = symbol.width;
+
+			if (side === 'left') {
+				const next = brackFrag.nextElementSibling;
+				if (next instanceof HTMLElement) next.style.marginLeft = symbol.width;
+			} else {
+				const prev = brackFrag.previousElementSibling;
+				if (prev instanceof HTMLElement) prev.style.marginRight = symbol.width;
+			}
+		}
+
+		getSymbol(side?: Direction) {
+			return (
+				(SVG_SYMBOLS[this.sides[side || 'right'].ch] as
+					| { width: string; html: string }
+					| undefined) || { width: '0', html: '' }
+			);
 		}
 
 		deleteTowards(dir: Direction, cursor: Cursor) {
@@ -1458,15 +1484,24 @@ export class Bracket extends BracketMixin(MathCommand) {
 	}
 
 	html() {
+		const leftSymbol = this.getSymbol('left');
+		const rightSymbol = this.getSymbol('right');
+
 		// Wait until now to set the html template so that .side may be set by createLeftOf or the parser.
 		this.htmlTemplate =
-			'<span class="mq-non-leaf">' +
-			`<span class="mq-scaled mq-paren${this.side === 'right' ? ' mq-ghost' : ''}">` +
-			this.sides.left.ch +
+			'<span class="mq-bracket-container mq-non-leaf">' +
+			`<span class="mq-bracket-l mq-scaled mq-paren${
+				this.side === 'right' ? ' mq-ghost' : ''
+			}" style="width:${leftSymbol.width}">` +
+			leftSymbol.html +
 			'</span>' +
-			'<span class="mq-non-leaf">&0</span>' +
-			`<span class="mq-scaled mq-paren${this.side === 'left' ? ' mq-ghost' : ''}">` +
-			this.sides.right.ch +
+			`<span class="mq-bracket-middle mq-non-leaf" style="margin-left:${
+				leftSymbol.width
+			};margin-right:${rightSymbol.width}">&0</span>` +
+			`<span class="mq-bracket-r mq-scaled mq-paren${
+				this.side === 'left' ? ' mq-ghost' : ''
+			}" style="width:${rightSymbol.width}">` +
+			rightSymbol.html +
 			'</span>' +
 			'</span>';
 		return super.html();
@@ -1567,10 +1602,18 @@ export class MathFunction extends BracketMixin(MathCommand) {
 			'<span class="mq-non-leaf mq-math-function">' +
 			`<span class="mq-non-leaf mq-function-name">${this.ctrlSeq.slice(1)}</span>` +
 			'<span class="mq-non-leaf mq-function-supsub">&0</span>' +
-			'<span class="mq-non-leaf mq-function-params">' +
-			'<span class="mq-scaled mq-paren">(</span>' +
-			'<span class="mq-non-leaf">&1</span>' +
-			`<span class="mq-scaled mq-paren${this.side === 'left' ? ' mq-ghost' : ''}">)</span>` +
+			'<span class="mq-function-params mq-bracket-container mq-non-leaf">' +
+			`<span class="mq-bracket-l mq-scaled mq-paren" style="width:${SVG_SYMBOLS['('].width}">` +
+			SVG_SYMBOLS['('].html +
+			'</span>' +
+			`<span class="mq-bracket-middle mq-non-leaf" style="margin-left:${
+				SVG_SYMBOLS['('].width
+			};margin-right:${SVG_SYMBOLS[')'].width}">&1</span>` +
+			`<span class="mq-bracket-r mq-scaled mq-paren${
+				this.side === 'left' ? ' mq-ghost' : ''
+			}" style="width:${SVG_SYMBOLS[')'].width}">` +
+			SVG_SYMBOLS[')'].html +
+			'</span>' +
 			'</span>' +
 			'</span>';
 
