@@ -1,20 +1,20 @@
 /* global assert, MQ */
 
 suite('aria', function () {
-	let mathField;
+	let mq;
 	let container;
 	setup(function () {
 		container = document.createElement('span');
 		document.getElementById('mock')?.append(container);
-		mathField = MQ.MathField(container);
+		mq = MQ.MathField(container);
 	});
 
 	const assertAriaEqual = (alertText) => {
-		assert.equal(alertText, mathField.__controller.aria.msg);
+		assert.equal(alertText, mq.__controller.aria.msg);
 	};
 
 	test('mathfield has aria-hidden on mq-root-block', function () {
-		mathField.latex('1+\\frac{1}{x}');
+		mq.latex('1+\\frac{1}{x}');
 		// There will be two hidden children: the raw text of the field, and its mathspeak representation.  The internal
 		// aria-labelledby attribute of the focusable text will still cause the mathspeak to be read aloud, while the
 		// visual math remains viewable.
@@ -90,145 +90,179 @@ suite('aria', function () {
 	});
 
 	test('typing and backspacing over simple expression', function () {
-		mathField.typedText('1');
+		mq.typedText('1');
 		assertAriaEqual('1');
-		mathField.typedText('+');
+		mq.typedText('+');
 		assertAriaEqual('plus');
-		mathField.typedText('1');
+		mq.typedText('1');
 		assertAriaEqual('1');
-		mathField.typedText('=');
+		mq.typedText('=');
 		assertAriaEqual('equals');
-		mathField.typedText('2');
+		mq.typedText('2');
 		assertAriaEqual('2');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('2');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('equals');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('1');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('plus');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('1');
 	});
 
 	test('typing and backspacing a fraction', function () {
-		mathField.typedText('1');
+		mq.typedText('1');
 		assertAriaEqual('1');
-		mathField.typedText('/');
+		mq.typedText('/');
 		assertAriaEqual('over');
-		mathField.typedText('2');
+		mq.typedText('2');
 		assertAriaEqual('2');
 
 		// We have logic to shorten the speak we return for common numeric fractions and superscripts.
 		// While editing, however, the slightly longer form (but unambiguous) form of the item should be spoken.
 		// In this case, we would shorten the fraction 1/2 to "1 half" when reading,
 		// but navigating around the equation should result in "StartFraction, 1 Over 2, EndFraction."
-		mathField.keystroke('Escape');
+		mq.keystroke('Escape');
 		assertAriaEqual('after StartFraction, 1 Over 2 , EndFraction');
 
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('end of denominator 2');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('2');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('Over');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('1');
 	});
 
 	test('navigating a fraction', function () {
-		mathField.typedText('1');
+		mq.typedText('1');
 		assertAriaEqual('1');
-		mathField.typedText('/');
+		mq.typedText('/');
 		assertAriaEqual('over');
-		mathField.typedText('2');
+		mq.typedText('2');
 		assertAriaEqual('2');
-		mathField.keystroke('Up');
+		mq.keystroke('Up');
 		assertAriaEqual('numerator 1');
-		mathField.keystroke('Down');
+		mq.keystroke('Down');
 		assertAriaEqual('denominator 2');
-		mathField.latex('');
+		mq.latex('');
 	});
 
 	test('typing and backspacing a binomial', function () {
-		mathField.typedText('1');
+		mq.typedText('1');
 		assertAriaEqual('1');
-		mathField.cmd('\\choose');
+		mq.cmd('\\choose');
 		// Matching behavior of "over", we don't get "choose" as the ARIA here.
-		mathField.typedText('2');
+		mq.typedText('2');
 		assertAriaEqual('2');
 
-		mathField.keystroke('Escape');
+		mq.keystroke('Escape');
 		assertAriaEqual('after StartBinomial, 1 Choose 2 , EndBinomial');
 
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('end of lower index 2');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('2');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('Choose');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('1');
 	});
 
 	test('navigating a binomial', function () {
-		mathField.typedText('1');
+		mq.typedText('1');
 		assertAriaEqual('1');
-		mathField.cmd('\\choose');
+		mq.cmd('\\choose');
 		// Matching behavior of "over", we don't get "choose" as the ARIA here.
-		mathField.typedText('2');
+		mq.typedText('2');
 		assertAriaEqual('2');
-		mathField.keystroke('Up');
+		mq.keystroke('Up');
 		assertAriaEqual('upper index 1');
-		mathField.keystroke('Down');
+		mq.keystroke('Down');
 		assertAriaEqual('lower index 2');
-		mathField.latex('');
+		mq.latex('');
 	});
 
 	test('typing and backspacing through parenthesies', function () {
-		mathField.typedText('(');
+		mq.typedText('(');
 		assertAriaEqual('left parenthesis');
-		mathField.typedText('1');
+		mq.typedText('1');
 		assertAriaEqual('1');
-		mathField.typedText('*');
+		mq.typedText('*');
 		assertAriaEqual('times');
-		mathField.typedText('2');
+		mq.typedText('2');
 		assertAriaEqual('2');
-		mathField.typedText(')');
+		mq.typedText(')');
 		assertAriaEqual('right parenthesis');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('right parenthesis');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('2');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('times');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('1');
-		mathField.keystroke('Backspace');
+		mq.keystroke('Backspace');
 		assertAriaEqual('left parenthesis');
 	});
 
+	test('typing and backspacing a math function', function () {
+		mq.options.addAutoCommands(['sin']);
+
+		mq.typedText('s');
+		assertAriaEqual('s');
+		mq.typedText('i');
+		assertAriaEqual('i');
+		mq.typedText('n');
+		assertAriaEqual('n');
+		mq.typedText('^');
+		assertAriaEqual('Superscript, , Baseline');
+		mq.typedText('2');
+		assertAriaEqual('2');
+
+		mq.keystroke('Escape');
+		assertAriaEqual('after Superscript, 2 , Baseline');
+
+		mq.keystroke('Backspace');
+		assertAriaEqual('end of superscript 2');
+		mq.keystroke('Escape');
+		mq.typedText('x');
+		assertAriaEqual('x');
+		mq.keystroke('Escape Left');
+		assertAriaEqual('end of sine parameter x');
+		mq.keystroke('Backspace');
+		assertAriaEqual('x');
+		mq.keystroke('Backspace Right');
+		assertAriaEqual('beginning of sine parameter');
+		mq.keystroke('Left');
+		assertAriaEqual('end of sine squared');
+
+		mq.options.removeAutoCommands(['sin']);
+	});
+
 	test('testing beginning and end alerts', function () {
-		mathField.typedText('\\sqrt x');
-		mathField.keystroke('Home');
+		mq.typedText('\\sqrt x');
+		mq.keystroke('Home');
 		assertAriaEqual('beginning of square root x');
-		mathField.keystroke('End');
+		mq.keystroke('End');
 		assertAriaEqual('end of square root x');
-		mathField.keystroke('Ctrl-Home');
+		mq.keystroke('Ctrl-Home');
 		assertAriaEqual('beginning of Math Input StartSquareRoot, x , EndSquareRoot');
-		mathField.keystroke('Ctrl-End');
+		mq.keystroke('Ctrl-End');
 		assertAriaEqual('end of Math Input StartSquareRoot, x , EndSquareRoot');
 	});
 
 	test('testing aria-label for interactive math', function (done) {
 		if (document.hasFocus()) {
-			mathField.focus();
-			mathField.typedText('\\sqrt x');
-			mathField.blur();
+			mq.focus();
+			mq.typedText('\\sqrt x');
+			mq.blur();
 			setTimeout(() => {
 				assert.equal(
-					mathField.__controller.mathspeakSpan.textContent,
+					mq.__controller.mathspeakSpan.textContent,
 					'Math Input: StartSquareRoot, x , EndSquareRoot'
 				);
 				done();
