@@ -1,4 +1,6 @@
-/* global assert, MQ */
+/* global MQ */
+
+import { assert } from './support/assert';
 
 suite('Public API', function () {
 	suite('global functions', function () {

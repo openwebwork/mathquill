@@ -1,4 +1,6 @@
-/* global assert, MQ */
+/* global MQ */
+
+import { assert } from './support/assert';
 
 suite('CSS', function () {
 	test("math field doesn't affect ancestor's .scrollWidth", function () {

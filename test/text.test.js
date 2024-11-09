@@ -1,8 +1,9 @@
-/* global assert, MQ */
+/* global MQ */
 
 import { prayWellFormed } from 'src/constants';
 import { Controller } from 'src/controller';
 import { latexMathParser } from 'commands/mathElements';
+import { assert } from './support/assert';
 
 suite('text', function () {
 	let mq, mostRecentlyReportedLatex;

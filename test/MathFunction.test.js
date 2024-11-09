@@ -1,7 +1,8 @@
-/* global assert, MQ */
+/* global MQ */
 
 import { VNode } from 'src/tree/vNode';
 import { MathFunction, latexMathParser } from 'commands/mathElements';
+import { assert } from './support/assert';
 
 suite('MathFunction', function () {
 	let mq;

@@ -1,10 +1,9 @@
-/* global assert */
-
 import { noop } from 'src/constants';
 import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 import { Options } from 'src/options';
 import { MathField } from 'commands/math';
 import { Controller } from 'src/controller';
+import { assert } from './support/assert';
 
 // FIXME:  Most of this needs to be reworked.  The fact is that the fake events that are being sent do not correctly
 // emulate actual behavior in a browser, and so the tests are a complete sham.

@@ -1,7 +1,8 @@
-/* global assert, MQ */
+/* global MQ */
 
 import { Options } from 'src/options';
 import { Bracket, latexMathParser } from 'commands/mathElements';
+import { assert } from './support/assert';
 
 suite('latex', function () {
 	const options = new Options();

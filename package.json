@@ -24,7 +24,7 @@
 		"build:web": "webpack --mode production",
 		"build": "npm run build:web && npm run build:lib",
 		"serve": "webpack serve --mode development",
-		"lint:eslint": "eslint ./src ./test ./public --fix",
+		"lint:eslint": "eslint ./src ./test --fix",
 		"lint:stylelint": "stylelint \"./src/**/*.less\" \"./public/**/*.css\" \"./public/**/*.html\" --fix",
 		"lint": "npm run lint:eslint && npm run lint:stylelint",
 		"format": "prettier --write ."
