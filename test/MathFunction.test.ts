@@ -1,11 +1,14 @@
-/* global MQ */
-
+import MathQuill from 'src/publicapi';
 import { VNode } from 'src/tree/vNode';
 import { MathFunction, latexMathParser } from 'commands/mathElements';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
+import type { MathBlock } from 'commands/mathBlock';
 
 suite('MathFunction', function () {
-	let mq;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField;
 	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
@@ -16,11 +19,11 @@ suite('MathFunction', function () {
 		mq.el().remove();
 	});
 
-	const assertParsesLatex = (str, latex) => {
+	const assertParsesLatex = (str: string, latex?: string) => {
 		if (typeof latex === 'undefined') latex = str;
 
 		const result = latexMathParser
-			.parse(str)
+			.parse<MathBlock>(str)
 			.postOrder('finalizeTree', mq.options)
 			.postOrder('contactWeld', mq.__controller.cursor)
 			.join('latex');
@@ -83,12 +86,14 @@ suite('MathFunction', function () {
 		});
 
 		test('basic latex output', function () {
-			const tree = latexMathParser.parse('\\sin_2^3\\left(x^2+3\\right)').postOrder('finalizeTree', mq.options);
+			const tree = latexMathParser
+				.parse<MathBlock>('\\sin_2^3\\left(x^2+3\\right)')
+				.postOrder('finalizeTree', mq.options);
 
 			assert.ok(tree.ends.left instanceof MathFunction);
 
-			assert.equal(tree.ends.left.ends.left.join('latex'), '_2^3');
-			assert.equal(tree.ends.left.ends.right.join('latex'), 'x^2+3');
+			assert.equal((tree.ends.left?.ends.left as MathBlock | undefined)?.join('latex'), '_2^3');
+			assert.equal((tree.ends.left?.ends.right as MathBlock | undefined)?.join('latex'), 'x^2+3');
 
 			assert.equal(tree.join('latex'), '\\sin_2^3\\left(x^2+3\\right)');
 		});
@@ -191,6 +196,8 @@ suite('MathFunction', function () {
 			mq.typedText('sin');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
 			assert.ok(cursor.parent?.parent instanceof MathFunction);
+			if (!(cursor.parent?.parent instanceof MathFunction))
+				throw new Error('cursor parent parent is not MathFunction');
 
 			mq.typedText('_');
 			assert.equal(mq.latex(), '\\sin_{ }\\left(\\right)');
@@ -200,7 +207,7 @@ suite('MathFunction', function () {
 
 			mq.keystroke('Backspace Backspace');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
-			assert.equal(cursor.parent?.parent.blocks[0], cursor.parent);
+			assert.equal(cursor.parent.parent.blocks[0], cursor.parent);
 		});
 
 		test('typing caret start superscript', function () {
@@ -209,6 +216,8 @@ suite('MathFunction', function () {
 			mq.typedText('sin');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
 			assert.ok(cursor.parent?.parent instanceof MathFunction);
+			if (!(cursor.parent?.parent instanceof MathFunction))
+				throw new Error('cursor parent parent is not MathFunction');
 
 			mq.typedText('^');
 			assert.equal(mq.latex(), '\\sin^{ }\\left(\\right)');
@@ -218,7 +227,7 @@ suite('MathFunction', function () {
 
 			mq.keystroke('Backspace Backspace');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
-			assert.equal(cursor.parent?.parent.blocks[0], cursor.parent);
+			assert.equal(cursor.parent.parent.blocks[0], cursor.parent);
 		});
 
 		test('typing space or anything other than ^ or _ inserts into content block', function () {
@@ -227,30 +236,32 @@ suite('MathFunction', function () {
 			mq.typedText('sin');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
 			assert.ok(cursor.parent?.parent instanceof MathFunction);
+			if (!(cursor.parent?.parent instanceof MathFunction))
+				throw new Error('cursor parent parent is not MathFunction');
 
 			mq.typedText(' ');
 			assert.equal(mq.latex(), '\\sin\\left(\\ \\right)');
-			assert.ok(cursor.parent?.parent instanceof MathFunction);
-			assert.equal(cursor.parent?.parent.blocks[1], cursor.parent);
+			assert.ok(cursor.parent.parent instanceof MathFunction);
+			assert.equal(cursor.parent.parent.blocks[1], cursor.parent);
 
 			mq.keystroke('Backspace Backspace');
 			mq.typedText('a');
 			assert.equal(mq.latex(), '\\sin\\left(a\\right)');
-			assert.ok(cursor.parent?.parent instanceof MathFunction);
-			assert.equal(cursor.parent?.parent.blocks[1], cursor.parent);
+			assert.ok(cursor.parent.parent instanceof MathFunction);
+			assert.equal(cursor.parent.parent.blocks[1], cursor.parent);
 
 			mq.keystroke('Backspace Backspace');
 			mq.typedText('8');
 			assert.equal(mq.latex(), '\\sin\\left(8\\right)');
-			assert.ok(cursor.parent?.parent instanceof MathFunction);
-			assert.equal(cursor.parent?.parent.blocks[1], cursor.parent);
+			assert.ok(cursor.parent.parent instanceof MathFunction);
+			assert.equal(cursor.parent.parent.blocks[1], cursor.parent);
 
 			mq.keystroke('Backspace Backspace');
 			mq.typedText('\\');
 			assert.equal(mq.latex(), '\\sin\\left(\\ \\right)');
 			mq.keystroke('Left');
-			assert.ok(cursor.parent?.parent instanceof MathFunction);
-			assert.equal(cursor.parent?.parent.blocks[1], cursor.parent);
+			assert.ok(cursor.parent.parent instanceof MathFunction);
+			assert.equal(cursor.parent.parent.blocks[1], cursor.parent);
 		});
 
 		test('typing start parenthesis moves to content block without adding additional parentheses', function () {
@@ -259,22 +270,26 @@ suite('MathFunction', function () {
 			mq.typedText('sin');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
 			assert.ok(cursor.parent?.parent instanceof MathFunction);
+			if (!(cursor.parent?.parent instanceof MathFunction))
+				throw new Error('cursor parent parent is not MathFunction');
 
 			mq.typedText('(');
 			assert.equal(mq.latex(), '\\sin\\left(\\right)');
-			assert.equal(cursor.parent?.parent.blocks[1], cursor.parent);
+			assert.equal(cursor.parent.parent.blocks[1], cursor.parent);
 		});
 	});
 
 	suite('behavior as a left bracket', function () {
 		suite('as initial left bracket', function () {
-			let endBracket;
+			let endBracket: Element;
 			setup(function () {
 				mq.typedText('sin1+2');
 				assert.equal(mq.latex(), '\\sin\\left(1+2\\right)');
 				const fcn = mq.__controller.cursor.parent?.parent;
 				assert.ok(fcn instanceof MathFunction);
-				endBracket = new VNode(fcn.elements.children().last).children().last;
+				if (!(fcn instanceof MathFunction)) throw new Error('cursor parent parent is not MathFunction');
+
+				endBracket = new VNode(fcn.elements.children().last).children().last as Element;
 				assert.ok(!!endBracket);
 				assert.ok(endBracket.classList.contains('mq-ghost'), 'right parenthesis is ghost initially');
 			});

@@ -1,16 +1,18 @@
-/* global MQ */
-
+import MathQuill from 'src/publicapi';
 import { Options } from 'src/options';
 import { Bracket, latexMathParser } from 'commands/mathElements';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
+import type { MathBlock } from 'commands/mathBlock';
+import type { InnerMathField, MathField, StaticMath } from 'commands/math';
 
 suite('latex', function () {
+	const MQ = MathQuill.getInterface();
 	const options = new Options();
 
-	const assertParsesLatex = (str, latex) => {
+	const assertParsesLatex = (str: string, latex?: string) => {
 		if (typeof latex === 'undefined') latex = str;
 
-		const result = latexMathParser.parse(str).postOrder('finalizeTree', options).join('latex');
+		const result = latexMathParser.parse<MathBlock>(str).postOrder('finalizeTree', options).join('latex');
 		assert.equal(result, latex, `parsing '${str}', got '${result}', expected '${latex}'`);
 	};
 
@@ -38,8 +40,12 @@ suite('latex', function () {
 	});
 
 	test('can parse mathbb error case', function () {
-		assert.throws(() => assertParsesLatex('\\mathbb + 2'));
-		assert.throws(() => assertParsesLatex('\\mathbb{A}'));
+		assert.throws(() => {
+			assertParsesLatex('\\mathbb + 2');
+		});
+		assert.throws(() => {
+			assertParsesLatex('\\mathbb{A}');
+		});
 	});
 
 	test('simple exponent', function () {
@@ -95,46 +101,46 @@ suite('latex', function () {
 	});
 
 	test('parens', function () {
-		const tree = latexMathParser.parse('\\left(123\\right)');
+		const tree = latexMathParser.parse<MathBlock>('\\left(123\\right)');
 
 		assert.ok(tree.ends.left instanceof Bracket);
-		const contents = tree.ends.left.ends.left.join('latex');
+		const contents = (tree.ends.left?.ends.left as MathBlock | undefined)?.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left(123\\right)');
 	});
 
 	test('\\langle/\\rangle (issue #508)', function () {
-		const tree = latexMathParser.parse('\\left\\langle 123\\right\\rangle)');
+		const tree = latexMathParser.parse<MathBlock>('\\left\\langle 123\\right\\rangle)');
 
 		assert.ok(tree.ends.left instanceof Bracket);
-		const contents = tree.ends.left.ends.left.join('latex');
+		const contents = (tree.ends.left?.ends.left as MathBlock | undefined)?.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\langle 123\\right\\rangle )');
 	});
 
 	test('\\langle/\\rangle (without whitespace)', function () {
-		const tree = latexMathParser.parse('\\left\\langle123\\right\\rangle)');
+		const tree = latexMathParser.parse<MathBlock>('\\left\\langle123\\right\\rangle)');
 
 		assert.ok(tree.ends.left instanceof Bracket);
-		const contents = tree.ends.left.ends.left.join('latex');
+		const contents = (tree.ends.left?.ends.left as MathBlock | undefined)?.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\langle 123\\right\\rangle )');
 	});
 
 	test('\\lVert/\\rVert', function () {
-		const tree = latexMathParser.parse('\\left\\lVert 123\\right\\rVert)');
+		const tree = latexMathParser.parse<MathBlock>('\\left\\lVert 123\\right\\rVert)');
 
 		assert.ok(tree.ends.left instanceof Bracket);
-		const contents = tree.ends.left.ends.left.join('latex');
+		const contents = (tree.ends.left?.ends.left as MathBlock | undefined)?.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\lVert 123\\right\\rVert )');
 	});
 
 	test('\\lVert/\\rVert (without whitespace)', function () {
-		const tree = latexMathParser.parse('\\left\\lVert123\\right\\rVert)');
+		const tree = latexMathParser.parse<MathBlock>('\\left\\lVert123\\right\\rVert)');
 
 		assert.ok(tree.ends.left instanceof Bracket);
-		const contents = tree.ends.left.ends.left.join('latex');
+		const contents = (tree.ends.left?.ends.left as MathBlock | undefined)?.join('latex');
 		assert.equal(contents, '123');
 		assert.equal(tree.join('latex'), '\\left\\lVert 123\\right\\rVert )');
 	});
@@ -181,7 +187,7 @@ suite('latex', function () {
 	});
 
 	suite('public API', function () {
-		let mq;
+		let mq: MathField;
 		setup(function () {
 			const field = document.createElement('span');
 			document.getElementById('mock')?.append(field);
@@ -189,10 +195,10 @@ suite('latex', function () {
 		});
 
 		suite('.latex(...)', function () {
-			const assertParsesLatex = (str, latex) => {
+			const assertParsesLatex = (str?: unknown, latex?: unknown) => {
 				if (typeof latex === 'undefined') latex = str;
-				mq.latex(str);
-				assert.equal(mq.latex(), latex);
+				mq.latex(str as string);
+				assert.equal(mq.latex(), latex as string);
 			};
 
 			test('basic rendering', function () {
@@ -232,9 +238,9 @@ suite('latex', function () {
 
 		suite('.write(...)', function () {
 			test('empty LaTeX', function () {
-				const assertParsesLatex = (str, latex) => {
+				const assertParsesLatex = (str: unknown, latex?: unknown) => {
 					if (typeof latex === 'undefined') latex = str;
-					mq.write(str);
+					mq.write(str as string);
 					assert.equal(mq.latex(), latex);
 				};
 				assertParsesLatex('');
@@ -245,7 +251,7 @@ suite('latex', function () {
 
 			test('overflow triggers automatic horizontal scroll', function (done) {
 				const mqEl = mq.el();
-				const rootEl = mq.__controller.root.elements.first;
+				const rootEl = mq.__controller.root.elements.first as Element;
 				const cursor = mq.__controller.cursor;
 
 				mqEl.style.width = '10px';
@@ -297,7 +303,7 @@ suite('latex', function () {
 	});
 
 	suite('\\MathQuillMathField', function () {
-		let outer, inner1, inner2;
+		let outer: StaticMath, inner1: InnerMathField, inner2: InnerMathField;
 		setup(function () {
 			const field = document.createElement('span');
 			field.textContent = '\\frac{\\MathQuillMathField{x_0 + x_1 + x_2}}{\\MathQuillMathField{3}}';
@@ -343,9 +349,9 @@ suite('latex', function () {
 			assert.equal(base, outer.innerFields[1]);
 			assert.equal(exp, outer.innerFields[2]);
 
-			mantissa.latex('1.2345');
-			base.latex('10');
-			exp.latex('8');
+			mantissa?.latex('1.2345');
+			base?.latex('10');
+			exp?.latex('8');
 			assert.equal(outer.latex(), '1.2345\\cdot10^8');
 		});
 
@@ -354,58 +360,58 @@ suite('latex', function () {
 			assert.equal(outer.innerFields.length, 2);
 			// assert.equal(outer.innerFields.m.__controller.container, false);
 
-			outer.innerFields.get('m').makeStatic();
-			assert.equal(outer.innerFields.get('m').__controller.editable, false);
+			outer.innerFields.get('m')?.makeStatic();
+			assert.equal(outer.innerFields.get('m')?.__controller.editable, false);
 			assert.equal(
-				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				outer.innerFields.get('m')?.__controller.container.classList.contains('mq-editable-field'),
 				false
 			);
-			assert.equal(outer.innerFields.get('b').__controller.editable, true);
+			assert.equal(outer.innerFields.get('b')?.__controller.editable, true);
 
 			//ensure no errors in making static field static
-			outer.innerFields.get('m').makeStatic();
-			assert.equal(outer.innerFields.get('m').__controller.editable, false);
+			outer.innerFields.get('m')?.makeStatic();
+			assert.equal(outer.innerFields.get('m')?.__controller.editable, false);
 			assert.equal(
-				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				outer.innerFields.get('m')?.__controller.container.classList.contains('mq-editable-field'),
 				false
 			);
-			assert.equal(outer.innerFields.get('b').__controller.editable, true);
+			assert.equal(outer.innerFields.get('b')?.__controller.editable, true);
 
-			outer.innerFields.get('m').makeEditable();
-			assert.equal(outer.innerFields.get('m').__controller.editable, true);
+			outer.innerFields.get('m')?.makeEditable();
+			assert.equal(outer.innerFields.get('m')?.__controller.editable, true);
 			assert.equal(
-				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				outer.innerFields.get('m')?.__controller.container.classList.contains('mq-editable-field'),
 				true
 			);
-			assert.equal(outer.innerFields.get('b').__controller.editable, true);
+			assert.equal(outer.innerFields.get('b')?.__controller.editable, true);
 
 			//ensure no errors with making editable field editable
-			outer.innerFields.get('m').makeEditable();
-			assert.equal(outer.innerFields.get('m').__controller.editable, true);
+			outer.innerFields.get('m')?.makeEditable();
+			assert.equal(outer.innerFields.get('m')?.__controller.editable, true);
 			assert.equal(
-				outer.innerFields.get('m').__controller.container.classList.contains('mq-editable-field'),
+				outer.innerFields.get('m')?.__controller.container.classList.contains('mq-editable-field'),
 				true
 			);
-			assert.equal(outer.innerFields.get('b').__controller.editable, true);
+			assert.equal(outer.innerFields.get('b')?.__controller.editable, true);
 		});
 
 		test('separate API object', function () {
-			const outer2 = MQ(outer.el());
-			assert.equal(outer2.innerFields.length, 2);
-			assert.equal(outer2.innerFields[0].id, inner1.id);
-			assert.equal(outer2.innerFields[1].id, inner2.id);
+			const outer2 = MQ(outer.el()) as StaticMath | undefined;
+			assert.equal(outer2?.innerFields.length, 2);
+			assert.equal(outer2?.innerFields[0].id, inner1.id);
+			assert.equal(outer2?.innerFields[1].id, inner2.id);
 		});
 	});
 
 	suite('error handling', function () {
-		let mq;
+		let mq: MathField;
 		setup(function () {
 			const field = document.createElement('span');
 			document.getElementById('mock')?.append(field);
 			mq = MQ.MathField(field);
 		});
 
-		const testCantParse = (title, ...args) => {
+		const testCantParse = (title: string, ...args: string[]) => {
 			test(title, function () {
 				for (const arg of args) {
 					mq.latex(arg);

@@ -1,8 +1,9 @@
-/* global MQ */
-
-import { assert } from './support/assert';
+import MathQuill from 'src/publicapi';
+import { assert } from 'test/support/assert';
 
 suite('CSS', function () {
+	const MQ = MathQuill.getInterface();
+
 	test("math field doesn't affect ancestor's .scrollWidth", function () {
 		const container = document.createElement('div');
 		container.style.fontSize = '16px';
@@ -23,12 +24,10 @@ suite('CSS', function () {
 		assert.equal(container.scrollWidth, 25);
 	});
 
-	const getHeight = (el) => {
+	const getHeight = (el: Element | null) => {
+		if (!el) return 0;
 		const computedStyle = getComputedStyle(el);
-		return (
-			el.clientHeight - parseFloat(computedStyle.paddingTop ?? 0) - parseFloat(computedStyle.paddingBottom ?? 0) >
-			0
-		);
+		return el.clientHeight - parseFloat(computedStyle.paddingTop) - parseFloat(computedStyle.paddingBottom);
 	};
 
 	test('empty root block does not collapse', function () {
@@ -38,7 +37,7 @@ suite('CSS', function () {
 		MQ.MathField(testEl);
 		const rootEl = testEl.querySelector('.mq-root-block');
 
-		assert.ok(rootEl.classList.contains('mq-empty'), 'Empty root block should have the mq-empty class name.');
+		assert.ok(rootEl?.classList.contains('mq-empty'), 'Empty root block should have the mq-empty class name.');
 		assert.ok(getHeight(rootEl) > 0, 'Empty root block height should be above 0.');
 	});
 
@@ -49,7 +48,7 @@ suite('CSS', function () {
 		MQ.MathField(testEl);
 		const numeratorEl = testEl.querySelector('.mq-numerator');
 
-		assert.ok(numeratorEl.classList.contains('mq-empty'), 'Empty numerator should have the mq-empty class name.');
+		assert.ok(numeratorEl?.classList.contains('mq-empty'), 'Empty numerator should have the mq-empty class name.');
 		assert.ok(getHeight(numeratorEl) > 0, 'Empty numerator height should be above 0.');
 	});
 
@@ -61,9 +60,9 @@ suite('CSS', function () {
 		mq.typedText("f'");
 
 		const mqF = mq.el().querySelector('.mq-f');
-		const computedStyle = getComputedStyle(mqF);
+		const computedStyle = mqF ? getComputedStyle(mqF) : undefined;
 		assert.ok(
-			parseFloat(computedStyle.marginRight ?? 0) > parseFloat(computedStyle.marginLeft ?? 0),
+			parseFloat(computedStyle?.marginRight ?? '0') > parseFloat(computedStyle?.marginLeft ?? '0'),
 			'florin right margin should be greater than left margin'
 		);
 	});
@@ -77,9 +76,13 @@ suite('CSS', function () {
 		const spans = mq.el().querySelectorAll('.mq-root-block span');
 		assert.equal(spans.length, 35, 'PlusMinus expression parsed incorrectly');
 
-		const isBinaryOperator = (i) => spans[i].classList.contains('mq-binary-operator');
-		const assertBinaryOperator = (i, s) => assert.ok(isBinaryOperator(i), '"' + s + '" should be binary');
-		const assertUnaryOperator = (i, s) => assert.ok(!isBinaryOperator(i), '"' + s + '" should be unary');
+		const isBinaryOperator = (i: number) => spans[i].classList.contains('mq-binary-operator');
+		const assertBinaryOperator = (i: number, s: string) => {
+			assert.ok(isBinaryOperator(i), '"' + s + '" should be binary');
+		};
+		const assertUnaryOperator = (i: number, s: string) => {
+			assert.ok(!isBinaryOperator(i), '"' + s + '" should be unary');
+		};
 
 		assertUnaryOperator(1, '(-');
 		assertUnaryOperator(4, '(-1,-');
@@ -104,9 +107,13 @@ suite('CSS', function () {
 		let spans = mq.el().querySelectorAll('.mq-root-block span');
 		assert.equal(spans.length, 6, 'PlusMinus expression parsed incorrectly');
 
-		const isBinaryOperator = (i) => spans[i].classList.contains('mq-binary-operator');
-		const assertBinaryOperator = (i, s) => assert.ok(isBinaryOperator(i), '"' + s + '" should be binary');
-		const assertUnaryOperator = (i, s) => assert.ok(!isBinaryOperator(i), '"' + s + '" should be unary');
+		const isBinaryOperator = (i: number) => spans[i].classList.contains('mq-binary-operator');
+		const assertBinaryOperator = (i: number, s: string) => {
+			assert.ok(isBinaryOperator(i), '"' + s + '" should be binary');
+		};
+		const assertUnaryOperator = (i: number, s: string) => {
+			assert.ok(!isBinaryOperator(i), '"' + s + '" should be unary');
+		};
 
 		assertUnaryOperator(1, '\\class{dummy}{-}');
 		assertBinaryOperator(4, '\\class{dummy}{-}2\\class{dummy}{+}');
@@ -148,13 +155,13 @@ suite('CSS', function () {
 		assert.ok(!n.classList.contains('mq-last'));
 
 		const supsub = mq.el().querySelector('.mq-supsub');
-		assert.ok(supsub.classList.contains('mq-after-operator-name'));
+		assert.ok(supsub?.classList.contains('mq-after-operator-name'));
 
 		mq.typedText('2').keystroke('Escape').typedText('(');
-		assert.ok(!supsub.classList.contains('mq-after-operator-name'));
+		assert.ok(!supsub?.classList.contains('mq-after-operator-name'));
 
 		mq.keystroke('Delete Left Left Left Backspace');
-		assert.ok(!supsub.classList.contains('mq-after-operator-name'));
+		assert.ok(!supsub?.classList.contains('mq-after-operator-name'));
 
 		const mqEl = mq.el();
 		while (mqEl.firstChild) mqEl.firstChild.remove();

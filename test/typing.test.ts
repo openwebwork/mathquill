@@ -1,11 +1,14 @@
-/* global MQ */
-
+import MathQuill from 'src/publicapi';
 import { Bracket } from 'commands/mathElements';
 import { prayWellFormed } from 'src/constants';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
+import type { Cursor } from 'src/cursor';
 
 suite('typing with auto-replaces', function () {
-	let mq, mostRecentlyReportedLatex;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField, mostRecentlyReportedLatex: string | number | undefined;
 	setup(function () {
 		mostRecentlyReportedLatex = NaN; // != to everything
 		const el = document.createElement('span');
@@ -17,8 +20,10 @@ suite('typing with auto-replaces', function () {
 		});
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
-	const assertLatex = (latex) => {
+	const prayWellFormedPoint = (pt: Cursor) => {
+		prayWellFormed(pt.parent, pt.left, pt.right);
+	};
+	const assertLatex = (latex: string) => {
 		prayWellFormedPoint(mq.__controller.cursor);
 		assert.equal(mostRecentlyReportedLatex, latex);
 		assert.equal(mq.latex(), latex);
@@ -803,16 +808,28 @@ suite('typing with auto-replaces', function () {
 				assertLatex('1+\\left(2+3\\right)');
 				const bracket = mq.__controller.cursor.parent?.parent;
 				assert.ok(bracket instanceof Bracket);
-				assert.ok(bracket.elements.children().last.classList.contains('mq-ghost'));
+				assert.ok(
+					bracket instanceof Bracket &&
+						(bracket.elements.children().last as Element).classList.contains('mq-ghost')
+				);
 
 				mq.keystroke('Right').typedText('+4');
 				assertLatex('1+\\left(2+3\\right)+4');
-				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
+				assert.ok(
+					bracket instanceof Bracket &&
+						!(bracket.elements.children().last as Element).classList.contains('mq-ghost')
+				);
 
 				mq.keystroke('Left Left Left Left Left Left Left Delete');
 				assertLatex('\\left(1+2+3\\right)+4');
-				assert.ok(bracket.elements.children().first.classList.contains('mq-ghost'));
-				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
+				assert.ok(
+					bracket instanceof Bracket &&
+						(bracket.elements.children().first as Element).classList.contains('mq-ghost')
+				);
+				assert.ok(
+					bracket instanceof Bracket &&
+						!(bracket.elements.children().last as Element).classList.contains('mq-ghost')
+				);
 			});
 
 			test('selected and replaced by LiveFraction solidifies ghosts (1+2)/( )', function () {
@@ -820,13 +837,25 @@ suite('typing with auto-replaces', function () {
 				assertLatex('\\frac{\\left(1+2\\right)}{ }');
 				const bracket = mq.__controller.cursor.parent?.parent?.ends.left?.ends.left;
 				assert.ok(bracket instanceof Bracket);
-				assert.ok(!bracket.elements.children().first.classList.contains('mq-ghost'));
-				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
+				assert.ok(
+					bracket instanceof Bracket &&
+						!(bracket.elements.children().first as Element).classList.contains('mq-ghost')
+				);
+				assert.ok(
+					bracket instanceof Bracket &&
+						!(bracket.elements.children().last as Element).classList.contains('mq-ghost')
+				);
 
 				mq.keystroke('Right Up Backspace');
 				assertLatex('\\frac{\\left(1+2\\right)}{ }');
-				assert.ok(!bracket.elements.children().first.classList.contains('mq-ghost'));
-				assert.ok(bracket.elements.children().last.classList.contains('mq-ghost'));
+				assert.ok(
+					bracket instanceof Bracket &&
+						!(bracket.elements.children().first as Element).classList.contains('mq-ghost')
+				);
+				assert.ok(
+					bracket instanceof Bracket &&
+						(bracket.elements.children().last as Element).classList.contains('mq-ghost')
+				);
 			});
 
 			test('close paren group by typing close-bracket outside ghost paren (1+2]', function () {
@@ -834,10 +863,12 @@ suite('typing with auto-replaces', function () {
 				assertLatex('\\left(1+2\\right)');
 				const bracket = mq.__controller.cursor.parent?.parent;
 				assert.ok(bracket instanceof Bracket);
-
 				mq.keystroke('Right').typedText(']');
 				assertLatex('\\left(1+2\\right]');
-				assert.ok(!bracket.elements.children().last.classList.contains('mq-ghost'));
+				assert.ok(
+					bracket instanceof Bracket &&
+						!(bracket.elements.children().last as Element).classList.contains('mq-ghost')
+				);
 			});
 
 			test('close adjacent paren group before containing paren group (1+(2+3])', function () {
@@ -996,7 +1027,7 @@ suite('typing with auto-replaces', function () {
 		// but also that when you backspace you get the right state such that
 		// you can either type = again to get the non-strict inequality again,
 		// or backspace again and it'll delete correctly.
-		function assertFullyFunctioningInequality(nonStrict, strict) {
+		const assertFullyFunctioningInequality = (nonStrict: string, strict: string) => {
 			assertLatex(nonStrict);
 			mq.keystroke('Backspace');
 			assertLatex(strict);
@@ -1006,7 +1037,7 @@ suite('typing with auto-replaces', function () {
 			assertLatex(strict);
 			mq.keystroke('Backspace');
 			assertLatex('');
-		}
+		};
 		test('typing and backspacing <=, >=, and !=', function () {
 			mq.typedText('<');
 			assertLatex('<');

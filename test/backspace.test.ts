@@ -1,11 +1,17 @@
-/* global MQ */
-
+import MathQuill from 'src/publicapi';
 import { prayWellFormed } from 'src/constants';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
+import type { Controller } from 'src/controller';
+import type { Cursor } from 'src/cursor';
+import type { MathField } from 'commands/math';
+import type { TNode } from 'tree/node';
+import { TextPiece } from 'commands/textElements';
 
 suite('backspace and delete', function () {
+	const MQ = MathQuill.getInterface();
+
 	suite('backspace', function () {
-		let mq, rootBlock, controller, cursor;
+		let mq: MathField, rootBlock: TNode, controller: Controller, cursor: Cursor;
 		setup(function () {
 			const field = document.createElement('span');
 			document.getElementById('mock')?.append(field);
@@ -15,8 +21,10 @@ suite('backspace and delete', function () {
 			cursor = controller.cursor;
 		});
 
-		const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
-		const assertLatex = (latex) => {
+		const prayWellFormedPoint = (pt: Cursor) => {
+			prayWellFormed(pt.parent, pt.left, pt.right);
+		};
+		const assertLatex = (latex: string) => {
 			prayWellFormedPoint(mq.__controller.cursor);
 			assert.equal(mq.latex(), latex);
 		};
@@ -24,8 +32,8 @@ suite('backspace and delete', function () {
 		test('backspace through exponent', function () {
 			controller.renderLatexMath('x^{nm}');
 			const exp = rootBlock.ends.right,
-				expBlock = exp.ends.left;
-			assert.equal(exp.latex(), '^{nm}', 'right end el is exponent');
+				expBlock = exp?.ends.left;
+			assert.equal(exp?.latex(), '^{nm}', 'right end el is exponent');
 			assert.equal(cursor.parent, rootBlock, 'cursor is in root block');
 			assert.equal(cursor.left, exp, 'cursor is at the end of root block');
 
@@ -208,7 +216,7 @@ suite('backspace and delete', function () {
 			const textBlock = rootBlock.ends.right;
 			assert.equal(cursor.parent, textBlock, 'cursor is in text block');
 			assert.equal(cursor.right, undefined, 'cursor is at the end of text block');
-			assert.equal(cursor.left.text(), 'x', 'cursor is rightward of the x');
+			assert.equal(cursor.left?.text(), 'x', 'cursor is rightward of the x');
 			assert.equal(mq.latex(), '\\text{x}', 'the x has been deleted');
 
 			mq.keystroke('Backspace');
@@ -245,8 +253,9 @@ suite('backspace and delete', function () {
 	});
 
 	suite('delete', function () {
-		let mq, rootBlock, controller, cursor;
+		let mq: MathField, rootBlock: TNode, controller: Controller, cursor: Cursor;
 		setup(function () {
+			const MQ = MathQuill.getInterface();
 			const field = document.createElement('span');
 			document.getElementById('mock')?.append(field);
 			mq = MQ.MathField(field);
@@ -255,10 +264,10 @@ suite('backspace and delete', function () {
 			cursor = controller.cursor;
 		});
 
-		const prayWellFormedPoint = (pt) => {
+		const prayWellFormedPoint = (pt: Cursor) => {
 			prayWellFormed(pt.parent, pt.left, pt.right);
 		};
-		const assertLatex = (latex) => {
+		const assertLatex = (latex: string) => {
 			prayWellFormedPoint(mq.__controller.cursor);
 			assert.equal(mq.latex(), latex);
 		};
@@ -268,8 +277,8 @@ suite('backspace and delete', function () {
 			const exp = rootBlock.ends.right,
 				base = rootBlock.ends.left;
 			mq.moveToLeftEnd();
-			assert.equal(exp.latex(), '^{nm}', 'right end el is exponent');
-			assert.equal(base.latex(), 'x', 'left end el is base');
+			assert.equal(exp?.latex(), '^{nm}', 'right end el is exponent');
+			assert.equal(base?.latex(), 'x', 'left end el is base');
 			assert.equal(cursor.parent, rootBlock, 'cursor is in root block');
 			assert.equal(cursor.right, base, 'cursor is at the start of root block');
 
@@ -377,7 +386,7 @@ suite('backspace and delete', function () {
 			// into the radix/degree/index
 			mq.keystroke('Right');
 			mq.keystroke('Right');
-			assert.equal(cursor.left.latex(), '3', 'cursor at end of radix');
+			assert.equal(cursor.left?.latex(), '3', 'cursor at end of radix');
 
 			// destroy the cube root, but leave 3x
 			mq.keystroke('Delete');
@@ -415,14 +424,14 @@ suite('backspace and delete', function () {
 			const textBlock = rootBlock.ends.left;
 			assert.equal(cursor.parent, textBlock, 'cursor is in text block');
 			assert.equal(cursor.left, undefined, 'cursor is at the start of text block');
-			assert.equal(cursor.right.textStr, 'x', 'cursor is leftward of the x');
-			assertLatex('\\text{x}', 'the x has not been deleted');
+			assert.equal(cursor.right instanceof TextPiece && cursor.right.textStr, 'x', 'cursor is leftward of the x');
+			assertLatex('\\text{x}');
 
 			mq.keystroke('Delete');
 			assert.equal(cursor.parent, textBlock, 'cursor is still in text block');
 			assert.equal(cursor.left, undefined, 'cursor is at the left end of the text block');
 			assert.equal(cursor.right, undefined, 'cursor is at the right end of the text block');
-			assertLatex('', 'the x has been deleted');
+			assertLatex('');
 
 			mq.keystroke('Delete');
 			assert.equal(cursor.parent, rootBlock, 'cursor is in root block');

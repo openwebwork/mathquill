@@ -9,14 +9,15 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2020",
-		"noEmit": true,
+		"noErrorTruncation": true,
 		"paths": {
 			"src/*": ["../src/*"],
 			"tree/*": ["../src/tree/*"],
 			"services/*": ["../src/services/*"],
 			"commands/*": ["../src/commands/*"],
 			"css/*": ["../src/css/*"],
-			"fonts/*": ["../src/fonts/*"]
+			"fonts/*": ["../src/fonts/*"],
+			"test/*": ["./*"]
 		},
 		"lib": ["esnext", "dom", "dom.iterable"]
 	},

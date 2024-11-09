@@ -3,13 +3,13 @@ import { saneKeyboardEvents } from 'services/saneKeyboardEvents.util';
 import { Options } from 'src/options';
 import { MathField } from 'commands/math';
 import { Controller } from 'src/controller';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
 
 // FIXME:  Most of this needs to be reworked.  The fact is that the fake events that are being sent do not correctly
 // emulate actual behavior in a browser, and so the tests are a complete sham.
 
 suite('saneKeyboardEvents', function () {
-	let el;
+	let el: HTMLTextAreaElement;
 
 	const supportsSelectionAPI = () => 'selectionStart' in el;
 
@@ -227,7 +227,7 @@ suite('saneKeyboardEvents', function () {
 				);
 				const mock = document.getElementById('mock');
 				// The next line skips teardown, so the mock element needs to be manually emptied.
-				while (mock.firstChild) mock.firstChild.remove();
+				while (mock?.firstChild) mock.firstChild.remove();
 				this.skip();
 			}
 
@@ -253,14 +253,16 @@ suite('saneKeyboardEvents', function () {
 		suite("selected text after keypress or paste doesn't get mistaken" + ' for inputted text', function () {
 			test('select() immediately after paste', function () {
 				let pastedText;
-				let onPaste = (text) => (pastedText = text);
+				let onPaste: ((text: string) => void) | null = (text: string) => (pastedText = text);
 
 				const ctrlr = new Controller(new MathField.RootBlock(), el, new Options());
-				ctrlr.options.overridePaste = (text) => onPaste(text);
+				ctrlr.options.overridePaste = (text) => {
+					onPaste?.(text);
+				};
 				const shim = saneKeyboardEvents(el, ctrlr);
 
 				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-				event.clipboardData.setData('text/plain', '$x^2+1$');
+				event.clipboardData?.setData('text/plain', '$x^2+1$');
 				el.dispatchEvent(event);
 
 				shim.select('$\\frac{x^2+1}{2}$');
@@ -275,14 +277,16 @@ suite('saneKeyboardEvents', function () {
 
 			test('select() after paste/input', function () {
 				let pastedText;
-				let onPaste = (text) => (pastedText = text);
+				let onPaste: ((text: string) => void) | null = (text: string) => (pastedText = text);
 
 				const ctrlr = new Controller(new MathField.RootBlock(), el, new Options());
-				ctrlr.options.overridePaste = (text) => onPaste(text);
+				ctrlr.options.overridePaste = (text) => {
+					onPaste?.(text);
+				};
 				const shim = saneKeyboardEvents(el, ctrlr);
 
 				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-				event.clipboardData.setData('text/plain', '$x^2+1$');
+				event.clipboardData?.setData('text/plain', '$x^2+1$');
 				el.dispatchEvent(event);
 
 				el.dispatchEvent(new InputEvent('input', { bubbles: true }));
@@ -300,11 +304,13 @@ suite('saneKeyboardEvents', function () {
 
 			test('select() immediately after keydown/keypress', function () {
 				let typedText;
-				let onText = (text) => (typedText = text);
+				let onText: ((text: string) => void) | null = (text) => (typedText = text);
 
 				const ctrlr = new Controller(new MathField.RootBlock(), el, new Options());
 				ctrlr.options.overrideKeystroke = noop;
-				ctrlr.options.overrideTypedText = (text) => onText(text);
+				ctrlr.options.overrideTypedText = (text) => {
+					onText?.(text);
+				};
 				const shim = saneKeyboardEvents(el, ctrlr);
 
 				el.dispatchEvent(
@@ -328,11 +334,13 @@ suite('saneKeyboardEvents', function () {
 
 			test('select() after keydown/keypress/input', function () {
 				let typedText;
-				let onText = (text) => (typedText = text);
+				let onText: ((text: string) => void) | null = (text) => (typedText = text);
 
 				const ctrlr = new Controller(new MathField.RootBlock(), el, new Options());
 				ctrlr.options.overrideKeystroke = noop;
-				ctrlr.options.overrideTypedText = (text) => onText(text);
+				ctrlr.options.overrideTypedText = (text) => {
+					onText?.(text);
+				};
 				const shim = saneKeyboardEvents(el, ctrlr);
 
 				el.dispatchEvent(
@@ -494,7 +502,7 @@ suite('saneKeyboardEvents', function () {
 			saneKeyboardEvents(el, ctrlr);
 
 			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-			event.clipboardData.setData('text/plain', '$x^2+1$');
+			event.clipboardData?.setData('text/plain', '$x^2+1$');
 			el.dispatchEvent(event);
 		});
 
@@ -515,7 +523,7 @@ suite('saneKeyboardEvents', function () {
 			);
 
 			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-			event.clipboardData.setData('text/plain', 'foobar');
+			event.clipboardData?.setData('text/plain', 'foobar');
 			el.dispatchEvent(event);
 		});
 
@@ -535,11 +543,9 @@ suite('saneKeyboardEvents', function () {
 				new KeyboardEvent('keypress', { key: 'v', which: 118, keyCode: 118, ctrlKey: true, bubbles: true })
 			);
 			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-			event.clipboardData.setData('text/plain', 'foobar');
+			event.clipboardData?.setData('text/plain', 'foobar');
 			el.dispatchEvent(event);
-			el.dispatchEvent(
-				new InputEvent('input', { key: 'v', which: 118, keyCode: 118, ctrlKey: true, bubbles: true })
-			);
+			el.dispatchEvent(new InputEvent('input', { which: 118, bubbles: true }));
 		});
 
 		test('keypress timeout happening before paste timeout', function (done) {
@@ -558,7 +564,7 @@ suite('saneKeyboardEvents', function () {
 				new KeyboardEvent('keypress', { key: 'v', which: 118, keyCode: 118, ctrlKey: true, bubbles: true })
 			);
 			const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-			event.clipboardData.setData('text/plain', 'foobar');
+			event.clipboardData?.setData('text/plain', 'foobar');
 			el.dispatchEvent(event);
 
 			// this synthesizes the keypress timeout calling handleText()
@@ -571,7 +577,9 @@ suite('saneKeyboardEvents', function () {
 		test('only runs handler once even if handler synchronously selects', function () {
 			// ...which MathQuill does and resulted in a stack overflow: https://git.io/vosm0
 			const ctrlr = new Controller(new MathField.RootBlock(), el, new Options());
-			ctrlr.options.overrideCopy = () => shim.select();
+			ctrlr.options.overrideCopy = () => {
+				shim.select('');
+			};
 			const shim = saneKeyboardEvents(el, ctrlr);
 
 			el.dispatchEvent(new ClipboardEvent('copy', { bubbles: true }));

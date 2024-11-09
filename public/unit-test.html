@@ -11,20 +11,9 @@
 		<script src="mocha/mocha.js"></script>
 		<link rel="stylesheet" href="mocha/mocha.css">
 
-		<!-- configure mocha -->
-		<script>
-			window.post_xunit_to = new URLSearchParams(location.search).get('post_xunit_to');
-			mocha.setup({ ui: 'tdd', reporter: post_xunit_to ? 'xunit' : 'html', bail: false });
-		</script>
-
 		<!-- include the library with the tests inlined -->
-		<script id="mathquill" src="mathquill.test.js"></script>
-
-		<!-- include MathQuill-basic -->
+		<script id="mathquill" src="mathquill.test.js" defer></script>
 		<link rel="stylesheet" href="mathquill.css">
-		<script>
-			MQ = MathQuill.getInterface();
-		</script>
 	</head>
 
 	<body>
@@ -33,6 +22,10 @@
 		<div id="mock"></div>
 
 		<script>
+			// configure mocha
+			const post_xunit_to = new URLSearchParams(location.search).get('post_xunit_to');
+			mocha.setup({ ui: 'tdd', reporter: post_xunit_to ? 'xunit' : 'html', bail: false });
+
 			teardown(() => {
 				const mock = document.getElementById('mock');
 				while (mock.firstChild) mock.firstChild.remove();

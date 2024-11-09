@@ -1,16 +1,19 @@
-/* global MQ */
-
-import { assert } from './support/assert';
+import MathQuill from 'src/publicapi';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
 
 suite('focusBlur', function () {
-	const assertHasFocus = (mq, name, invert) =>
+	const MQ = MathQuill.getInterface();
+
+	const assertHasFocus = (mq: MathField, name: string, invert?: boolean) => {
 		assert.ok(
-			!!invert ^ (mq.el().querySelector('textarea') === document.activeElement),
+			invert !== (mq.el().querySelector('textarea') === document.activeElement),
 			name + (invert ? ' does not have focus' : ' has focus')
 		);
+	};
 
 	suite('handlers can shift focus away', function () {
-		let mq, mq2, wasUpOutOfCalled;
+		let mq: MathField, mq2: MathField, wasUpOutOfCalled: boolean;
 		setup(function () {
 			const mock = document.getElementById('mock');
 			const span = document.createElement('span');
@@ -29,8 +32,9 @@ suite('focusBlur', function () {
 			wasUpOutOfCalled = false;
 		});
 
-		const triggerUpOutOf = (mq) => {
-			mq.el()
+		const triggerUpOutOf = (mq: MathField) => {
+			mq
+				.el()
 				.querySelector('textarea')
 				?.dispatchEvent(
 					new KeyboardEvent('keydown', { key: 'ArrowUp', which: 38, keyCode: 38, bubbles: true })
@@ -83,7 +87,7 @@ suite('focusBlur', function () {
 
 			mq.blur();
 
-			assertHasFocus(mq, 'mq', 'not');
+			assertHasFocus(mq, 'mq', true);
 
 			// There is different behavior if the window is focused or not.  Ideally this test would run in both states.
 			// However, javascript can not remove focus from the window, so the test just has to deal with the current
@@ -134,14 +138,14 @@ suite('focusBlur', function () {
 		assertHasFocus(mq, 'math field');
 
 		const textarea = document.createElement('textarea');
-		mock.append(textarea);
+		mock?.append(textarea);
 		textarea.focus();
 		assert.ok(textarea === document.activeElement, 'textarea has focus');
 
 		setTimeout(() => {
 			assert.ok(!mq.el().classList.contains('mq-focused'), 'math field is visibly blurred');
 
-			while (mock.firstChild) mock.firstChild.remove();
+			while (mock?.firstChild) mock.firstChild.remove();
 			done();
 		});
 	});
