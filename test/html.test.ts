@@ -1,9 +1,18 @@
+import MathQuill from 'src/publicapi';
 import { mqCmdId, mqBlockId } from 'src/constants';
 import { MathCommand } from 'commands/mathElements';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
 
 suite('HTML', function () {
-	const renderHtml = (numBlocks, htmlTemplate) => {
+	const MQ = MathQuill.getInterface();
+
+	setup(function () {
+		const field = document.createElement('span');
+		document.getElementById('mock')?.append(field);
+		MQ.MathField(field, {});
+	});
+
+	const renderHtml = (numBlocks: number, htmlTemplate: string) => {
 		const cmd = {
 			id: 1,
 			blocks: Array(numBlocks),
@@ -11,11 +20,9 @@ suite('HTML', function () {
 		};
 		for (let i = 0; i < numBlocks; ++i) {
 			cmd.blocks[i] = {
-				i: i,
+				i,
 				id: 2 + i,
-				join: function () {
-					return `Block:${this.i}`;
-				}
+				join: () => `Block:${i.toString()}`
 			};
 		}
 		return MathCommand.prototype.html.call(cmd);

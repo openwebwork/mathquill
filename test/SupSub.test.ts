@@ -1,23 +1,28 @@
-/* global MQ */
-
+import MathQuill from 'src/publicapi';
 import { noop, prayWellFormed } from 'src/constants';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
+import type { Cursor } from 'src/cursor';
 
 suite('SupSub', function () {
-	let mq;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField;
 	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
 		mq = MQ.MathField(field);
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
+	const prayWellFormedPoint = (pt: Cursor) => {
+		prayWellFormed(pt.parent, pt.left, pt.right);
+	};
 
-	let expecteds = [
+	let expecteds: string | string[] = [
 		'x_{ab} x_{ba}, x_a^b x_a^b; x_{ab} x_{ba}, x_a^b x_a^b; x_a x_a, x_a^{} x_a^{}',
 		'x_b^a x_b^a, x^{ab} x^{ba}; x_b^a x_b^a, x^{ab} x^{ba}; x_{}^a x_{}^a, x^a x^a'
 	];
-	let expectedsAfterC = [
+	let expectedsAfterC: string | string[] = [
 		'x_{abc} x_{bca}, x_a^{bc} x_a^{bc}; x_{ab}c x_{bca}, x_a^bc x_a^bc; x_ac x_{ca}, x_a^{}c x_a^{}c',
 		'x_{bc}^a x_{bc}^a, x^{abc} x^{bca}; x_b^ac x_b^ac, x^{ab}c x^{bca}; x_{}^ac x_{}^ac, x^ac x^{ca}'
 	];
@@ -26,9 +31,9 @@ suite('SupSub', function () {
 
 		'typed, wrote, wrote empty'.split(', ').forEach((did, j) => {
 			const doTo = [
-				(mq, supsub) => mq.typedText(supsub).typedText('b'),
-				(mq, supsub) => mq.write(`${supsub}b`),
-				(mq, supsub) => mq.write(`${supsub}{}`)
+				(mq: MathField, supsub: string) => mq.typedText(supsub).typedText('b'),
+				(mq: MathField, supsub: string) => mq.write(`${supsub}b`),
+				(mq: MathField, supsub: string) => mq.write(`${supsub}{}`)
 			][j];
 
 			'sub super'.split(' ').forEach((supsub, k) => {
@@ -37,7 +42,7 @@ suite('SupSub', function () {
 				'after before'.split(' ').forEach((side, l) => {
 					const moveToSide = [
 						noop,
-						(mq) => {
+						(mq: MathField) => {
 							mq.moveToLeftEnd().keystroke('Right');
 						}
 					][l];
@@ -70,12 +75,12 @@ suite('SupSub', function () {
 		const initialLatex = 'x_a x^a'.split(' ')[i];
 
 		'typed wrote'.split(' ').forEach((did, j) => {
-			const doTo = [(mq) => mq.typedText('³'), (mq) => mq.write('³')][j];
+			const doTo = [(mq: MathField) => mq.typedText('³'), (mq: MathField) => mq.write('³')][j];
 
 			'after before'.split(' ').forEach((side, k) => {
 				const moveToSide = [
 					noop,
-					(mq) => {
+					(mq: MathField) => {
 						mq.moveToLeftEnd().keystroke('Right');
 					}
 				][k];

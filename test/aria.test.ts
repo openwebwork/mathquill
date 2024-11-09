@@ -1,17 +1,18 @@
-/* global MQ */
-
-import { assert } from './support/assert';
+import MathQuill from 'src/publicapi';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
 
 suite('aria', function () {
-	let mq;
-	let container;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField, container: HTMLElement;
 	setup(function () {
 		container = document.createElement('span');
 		document.getElementById('mock')?.append(container);
 		mq = MQ.MathField(container);
 	});
 
-	const assertAriaEqual = (alertText) => {
+	const assertAriaEqual = (alertText: string) => {
 		assert.equal(alertText, mq.__controller.aria.msg);
 	};
 
@@ -64,7 +65,7 @@ suite('aria', function () {
 			'The static math textarea is not tabbable.'
 		);
 		const textArea = container.querySelector('textarea');
-		assert.ok(textArea.closest('[aria-hidden="true"]'), 'Textarea has an aria-hidden parent');
+		assert.ok(textArea?.closest('[aria-hidden="true"]'), 'Textarea has an aria-hidden parent');
 		const mathSpeak = container.querySelectorAll('.mq-mathspeak');
 		assert.equal(mathSpeak.length, 2, 'Two mathspeak regions');
 		assert.ok(mathSpeak[1].closest('[aria-hidden="true"]'), 'Mathspeak has an aria-hidden parent');
@@ -264,7 +265,7 @@ suite('aria', function () {
 			mq.blur();
 			setTimeout(() => {
 				assert.equal(
-					mq.__controller.mathspeakSpan.textContent,
+					mq.__controller.mathspeakSpan?.textContent,
 					'Math Input: StartSquareRoot, x , EndSquareRoot'
 				);
 				done();
@@ -278,7 +279,7 @@ suite('aria', function () {
 					'Click the page, or close the Developer Tools, and Refresh.'
 			);
 			const mock = document.getElementById('mock');
-			while (mock.firstChild) mock.firstChild.remove();
+			while (mock?.firstChild) mock.firstChild.remove();
 			this.skip();
 		}
 	});
@@ -290,17 +291,17 @@ suite('aria', function () {
 		document.getElementById('mock')?.append(staticSpan);
 		const staticMath = MQ.StaticMath(staticSpan);
 		assert.equal(
-			staticMath.__controller.mathspeakSpan.textContent,
+			staticMath.__controller.mathspeakSpan?.textContent,
 			'y equals StartFraction, 2 x Over 3 y , EndFraction'
 		);
 		assert.equal('', staticMath.getAriaLabel());
 		staticMath.setAriaLabel('Static Label');
 		assert.equal(
-			staticMath.__controller.mathspeakSpan.textContent,
+			staticMath.__controller.mathspeakSpan?.textContent,
 			'Static Label: y equals StartFraction, 2 x Over 3 y , EndFraction'
 		);
 		assert.equal('Static Label', staticMath.getAriaLabel());
 		staticMath.latex('2+2');
-		assert.equal(staticMath.__controller.mathspeakSpan.textContent, 'Static Label: 2 plus 2');
+		assert.equal(staticMath.__controller.mathspeakSpan?.textContent, 'Static Label: 2 plus 2');
 	});
 });

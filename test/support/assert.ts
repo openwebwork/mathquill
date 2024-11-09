@@ -10,24 +10,25 @@ const fail = (opts?: { message?: string; explanation?: string }) => {
 };
 
 export const assert = {
-	ok(thing: string, message: string) {
+	ok(thing: unknown, message?: string) {
 		if (thing) return;
-		fail({ message: message, explanation: `expected ${thing} to be truthy` });
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+		fail({ message, explanation: `expected ${thing} to be truthy` });
 	},
-	equal<T>(thing1: T, thing2: T, message: string) {
+	equal<T>(thing1: T, thing2: T, message?: string) {
 		if (thing1 === thing2) return;
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		fail({ message: message, explanation: `expected (${thing1}) to equal (${thing2})` });
+		fail({ message, explanation: `expected (${thing1}) to equal (${thing2})` });
 	},
-	throws(fn: (...args: unknown[]) => unknown, message: string) {
+	throws(fn: (...args: unknown[]) => unknown, message?: string) {
 		try {
 			fn();
 		} catch {
 			return;
 		}
-		fail({ message: message, explanation: `expected ${fn.toString()} to throw an error` });
+		fail({ message, explanation: `expected ${fn.toString()} to throw an error` });
 	},
 	fail(message: string) {
-		fail({ message: message, explanation: 'generic fail' });
+		fail({ message, explanation: 'generic fail' });
 	}
 };

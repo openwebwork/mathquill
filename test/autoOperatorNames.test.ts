@@ -1,33 +1,36 @@
-/* global MQ */
-
+import MathQuill from 'src/publicapi';
 import { Letter } from 'commands/mathElements';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
 
 suite('autoOperatorNames', function () {
-	let mq;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField;
 	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
 		mq = MQ.MathField(field);
 	});
 
-	const assertLatex = (input, expected) => {
+	const assertLatex = (input: string, expected: string) => {
 		const result = mq.latex();
 		assert.equal(result, expected, `${input}, got '${result}', expected '${expected}'`);
 	};
 
-	const assertText = (input, expected) => {
+	const assertText = (input: string, expected: string) => {
 		const result = mq.text();
 		assert.equal(result, expected, `${input}, got '${result}', expected '${expected}'`);
 	};
 
 	test('simple LaTeX parsing, typing', function () {
-		const assertAutoOperatorNamesWork = (str, latex) => {
+		const assertAutoOperatorNamesWork = (str: string, latex: string) => {
 			let count = 0;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			const _autoUnItalicize = Letter.prototype.autoUnItalicize;
-			Letter.prototype.autoUnItalicize = function () {
+			Letter.prototype.autoUnItalicize = function (opts) {
 				count += 1;
-				return _autoUnItalicize.apply(this, arguments);
+				_autoUnItalicize.apply(this, [opts]);
 			};
 
 			mq.latex(str);
@@ -54,7 +57,7 @@ suite('autoOperatorNames', function () {
 	});
 
 	test('text() output', function () {
-		const assertTranslatedCorrectly = (latexStr, text) => {
+		const assertTranslatedCorrectly = (latexStr: string, text: string) => {
 			mq.latex(latexStr);
 			assertText(`outputting ${latexStr}`, text);
 		};
@@ -65,10 +68,11 @@ suite('autoOperatorNames', function () {
 
 	test('deleting', function () {
 		let count = 0;
+		// eslint-disable-next-line @typescript-eslint/unbound-method
 		const _autoUnItalicize = Letter.prototype.autoUnItalicize;
-		Letter.prototype.autoUnItalicize = function () {
+		Letter.prototype.autoUnItalicize = function (opts) {
 			count += 1;
-			return _autoUnItalicize.apply(this, arguments);
+			_autoUnItalicize.apply(this, [opts]);
 		};
 
 		mq.options.addAutoOperatorNames('cac');

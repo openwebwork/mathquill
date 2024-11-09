@@ -1,26 +1,30 @@
 import { noop } from 'src/constants';
-import { Cursor } from 'src/cursor';
+import { Controller } from 'src/controller';
+import { Options } from 'src/options';
 import { Point } from 'tree/point';
 import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
-import { assert } from './support/assert';
+import { assert } from 'test/support/assert';
+import { MathField } from 'commands/math';
 
 suite('Cursor::select()', function () {
-	const cursor = new Cursor();
+	const cursor = new Controller(new MathField.RootBlock(), document.createElement('span'), new Options()).cursor;
 	cursor.selectionChanged = noop;
 
-	const assertSelection = (A, B, leftEnd, rightEnd) => {
-		const lca = leftEnd.parent,
+	const assertSelection = (A: Point, B: Point, leftEnd?: TNode, rightEnd?: TNode) => {
+		const lca = leftEnd?.parent,
 			frag = new Fragment(leftEnd, rightEnd || leftEnd);
 
 		(function eitherOrder(A, B) {
 			let count = 0;
-			lca.selectChildren = function (leftEnd, rightEnd) {
-				count += 1;
-				assert.equal(frag.ends.left, leftEnd);
-				assert.equal(frag.ends.right, rightEnd);
-				return TNode.prototype.selectChildren.apply(this, arguments);
-			};
+			if (lca) {
+				lca.selectChildren = function (leftEnd, rightEnd) {
+					count += 1;
+					assert.equal(frag.ends.left, leftEnd);
+					assert.equal(frag.ends.right, rightEnd);
+					return TNode.prototype.selectChildren.apply(this, [leftEnd, rightEnd]);
+				};
+			}
 
 			cursor.parent = A.parent;
 			cursor.left = A.left;
@@ -101,13 +105,13 @@ suite('Cursor::select()', function () {
 		cursor.right = A.right;
 		cursor.startSelection();
 		cursor.parent = anotherTree;
-		cursor.left = 0;
-		cursor.right = 0;
+		delete cursor.left;
+		delete cursor.right;
 		assert.throws(() => cursor.select());
 
 		cursor.parent = anotherTree;
-		cursor.left = 0;
-		cursor.right = 0;
+		delete cursor.left;
+		delete cursor.right;
 		cursor.startSelection();
 		cursor.parent = A.parent;
 		cursor.left = A.left;

@@ -100,7 +100,7 @@ module.exports = (_env, argv) => {
 		console.log('Using development mode.');
 
 		config.devtool = 'source-map';
-		config.entry['mathquill.test'] = './test/index.js';
+		config.entry['mathquill.test'] = './test/index.ts';
 		config.resolve.alias.test = path.resolve(__dirname, 'test');
 		config.devServer = {
 			server: { type: 'http' },

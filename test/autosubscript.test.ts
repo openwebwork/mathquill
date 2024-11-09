@@ -1,9 +1,14 @@
-/* global MQ */
-
-import { assert } from './support/assert';
+import MathQuill from 'src/publicapi';
+import { assert } from 'test/support/assert';
+import type { Controller } from 'src/controller';
+import type { Cursor } from 'src/cursor';
+import type { MathField } from 'commands/math';
+import type { TNode } from 'tree/node';
 
 suite('autoSubscript', function () {
-	let mq, rootBlock, controller, cursor;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField, rootBlock: TNode, controller: Controller, cursor: Cursor;
 	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
