@@ -1,6 +1,5 @@
-/* global assert */
-
 import { Parser } from 'services/parser.util';
+import { assert } from './support/assert';
 
 suite('parser', function () {
 	const string = Parser.string;

@@ -1,6 +1,7 @@
-/* global assert, MQ */
+/* global MQ */
 
 import { noop, prayWellFormed } from 'src/constants';
+import { assert } from './support/assert';
 
 suite('SupSub', function () {
 	let mq;

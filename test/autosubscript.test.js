@@ -1,4 +1,6 @@
-/* global assert, MQ */
+/* global MQ */
+
+import { assert } from './support/assert';
 
 suite('autoSubscript', function () {
 	let mq, rootBlock, controller, cursor;

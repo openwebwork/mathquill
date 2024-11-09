@@ -1,6 +1,7 @@
-/* global assert, MQ */
+/* global MQ */
 
 import { Letter } from 'commands/mathElements';
+import { assert } from './support/assert';
 
 suite('autoOperatorNames', function () {
 	let mq;

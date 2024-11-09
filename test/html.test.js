@@ -1,7 +1,6 @@
-/* global assert */
-
 import { mqCmdId, mqBlockId } from 'src/constants';
 import { MathCommand } from 'commands/mathElements';
+import { assert } from './support/assert';
 
 suite('HTML', function () {
 	const renderHtml = (numBlocks, htmlTemplate) => {

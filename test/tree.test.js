@@ -1,7 +1,6 @@
-/* global assert */
-
 import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
+import { assert } from './support/assert';
 
 suite('tree', function () {
 	suite('adopt', function () {

@@ -1,10 +1,9 @@
-/* global assert */
-
 import { noop } from 'src/constants';
 import { Cursor } from 'src/cursor';
 import { Point } from 'tree/point';
 import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
+import { assert } from './support/assert';
 
 suite('Cursor::select()', function () {
 	const cursor = new Cursor();

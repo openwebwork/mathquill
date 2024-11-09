@@ -1,4 +1,6 @@
-/* global assert, MQ */
+/* global MQ */
+
+import { assert } from './support/assert';
 
 suite('focusBlur', function () {
 	const assertHasFocus = (mq, name, invert) =>

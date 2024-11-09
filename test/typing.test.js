@@ -1,7 +1,8 @@
-/* global assert, MQ */
+/* global MQ */
 
 import { Bracket } from 'commands/mathElements';
 import { prayWellFormed } from 'src/constants';
+import { assert } from './support/assert';
 
 suite('typing with auto-replaces', function () {
 	let mq, mostRecentlyReportedLatex;
