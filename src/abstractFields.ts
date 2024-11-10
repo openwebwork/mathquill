@@ -14,7 +14,7 @@ export class AbstractMathQuill {
 	__controller: Controller;
 	__options: Options;
 	id: number;
-	revert?: () => void;
+	revert?: () => HTMLElement;
 	static RootBlock?: Constructor<TNode>;
 
 	constructor(ctrlr: Controller) {
@@ -73,6 +73,8 @@ export class AbstractMathQuill {
 		return this.__controller.exportText();
 	}
 
+	latex(latex: string): this;
+	latex(): string;
 	latex(latex?: string) {
 		if (typeof latex !== 'undefined') {
 			this.__controller.renderLatexMath(latex);
@@ -203,16 +205,16 @@ export class EditableField extends AbstractMathQuill {
 	dropEmbedded(
 		pageX: number,
 		pageY: number,
-		options: { text?: () => string; htmlTemplate?: string; latex?: () => string }
+		options: { text?: () => string; htmlString?: string; latex?: () => string }
 	) {
-		const el = document.elementFromPoint(pageX - window.scrollX, pageY - window.scrollY) as HTMLElement;
+		const el = document.elementFromPoint(pageX - window.scrollX, pageY - window.scrollY);
 		this.__controller.seek(el, pageX);
 		const cmd = new LatexCmds.embed().setOptions(options);
 		cmd.createLeftOf(this.__controller.cursor);
 	}
 
-	clickAt(clientX: number, clientY: number, target: HTMLElement | undefined) {
-		target = target || (document.elementFromPoint(clientX, clientY) as HTMLElement);
+	clickAt(clientX: number, clientY: number, target?: Element | null) {
+		target = target || document.elementFromPoint(clientX, clientY);
 
 		const ctrlr = this.__controller,
 			root = ctrlr.root;

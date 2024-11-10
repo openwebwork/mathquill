@@ -52,8 +52,10 @@ export class StaticMath extends AbstractMathQuill {
 		return this;
 	}
 
+	latex(latex: string): this;
+	latex(): string;
 	latex(latex?: string) {
-		const returned = super.latex(latex);
+		const returned = typeof latex === 'string' ? super.latex(latex) : super.latex();
 		if (typeof latex !== 'undefined') {
 			this.__controller.root.postOrder(
 				'registerInnerField',

@@ -206,7 +206,7 @@ class LatexFragment extends MathCommand {
 	}
 
 	createLeftOf(cursor: Cursor) {
-		const block: MathCommand = latexMathParser.parse(this.latex());
+		const block = latexMathParser.parse<MathCommand>(this.latex());
 		if (cursor.parent) block.children().adopt(cursor.parent, cursor[L], cursor[R]);
 		cursor[L] = block.ends[R];
 		cursor.element.before(...block.domify().contents);
@@ -217,7 +217,7 @@ class LatexFragment extends MathCommand {
 	}
 
 	parser() {
-		const block: MathCommand = latexMathParser.parse(this.latex());
+		const block = latexMathParser.parse<MathCommand>(this.latex());
 		return Parser.succeed(block.children());
 	}
 }

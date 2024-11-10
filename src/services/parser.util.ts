@@ -133,16 +133,16 @@ export class Parser {
 	}
 
 	// Primitive parsers
-	static string(str: string) {
+	static string = (str: string) => {
 		return new Parser((stream, onSuccess, onFailure) => {
 			const head = stream.slice(0, str.length);
 
 			if (head === str) return onSuccess(stream.slice(str.length), head);
 			else return onFailure(stream, `expected '${str}'`);
 		});
-	}
+	};
 
-	static regex(re: RegExp) {
+	static regex = (re: RegExp) => {
 		if (re.toString().charAt(1) !== '^') throw new Error('regexp parser is anchored');
 
 		return new Parser((stream, onSuccess, onFailure) => {
@@ -151,16 +151,12 @@ export class Parser {
 			if (match) return onSuccess(stream.slice(match[0].length), match[0]);
 			else return onFailure(stream, `expected ${re.toString()}`);
 		});
-	}
+	};
 
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-	static succeed<T>(result?: T) {
-		return new Parser((stream, onSuccess) => onSuccess(stream, result));
-	}
+	static succeed = <T>(result?: T) => new Parser((stream, onSuccess) => onSuccess(stream, result));
 
-	static fail(msg?: string) {
-		return new Parser((stream, _, onFailure) => onFailure(stream, msg));
-	}
+	static fail = (msg?: string) => new Parser((stream, _, onFailure) => onFailure(stream, msg));
 
 	static letter = Parser.regex(/^[a-z]/i);
 	static letters = Parser.regex(/^[a-z]*/i);

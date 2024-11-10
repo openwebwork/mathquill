@@ -26,14 +26,26 @@ declare global {
 const isBrowser = Object.getPrototypeOf(Object.getPrototypeOf(globalThis)) !== Object.prototype;
 
 interface MQApi {
-	(el: unknown): AbstractMathQuill | undefined;
+	(el?: HTMLElement): AbstractMathQuill | undefined;
 	saneKeyboardEvents: typeof saneKeyboardEvents;
-	config: (opts: InputOptions) => MQApi;
-	registerEmbed: (name: string, options: (data: string) => EmbedOptions) => void;
-	StaticMath: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
-	MathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
-	InnerMathField: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
-	TextField: (el: unknown, opts: InputOptions) => AbstractMathQuill | undefined;
+	config(opts: InputOptions): MQApi;
+	registerEmbed(name: string, options: (data: string) => EmbedOptions): void;
+	StaticMath: {
+		(el?: null): undefined;
+		(el: HTMLElement, opts?: InputOptions): StaticMath;
+	};
+	MathField: {
+		(el?: null): undefined;
+		(el: HTMLElement, opts?: InputOptions): MathField;
+	};
+	InnerMathField: {
+		(el?: null): undefined;
+		(el: HTMLElement, opts?: InputOptions): InnerMathField;
+	};
+	TextField: {
+		(el?: null): undefined;
+		(el: HTMLElement, opts?: InputOptions): TextField;
+	};
 }
 
 interface MathQuill {
@@ -49,14 +61,12 @@ const mathQuill: MathQuill = {
 	VERSION: '0.0.1',
 
 	getInterface() {
-		const APIClasses: Record<string, AbstractMathQuillConstructor> = {};
-
 		// Function that takes an HTML element and, if it's the root HTML element of a
 		// static math or math or text field, returns an API object for it (else, undefined).
 		//   const mathfield = MQ.MathField(mathFieldSpan);
 		//   assert(MQ(mathFieldSpan).id === mathfield.id);
 		//   assert(MQ(mathFieldSpan).id === MQ(mathFieldSpan).id);
-		const MQ = (el: unknown) => {
+		const MQ = (el?: HTMLElement) => {
 			if (!(el instanceof HTMLElement)) return;
 			const blockId = el.querySelector('.mq-root-block')?.getAttribute(mqBlockId) ?? false;
 			const ctrlr = blockId ? TNode.byId.get(parseInt(blockId))?.controller : undefined;
@@ -65,9 +75,9 @@ const mathQuill: MathQuill = {
 
 		MQ.saneKeyboardEvents = saneKeyboardEvents;
 
-		MQ.config = (opts: InputOptions) => {
+		MQ.config = (opts: InputOptions): MQApi => {
 			Options.config(Options.prototype, opts);
-			return MQ;
+			return MQ as MQApi;
 		};
 
 		MQ.registerEmbed = (name: string, options: (data: string) => EmbedOptions) => {
@@ -80,20 +90,31 @@ const mathQuill: MathQuill = {
 		// Export the API functions that MathQuill-ify an HTML element into API objects
 		// of each class. If the element had already been MathQuill-ified but into a
 		// different kind (or it's not an HTML element), return undefined.
-		for (const [kind, APIClass] of Object.entries({ StaticMath, MathField, InnerMathField, TextField })) {
-			APIClasses[kind] = APIClass;
-			(MQ as MQApi)[kind as keyof Pick<MQApi, 'StaticMath' | 'MathField' | 'InnerMathField' | 'TextField'>] = (
-				el: unknown,
-				opts: InputOptions
-			) => {
+		const createEntrypoint = <MQClass extends AbstractMathQuillConstructor>(
+			kind: keyof Pick<MQApi, 'StaticMath' | 'MathField' | 'InnerMathField' | 'TextField'>,
+			APIClass: MQClass
+		) => {
+			function mqEntrypoint(el?: null): undefined;
+			function mqEntrypoint(el: HTMLElement, opts?: InputOptions): InstanceType<MQClass>;
+			function mqEntrypoint(el?: HTMLElement | null, opts?: InputOptions) {
+				if (!(el instanceof HTMLElement)) return;
 				const mq = MQ(el);
-				if (mq instanceof APIClass || !(el instanceof HTMLElement)) return mq;
+				if (!(el instanceof HTMLElement) || mq instanceof APIClass) return mq;
 				const ctrlr = new Controller(new APIClass.RootBlock(), el, new Options());
 				ctrlr.KIND_OF_MQ = kind;
-				return new APIClass(ctrlr).config(opts).__mathquillify();
-			};
-			Object.setPrototypeOf((MQ as MQApi)[kind as keyof MQApi], APIClass);
-		}
+				return new APIClass(ctrlr).config(opts ?? {}).__mathquillify();
+			}
+			return mqEntrypoint;
+		};
+
+		MQ.StaticMath = createEntrypoint('StaticMath', StaticMath);
+		MQ.StaticMath.prototype = StaticMath.prototype;
+		MQ.MathField = createEntrypoint('MathField', MathField);
+		MQ.MathField.prototype = MathField.prototype;
+		MQ.InnerMathField = createEntrypoint('InnerMathField', InnerMathField);
+		MQ.InnerMathField.prototype = InnerMathField.prototype;
+		MQ.TextField = createEntrypoint('TextField', TextField);
+		MQ.TextField.prototype = TextField.prototype;
 
 		return MQ as MQApi;
 	},

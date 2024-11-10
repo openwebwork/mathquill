@@ -38,14 +38,14 @@ export interface InputOptions {
 	autoSubscriptNumerals?: boolean;
 	typingSlashWritesDivisionSymbol?: boolean;
 	typingAsteriskWritesTimesSymbol?: boolean;
-	substituteTextarea?: () => HTMLTextAreaElement;
+	substituteTextarea?: () => HTMLElement;
 	handlers?: Handlers;
 	overridePaste?: () => void;
 	overrideCut?: () => void;
 	overrideCopy?: () => void;
 	overrideTypedText?: (text: string) => void;
 	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
-	ignoreNextMousedown: (e?: MouseEvent) => boolean;
+	ignoreNextMousedown?: (e?: MouseEvent) => boolean;
 }
 
 interface NamesWLength {

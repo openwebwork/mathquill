@@ -248,7 +248,7 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 // A piece of plain text, with a TextBlock as a parent and no children. This wraps a single DOMTextNode.
 // For convenience, it has a textStr property that is a string that mirrors the text contents of the DOMTextNode.
 // Text contents must always be nonempty.
-class TextPiece extends TNode {
+export class TextPiece extends TNode {
 	textStr: string;
 	dom?: Text;
 

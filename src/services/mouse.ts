@@ -140,7 +140,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 			this.container.addEventListener('mousedown', this.mouseDownHandler);
 		}
 
-		seek(target: HTMLElement | undefined, pageX: number) {
+		seek(target: Element | null | undefined, pageX: number) {
 			const cursor = this.notify('select').cursor;
 
 			let nodeId = 0;

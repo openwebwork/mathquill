@@ -22,10 +22,10 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 		}
 
 		renderLatexMath(latex: string) {
-			const block: MathBlock | undefined = latexMathParser
+			const block = latexMathParser
 				.skip(Parser.eof)
 				.or(Parser.all.result(false))
-				.parse(latex);
+				.parse<MathBlock | undefined>(latex);
 
 			this.root.eachChild('postOrder', 'dispose');
 			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
@@ -83,7 +83,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			const escapedDollar = Parser.string('\\$').result('$');
 			const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);
 			const latexText = mathMode.or(textChar).many();
-			const commands: TNode[] | undefined = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+			const commands = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse<TNode[] | undefined>(latex);
 
 			if (commands) {
 				for (const command of commands) {

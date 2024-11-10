@@ -127,7 +127,7 @@ export class MathBlock extends BlockFocusBlur(writeMethodMixin(MathElement)) {
 		const all = Parser.all;
 		const eof = Parser.eof;
 
-		const block: MathCommand | undefined = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
+		const block = latexMathParser.skip(eof).or(all.result(false)).parse<MathCommand | undefined>(latex);
 
 		if (block && !block.isEmpty() && block.prepareInsertionAt(cursor)) {
 			if (cursor.parent) block.children().adopt(cursor.parent, cursor[L], cursor[R]);
