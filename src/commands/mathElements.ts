@@ -1436,9 +1436,10 @@ const BracketMixin = <TBase extends Constructor<MathCommand>>(Base: TBase) =>
 
 		getSymbol(side?: Direction) {
 			return (
-				(SVG_SYMBOLS[this.sides[side || 'right'].ch] as
-					| { width: string; html: string }
-					| undefined) || { width: '0', html: '' }
+				(SVG_SYMBOLS[this.sides[side || 'right'].ch] as { width: string; html: string } | undefined) || {
+					width: '0',
+					html: ''
+				}
 			);
 		}
 

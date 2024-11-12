@@ -25,9 +25,13 @@
 		"build": "npm run build:web && npm run build:lib",
 		"serve": "webpack serve --mode development",
 		"lint:eslint": "eslint ./src ./test --fix",
+		"lint:eslint:check": "eslint ./src ./test",
 		"lint:stylelint": "stylelint \"./src/**/*.less\" \"./public/**/*.css\" \"./public/**/*.html\" --fix",
+		"lint:stylelint:check": "stylelint \"./src/**/*.less\" \"./public/**/*.css\" \"./public/**/*.html\"",
 		"lint": "npm run lint:eslint && npm run lint:stylelint",
-		"format": "prettier --write ."
+		"lint:check": "npm run lint:eslint:check && npm run lint:stylelint:check",
+		"format": "prettier --write .",
+		"format:check": "prettier --check ."
 	},
 	"devDependencies": {
 		"@awmottaz/prettier-plugin-void-html": "^1.6.1",
