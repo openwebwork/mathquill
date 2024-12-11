@@ -54,9 +54,8 @@ Additionally you can run `npm run serve` which will automatically re-build and s
 tests.
 
 Then you can enter <http://localhost:9292/demo.html>, <http://localhost:9292/unit-test.html>,
-<http://localhost:9292/visual-test.html>, <http://localhost:9292/input-test.html>,
-<http://localhost:9292/basic-test.html>, or just <http://localhost:9292> in your browser to view the various available
-pages.
+<http://localhost:9292/visual-test.html>, <http://localhost:9292/input-test.html>, or just <http://localhost:9292> in
+your browser to view the various available pages.
 
 ## Open-Source License
 

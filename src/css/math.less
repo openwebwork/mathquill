@@ -33,6 +33,17 @@
 		line-height: 0.9;
 	}
 
+	svg {
+		// SVG symbols are used for brackets and square root symbols.
+		// This copies the current font color to these SVG symbols.
+		fill: currentcolor;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+
 	* {
 		font-size: inherit;
 		line-height: inherit;
@@ -157,7 +168,6 @@
 		.inline-block;
 	}
 
-	////
 	// ^, _
 	// sup/sub
 	// TODO: try http://jsbin.com/gabunebe/3/edit instead
@@ -200,28 +210,40 @@
 	}
 
 	span.mq-nthroot {
-		font-size: 60%;
-		vertical-align: 0.9em;
-		margin-right: -0.9em;
+		font-size: 70%;
+		vertical-align: 0.75em;
+		margin-right: -0.8em;
 		margin-left: 0.2em;
 		min-width: 0.5em;
 	}
 
-	////
-	// parentheses
-	.mq-paren {
-		padding: 0 0.1em;
-		vertical-align: top;
-		transform-origin: center 0.06em;
+	// brackets
+	.mq-ghost svg {
+		opacity: 0.4;
+	}
 
-		&.mq-ghost {
-			color: silver;
-		}
+	.mq-bracket-middle {
+		margin-top: 0.1em;
+		margin-bottom: 0.1em;
+	}
 
-		+ span {
-			margin-top: 0.1em;
-			margin-bottom: 0.1em;
-		}
+	.mq-bracket-l,
+	.mq-bracket-r {
+		position: absolute;
+		top: 0;
+		bottom: 2px;
+	}
+
+	.mq-bracket-l {
+		left: 0;
+	}
+
+	.mq-bracket-r {
+		right: 0;
+	}
+
+	.mq-bracket-container {
+		position: relative;
 	}
 
 	.mq-array {
@@ -233,7 +255,6 @@
 		display: block;
 	}
 
-	////
 	// non-italicized operator names
 	// like \sin, \cos, \ln, etc.
 	.mq-operator-name {
@@ -251,7 +272,6 @@
 		padding-right: 0.2em;
 	}
 
-	////
 	// \frac
 	// fractions
 	// TODO: try http://jsbin.com/gabunebe/4/edit instead
@@ -291,20 +311,23 @@
 		height: 0.3em;
 	}
 
-	////
 	// \sqrt
 	// square roots
 	.mq-sqrt-prefix {
-		padding-top: 0;
+		position: absolute;
+		top: 1px;
+		bottom: 0.15em;
+		width: 0.95em;
+	}
+
+	.mq-sqrt-container {
 		position: relative;
-		top: 0.1em;
-		vertical-align: top;
-		.transform-origin(top);
 	}
 
 	.mq-sqrt-stem {
 		border-top: 1px solid;
 		margin-top: 1px;
+		margin-left: 0.9em;
 		padding-left: 0.15em;
 		padding-right: 0.2em;
 		margin-right: 0.1em;

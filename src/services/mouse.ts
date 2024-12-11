@@ -1,7 +1,7 @@
 // Deals with mouse events for clicking and drag-to-select.
 
 import type { Constructor } from 'src/constants';
-import { mqCmdId, mqBlockId, noop, pray, L, R } from 'src/constants';
+import { mqCmdId, mqBlockId, noop } from 'src/constants';
 import { TNode } from 'tree/node';
 import type { ControllerBase } from 'src/controller';
 import type { HorizontalScroll } from 'services/scrollHoriz';
@@ -19,21 +19,19 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 
 			// Drag-to-select event handling
 			this.mouseDownHandler = (e: MouseEvent) => {
-				const rootEl = (e.target as HTMLElement).closest('.mq-root-block')!;
-				const root =
-					TNode.byId[
-						parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl?.getAttribute(mqBlockId)) ?? '0')
-					];
+				const rootEl = (e.target as HTMLElement | undefined)?.closest('.mq-root-block');
+				const root = TNode.byId.get(
+					parseInt((rootEl?.getAttribute(mqBlockId) || ultimateRootEl.getAttribute(mqBlockId)) ?? '0')
+				);
 
-				if (!root.controller) {
-					throw 'controller undefined... what?';
+				if (!root?.controller) {
+					throw new Error('controller undefined... what?');
 				}
 
 				const ctrlr = root.controller,
 					cursor = ctrlr.cursor,
 					blink = cursor.blink;
-				const textareaSpan = ctrlr.textareaSpan,
-					textarea = ctrlr.textarea;
+				const textarea = ctrlr.textarea;
 
 				e.preventDefault();
 
@@ -51,8 +49,13 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				const mousemove = (e: Event) => (target = e.target as HTMLElement);
 				const docmousemove = (e: MouseEvent) => {
 					if (!cursor.anticursor) cursor.startSelection();
-					ctrlr.seek(target!, e.pageX ?? 0).cursor.select();
+					ctrlr.seek(target, e.pageX).cursor.select();
 					target = undefined;
+					if (cursor.selection)
+						ctrlr.aria
+							.clear()
+							.queue(cursor.selection.join('mathspeak') + ' selected')
+							.alert();
 				};
 				// Outside rootEl, the MathQuill node corresponding to the target (if any)
 				// won't be inside this root.  So don't mislead Controller::seek with it.
@@ -60,8 +63,10 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 				const mouseup = () => {
 					cursor.blink = blink;
 					if (!cursor.selection) {
-						if (ctrlr.editable) cursor.show();
-						else textareaSpan?.remove();
+						if (ctrlr.editable) {
+							cursor.show();
+							if (cursor.parent) ctrlr.aria.queue(cursor.parent).alert();
+						}
 					}
 
 					// Delete the mouse handlers now that the drag has ended.
@@ -72,62 +77,64 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 
 				if (e.detail === 3) {
 					// If this is a triple click, then select all and return.
-					ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-					while (cursor[L]) ctrlr.selectLeft();
+					ctrlr.selectAll();
+					ctrlr.aria.alert();
 					mouseup();
 					return;
 				} else if (e.detail === 2) {
 					// If this is a double click, then select the block that is to the right of the cursor, and return.
 					// Note that the interpretation of what a block is in this situation is not a true MathQuill block.
 					// Rather an attempt is made to select word like blocks.
-					ctrlr.seek(e.target as HTMLElement, e.pageX ?? 0);
-					if (!cursor[R] && cursor[L]?.parent === root) ctrlr.moveLeft();
+					ctrlr.seek(e.target as HTMLElement, e.pageX);
+					if (!cursor.right && cursor.left?.parent === root) ctrlr.moveLeft();
 
-					if (cursor[R] instanceof Letter) {
-						// If a "Letter" is to the right of the cursor, then try to select all adjacent "Letter"s that
-						// are of the same basic ilk.  That means all "Letter"s that are part of an operator name, or
-						// all "Letter"s that are not part of an operator name.
-						const currentNode = cursor[R];
-						while (
-							cursor[L] &&
-							cursor[L] instanceof Letter &&
-							cursor[L].isPartOfOperator === currentNode.isPartOfOperator
-						)
-							ctrlr.moveLeft();
-						cursor.startSelection();
-						while (
-							cursor[R] &&
-							cursor[R] instanceof Letter &&
-							cursor[R].isPartOfOperator === currentNode.isPartOfOperator
-						)
-							ctrlr.selectRight();
-					} else if (cursor[R] instanceof Digit) {
-						// If a "Digit" is to the right of the cursor, then select all adjacent "Digit"s.
-						while (cursor[L] && cursor[L] instanceof Digit) ctrlr.moveLeft();
-						cursor.startSelection();
-						while (cursor[R] && cursor[R] instanceof Digit) ctrlr.selectRight();
-					} else {
-						cursor.startSelection();
-						ctrlr.selectRight();
-					}
+					ctrlr.withIncrementalSelection((selectDir) => {
+						if (cursor.right instanceof Letter) {
+							// If a "Letter" is to the right of the cursor, then try to select all adjacent "Letter"s
+							// that are of the same basic ilk.  That means all "Letter"s that are part of an operator
+							// name, or all "Letter"s that are not part of an operator name.
+							const currentNode = cursor.right;
+							while (
+								cursor.left &&
+								cursor.left instanceof Letter &&
+								cursor.left.isPartOfOperator === currentNode.isPartOfOperator
+							)
+								ctrlr.moveLeft();
+							cursor.startSelection();
+							while (
+								// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+								cursor.right &&
+								cursor.right instanceof Letter &&
+								cursor.right.isPartOfOperator === currentNode.isPartOfOperator
+							)
+								selectDir('right');
+						} else if (cursor.right instanceof Digit) {
+							// If a "Digit" is to the right of the cursor, then select all adjacent "Digit"s.
+							while (cursor.left && cursor.left instanceof Digit) ctrlr.moveLeft();
+							cursor.startSelection();
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+							while (cursor.right && cursor.right instanceof Digit) selectDir('right');
+						} else {
+							cursor.startSelection();
+							selectDir('right');
+						}
 
-					// If the cursor is in a text block, then select the whole text block.
-					if (cursor[L]?.parent instanceof TextBlock) {
-						cursor[L].parent.moveOutOf(L, cursor);
-						ctrlr.selectRight();
-					}
+						// If the cursor is in a text block, then select the whole text block.
+						if (cursor.left?.parent instanceof TextBlock) {
+							cursor.left.parent.moveOutOf('left', cursor);
+							selectDir('right');
+						}
+					});
 
+					ctrlr.aria.alert();
 					mouseup();
 					return;
 				}
 
-				if (ctrlr.blurred) {
-					if (!ctrlr.editable) rootEl?.prepend(textareaSpan!);
-					textarea?.focus();
-				}
+				if (ctrlr.blurred) textarea?.focus();
 
 				cursor.blink = noop;
-				ctrlr.seek(e.target as HTMLElement, e.pageX ?? 0).cursor.startSelection();
+				ctrlr.seek(e.target as HTMLElement, e.pageX).cursor.startSelection();
 
 				rootEl?.addEventListener('mousemove', mousemove);
 				ownerDocument.addEventListener('mousemove', docmousemove);
@@ -139,7 +146,7 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 			this.container.addEventListener('mousedown', this.mouseDownHandler);
 		}
 
-		seek(target: HTMLElement, pageX: number) {
+		seek(target: Element | null | undefined, pageX: number) {
 			const cursor = this.notify('select').cursor;
 
 			let nodeId = 0;
@@ -152,8 +159,8 @@ export const MouseEventController = <TBase extends Constructor<ControllerBase> &
 					);
 				}
 			}
-			const node = nodeId ? TNode.byId[nodeId] : this.root;
-			pray('nodeId is the id of some TNode that exists', !!node);
+			const node = nodeId ? TNode.byId.get(nodeId) : this.root;
+			if (!node) throw new Error('nodeId is not the id of a TNode that exists');
 
 			// Don't clear the selection until after getting node from target, in case
 			// target was selection span.  Otherwise target will have no parent and will

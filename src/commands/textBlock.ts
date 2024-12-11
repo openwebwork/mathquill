@@ -2,14 +2,14 @@
 
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
-import { RootMathBlock } from 'commands/mathBlock';
+import { RootMathBlock, RootMathCommand } from 'commands/mathBlock';
 import { VanillaSymbol } from 'commands/mathElements';
-import { RootMathCommand } from 'commands/mathBlock';
 
 export class RootTextBlock extends RootMathBlock {
 	keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
 		if (key === 'Spacebar' || key === 'Shift-Spacebar') return;
-		return super.keystroke(key, e, ctrlr);
+		super.keystroke(key, e, ctrlr);
+		return;
 	}
 
 	write(cursor: Cursor, ch: string) {

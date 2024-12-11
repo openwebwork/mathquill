@@ -1,7 +1,6 @@
 // Symbols for Basic Mathematics
 
-import type { Direction } from 'src/constants';
-import { noop, L, R, bindMixin, LatexCmds, CharCmds } from 'src/constants';
+import { type Direction, noop, bindMixin, LatexCmds, CharCmds } from 'src/constants';
 import { Options } from 'src/options';
 import type { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
@@ -35,7 +34,7 @@ class OperatorName extends Symbol {
 	parser() {
 		const block = new MathBlock();
 		for (const char of this.ctrlSeq) {
-			new Letter(char).adopt(block, block.ends[R]);
+			new Letter(char).adopt(block, block.ends.right);
 		}
 		return Parser.succeed(block.children());
 	}
@@ -74,15 +73,14 @@ LatexCmds.f = class extends Letter {
 };
 
 // VanillaSymbol's
-LatexCmds[' '] = LatexCmds.space = bindMixin(VanillaSymbol, '\\ ', '&nbsp;');
+LatexCmds[' '] = LatexCmds.space = bindMixin(VanillaSymbol, '\\ ', '&nbsp;', '', ' ');
 
-LatexCmds["'"] = LatexCmds.prime = bindMixin(VanillaSymbol, "'", '&prime;');
+LatexCmds["'"] = LatexCmds.prime = bindMixin(VanillaSymbol, "'", '&prime;', '', 'prime');
 // LatexCmds['\u2033'] = LatexCmds.dprime = bindMixin(VanillaSymbol, '\u2033', '&Prime;');
 
-LatexCmds.backslash = bindMixin(VanillaSymbol, '\\backslash ', '\\');
-if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
+LatexCmds.backslash = bindMixin(VanillaSymbol, '\\backslash ', '\\', '', 'backslash');
 
-LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$');
+LatexCmds.$ = bindMixin(VanillaSymbol, '\\$', '$', '', 'dollar');
 
 // does not use Symbola font
 class NonSymbolaSymbol extends Symbol {
@@ -201,24 +199,32 @@ LatexCmds.Gamma =
 // symbols that aren't a single MathCommand, but are instead a whole
 // Fragment. Creates the Fragment from a LaTeX string
 class LatexFragment extends MathCommand {
+	latexStr: string;
+
 	constructor(latex: string) {
 		super();
 		this.latex = () => latex;
+		this.latexStr = latex;
 	}
 
 	createLeftOf(cursor: Cursor) {
-		const block: MathCommand = latexMathParser.parse(this.latex());
-		block.children().adopt(cursor.parent!, cursor[L], cursor[R]);
-		cursor[L] = block.ends[R];
+		const block: MathCommand = latexMathParser.parse<MathCommand>(this.latex());
+		if (cursor.parent) block.children().adopt(cursor.parent, cursor.left, cursor.right);
+		cursor.left = block.ends.right;
 		cursor.element.before(...block.domify().contents);
 		block.finalizeInsert(cursor.options, cursor);
-		block.ends[R]?.[R]?.siblingCreated?.(cursor.options, L);
-		block.ends[L]?.[L]?.siblingCreated?.(cursor.options, R);
+		block.ends.right?.right?.siblingCreated?.(cursor.options, 'left');
+		block.ends.left?.left?.siblingCreated?.(cursor.options, 'right');
 		cursor.parent?.bubble('reflow');
 	}
 
+	mathspeak() {
+		const block = latexMathParser.parse<MathCommand>(this.latexStr);
+		return block.mathspeak();
+	}
+
 	parser() {
-		const block: MathCommand = latexMathParser.parse(this.latex());
+		const block = latexMathParser.parse<MathCommand>(this.latex());
 		return Parser.succeed(block.children());
 	}
 }
@@ -255,19 +261,19 @@ LatexCmds['\u00bd'] = bindMixin(LatexFragment, '\\frac12');
 LatexCmds['\u00be'] = bindMixin(LatexFragment, '\\frac34');
 
 class PlusMinus extends BinaryOperator {
-	constructor(ctrlSeq: string, html?: string, text?: string) {
-		super(ctrlSeq, `<span>${html || ctrlSeq}</span>`, text, true);
+	constructor(ctrlSeq: string, html?: string, text?: string, mathspeak?: string) {
+		super(ctrlSeq, `<span>${html || ctrlSeq}</span>`, text, mathspeak, true);
 
 		this.siblingCreated = this.siblingDeleted = (opts: Options, dir?: Direction) => this.contactWeld(opts, dir);
 	}
 
 	contactWeld(_opts: Options, dir?: Direction) {
 		const isUnary = (node: TNode): boolean => {
-			if (node[L]) {
+			if (node.left) {
 				// If the left sibling is a binary operator or a separator (comma, semicolon, colon)
 				// or an open bracket (open parenthesis, open square bracket)
 				// consider the operator to be unary.
-				if (node[L] instanceof BinaryOperator || /^[,;:([]$/.test((node[L] as BinaryOperator).ctrlSeq)) {
+				if (node.left instanceof BinaryOperator || /^[,;:([]$/.test((node.left as BinaryOperator).ctrlSeq)) {
 					return true;
 				}
 			} else if (node.parent?.parent?.isStyleBlock()) {
@@ -281,25 +287,71 @@ class PlusMinus extends BinaryOperator {
 			return false;
 		};
 
-		if (dir === R) return; // ignore if sibling only changed on the right
+		if (dir === 'right') return; // ignore if sibling only changed on the right
 		this.isUnary = isUnary(this);
 		this.elements.firstElement.className = this.isUnary ? '' : 'mq-binary-operator';
 		return this;
 	}
 }
 
-LatexCmds['+'] = bindMixin(PlusMinus, '+', '+');
-// These are different dashes, I think one is an en dash and the other is a hyphen.
-LatexCmds['\u2013'] = LatexCmds['-'] = bindMixin(PlusMinus, '-', '&minus;');
-LatexCmds['\u00b1'] = LatexCmds.pm = LatexCmds.plusmn = LatexCmds.plusminus = bindMixin(PlusMinus, '\\pm ', '&plusmn;');
-LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus = bindMixin(PlusMinus, '\\mp ', '&#8723;');
+LatexCmds['+'] = class extends PlusMinus {
+	constructor() {
+		super('+', '+');
+	}
+	mathspeak(): string {
+		return this.isUnary ? 'positive' : 'plus';
+	}
+};
+
+LatexCmds['\u2013'] = LatexCmds['-'] = class extends PlusMinus {
+	constructor() {
+		super('-', '&minus;');
+	}
+	mathspeak(): string {
+		return this.isUnary ? 'negative' : 'minus';
+	}
+};
+
+LatexCmds['\u00b1'] =
+	LatexCmds.pm =
+	LatexCmds.plusmn =
+	LatexCmds.plusminus =
+		bindMixin(PlusMinus, '\\pm ', '&plusmn;', '', 'plus-or-minus');
+LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus = bindMixin(PlusMinus, '\\mp ', '&#8723;', '', 'minus-or-plus');
 
 // Semantically should be &sdot;, but &middot; looks better
-CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot = bindMixin(BinaryOperator, '\\cdot ', '&middot;', '*');
+CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot = bindMixin(BinaryOperator, '\\cdot ', '&middot;', '*', 'times');
 
-const less = { ctrlSeq: '\\le ', html: '&le;', text: '<=', ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
-const greater = { ctrlSeq: '\\ge ', html: '&ge;', text: '>=', ctrlSeqStrict: '>', htmlStrict: '&gt;', textStrict: '>' };
-const neq = { ctrlSeq: '\\ne ', html: '&ne;', text: '!=', ctrlSeqStrict: '!', htmlStrict: '!', textStrict: '!' };
+const less = {
+	ctrlSeq: '\\le ',
+	html: '&le;',
+	text: '<=',
+	mathspeak: 'less than or equal to',
+	ctrlSeqStrict: '<',
+	htmlStrict: '&lt;',
+	textStrict: '<',
+	mathspeakStrict: 'less than'
+};
+const greater = {
+	ctrlSeq: '\\ge ',
+	html: '&ge;',
+	text: '>=',
+	mathspeak: 'greater than or equal to',
+	ctrlSeqStrict: '>',
+	htmlStrict: '&gt;',
+	textStrict: '>',
+	mathspeakStrict: 'greater than'
+};
+const neq = {
+	ctrlSeq: '\\ne ',
+	html: '&ne;',
+	text: '!=',
+	mathspeak: 'not equal to',
+	ctrlSeqStrict: '!',
+	htmlStrict: '!',
+	textStrict: '!',
+	mathspeakStrict: 'factorial'
+};
 
 LatexCmds['<'] = LatexCmds.lt = bindMixin(Inequality, less, true);
 LatexCmds['>'] = LatexCmds.gt = bindMixin(Inequality, greater, true);
@@ -310,12 +362,12 @@ LatexCmds['\u2260'] = LatexCmds.ne = LatexCmds.neq = bindMixin(FactorialOrNEQ, n
 
 LatexCmds['='] = Equality;
 
-LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&times;', '*');
+LatexCmds['\u00d7'] = LatexCmds.times = bindMixin(BinaryOperator, '\\times ', '&times;', '*', 'times');
 
 LatexCmds['\u00f7'] =
 	LatexCmds.div =
 	LatexCmds.divide =
 	LatexCmds.divides =
-		bindMixin(BinaryOperator, '\\div ', '&divide;', '/');
+		bindMixin(BinaryOperator, '\\div ', '&divide;', '/', 'divided by');
 
-CharCmds['~'] = LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~');
+CharCmds['~'] = LatexCmds.sim = bindMixin(BinaryOperator, '\\sim ', '~', '~', 'tilde');

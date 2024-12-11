@@ -1,7 +1,6 @@
 // Latex Controller Extension
 
 import type { Constructor } from 'src/constants';
-import { L, R } from 'src/constants';
 import type { TNode } from 'tree/node';
 import { Parser } from 'services/parser.util';
 import { VanillaSymbol, latexMathParser } from 'commands/mathElements';
@@ -22,11 +21,14 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 		}
 
 		renderLatexMath(latex: string) {
-			const block = latexMathParser.skip(Parser.eof).or(Parser.all.result(false)).parse<MathBlock>(latex);
+			const block = latexMathParser
+				.skip(Parser.eof)
+				.or(Parser.all.result(false))
+				.parse<MathBlock | undefined>(latex);
 
 			this.root.eachChild('postOrder', 'dispose');
-			delete this.root.ends[L];
-			delete this.root.ends[R];
+			delete this.root.ends.left;
+			delete this.root.ends.right;
 
 			if (block instanceof MathBlock && block.prepareInsertionAt(this.cursor)) {
 				block.children().adopt(this.root);
@@ -39,6 +41,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			}
 
 			delete this.cursor.selection;
+			this.updateMathspeak();
 			this.cursor.insAtRightEnd(this.root);
 		}
 
@@ -46,10 +49,12 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			this.root.elements
 				.children()
 				.contents.slice(1)
-				.forEach((el) => (el as HTMLElement).remove());
+				.forEach((el) => {
+					(el as HTMLElement).remove();
+				});
 			this.root.eachChild('postOrder', 'dispose');
-			delete this.root.ends[L];
-			delete this.root.ends[R];
+			delete this.root.ends.left;
+			delete this.root.ends.right;
 			delete this.cursor.selection;
 			this.cursor.show().insAtRightEnd(this.root);
 
@@ -65,7 +70,7 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 					const rootMathCommand = new RootMathCommand(this.cursor);
 
 					rootMathCommand.createBlocks();
-					const rootMathBlock = rootMathCommand.ends[L] as MathBlock;
+					const rootMathBlock = rootMathCommand.ends.left as MathBlock;
 					block.children().adopt(rootMathBlock);
 
 					return rootMathCommand;
@@ -74,11 +79,11 @@ export const LatexControllerExtension = <TBase extends Constructor<ControllerBas
 			const escapedDollar = Parser.string('\\$').result('$');
 			const textChar = escapedDollar.or(Parser.regex(/^[^$]/)).map(VanillaSymbol);
 			const latexText = mathMode.or(textChar).many();
-			const commands: TNode[] = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse(latex);
+			const commands = latexText.skip(Parser.eof).or(Parser.all.result(false)).parse<TNode[] | undefined>(latex);
 
 			if (commands) {
 				for (const command of commands) {
-					command.adopt(this.root, this.root.ends[R]);
+					command.adopt(this.root, this.root.ends.right);
 				}
 
 				this.root.elements.lastElement.append(...this.root.domify().contents);

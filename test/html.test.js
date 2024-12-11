@@ -1,9 +1,9 @@
-/* global suite, test, assert */
+/* global assert */
 
 import { mqCmdId, mqBlockId } from 'src/constants';
 import { MathCommand } from 'commands/mathElements';
 
-suite('HTML', () => {
+suite('HTML', function () {
 	const renderHtml = (numBlocks, htmlTemplate) => {
 		const cmd = {
 			id: 1,
@@ -22,7 +22,7 @@ suite('HTML', () => {
 		return MathCommand.prototype.html.call(cmd);
 	};
 
-	test('simple HTML templates', () => {
+	test('simple HTML templates', function () {
 		let htmlTemplate = '<span>A Symbol</span>';
 		let html = `<span ${mqCmdId}=1>A Symbol</span>`;
 
@@ -43,7 +43,7 @@ suite('HTML', () => {
 		assert.equal(html, renderHtml(2, htmlTemplate), 'container span with two block spans');
 	});
 
-	test('context-free HTML templates', () => {
+	test('context-free HTML templates', function () {
 		let htmlTemplate = '<br/>';
 		let html = `<br ${mqCmdId}=1/>`;
 

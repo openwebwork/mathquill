@@ -1,7 +1,7 @@
 {
 	"name": "@openwebwork/mathquill",
 	"description": "Easily type math in your webapp",
-	"version": "0.11.0-beta.1",
+	"version": "0.11.0-beta.2",
 	"license": "MPL-2.0",
 	"repository": {
 		"type": "git",
@@ -21,7 +21,6 @@
 	"scripts": {
 		"build:lib": "NODE_OPTIONS='--no-warnings=ExperimentalWarning' rollup -c",
 		"build:dev": "webpack --mode development",
-		"build:all-js": "BUILD_BASIC=true webpack --mode production",
 		"build:web": "webpack --mode production",
 		"build": "npm run build:web && npm run build:lib",
 		"serve": "webpack serve --mode development",
@@ -38,6 +37,7 @@
 		"css-minimizer-webpack-plugin": "^7.0.0",
 		"eslint": "^9.9.1",
 		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-mocha": "^10.5.0",
 		"eslint-webpack-plugin": "^4.2.0",
 		"globals": "^15.9.0",
 		"less": "^4.2.0",

@@ -1,16 +1,16 @@
-/* global suite, test, assert, setup, MQ */
+/* global assert, MQ */
 
-import { L, R, noop, prayWellFormed } from 'src/constants';
+import { noop, prayWellFormed } from 'src/constants';
 
-suite('SupSub', () => {
+suite('SupSub', function () {
 	let mq;
-	setup(() => {
+	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
 		mq = MQ.MathField(field);
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt[L], pt[R]);
+	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
 
 	let expecteds = [
 		'x_{ab} x_{ba}, x_a^b x_a^b; x_{ab} x_{ba}, x_a^b x_a^b; x_a x_a, x_a^{} x_a^{}',
@@ -44,7 +44,7 @@ suite('SupSub', () => {
 					const expected = expecteds[i].split('; ')[j].split(', ')[k].split(' ')[l];
 					const expectedAfterC = expectedsAfterC[i].split('; ')[j].split(', ')[k].split(' ')[l];
 
-					test(`initial ${initSupsub}script then ${did} ${supsub}script ${side}`, () => {
+					test(`initial ${initSupsub}script then ${did} ${supsub}script ${side}`, function () {
 						mq.latex(initialLatex);
 						assert.equal(mq.latex(), initialLatex);
 
@@ -82,7 +82,7 @@ suite('SupSub', () => {
 				const expected = expecteds.split('; ')[i].split(', ')[j].split(' ')[k];
 				const expectedAfterC = expectedsAfterC.split('; ')[i].split(', ')[j].split(' ')[k];
 
-				test(`initial ${initSupsub}script then ${did} '³' ${side}`, () => {
+				test(`initial ${initSupsub}script then ${did} '³' ${side}`, function () {
 					mq.latex(initialLatex);
 					assert.equal(mq.latex(), initialLatex);
 
@@ -100,7 +100,7 @@ suite('SupSub', () => {
 		});
 	});
 
-	test("render LaTeX with 2 SupSub's in a row", () => {
+	test("render LaTeX with 2 SupSub's in a row", function () {
 		mq.latex('x_a_b');
 		assert.equal(mq.latex(), 'x_{ab}');
 
@@ -120,7 +120,7 @@ suite('SupSub', () => {
 		assert.equal(mq.latex(), 'x^a');
 	});
 
-	test("render LaTeX with 3 alternating SupSub's in a row", () => {
+	test("render LaTeX with 3 alternating SupSub's in a row", function () {
 		mq.latex('x_a^b_c');
 		assert.equal(mq.latex(), 'x_{ac}^b');
 
@@ -128,8 +128,8 @@ suite('SupSub', () => {
 		assert.equal(mq.latex(), 'x_b^{ac}');
 	});
 
-	suite('deleting', () => {
-		test('backspacing out of and then re-typing subscript', () => {
+	suite('deleting', function () {
+		test('backspacing out of and then re-typing subscript', function () {
 			mq.latex('x_a^b');
 			assert.equal(mq.latex(), 'x_a^b');
 
@@ -148,7 +148,7 @@ suite('SupSub', () => {
 			mq.typedText('c');
 			assert.equal(mq.latex(), 'xca^b');
 		});
-		test('backspacing out of and then re-typing superscript', () => {
+		test('backspacing out of and then re-typing superscript', function () {
 			mq.latex('x_a^b');
 			assert.equal(mq.latex(), 'x_a^b');
 

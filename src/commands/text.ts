@@ -10,6 +10,8 @@ export class TextField extends EditableField {
 		return super.__mathquillify('mq-editable-field', 'mq-text-mode');
 	}
 
+	latex(latex: string): this;
+	latex(): string;
 	latex(latex?: string) {
 		if (typeof latex !== 'undefined') {
 			this.__controller.renderLatexText(latex);

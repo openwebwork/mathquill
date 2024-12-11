@@ -1,7 +1,7 @@
-import MathQuill from 'src/publicapi';
+import mathQuill from 'src/publicapi';
 import { MQ_VERSION } from 'src/version';
 import 'css/main.less';
 
-MathQuill.VERSION = MQ_VERSION;
+mathQuill.VERSION = MQ_VERSION;
 
-window.MathQuill = MathQuill;
+window.MathQuill = mathQuill;

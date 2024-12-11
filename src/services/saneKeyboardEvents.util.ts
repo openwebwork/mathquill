@@ -1,7 +1,6 @@
 // An abstraction layer wrapping the textarea in an object with methods to manipulate and listen to events.
 // This is an internal abstraction layer intented to handle cross-browser inconsistencies in event handlers.
 
-import { L } from 'src/constants';
 import type { Controller } from 'src/controller';
 
 export const saneKeyboardEvents = (() => {
@@ -35,8 +34,8 @@ export const saneKeyboardEvents = (() => {
 	return (textarea: HTMLTextAreaElement, controller: Controller) => {
 		// Virtual keyboards on touch screen devices send 'Unidentified' for almost all keys in the 'keydown' event. As
 		// a result the keystroke handler called in that event handler passes 'Unidentified' for the key.  This makes
-		// the spaceBehavesLikeTab option fail on these devices.  So this flag detects the 'Unidentified' key, and calls
-		// the keystroke handler again passing 'Spacebar' for the key, when a space is typed.
+		// the enableSpaceNavigation option fail on these devices.  So this flag detects the 'Unidentified' key, and
+		// calls the keystroke handler again passing 'Spacebar' for the key, when a space is typed.
 		let sendInputSpaceKeystroke = false;
 
 		// Public methods
@@ -77,6 +76,12 @@ export const saneKeyboardEvents = (() => {
 
 		const onInput = (e: Event) => {
 			if ((e as InputEvent).inputType === 'insertFromPaste') return;
+
+			if ((e as InputEvent).inputType === 'insertLineBreak') {
+				controller.typedText('\n');
+				return;
+			}
+
 			const text = (e as InputEvent).data ?? '';
 			if (text.length === 1) {
 				if (controller.options.overrideTypedText) {
@@ -85,9 +90,9 @@ export const saneKeyboardEvents = (() => {
 					if (
 						text === ' ' &&
 						sendInputSpaceKeystroke &&
-						controller.options.spaceBehavesLikeTab &&
+						controller.options.enableSpaceNavigation &&
 						controller.cursor.depth() > 1 &&
-						controller.cursor[L]?.ctrlSeq !== ','
+						controller.cursor.left?.ctrlSeq !== ','
 					) {
 						handleKey('Spacebar', e as KeyboardEvent);
 						setTimeout(() => (textarea.value = ''));

@@ -1,10 +1,10 @@
-/* global suite, test, assert, setup, MQ */
+/* global assert, MQ */
 
 import { Letter } from 'commands/mathElements';
 
-suite('autoOperatorNames', () => {
+suite('autoOperatorNames', function () {
 	let mq;
-	setup(() => {
+	setup(function () {
 		const field = document.createElement('span');
 		document.getElementById('mock')?.append(field);
 		mq = MQ.MathField(field);
@@ -20,7 +20,7 @@ suite('autoOperatorNames', () => {
 		assert.equal(result, expected, `${input}, got '${result}', expected '${expected}'`);
 	};
 
-	test('simple LaTeX parsing, typing', () => {
+	test('simple LaTeX parsing, typing', function () {
 		const assertAutoOperatorNamesWork = (str, latex) => {
 			let count = 0;
 			const _autoUnItalicize = Letter.prototype.autoUnItalicize;
@@ -52,7 +52,7 @@ suite('autoOperatorNames', () => {
 		assertAutoOperatorNamesWork('skerskersker', 's\\ker s\\ker s\\ker');
 	});
 
-	test('text() output', () => {
+	test('text() output', function () {
 		const assertTranslatedCorrectly = (latexStr, text) => {
 			mq.latex(latexStr);
 			assertText(`outputting ${latexStr}`, text);
@@ -62,7 +62,7 @@ suite('autoOperatorNames', () => {
 		assertTranslatedCorrectly('\\ker\\left(xy\\right)', 'ker(xy)');
 	});
 
-	test('deleting', () => {
+	test('deleting', function () {
 		let count = 0;
 		const _autoUnItalicize = Letter.prototype.autoUnItalicize;
 		Letter.prototype.autoUnItalicize = function () {
@@ -99,31 +99,31 @@ suite('autoOperatorNames', () => {
 		mq.options.removeAutoOperatorNames('cac');
 	});
 
-	suite('override autoOperatorNames', () => {
-		test('basic', () => {
+	suite('override autoOperatorNames', function () {
+		test('basic', function () {
 			mq.config({ autoOperatorNames: 'ker lol' });
 			mq.typedText('arckertrololol');
 			assert.equal(mq.latex(), 'arc\\ker tro\\operatorname{lol}ol');
 		});
 
-		test('command contains non-letters', () => {
+		test('command contains non-letters', function () {
 			assert.throws(() => MQ.config({ autoOperatorNames: 'e1' }));
 		});
 
-		test('command length less than 2', () => {
+		test('command length less than 2', function () {
 			assert.throws(() => MQ.config({ autoOperatorNames: 'e' }));
 		});
 
-		suite('command list not perfectly space-delimited is okay', () => {
-			test('double space', () => {
+		suite('command list not perfectly space-delimited is okay', function () {
+			test('double space', function () {
 				assert.ok(() => MQ.config({ autoOperatorNames: 'pi  theta' }));
 			});
 
-			test('leading space', () => {
+			test('leading space', function () {
 				assert.ok(() => MQ.config({ autoOperatorNames: ' pi' }));
 			});
 
-			test('trailing space', () => {
+			test('trailing space', function () {
 				assert.ok(() => MQ.config({ autoOperatorNames: 'pi ' }));
 			});
 		});

@@ -1,7 +1,5 @@
-import type { Direction, Constructor } from 'src/constants';
-import { L, R, noop, mqBlockId, mqCmdId, LatexCmds } from 'src/constants';
-import type { InputOptions } from 'src/options';
-import { Options } from 'src/options';
+import { type Direction, type Constructor, noop, mqBlockId, mqCmdId, LatexCmds } from 'src/constants';
+import { type InputOptions, Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { TNode } from 'tree/node';
 
@@ -14,7 +12,7 @@ export class AbstractMathQuill {
 	__controller: Controller;
 	__options: Options;
 	id: number;
-	revert?: () => void;
+	revert?: () => HTMLElement;
 	static RootBlock?: Constructor<TNode>;
 
 	constructor(ctrlr: Controller) {
@@ -35,6 +33,7 @@ export class AbstractMathQuill {
 		const rootEl = document.createElement('span');
 		rootEl.classList.add('mq-root-block');
 		rootEl.setAttribute(mqBlockId, root.id.toString());
+		rootEl.setAttribute('aria-hidden', 'true');
 		root.elements.add(rootEl);
 		el.append(rootEl);
 
@@ -53,6 +52,8 @@ export class AbstractMathQuill {
 			el.append(...contents);
 			return el;
 		};
+
+		return this;
 	}
 
 	get options() {
@@ -71,6 +72,8 @@ export class AbstractMathQuill {
 		return this.__controller.exportText();
 	}
 
+	latex(latex: string): this;
+	latex(): string;
 	latex(latex?: string) {
 		if (typeof latex !== 'undefined') {
 			this.__controller.renderLatexMath(latex);
@@ -93,6 +96,33 @@ export class AbstractMathQuill {
 		this.__controller.root.postOrder('reflow');
 		return this;
 	}
+
+	focus() {
+		if (document.activeElement === this.__controller.textarea)
+			this.__controller.textarea.dispatchEvent(new FocusEvent('focus'));
+		else this.__controller.textarea?.focus();
+		return this;
+	}
+
+	blur() {
+		if (document.activeElement !== this.__controller.textarea)
+			this.__controller.textarea?.dispatchEvent(new FocusEvent('blur'));
+		else this.__controller.textarea.blur();
+		return this;
+	}
+
+	setAriaLabel(ariaLabel: string) {
+		this.__controller.setAriaLabel(ariaLabel);
+		return this;
+	}
+
+	getAriaLabel() {
+		return this.__controller.getAriaLabel();
+	}
+
+	mathspeak() {
+		return this.__controller.exportMathSpeak();
+	}
 }
 
 export class EditableField extends AbstractMathQuill {
@@ -101,20 +131,6 @@ export class EditableField extends AbstractMathQuill {
 		this.__controller.editable = true;
 		this.__controller.delegateMouseEvents();
 		this.__controller.editablesTextareaEvents();
-		return this;
-	}
-
-	focus() {
-		if (document.activeElement === this.__controller.textarea)
-			this.__controller.textarea?.dispatchEvent(new FocusEvent('focus'));
-		else this.__controller.textarea?.focus();
-		return this;
-	}
-
-	blur() {
-		if (document.activeElement !== this.__controller.textarea)
-			this.__controller.textarea?.dispatchEvent(new FocusEvent('blur'));
-		else this.__controller.textarea?.blur();
 		return this;
 	}
 
@@ -129,8 +145,8 @@ export class EditableField extends AbstractMathQuill {
 		const root = this.__controller.root,
 			cursor = this.__controller.cursor;
 		root.eachChild('postOrder', 'dispose');
-		delete root.ends[L];
-		delete root.ends[R];
+		delete root.ends.left;
+		delete root.ends.right;
 		root.elements.empty();
 		delete cursor.selection;
 		cursor.insAtRightEnd(root);
@@ -142,7 +158,7 @@ export class EditableField extends AbstractMathQuill {
 			cursor = ctrlr.cursor;
 		if (/^\\[a-z]+$/i.test(cmd) && !cursor.isTooDeep()) {
 			cmd = cmd.slice(1);
-			const klass = LatexCmds[cmd];
+			const klass = LatexCmds[cmd] as Constructor<TNode> | undefined;
 			if (klass) {
 				const newCmd = new klass(cmd);
 				if (cursor.selection) newCmd.replaces(cursor.replaceSelection());
@@ -157,9 +173,7 @@ export class EditableField extends AbstractMathQuill {
 	}
 
 	select() {
-		const ctrlr = this.__controller;
-		ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-		while (ctrlr.cursor[L]) ctrlr.selectLeft();
+		this.__controller.selectAll();
 		return this;
 	}
 
@@ -173,10 +187,10 @@ export class EditableField extends AbstractMathQuill {
 		return this;
 	}
 	moveToLeftEnd() {
-		return this.moveToDirEnd(L);
+		return this.moveToDirEnd('left');
 	}
 	moveToRightEnd() {
-		return this.moveToDirEnd(R);
+		return this.moveToDirEnd('right');
 	}
 
 	keystroke(keys: string) {
@@ -199,27 +213,38 @@ export class EditableField extends AbstractMathQuill {
 	dropEmbedded(
 		pageX: number,
 		pageY: number,
-		options: { text?: () => string; htmlTemplate?: string; latex?: () => string }
+		options: { text?: () => string; htmlString?: string; latex?: () => string }
 	) {
-		const el = document.elementFromPoint(pageX - window.scrollX, pageY - window.scrollY) as HTMLElement;
+		const el = document.elementFromPoint(pageX - window.scrollX, pageY - window.scrollY);
 		this.__controller.seek(el, pageX);
 		const cmd = new LatexCmds.embed().setOptions(options);
 		cmd.createLeftOf(this.__controller.cursor);
 	}
 
-	clickAt(clientX: number, clientY: number, target: HTMLElement | undefined) {
-		target = target || (document.elementFromPoint(clientX, clientY) as HTMLElement);
+	clickAt(clientX: number, clientY: number, target?: Element | null) {
+		target = target || document.elementFromPoint(clientX, clientY);
 
 		const ctrlr = this.__controller,
 			root = ctrlr.root;
 		if (!root.elements.firstElement.contains(target)) target = root.elements.firstElement;
 		ctrlr.seek(target, clientX + window.scrollX);
+		// Force blurred window behavior to prevention selection of all content.
+		this.__controller.windowBlurred = true;
 		if (ctrlr.blurred) this.focus();
+		this.__controller.windowBlurred = false;
 		return this;
 	}
 
 	ignoreNextMousedown(fn: (e?: MouseEvent) => boolean) {
 		this.__controller.cursor.options.ignoreNextMousedown = fn;
 		return this;
+	}
+
+	setAriaPostLabel(ariaPostLabel: string, timeout?: number) {
+		this.__controller.setAriaPostLabel(ariaPostLabel, timeout);
+		return this;
+	}
+	getAriaPostLabel() {
+		return this.__controller.getAriaPostLabel();
 	}
 }

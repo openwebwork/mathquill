@@ -4,7 +4,7 @@ The configuration options object is of the following form:
 
 ```js
 {
-    spaceBehavesLikeTab: true,
+    enableSpaceNavigation: true,
     leftRightIntoCmdGoes: 'up',
     restrictMismatchedBrackets: true,
     sumStartsWithNEquals: true,
@@ -35,10 +35,10 @@ Global defaults may be set with [`MQ.config(global_config)`](Api_Methods.md#mqco
 
 The following configuration options are available.
 
-### spacesBehavesLikeTab
+### enableSpaceNavigation
 
-If `spaceBehavesLikeTab` is true the keystrokes `{Shift-,}Spacebar` will behave like `{Shift-,}Tab` escaping from the
-current block (as opposed to the default behavior of inserting a Space character).
+If `enableSpaceNavigation` is true the keystrokes `{Shift-,}Spacebar` will behave like `{Shift-,}Escape` escaping from
+the current block (as opposed to the default behavior of inserting a Space character).
 
 ### leftRightIntoCmdGoes
 
@@ -77,9 +77,9 @@ be exponentiated or subscripted. Prevents the especially confusing typo `x^^2`, 
 `charsThatBreakOutOfSupSub` takes a string of the chars that when typed, "break out" of superscripts and subscripts.
 
 Normally, to get out of a superscript or subscript, a user has to navigate out of it with the directional keys, a mouse
-click, tab, or Space if [`spaceBehavesLikeTab`](#spacesbehavesliketab) is true. For example, typing `x^2n+y` normally
-results in the LaTeX `x^{2n+y}`. If you wanted to get the LaTeX `x^{2n}+y`, the user would have to manually move the
-cursor out of the exponent.
+click, or Space if `enableSpaceNavigation` is true. For example, typing `x^2n+y` normally results in the LaTeX
+`x^{2n+y}`. If you wanted to get the LaTeX `x^{2n}+y`, the user would have to manually move the cursor out of the
+exponent.
 
 If this option was set to `'+-'`, `+` and `-` would "break out" of the exponent. This doesn't apply to the first
 character in a superscript or subscript, so typing `x^-6` still results in `x^{-6}`. The downside to setting this option
@@ -122,6 +122,47 @@ Nested content in latex rendered during initialization or pasted into mathquill 
 Overwriting this may be useful for hacks like suppressing built-in virtual keyboards. It defaults to
 `<textarea autocorrect=off .../>`.
 
+### mouseEvents
+
+If `mouseEvents` is true then mouse events are active for static math fieds. This is true by default.
+
+### autoSubscriptNumerals
+
+If `autoSubscriptNumerals` is true then a number typed after a letter will automatically be put into a subscript.
+
+### typingSlashWritesDivisionSymbol
+
+If `typingSlashWritesDivisionSymbol` true then typing a slash gives the division symbol instead of a live fraction.
+
+### typingAsteriskWritesTimesSymbol
+
+If `typingAsteriskWritesTimesSymbol` is true then typing an asterisk gives the times symbol instead of a `\cdot`.
+
+### rootsAreExponents
+
+If `rootsAreExponents` is true, then the text output of an nth root will be `x^(1/n)`. Otherwise it will be `root(n,x)`.
+
+### logsChangeBase
+
+If `logsChangeBase` is true then the text output for the logarithm with base b of x will be `log(x)/log(b)`. Otherwise
+the output will be `logb(b,x)`. Note that this option does not affect base 10 output. That is always `log10(x)`.
+
+### tabbable
+
+For static and editable math fields, when `tabbable` is false, the math field is not part of the page's tab order.
+Despite that, the math field can still be focused when selected by a mouse.
+
+Static math fields default to `tabbable: false`, Editable math fields default to `tabbable: true`.
+
+### blurWithCursor
+
+This is a method with the signature `(e: FocusEvent, mq?: AbstractMathQuill) => boolean`. If provided, this method will
+be called anytime an editable math field loses focus (for example if the "Tab" key is pressed or the window loses
+focus). If the method returns true, then the field will be blurred with the cursor left visible. This means that if
+there is a selection in the field, it will not be cleared but will be given an inactive gray styling, and if there is
+not a selection then the cursor will remain in the field but will stop blinking. This gives the appearance of no longer
+being active but gives indicators as to where the cursor is. This is useful for implementing a toolbar.
+
 ## Handlers
 
 Handlers are called after a specified event.
@@ -159,7 +200,13 @@ Called whenever Enter is pressed.
 This is called when the contents of the field might have been changed. This will be called with any edit, such as
 something being typed, deleted, or written with the API. Note that this may be called when nothing has actually changed.
 
-Deprecated aliases: `edited`, `reflow`.
+### textBlockEnter(mathField)
+
+This is called whenever a text block is started.
+
+### textBlockExit(mathField)
+
+This is called whenver a text block is ended.
 
 ## Changing Colors
 

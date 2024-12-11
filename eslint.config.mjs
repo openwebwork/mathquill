@@ -3,6 +3,7 @@ import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import stylistic from '@stylistic/eslint-plugin';
+import mochaPlugin from 'eslint-plugin-mocha';
 
 export default [
 	{
@@ -10,7 +11,7 @@ export default [
 	},
 	{ files: ['**/*.{js,mjs,cjs,ts,tsx}'] },
 	pluginJs.configs.recommended,
-	...tseslint.configs.recommendedTypeChecked,
+	...tseslint.configs.strictTypeChecked,
 	...tseslint.configs.stylisticTypeChecked,
 	{
 		languageOptions: {
@@ -30,6 +31,7 @@ export default [
 		languageOptions: { parserOptions: { project: false, program: null, projectService: false } },
 		rules: { ...tseslint.configs.disableTypeChecked.rules, '@typescript-eslint/no-require-imports': 'off' }
 	},
+	{ files: ['**/test/*.test.js'], ...mochaPlugin.configs.flat.recommended },
 	eslintConfigPrettier,
 	{
 		plugins: { '@stylistic': stylistic },
@@ -55,13 +57,13 @@ export default [
 			'no-void': 'off',
 			'one-var': 'off',
 
-			'prefer-promise-reject-errors': 'off',
 			'@typescript-eslint/explicit-function-return-type': 'off',
 			'@typescript-eslint/explicit-module-boundary-types': 'off',
-			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_ignore_' }],
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 			'@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],
 			'@typescript-eslint/prefer-nullish-coalescing': 'off',
-			'@typescript-eslint/only-throw-error': 'off',
+
+			'mocha/no-setup-in-describe': 'off',
 
 			// Allow console and debugger during development only.
 			'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',

@@ -1,7 +1,6 @@
 // Virtual Node class
 
 import type { Direction } from 'src/constants';
-import { L } from 'src/constants';
 
 export class VNode {
 	contents: Node[] = [];
@@ -54,7 +53,9 @@ export class VNode {
 	}
 
 	detach() {
-		this.contents.forEach((child) => (child as Element).remove());
+		this.contents.forEach((child) => {
+			(child as Element).remove();
+		});
 	}
 
 	remove() {
@@ -71,7 +72,7 @@ export class VNode {
 
 	children(selector?: string) {
 		return new VNode(
-			this.contents.reduce((ret, el) => {
+			this.contents.reduce<Node[]>((ret, el) => {
 				ret.push(
 					...Array.from(el.childNodes).filter((child) => {
 						return (
@@ -80,16 +81,16 @@ export class VNode {
 					})
 				);
 				return ret;
-			}, [] as Node[])
+			}, [])
 		);
 	}
 
 	find(selector: string) {
 		return new VNode(
-			this.contents.reduce((ret, el) => {
+			this.contents.reduce<Node[]>((ret, el) => {
 				ret.push(...(el as Element).querySelectorAll(selector));
 				return ret;
-			}, [] as Node[])
+			}, [])
 		);
 	}
 
@@ -118,21 +119,21 @@ export class VNode {
 		return false;
 	}
 
-	html(contents: string): VNode;
+	html(contents: string): this;
 	html(): string;
-	html(contents?: string): string | VNode {
+	html(contents?: string): string | this {
 		if (typeof contents === 'string') {
 			this.contents.forEach((elt) => {
 				if (elt instanceof Element) elt.innerHTML = contents;
 			});
 			return this;
 		}
-		return this.firstElement?.innerHTML ?? '';
+		return this.firstElement.innerHTML;
 	}
 
-	text(contents: string): VNode;
+	text(contents: string): this;
 	text(): string;
-	text(contents?: string): string | VNode {
+	text(contents?: string): string | this {
 		if (contents) {
 			this.contents.forEach((elt) => {
 				if (elt instanceof Element) elt.textContent = contents;
@@ -146,13 +147,13 @@ export class VNode {
 
 	insDirOf(dir: Direction, vNode: Element | CharacterData | VNode) {
 		if (vNode instanceof VNode && !vNode.contents.length) return;
-		if (dir === L) (vNode instanceof VNode ? vNode.first : vNode).before(...this.contents);
+		if (dir === 'left') (vNode instanceof VNode ? vNode.first : vNode).before(...this.contents);
 		else (vNode instanceof VNode ? vNode.last : vNode).after(...this.contents);
 	}
 
 	insAtDirEnd(dir: Direction, vNode: Element | VNode) {
 		if (vNode instanceof VNode && !vNode.contents.length) return;
-		if (dir === L) (vNode instanceof VNode ? vNode.firstElement : vNode).prepend(...this.contents);
+		if (dir === 'left') (vNode instanceof VNode ? vNode.firstElement : vNode).prepend(...this.contents);
 		else (vNode instanceof VNode ? vNode.lastElement : vNode).append(...this.contents);
 	}
 }

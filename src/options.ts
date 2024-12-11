@@ -1,24 +1,21 @@
 // Options for the API objects
 
-import type { Direction } from 'src/constants';
-import { BuiltInOpNames } from 'src/constants';
+import { type Direction, BuiltInOpNames } from 'src/constants';
 import type { AbstractMathQuill } from 'src/abstractFields';
 
-export type Handler = (mq: AbstractMathQuill) => void;
-export type DirectionHandler = (dir: Direction, mq: AbstractMathQuill) => void;
+export type Handler = (mq?: AbstractMathQuill) => void;
+export type DirectionHandler = (dir: Direction, mq?: AbstractMathQuill) => void;
 
 export interface Handlers {
 	enter?: Handler;
 	edit?: Handler;
-	edited?: Handler;
-	reflow?: Handler;
 	textBlockEnter?: Handler;
 	textBlockExit?: Handler;
 	moveOutOf?: DirectionHandler;
 	deleteOutOf?: DirectionHandler;
 	selectOutOf?: DirectionHandler;
-	upOutOf?: DirectionHandler;
-	downOutOf?: DirectionHandler;
+	upOutOf?: Handler;
+	downOutOf?: Handler;
 }
 
 export interface InputOptions {
@@ -27,7 +24,7 @@ export interface InputOptions {
 	autoOperatorNames?: string;
 	charsThatBreakOutOfSupSub?: string;
 	statelessClipboard?: boolean;
-	spaceBehavesLikeTab?: boolean;
+	enableSpaceNavigation?: boolean;
 	leftRightIntoCmdGoes?: 'up' | 'down';
 	restrictMismatchedBrackets?: boolean;
 	sumStartsWithNEquals?: boolean;
@@ -38,14 +35,16 @@ export interface InputOptions {
 	autoSubscriptNumerals?: boolean;
 	typingSlashWritesDivisionSymbol?: boolean;
 	typingAsteriskWritesTimesSymbol?: boolean;
-	substituteTextarea?: () => HTMLTextAreaElement;
+	substituteTextarea?: (tabbable?: boolean) => HTMLElement;
 	handlers?: Handlers;
 	overridePaste?: () => void;
 	overrideCut?: () => void;
 	overrideCopy?: () => void;
 	overrideTypedText?: (text: string) => void;
 	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
-	ignoreNextMousedown: (e?: MouseEvent) => boolean;
+	ignoreNextMousedown?: (e?: MouseEvent) => boolean;
+	blurWithCursor?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
+	tabbable?: boolean;
 }
 
 interface NamesWLength {
@@ -88,13 +87,13 @@ export class Options {
 		}
 
 		if (!/^\s*[a-z]+(?:\s+[a-z]+)*\s*$/i.test(cmds)) {
-			throw `"${cmds}" not a space-delimited list of only letters`;
+			throw new Error(`"${cmds}" not a space-delimited list of only letters`);
 		}
 		const list = cmds.trim().split(/\s+/),
 			dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
-			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
-			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
+			if (cmd.length < 2) throw new Error(`autocommand "${cmd}" not minimum length of 2`);
+			if (cmd in BuiltInOpNames) throw new Error(`"${cmd}" is a built-in operator name`);
 			dict[cmd] = 1;
 			dict._maxLength = Math.max(dict._maxLength, cmd.length);
 		}
@@ -104,12 +103,12 @@ export class Options {
 
 	addAutoCommands(cmds: string | string[]) {
 		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
-		if (!this.#_autoCommands) throw 'autoCommands setter not working';
+		if (!this.#_autoCommands) throw new Error('autoCommands setter not working');
 		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of newCmds) {
-			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw `${cmd} is not a valid autocommand name`;
-			if (cmd.length < 2) throw `autocommand "${cmd}" not minimum length of 2`;
-			if (cmd in BuiltInOpNames) throw `"${cmd}" is a built-in operator name`;
+			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw new Error(`${cmd} is not a valid autocommand name`);
+			if (cmd.length < 2) throw new Error(`autocommand "${cmd}" not minimum length of 2`);
+			if (cmd in BuiltInOpNames) throw new Error(`"${cmd}" is a built-in operator name`);
 			this.#_autoCommands[cmd] = 1;
 			this.#_autoCommands._maxLength = Math.max(this.#_autoCommands._maxLength, cmd.length);
 		}
@@ -117,9 +116,10 @@ export class Options {
 
 	removeAutoCommands(cmds: string | string[]) {
 		if (!this.#_autoCommands) this.autoCommands = Options.#autoCommands;
-		if (!this.#_autoCommands) throw 'autoCommands setter not working';
+		if (!this.#_autoCommands) throw new Error('autoCommands setter not working');
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of removeCmds) {
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.#_autoCommands[cmd];
 		}
 		this.#_autoCommands._maxLength = Object.keys(this.#_autoCommands).reduce(
@@ -176,12 +176,12 @@ export class Options {
 		}
 
 		if (!/^\s*[a-z]+(?:\s+[a-z]+)*\s*$/i.test(cmds)) {
-			throw `"${cmds}" not a space-delimited list of only letters`;
+			throw new Error(`"${cmds}" not a space-delimited list of only letters`);
 		}
 		const list = cmds.trim().split(/\s+/),
 			dict: NamesWLength = { _maxLength: 0 };
 		for (const cmd of list) {
-			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
+			if (cmd.length < 2) throw new Error(`"${cmd}" not minimum length of 2`);
 			dict[cmd] = 1;
 			dict._maxLength = Math.max(dict._maxLength, cmd.length);
 		}
@@ -191,11 +191,11 @@ export class Options {
 
 	addAutoOperatorNames(cmds: string | string[]) {
 		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
-		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
+		if (!this.#_autoOperatorNames) throw new Error('autoOperatorNames setter not working');
 		const newCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of newCmds) {
-			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw `${cmd} is not a valid autocommand name`;
-			if (cmd.length < 2) throw `"${cmd}" not minimum length of 2`;
+			if (/\s/.test(cmd) || !/^[a-z]*$/i.test(cmd)) throw new Error(`${cmd} is not a valid autocommand name`);
+			if (cmd.length < 2) throw new Error(`"${cmd}" not minimum length of 2`);
 			this.#_autoOperatorNames[cmd] = 1;
 			this.#_autoOperatorNames._maxLength = Math.max(this.#_autoOperatorNames._maxLength, cmd.length);
 		}
@@ -203,9 +203,10 @@ export class Options {
 
 	removeAutoOperatorNames(cmds: string | string[]) {
 		if (!this.#_autoOperatorNames) this.autoOperatorNames = Options.#autoOperatorNames;
-		if (!this.#_autoOperatorNames) throw 'autoOperatorNames setter not working';
+		if (!this.#_autoOperatorNames) throw new Error('autoOperatorNames setter not working');
 		const removeCmds = cmds instanceof Array ? cmds.map((c) => c.trim()) : [cmds.trim()];
 		for (const cmd of removeCmds) {
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete this.#_autoOperatorNames[cmd];
 		}
 		this.#_autoOperatorNames._maxLength = Object.keys(this.#_autoOperatorNames).reduce(
@@ -237,14 +238,14 @@ export class Options {
 	}
 
 	// If true then space will behave like tab escaping from the current block instead of inserting a space.
-	static #spaceBehavesLikeTab = false;
-	#_spaceBehavesLikeTab?: boolean;
-	get spaceBehavesLikeTab() {
-		return this.#_spaceBehavesLikeTab ?? Options.#spaceBehavesLikeTab;
+	static #enableSpaceNavigation = false;
+	#_enableSpaceNavigation?: boolean;
+	get enableSpaceNavigation() {
+		return this.#_enableSpaceNavigation ?? Options.#enableSpaceNavigation;
 	}
-	set spaceBehavesLikeTab(spaceBehavesLikeTab) {
-		if (this instanceof Options) this.#_spaceBehavesLikeTab = spaceBehavesLikeTab;
-		else Options.#spaceBehavesLikeTab = spaceBehavesLikeTab;
+	set enableSpaceNavigation(enableSpaceNavigation) {
+		if (this instanceof Options) this.#_enableSpaceNavigation = enableSpaceNavigation;
+		else Options.#enableSpaceNavigation = enableSpaceNavigation;
 	}
 
 	// Set to 'up' or 'down' so that left and right go up or down (respectively) into commands.
@@ -254,8 +255,8 @@ export class Options {
 		return this.#_leftRightIntoCmdGoes ?? Options.#leftRightIntoCmdGoes;
 	}
 	set leftRightIntoCmdGoes(updown: 'up' | 'down' | undefined) {
-		if (updown && updown !== 'up' && updown !== 'down') {
-			throw `"up" or "down" required for leftRightIntoCmdGoes option, got "${updown as string}"`;
+		if (updown && updown !== 'up' && (updown as string) !== 'down') {
+			throw new Error(`"up" or "down" required for leftRightIntoCmdGoes option, got "${updown as string}"`);
 		}
 		if (this instanceof Options) this.#_leftRightIntoCmdGoes = updown;
 		else Options.#leftRightIntoCmdGoes = updown;
@@ -366,11 +367,12 @@ export class Options {
 
 	handlers?: Handlers;
 
-	substituteTextarea() {
+	substituteTextarea(tabbable?: boolean) {
 		const textarea = document.createElement('textarea');
 		textarea.setAttribute('autocapitalize', 'off');
 		textarea.setAttribute('autocomplete', 'off');
 		textarea.setAttribute('spellcheck', 'false');
+		textarea.tabIndex = tabbable ? 0 : -1;
 		return textarea;
 	}
 
@@ -380,7 +382,17 @@ export class Options {
 	overrideTypedText?: (text: string) => void;
 	overrideKeystroke?: (key: string, event: KeyboardEvent) => void;
 
-	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => {
-		return false;
-	};
+	ignoreNextMousedown: (e?: MouseEvent) => boolean = () => false;
+
+	blurWithCursor?: (e: FocusEvent, mq?: AbstractMathQuill) => boolean;
+
+	static #tabbable: boolean | undefined;
+	#_tabbable?: boolean;
+	get tabbable(): boolean | undefined {
+		return typeof this.#_tabbable === 'boolean' ? this.#_tabbable : Options.#tabbable;
+	}
+	set tabbable(tabbable) {
+		if (this instanceof Options) this.#_tabbable = tabbable;
+		else Options.#tabbable = tabbable;
+	}
 }

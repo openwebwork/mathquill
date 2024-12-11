@@ -1,15 +1,15 @@
-/* global suite, test, assert, setup, teardown, MQ */
+/* global assert, MQ */
 
-suite('text() output', () => {
+suite('text() output', function () {
 	let mq;
-	setup(() => {
+	setup(function () {
 		const el = document.createElement('span');
 		document.getElementById('mock')?.append(el);
 
 		// Note that these are the default configuration settings used by webwork,
 		// and should be kept up to date with those settings.
 		mq = MQ.MathField(el, {
-			spaceBehavesLikeTab: true,
+			enableSpaceNavigation: true,
 			leftRightIntoCmdGoes: 'up',
 			restrictMismatchedBrackets: true,
 			sumStartsWithNEquals: true,
@@ -22,13 +22,13 @@ suite('text() output', () => {
 			maxDepth: 10
 		});
 	});
-	teardown(() => {
+	teardown(function () {
 		mq.el().remove();
 	});
 
 	// FIXME: For WeBWorK text output is extremely important. So much more of this is needed.
 
-	test('degrees typed with no spaces', () => {
+	test('degrees typed with no spaces', function () {
 		mq.typedText('0degC');
 		assert.equal(mq.text(), '0\u00B0C', '0 degrees Celsius');
 		mq.empty();
@@ -46,7 +46,7 @@ suite('text() output', () => {
 		mq.empty();
 	});
 
-	test('degrees typed with spaces', () => {
+	test('degrees typed with spaces', function () {
 		mq.typedText('0 degC');
 		assert.equal(mq.text(), '0 \u00B0C', '0 degrees Celsius');
 		mq.empty();

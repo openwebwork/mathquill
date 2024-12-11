@@ -1,5 +1,3 @@
-import { pray } from 'src/constants';
-
 type ParserBody = <SR, FR>(
 	stream: string,
 	success: (stream: string, ...args: any[]) => SR,
@@ -20,26 +18,28 @@ export class Parser {
 		this._ = body;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 	parse<T>(stream?: string | number | boolean | object) {
 		return this.skip(Parser.eof)._(
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			`${stream}`,
 			(_stream, result: T) => result,
 			(stream: string, message: string) => {
-				throw `Parse Error: ${message} at ${stream || 'EOF'}`;
+				throw new Error(`Parse Error: ${message} at ${stream || 'EOF'}`);
 			}
 		);
 	}
 
 	// Primitive combinators
 	or(alternative: Parser) {
-		pray('or is passed a parser', alternative instanceof Parser);
+		if (!(alternative instanceof Parser)) throw new Error('or is passed a parser');
 
 		return new Parser((stream, onSuccess, onFailure) =>
 			this._(stream, onSuccess, () => alternative._(stream, onSuccess, onFailure))
 		);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 	then<T>(next: Parser | ((result: T) => Parser) | (() => Parser)) {
 		return new Parser((stream, onSuccess, onFailure) =>
 			this._(
@@ -47,8 +47,8 @@ export class Parser {
 				(newStream, result: T) => {
 					const nextParser =
 						next instanceof Parser ? next : typeof next === 'function' ? next(result) : undefined;
-					pray('a parser is returned', nextParser instanceof Parser);
-					return nextParser!._(newStream, onSuccess, onFailure);
+					if (!(nextParser instanceof Parser)) throw new Error('a parser is returned');
+					return nextParser._(newStream, onSuccess, onFailure);
 				},
 				onFailure
 			)
@@ -56,6 +56,7 @@ export class Parser {
 	}
 
 	// Optimized iterative combinators
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 	many<T>() {
 		return new Parser((stream, onSuccess) => {
 			const xs: T[] = [];
@@ -76,6 +77,7 @@ export class Parser {
 		});
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 	times<T>(min: number, max: number = min) {
 		return new Parser((stream, onSuccess, onFailure) => {
 			const xs: T[] = [];
@@ -104,6 +106,7 @@ export class Parser {
 	}
 
 	// Higher-level combinators
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 	result<T>(res: T) {
 		return this.then(Parser.succeed(res));
 	}
@@ -130,17 +133,17 @@ export class Parser {
 	}
 
 	// Primitive parsers
-	static string(str: string) {
+	static string = (str: string) => {
 		return new Parser((stream, onSuccess, onFailure) => {
 			const head = stream.slice(0, str.length);
 
 			if (head === str) return onSuccess(stream.slice(str.length), head);
 			else return onFailure(stream, `expected '${str}'`);
 		});
-	}
+	};
 
-	static regex(re: RegExp) {
-		pray('regexp parser is anchored', re.toString().charAt(1) === '^');
+	static regex = (re: RegExp) => {
+		if (re.toString().charAt(1) !== '^') throw new Error('regexp parser is anchored');
 
 		return new Parser((stream, onSuccess, onFailure) => {
 			const match = re.exec(stream);
@@ -148,15 +151,12 @@ export class Parser {
 			if (match) return onSuccess(stream.slice(match[0].length), match[0]);
 			else return onFailure(stream, `expected ${re.toString()}`);
 		});
-	}
+	};
 
-	static succeed<T>(result?: T) {
-		return new Parser((stream, onSuccess) => onSuccess(stream, result));
-	}
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+	static succeed = <T>(result?: T) => new Parser((stream, onSuccess) => onSuccess(stream, result));
 
-	static fail(msg?: string) {
-		return new Parser((stream, _, onFailure) => onFailure(stream, msg));
-	}
+	static fail = (msg?: string) => new Parser((stream, _, onFailure) => onFailure(stream, msg));
 
 	static letter = Parser.regex(/^[a-z]/i);
 	static letters = Parser.regex(/^[a-z]*/i);

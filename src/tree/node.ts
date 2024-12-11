@@ -1,7 +1,6 @@
 // TNode base class of edit tree-related objects
 
-import type { Direction } from 'src/constants';
-import { L, R, iterator, pray, prayDirection, mqCmdId, mqBlockId } from 'src/constants';
+import { type Direction, iterator, mqCmdId, mqBlockId } from 'src/constants';
 import type { Options } from 'src/options';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
@@ -10,25 +9,32 @@ import { VNode } from 'tree/vNode';
 import { Fragment } from 'tree/fragment';
 
 export interface Ends {
-	[L]?: TNode;
-	[R]?: TNode;
+	left?: TNode;
+	right?: TNode;
 }
 
-const prayOverridden = (name: string) => pray(`"${name}" should be overridden or never called on this node`);
+export interface MathspeakOptions {
+	createdLeftOf?: Cursor;
+	ignoreShorthand?: boolean;
+}
+
+const prayOverridden = (name: string) => {
+	throw new Error(`"${name}" should be overridden or never called on this node`);
+};
 
 // MathQuill virtual-DOM tree-node abstract base class
 // Only doing tree node manipulation via these adopt/disown methods guarantees well-formedness of the tree.
 export class TNode {
 	static id = 0;
-	static byId: Record<number, TNode> = {};
+	static byId = new Map<number, TNode>();
 	static uniqueNodeId = () => ++TNode.id;
 
 	elements: VNode = new VNode();
 	id: number;
 	parent?: TNode;
 	ends: Ends = {};
-	[L]?: TNode;
-	[R]?: TNode;
+	left?: TNode;
+	right?: TNode;
 	controller?: Controller;
 
 	ctrlSeq = '';
@@ -39,6 +45,10 @@ export class TNode {
 	isSymbol?: boolean;
 	isSupSubLeft?: boolean;
 
+	ariaLabel?: string;
+	mathspeakName?: string;
+	mathspeakTemplate?: string[];
+
 	upInto?: TNode;
 	downInto?: TNode;
 	upOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | TNode | boolean;
@@ -46,7 +56,7 @@ export class TNode {
 
 	reflow?: () => void;
 
-	bubble = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
+	bubble = iterator((yield_: (node: TNode) => TNode | boolean | undefined) => {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		for (let ancestor: TNode | undefined = this; ancestor; ancestor = ancestor.parent) {
 			if (yield_(ancestor) === false) break;
@@ -55,10 +65,11 @@ export class TNode {
 		return this;
 	});
 
-	postOrder = iterator((yield_: (node: TNode) => TNode | boolean | void) => {
+	postOrder = iterator((yield_: (node: TNode) => TNode | boolean | undefined) => {
 		(function recurse(descendant: TNode) {
 			descendant.eachChild(recurse);
 			yield_(descendant);
+			return true;
 		})(this);
 
 		return this;
@@ -66,15 +77,15 @@ export class TNode {
 
 	constructor() {
 		this.id = TNode.uniqueNodeId();
-		TNode.byId[this.id] = this;
+		TNode.byId.set(this.id, this);
 	}
 
 	dispose() {
-		delete TNode.byId[this.id];
+		TNode.byId.delete(this.id);
 	}
 
 	toString() {
-		return `{{ MathQuill TNode #${this.id} }}`;
+		return `{{ MathQuill TNode #${this.id.toString()} }}`;
 	}
 
 	addToElements(el: VNode | HTMLElement) {
@@ -89,28 +100,30 @@ export class TNode {
 			if (el instanceof HTMLElement) {
 				const cmdId = parseInt(el.getAttribute(mqCmdId) ?? '0');
 				const blockId = parseInt(el.getAttribute(mqBlockId) ?? '0');
-				if (cmdId) TNode.byId[cmdId].addToElements(el);
-				if (blockId) TNode.byId[blockId].addToElements(el);
+				if (cmdId) TNode.byId.get(cmdId)?.addToElements(el);
+				if (blockId) TNode.byId.get(blockId)?.addToElements(el);
 			}
 			for (let child = el.firstChild; child; child = child.nextSibling) {
 				addToElements(child);
 			}
 		};
 
-		localVNode.contents.forEach((element) => addToElements(element));
+		localVNode.contents.forEach((element) => {
+			addToElements(element);
+		});
 		return localVNode;
 	}
 
-	createDir(dir: Direction, cursor: Cursor) {
-		prayDirection(dir);
+	createDir(dir: Direction | undefined, cursor: Cursor) {
+		if (dir !== 'left' && dir !== 'right') throw new Error('a direction was not passed');
 		this.domify();
 		this.elements.insDirOf(dir, cursor.element);
-		cursor[dir] = this.adopt(cursor.parent!, cursor[L], cursor[R]);
+		if (cursor.parent) cursor[dir] = this.adopt(cursor.parent, cursor.left, cursor.right);
 		return this;
 	}
 
 	createLeftOf(el: Cursor) {
-		this.createDir(L, el);
+		this.createDir('left', el);
 	}
 
 	selectChildren(leftEnd?: TNode, rightEnd?: TNode) {
@@ -118,7 +131,7 @@ export class TNode {
 	}
 
 	isEmpty() {
-		return !this.ends[L] && !this.ends[R];
+		return !this.ends.left && !this.ends.right;
 	}
 
 	isStyleBlock() {
@@ -126,10 +139,10 @@ export class TNode {
 	}
 
 	children() {
-		return new Fragment(this.ends[L], this.ends[R]);
+		return new Fragment(this.ends.left, this.ends.right);
 	}
 
-	eachChild(method: 'postOrder' | ((node: TNode) => boolean) | ((node: TNode) => void), order?: string) {
+	eachChild(method: 'postOrder' | ((node: TNode) => boolean), order?: string) {
 		const children = this.children();
 		children.each(method, order);
 		return this;
@@ -168,7 +181,7 @@ export class TNode {
 		switch (key) {
 			case 'Ctrl-Shift-Backspace':
 			case 'Ctrl-Backspace':
-				ctrlr.ctrlDeleteDir(L);
+				ctrlr.ctrlDeleteDir('left');
 				break;
 
 			case 'Shift-Backspace':
@@ -176,64 +189,62 @@ export class TNode {
 				ctrlr.backspace();
 				break;
 
-			// Tab or Esc -> go one block right if it exists, else escape right.
+			// Esc -> go one block right if it exists, else escape right.
 			case 'Escape':
-			case 'Tab':
-				ctrlr.escapeDir(R, key, e);
+				ctrlr.escapeDir('right', key, e);
 				return;
 
-			// Shift-Tab -> go one block left if it exists, else escape left.
-			case 'Shift-Tab':
+			// Shift-Escape -> go one block left if it exists, else escape left.
 			case 'Shift-Escape':
-				ctrlr.escapeDir(L, key, e);
+				ctrlr.escapeDir('left', key, e);
 				return;
 
 			// End -> move to the end of the current block.
 			case 'End':
-				ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent!);
+				if (cursor.parent) {
+					ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent);
+					ctrlr.aria.queue('end of').queue(cursor.parent, true);
+				}
 				break;
 
 			// Ctrl-End -> move all the way to the end of the root block.
 			case 'Ctrl-End':
 				ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
+				ctrlr.aria.queue('end of').queue(ctrlr.ariaLabel).queue(ctrlr.root).queue(ctrlr.ariaPostLabel);
 				break;
 
 			// Shift-End -> select to the end of the current block.
 			case 'Shift-End':
-				while (cursor[R]) {
-					ctrlr.selectRight();
-				}
+				ctrlr.selectToBlockEndInDir('right');
 				break;
 
 			// Ctrl-Shift-End -> select to the end of the root block.
 			case 'Ctrl-Shift-End':
-				while (cursor[R] || cursor.parent !== ctrlr.root) {
-					ctrlr.selectRight();
-				}
+				ctrlr.selectToRootEndInDir('right');
 				break;
 
 			// Home -> move to the start of the root block or the current block.
 			case 'Home':
-				ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent!);
+				if (cursor.parent) {
+					ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent);
+					ctrlr.aria.queue('beginning of').queue(cursor.parent, true);
+				}
 				break;
 
 			// Ctrl-Home -> move to the start of the current block.
 			case 'Ctrl-Home':
 				ctrlr.notify('move').cursor.insAtLeftEnd(ctrlr.root);
+				ctrlr.aria.queue('beginning of').queue(ctrlr.ariaLabel).queue(ctrlr.root).queue(ctrlr.ariaPostLabel);
 				break;
 
 			// Shift-Home -> select to the start of the current block.
 			case 'Shift-Home':
-				while (cursor[L]) {
-					ctrlr.selectLeft();
-				}
+				ctrlr.selectToBlockEndInDir('left');
 				break;
 
 			// Ctrl-Shift-Home -> move to the start of the root block.
 			case 'Ctrl-Shift-Home':
-				while (cursor[L] || cursor.parent !== ctrlr.root) {
-					ctrlr.selectLeft();
-				}
+				ctrlr.selectToRootEndInDir('left');
 				break;
 
 			case 'Left':
@@ -262,29 +273,34 @@ export class TNode {
 				break;
 
 			case 'Shift-Up':
-				if (cursor[L]) {
-					while (cursor[L]) ctrlr.selectLeft();
-				} else {
-					ctrlr.selectLeft();
-				}
+				ctrlr.withIncrementalSelection((selectDir) => {
+					if (cursor.left) {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+						while (cursor.left) selectDir('left');
+					} else {
+						selectDir('left');
+					}
+				});
 				break;
 
 			case 'Shift-Down':
-				if (cursor[R]) {
-					while (cursor[R]) ctrlr.selectRight();
-				} else {
-					ctrlr.selectRight();
-				}
+				ctrlr.withIncrementalSelection((selectDir) => {
+					if (cursor.right) {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+						while (cursor.right) selectDir('right');
+					} else {
+						selectDir('right');
+					}
+				});
 				break;
 
 			case 'Ctrl-Up':
-				break;
 			case 'Ctrl-Down':
 				break;
 
 			case 'Ctrl-Shift-Delete':
 			case 'Ctrl-Delete':
-				ctrlr.ctrlDeleteDir(R);
+				ctrlr.ctrlDeleteDir('right');
 				break;
 
 			case 'Shift-Delete':
@@ -294,13 +310,53 @@ export class TNode {
 
 			case 'Meta-A':
 			case 'Ctrl-A':
-				ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
-				while (cursor[L]) ctrlr.selectLeft();
+				ctrlr.selectAll();
+				break;
+
+			// The remaining key strokes are only of benefit to screen reader users.
+
+			// speak parent block that has focus
+			case 'Ctrl-Alt-Up':
+				if (cursor.parent?.parent && cursor.parent.parent instanceof TNode)
+					ctrlr.aria.queue(cursor.parent.parent);
+				else ctrlr.aria.queue('nothing above');
+				break;
+
+			// speak current block that has focus
+			case 'Ctrl-Alt-Down':
+				if (cursor.parent && cursor.parent instanceof TNode) ctrlr.aria.queue(cursor.parent);
+				else ctrlr.aria.queue('block is empty');
+				break;
+
+			// speak left-adjacent block
+			case 'Ctrl-Alt-Left':
+				if (cursor.parent?.parent?.ends.left) ctrlr.aria.queue(cursor.parent.parent.ends.left);
+				else ctrlr.aria.queue('nothing to the left');
+				break;
+
+			// speak right-adjacent block
+			case 'Ctrl-Alt-Right':
+				if (cursor.parent?.parent?.ends.right) ctrlr.aria.queue(cursor.parent.parent.ends.right);
+				else ctrlr.aria.queue('nothing to the right');
+				break;
+
+			// speak selection
+			case 'Ctrl-Alt-Shift-Down':
+				if (cursor.selection) ctrlr.aria.queue(cursor.selection.join('mathspeak', ' ').trim() + ' selected');
+				else ctrlr.aria.queue('nothing selected');
+				break;
+
+			// speak ARIA post label (evaluation or error)
+			case 'Ctrl-Alt-=':
+			case 'Ctrl-Alt-Shift-Right':
+				if (ctrlr.ariaPostLabel.length) ctrlr.aria.queue(ctrlr.ariaPostLabel);
+				else ctrlr.aria.queue('no answer');
 				break;
 
 			default:
 				return;
 		}
+		ctrlr.aria.alert();
 		e.preventDefault();
 		ctrlr.scrollHoriz();
 	}
@@ -317,29 +373,32 @@ export class TNode {
 	focus() {
 		/* do nothing */
 	}
-	blur(_ignore_cursor?: Cursor) {
+	blur(_cursor?: Cursor) {
 		/* do nothing */
 	}
-	seek(_ignore_left: number, _ignore_cursor: Cursor) {
+	seek(_left: number, _cursor: Cursor) {
 		/* do nothing */
 	}
-	writeLatex(_ignore_cursor: Cursor, _ignore_latex: string) {
+	writeLatex(_cursor: Cursor, _latex: string) {
 		/* do nothing */
 	}
-	finalizeInsert(_ignore_options: Options, _ignore_cursor: Cursor) {
+	finalizeInsert(_options: Options, _cursor: Cursor) {
 		/* do nothing */
 	}
-	write(_ignore_cursor: Cursor, _ignore_ch: string) {
+	write(_cursor: Cursor, _ch: string) {
 		/* do nothing */
 	}
-	replaces(_ignore_fragment?: string | Fragment) {
+	replaces(_fragment?: string | Fragment) {
 		/* do nothing */
 	}
-	setOptions(_ignore_options: { text?: () => string; htmlTemplate?: string; latex?: () => string }) {
+	setOptions(_options: { text?: () => string; htmlTemplate?: string; latex?: () => string }) {
 		return this;
 	}
-	chToCmd(_ignore_ch: string, _ignore_options: Options): TNode {
-		return this;
+	chToCmd(_ch: string, _options: Options): TNode {
+		return this as TNode;
+	}
+	mathspeak(_options?: MathspeakOptions) {
+		return '';
 	}
 
 	getController() {
@@ -351,31 +410,31 @@ export class TNode {
 	}
 
 	// called by Controller::escapeDir, moveDir
-	moveOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor, _ignore_updown?: 'up' | 'down') {
+	moveOutOf(_dir: Direction, _cursor?: Cursor, _updown?: 'up' | 'down') {
 		prayOverridden('moveOutOf');
 	}
 	// called by Controller::moveDir
-	moveTowards(_ignore_dir: Direction, _ignore_cursor: Cursor, _ignore_updown?: 'up' | 'down') {
+	moveTowards(_dir: Direction, _cursor: Cursor, _updown?: 'up' | 'down') {
 		prayOverridden('moveTowards');
 	}
 	// called by Controller::deleteDir
-	deleteOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) {
+	deleteOutOf(_dir: Direction, _cursor?: Cursor) {
 		prayOverridden('deleteOutOf');
 	}
 	// called by Controller::deleteDir
-	deleteTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) {
+	deleteTowards(_dir: Direction, _cursor: Cursor) {
 		prayOverridden('deleteTowards');
 	}
 	// called by Controller::selectDir
-	unselectInto(_ignore_dir: Direction, _ignore_cursor: Cursor) {
+	unselectInto(_dir: Direction, _cursor: Cursor) {
 		prayOverridden('unselectInto');
 	}
 	// called by Controller::selectDir
-	selectOutOf(_ignore_dir: Direction, _ignore_cursor?: Cursor) {
+	selectOutOf(_dir: Direction, _cursor?: Cursor) {
 		prayOverridden('selectOutOf');
 	}
 	// called by Controller::selectDir
-	selectTowards(_ignore_dir: Direction, _ignore_cursor: Cursor) {
+	selectTowards(_dir: Direction, _cursor: Cursor) {
 		prayOverridden('selectTowards');
 	}
 }

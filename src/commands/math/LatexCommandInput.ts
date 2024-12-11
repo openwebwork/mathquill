@@ -1,6 +1,6 @@
 // Input box to type backslash commands
 
-import { L, R, LatexCmds, CharCmds } from 'src/constants';
+import { LatexCmds, CharCmds } from 'src/constants';
 import type { Controller } from 'src/controller';
 import type { Cursor } from 'src/cursor';
 import type { Fragment } from 'tree/fragment';
@@ -26,7 +26,9 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	createBlocks() {
 		super.createBlocks();
 
-		const leftEnd = this.ends[L]!;
+		const leftEnd = this.ends.left;
+
+		if (!leftEnd) return;
 
 		leftEnd.focus = () => {
 			leftEnd.parent?.elements.addClass('mq-has-cursor');
@@ -45,20 +47,26 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 		leftEnd.write = (cursor: Cursor, ch: string) => {
 			cursor.show().deleteSelection();
 
-			if (/[a-z]/i.exec(ch)) new VanillaSymbol(ch).createLeftOf(cursor);
-			else {
-				(leftEnd.parent as LatexCommandInput).renderCommand(cursor);
+			if (/[a-z]/i.exec(ch)) {
+				new VanillaSymbol(ch).createLeftOf(cursor);
+				cursor.controller.aria.alert(ch);
+			} else {
+				const cmd = (leftEnd.parent as LatexCommandInput).renderCommand(cursor);
+				cursor.controller.aria.queue(cmd.mathspeak({ createdLeftOf: cursor }));
 				if (ch !== '\\' || !leftEnd.isEmpty()) cursor.parent?.write(cursor, ch);
+				else cursor.controller.aria.alert();
 			}
 		};
 
 		leftEnd.keystroke = (key: string, e: KeyboardEvent, ctrlr: Controller) => {
-			if (key === 'Tab' || key === 'Enter' || key === 'Spacebar') {
-				(leftEnd.parent as LatexCommandInput).renderCommand(ctrlr.cursor);
+			if (key === 'Tab' || key === 'Shift-Tab' || key === 'Enter' || key === 'Spacebar') {
+				const cmd = (leftEnd.parent as LatexCommandInput).renderCommand(ctrlr.cursor);
+				ctrlr.aria.alert(cmd.mathspeak({ createdLeftOf: ctrlr.cursor }));
 				e.preventDefault();
 				return;
 			}
-			return super.keystroke(key, e, ctrlr);
+			super.keystroke(key, e, ctrlr);
+			return;
 		};
 	}
 
@@ -85,27 +93,29 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 	}
 
 	latex() {
-		return '\\' + (this.ends[L]?.latex() ?? '') + ' ';
+		return '\\' + (this.ends.left?.latex() ?? '') + ' ';
 	}
 
 	renderCommand(cursor: Cursor) {
 		this.elements = new VNode(this.elements.last);
 		this.remove();
 
-		if (this[R]) cursor.insLeftOf(this[R]);
-		else cursor.insAtRightEnd(this.parent!);
+		if (this.right) cursor.insLeftOf(this.right);
+		else if (this.parent) cursor.insAtRightEnd(this.parent);
 
-		const latex = this.ends[L]?.latex() || ' ';
+		const latex = this.ends.left?.latex() || ' ';
 		if (latex in LatexCmds) {
 			const cmd = new LatexCmds[latex](latex);
 			if (this._replacedFragment) cmd.replaces(this._replacedFragment);
 			cmd.createLeftOf(cursor);
+			return cmd;
 		} else {
 			const cmd = new TextBlock();
 			cmd.replaces(latex);
 			cmd.createLeftOf(cursor);
 			cursor.insRightOf(cmd);
 			if (this._replacedFragment) this._replacedFragment.remove();
+			return cmd;
 		}
 	}
 };

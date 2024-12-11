@@ -45,21 +45,24 @@ export class StaticMath extends AbstractMathQuill {
 
 	__mathquillify() {
 		super.__mathquillify('mq-math-mode');
-		if (this.__options.mouseEvents) {
-			this.__controller.delegateMouseEvents();
-			this.__controller.staticMathTextareaEvents();
-		}
+		this.__controller.setupStaticField();
+		if (this.__options.mouseEvents) this.__controller.delegateMouseEvents();
+		this.__controller.staticMathTextareaEvents();
 		return this;
 	}
 
+	latex(latex: string): this;
+	latex(): string;
 	latex(latex?: string) {
-		const returned = super.latex(latex);
+		const returned = typeof latex === 'string' ? super.latex(latex) : super.latex();
 		if (typeof latex !== 'undefined') {
 			this.__controller.root.postOrder(
 				'registerInnerField',
 				(this.innerFields = new Store<InnerMathField>()),
 				InnerMathField
 			);
+			// Force an ARIA label update to remain in sync with the new LaTeX value.
+			this.__controller.updateMathspeak();
 		}
 		return returned;
 	}

@@ -1,7 +1,6 @@
 // Horizontal panning for editable fields that overflow their width
 
 import type { Constructor } from 'src/constants';
-import { L, R } from 'src/constants';
 import type { ControllerBase } from 'src/controller';
 
 export const HorizontalScroll = <TBase extends Constructor<ControllerBase>>(Base: TBase) =>
@@ -18,7 +17,7 @@ export const HorizontalScroll = <TBase extends Constructor<ControllerBase>>(Base
 				const rect = this.cursor.selection.elements.firstElement.getBoundingClientRect();
 				const overLeft = rect.left - (rootRect.left + 20);
 				const overRight = rect.right - (rootRect.right - 20);
-				if (this.cursor.selection.ends[L] === this.cursor[R]) {
+				if (this.cursor.selection.ends.left === this.cursor.right) {
 					if (overLeft < 0) scrollBy = overLeft;
 					else if (overRight > 0) {
 						if (rect.left - overRight < rootRect.left + 20) scrollBy = overLeft;
