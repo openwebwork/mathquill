@@ -1,6 +1,5 @@
-/* global assert */
-
 import { Parser } from 'services/parser.util';
+import { assert } from 'test/support/assert';
 
 suite('parser', function () {
 	const string = Parser.string;
@@ -36,10 +35,10 @@ suite('parser', function () {
 		});
 
 		test('asserts that a parser is returned', function () {
-			const parser1 = letter.then(() => 'not a parser');
+			const parser1 = letter.then(() => 'not a parser' as unknown as Parser);
 			assert.throws(() => parser1.parse('x'));
 
-			const parser2 = letter.then('x');
+			const parser2 = letter.then('x' as unknown as Parser);
 			assert.throws(() => parser2.parse('xx'));
 		});
 
@@ -114,7 +113,9 @@ suite('parser', function () {
 		});
 	});
 
-	const assertEqualArray = (arr1, arr2) => assert.equal(arr1.join(), arr2.join());
+	const assertEqualArray = (arr1: string[], arr2: string[]) => {
+		assert.equal(arr1.join(), arr2.join());
+	};
 
 	suite('many', function () {
 		test('simple case', function () {
@@ -191,18 +192,18 @@ suite('parser', function () {
 		const succeed = Parser.succeed;
 
 		test('use Parser.fail to fail dynamically', function () {
-			const parser = any.then((ch) => fail(`character ${ch} not allowed`)).or(string('x'));
+			const parser = any.then((ch: string) => fail(`character ${ch} not allowed`)).or(string('x'));
 
 			assert.throws(() => parser.parse('y'));
 			assert.equal(parser.parse('x'), 'x');
 		});
 
 		test('use Parser.succeed or Parser.fail to branch conditionally', function () {
-			let allowedOperator;
+			let allowedOperator: string;
 
 			const parser = string('x')
 				.then(string('+').or(string('*')))
-				.then((operator) => {
+				.then((operator: string) => {
 					if (operator === allowedOperator) return succeed(operator);
 					else return fail(`expected ${allowedOperator}`);
 				})

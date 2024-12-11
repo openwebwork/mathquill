@@ -1,6 +1,3 @@
-import MathQuill from 'src/publicapi';
-window.MathQuill = MathQuill;
-
 import 'test/html.test';
 import 'test/text.test';
 import 'test/typing.test';

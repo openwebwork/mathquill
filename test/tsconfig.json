@@ -11,15 +11,16 @@
 		"target": "es2020",
 		"noErrorTruncation": true,
 		"paths": {
-			"src/*": ["src/*"],
-			"tree/*": ["src/tree/*"],
-			"services/*": ["src/services/*"],
-			"commands/*": ["src/commands/*"],
-			"css/*": ["src/css/*"],
-			"fonts/*": ["src/fonts/*"]
+			"src/*": ["../src/*"],
+			"tree/*": ["../src/tree/*"],
+			"services/*": ["../src/services/*"],
+			"commands/*": ["../src/commands/*"],
+			"css/*": ["../src/css/*"],
+			"fonts/*": ["../src/fonts/*"],
+			"test/*": ["./*"]
 		},
 		"lib": ["esnext", "dom", "dom.iterable"]
 	},
-	"include": ["src/**/*"],
-	"exclude": ["dist", "node_modules"]
+	"include": ["../src/**/*", "**/*"],
+	"exclude": ["../dist", "../node_modules"]
 }

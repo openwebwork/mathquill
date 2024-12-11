@@ -1,11 +1,10 @@
-/* global assert */
-
 import { TNode } from 'tree/node';
 import { Fragment } from 'tree/fragment';
+import { assert } from 'test/support/assert';
 
 suite('tree', function () {
 	suite('adopt', function () {
-		const assertTwoChildren = (parent, one, two) => {
+		const assertTwoChildren = (parent: TNode, one: TNode, two: TNode) => {
 			assert.equal(one.parent, parent, 'one.parent is set');
 			assert.equal(two.parent, parent, 'two.parent is set');
 
@@ -77,7 +76,7 @@ suite('tree', function () {
 	});
 
 	suite('disown', function () {
-		const assertSingleChild = (parent, child) => {
+		const assertSingleChild = (parent: TNode, child: TNode) => {
 			assert.equal(parent.ends.left, child, 'parent.ends.left is child');
 			assert.equal(parent.ends.right, child, 'parent.ends.right is child');
 			assert.ok(!child.left, 'child has nothing leftward');
@@ -161,21 +160,23 @@ suite('tree', function () {
 			const empty = new Fragment();
 			let count = 0;
 
-			empty.each(() => ++count);
+			empty.each(() => {
+				++count;
+				return true;
+			});
 
 			assert.equal(count, 0, 'each is a noop on an empty fragment');
 		});
 
 		test('half-empty fragments are disallowed', function () {
-			assert.throws(() => new Fragment(new TNode(), 0), 'half-empty on the right');
-			assert.throws(() => new Fragment(0, new TNode()), 'half-empty on the left');
+			assert.throws(() => new Fragment(new TNode(), undefined), 'half-empty on the right');
+			assert.throws(() => new Fragment(undefined, new TNode()), 'half-empty on the left');
 		});
 
 		test('directionalized constructor call', function () {
 			const ChNode = class extends TNode {
-				constructor(ch) {
+				constructor(public ch: string) {
 					super();
-					this.ch = ch;
 				}
 			};
 			const parent = new TNode();
@@ -185,7 +186,7 @@ suite('tree', function () {
 			const d = new ChNode('d').adopt(parent, parent.ends.right);
 			new ChNode('e').adopt(parent, parent.ends.right);
 
-			const cat = (str, node) => str + node.ch;
+			const cat = (str: string, node: TNode) => str + (node as InstanceType<typeof ChNode>).ch;
 			assert.equal('bcd', new Fragment(b, d).fold('', cat));
 			assert.equal('bcd', new Fragment(b, d, 'left').fold('', cat));
 			assert.equal('bcd', new Fragment(d, b, 'right').fold('', cat));

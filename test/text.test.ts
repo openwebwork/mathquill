@@ -1,11 +1,17 @@
-/* global assert, MQ */
-
+import MathQuill from 'src/publicapi';
 import { prayWellFormed } from 'src/constants';
 import { Controller } from 'src/controller';
+import { Options } from 'src/options';
 import { latexMathParser } from 'commands/mathElements';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
+import type { Cursor } from 'src/cursor';
+import type { MathBlock } from 'commands/mathBlock';
 
 suite('text', function () {
-	let mq, mostRecentlyReportedLatex;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField, mostRecentlyReportedLatex: string | number | undefined;
 	setup(function () {
 		mostRecentlyReportedLatex = NaN; // != to everything
 		const el = document.createElement('span');
@@ -17,31 +23,33 @@ suite('text', function () {
 		});
 	});
 
-	const prayWellFormedPoint = (pt) => prayWellFormed(pt.parent, pt.left, pt.right);
-	const assertLatex = (latex) => {
+	const prayWellFormedPoint = (pt: Cursor) => {
+		prayWellFormed(pt.parent, pt.left, pt.right);
+	};
+	const assertLatex = (latex: string) => {
 		prayWellFormedPoint(mq.__controller.cursor);
 		assert.equal(mostRecentlyReportedLatex, latex, 'assertLatex failed');
 		assert.equal(mq.latex(), latex, 'assertLatex failed');
 	};
 
-	const fromLatex = (latex) => {
-		const block = latexMathParser.parse(latex);
+	const fromLatex = (latex: string) => {
+		const block: MathBlock = latexMathParser.parse(latex);
 		block.domify();
 
 		return block;
 	};
 
-	const assertSplit = (dom, prev, next) => {
+	const assertSplit = (dom: HTMLElement, prev?: string | null, next?: string | null) => {
 		if (prev) {
 			assert.ok(dom.previousSibling instanceof Text);
-			assert.equal(prev, dom.previousSibling.data, 'assertSplit failed');
+			assert.equal(prev, dom.previousSibling instanceof Text && dom.previousSibling.data, 'assertSplit failed');
 		} else {
 			assert.ok(!dom.previousSibling);
 		}
 
 		if (next) {
 			assert.ok(dom.nextSibling instanceof Text);
-			assert.equal(next, dom.nextSibling.data, 'assertSplit failed');
+			assert.equal(next, dom.nextSibling instanceof Text && dom.nextSibling.data, 'assertSplit failed');
 		} else {
 			assert.ok(!dom.nextSibling);
 		}
@@ -49,7 +57,7 @@ suite('text', function () {
 
 	test('changes the text nodes as the cursor moves around', function () {
 		const block = fromLatex('\\text{abc}');
-		const ctrlr = new Controller(block, 0, 0);
+		const ctrlr = new Controller(block, document.createElement('span'), new Options());
 		const cursor = ctrlr.cursor.insAtRightEnd(block);
 
 		ctrlr.moveLeft();
@@ -76,7 +84,7 @@ suite('text', function () {
 
 	test('does not change latex as the cursor moves around', function () {
 		const block = fromLatex('\\text{x}');
-		const ctrlr = new Controller(block, 0, 0);
+		const ctrlr = new Controller(block, document.createElement('span'), new Options());
 		ctrlr.cursor.insAtRightEnd(block);
 
 		ctrlr.moveLeft();

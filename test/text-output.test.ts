@@ -1,7 +1,11 @@
-/* global assert, MQ */
+import MathQuill from 'src/publicapi';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
 
 suite('text() output', function () {
-	let mq;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField;
 	setup(function () {
 		const el = document.createElement('span');
 		document.getElementById('mock')?.append(el);
@@ -15,7 +19,9 @@ suite('text() output', function () {
 			sumStartsWithNEquals: true,
 			supSubsRequireOperand: true,
 			autoCommands: ['pi', 'sqrt', 'root', 'vert', 'inf', 'union', 'abs', 'deg', 'ln', 'log']
-				.concat(['sin', 'cos', 'tan', 'sec', 'csc', 'cot'].reduce((a, t) => a.concat([t, `arc${t}`]), []))
+				.concat(
+					['sin', 'cos', 'tan', 'sec', 'csc', 'cot'].reduce<string[]>((a, t) => a.concat([t, `arc${t}`]), [])
+				)
 				.join(' '),
 			rootsAreExponents: true,
 			logsChangeBase: true,
