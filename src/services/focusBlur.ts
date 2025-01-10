@@ -53,9 +53,13 @@ export const FocusBlurEvents = <TBase extends Constructor<ControllerBase>>(Base:
 						this.cursor.show();
 					}
 				} else {
-					this.cursor.hide().parent?.blur();
-					if (document.hasFocus()) this.cursor.clearSelection().endSelection();
-					else if (this.cursor.selection) this.cursor.selection.elements.addClass('mq-blur');
+					if (document.hasFocus()) {
+						this.cursor.hide().parent?.blur(this.cursor);
+						this.cursor.clearSelection().endSelection();
+					} else {
+						this.cursor.hide().parent?.blur();
+						if (this.cursor.selection) this.cursor.selection.elements.addClass('mq-blur');
+					}
 				}
 				this.updateMathspeak(true);
 			};
