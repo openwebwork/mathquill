@@ -225,7 +225,11 @@ export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 		if (!cursor) return;
 		if (this.textContents() === '') {
 			this.remove();
-			if (cursor.left === this) cursor.left = this.left;
+			if (cursor.parent === this) {
+				cursor.parent = this.parent;
+				cursor.left = this.left;
+				cursor.right = this.right;
+			} else if (cursor.left === this) cursor.left = this.left;
 			else if (cursor.right === this) cursor.right = this.right;
 		} else {
 			// If the text block contains the selection, then that needs to be removed before fuseChildren is called.
