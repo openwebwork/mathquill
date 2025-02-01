@@ -1,0 +1,27 @@
+---
+name: Lint Code Base
+
+defaults:
+    run:
+        shell: bash
+
+on:
+    push:
+        branches-ignore: [main]
+    pull_request:
+
+jobs:
+    eslint:
+        name: Lint TypeScript and JavaScript files with eslint and style files with stylelint
+        runs-on: ubuntu-24.04
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Install Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+            - name: Install Dependencies and Build
+              run: npm ci --ignore-scripts && npm run build
+            - name: Lint files with eslint and stylelint
+              run: npm run lint:check

@@ -1,7 +1,14 @@
-/* global assert, MQ */
+import MathQuill from 'src/publicapi';
+import { assert } from 'test/support/assert';
+import type { InnerMathField, MathField } from 'commands/math';
+import type { TNode } from 'tree/node';
+import type { Controller } from 'src/controller';
+import type { Cursor } from 'src/cursor';
 
 suite('up/down', function () {
-	let mq, rootBlock, controller, cursor;
+	const MQ = MathQuill.getInterface();
+
+	let mq: MathField, rootBlock: TNode, controller: Controller, cursor: Cursor;
 	setup(function () {
 		const el = document.createElement('span');
 		document.getElementById('mock')?.append(el);
@@ -14,8 +21,8 @@ suite('up/down', function () {
 	test('up/down in out of exponent', function () {
 		controller.renderLatexMath('x^{nm}');
 		const exp = rootBlock.ends.right,
-			expBlock = exp.ends.left;
-		assert.equal(exp.latex(), '^{nm}', 'right end el is exponent');
+			expBlock = exp?.ends.left;
+		assert.equal(exp?.latex(), '^{nm}', 'right end el is exponent');
 		assert.equal(cursor.parent, rootBlock, 'cursor is in root block');
 		assert.equal(cursor.left, exp, 'cursor is at the end of root block');
 
@@ -36,8 +43,8 @@ suite('up/down', function () {
 
 		mq.keystroke('Up Right');
 		assert.equal(cursor.parent, expBlock, 'cursor up left stays in exponent');
-		assert.equal(cursor.left.latex(), 'n', 'cursor is in the middle of exponent');
-		assert.equal(cursor.right.latex(), 'm', 'cursor is in the middle of exponent');
+		assert.equal(cursor.left?.latex(), 'n', 'cursor is in the middle of exponent');
+		assert.equal(cursor.right?.latex(), 'm', 'cursor is in the middle of exponent');
 
 		mq.keystroke('Down');
 		assert.equal(cursor.parent, rootBlock, 'cursor down leaves exponent');
@@ -48,8 +55,8 @@ suite('up/down', function () {
 	test('up/down in out of subscript', function () {
 		controller.renderLatexMath('a_{12}');
 		const sub = rootBlock.ends.right,
-			subBlock = sub.ends.left;
-		assert.equal(sub.latex(), '_{12}', 'right end el is subscript');
+			subBlock = sub?.ends.left;
+		assert.equal(sub?.latex(), '_{12}', 'right end el is subscript');
 		assert.equal(cursor.parent, rootBlock, 'cursor is in root block');
 		assert.equal(cursor.left, sub, 'cursor is at the end of root block');
 
@@ -70,8 +77,8 @@ suite('up/down', function () {
 
 		mq.keystroke('Down Right');
 		assert.equal(cursor.parent, subBlock, 'cursor down left stays in subscript');
-		assert.equal(cursor.left.latex(), '1', 'cursor is in the middle of subscript');
-		assert.equal(cursor.right.latex(), '2', 'cursor is in the middle of subscript');
+		assert.equal(cursor.left?.latex(), '1', 'cursor is in the middle of subscript');
+		assert.equal(cursor.right?.latex(), '2', 'cursor is in the middle of subscript');
 
 		mq.keystroke('Up');
 		assert.equal(cursor.parent, rootBlock, 'cursor up leaves subscript');
@@ -81,12 +88,12 @@ suite('up/down', function () {
 	test('up/down into and within fraction', function () {
 		controller.renderLatexMath('\\frac{12}{34}');
 		const frac = rootBlock.ends.left,
-			numer = frac.ends.left,
-			denom = frac.ends.right;
-		assert.equal(frac.latex(), '\\frac{12}{34}', 'fraction is in root block');
+			numer = frac?.ends.left,
+			denom = frac?.ends.right;
+		assert.equal(frac?.latex(), '\\frac{12}{34}', 'fraction is in root block');
 		assert.equal(frac, rootBlock.ends.right, 'fraction is sole child of root block');
-		assert.equal(numer.latex(), '12', 'numerator is left end child of fraction');
-		assert.equal(denom.latex(), '34', 'denominator is right end child of fraction');
+		assert.equal(numer?.latex(), '12', 'numerator is left end child of fraction');
+		assert.equal(denom?.latex(), '34', 'denominator is right end child of fraction');
 
 		mq.keystroke('Up');
 		assert.equal(cursor.parent, numer, 'cursor up goes into numerator');
@@ -120,9 +127,9 @@ suite('up/down', function () {
 	test('nested subscripts and fractions', function () {
 		controller.renderLatexMath('\\frac{d}{dx_{\\frac{24}{36}0}}\\sqrt{x}=x^{\\frac{1}{2}}');
 		const exp = rootBlock.ends.right,
-			expBlock = exp.ends.left,
-			half = expBlock.ends.left,
-			halfDenom = half.ends.right;
+			expBlock = exp?.ends.left,
+			half = expBlock?.ends.left,
+			halfDenom = half?.ends.right;
 
 		mq.keystroke('Left');
 		assert.equal(cursor.parent, expBlock, 'cursor left goes into exponent');
@@ -135,12 +142,12 @@ suite('up/down', function () {
 		assert.equal(cursor.left, exp, 'down from end of half puts cursor after exponent');
 
 		const derivative = rootBlock.ends.left,
-			dxBlock = derivative.ends.right,
-			sub = dxBlock.ends.right,
-			subBlock = sub.ends.left,
-			subFrac = subBlock.ends.left,
-			subFracNumer = subFrac.ends.left,
-			subFracDenom = subFrac.ends.right;
+			dxBlock = derivative?.ends.right,
+			sub = dxBlock?.ends.right,
+			subBlock = sub?.ends.left,
+			subFrac = subBlock?.ends.left,
+			subFracNumer = subFrac?.ends.left,
+			subFracDenom = subFrac?.ends.right;
 
 		cursor.insAtLeftEnd(rootBlock);
 		mq.keystroke('Down Right Right Down');
@@ -172,9 +179,10 @@ suite('up/down', function () {
 			"cursor up up from subscript fraction denominator that's not at right end goes before subscript"
 		);
 
+		if (!subBlock) throw new Error('sub block is undefined');
 		cursor.insAtRightEnd(subBlock);
 		controller.backspace();
-		assert.equal(subFrac.right, undefined, 'subscript fraction is at right end');
+		assert.equal(subFrac?.right, undefined, 'subscript fraction is at right end');
 		assert.equal(cursor.left, subFrac, 'cursor after subscript fraction');
 
 		mq.keystroke('Down');
@@ -199,7 +207,10 @@ suite('up/down', function () {
 		document.getElementById('mock')?.append(el);
 
 		const outer = MQ.StaticMath(el);
-		const inner = MQ(outer.el().querySelector('.mq-editable-field'));
+		const innerEditableSpan = outer.el().querySelector('.mq-editable-field');
+		assert.ok(innerEditableSpan instanceof HTMLElement);
+		if (!(innerEditableSpan instanceof HTMLElement)) throw new Error('inner editable field does not exist');
+		const inner = MQ(innerEditableSpan) as InnerMathField;
 
 		assert.equal(inner.__controller.cursor.parent, inner.__controller.root);
 		inner.keystroke('Down');

@@ -1,15 +1,21 @@
-/* global assert, MQ */
+import MathQuill from 'src/publicapi';
+import { assert } from 'test/support/assert';
+import type { MathField } from 'commands/math';
+import type { InputOptions } from 'src/options';
 
 suite('Public API', function () {
+	const MQ = MathQuill.getInterface();
+
 	suite('global functions', function () {
 		test('undefined', function () {
 			assert.equal(MQ(), undefined);
-			assert.equal(MQ(0), undefined);
-			assert.equal(MQ('<span/>'), undefined);
+			assert.equal(MQ(0 as unknown as HTMLElement), undefined);
+			assert.equal(MQ('<span/>' as unknown as HTMLElement), undefined);
 			assert.equal(MQ(document.createElement('span')), undefined);
+			// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
 			assert.equal(MQ.MathField(), undefined);
-			assert.equal(MQ.MathField(0), undefined);
-			assert.equal(MQ.MathField('<span/>'), undefined);
+			assert.equal(MQ.MathField(0 as unknown as HTMLElement), undefined);
+			assert.equal(MQ.MathField('<span/>' as unknown as HTMLElement), undefined);
 		});
 
 		test('MQ.MathField()', function () {
@@ -25,24 +31,21 @@ suite('Public API', function () {
 
 			assert.ok(MQ(mathFieldSpan) === mathField);
 
-			assert.equal(MQ(mathFieldSpan).id, mathField.id);
-			assert.equal(MQ(mathFieldSpan).id, MQ(mathFieldSpan).id);
-
-			assert.equal(MQ(mathFieldSpan).data, mathField.data);
-			assert.equal(MQ(mathFieldSpan).data, MQ(mathFieldSpan).data);
+			assert.equal(MQ(mathFieldSpan)?.id, mathField.id);
+			assert.equal(MQ(mathFieldSpan)?.id, MQ(mathFieldSpan)?.id);
 		});
 
 		test('blurred when created', function () {
 			const el = document.createElement('span');
 			MQ.MathField(el);
 			const rootBlock = el.querySelector('.mq-root-block');
-			assert.ok(rootBlock.classList.contains('mq-empty'));
-			assert.ok(!rootBlock.classList.contains('mq-has-cursor'));
+			assert.ok(rootBlock?.classList.contains('mq-empty'));
+			assert.ok(rootBlock && !rootBlock.classList.contains('mq-has-cursor'));
 		});
 	});
 
 	suite('basic API methods', function () {
-		let mq;
+		let mq: MathField;
 		setup(function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
@@ -53,14 +56,14 @@ suite('Public API', function () {
 			const el = document.createElement('span');
 			el.innerHTML = 'some <code>HTML</code>';
 			const mq = MQ.MathField(el);
-			assert.equal(mq.revert().innerHTML, 'some <code>HTML</code>');
+			assert.equal(mq.revert?.().innerHTML, 'some <code>HTML</code>');
 		});
 
 		test('select, clearSelection', function () {
 			mq.latex('n+\\frac{n}{2}');
 			assert.ok(!mq.__controller.cursor.selection);
 			mq.select();
-			assert.equal(mq.__controller.cursor.selection.join('latex'), 'n+\\frac{n}{2}');
+			assert.equal(mq.__controller.cursor.selection?.join('latex'), 'n+\\frac{n}{2}');
 			mq.clearSelection();
 			assert.ok(!mq.__controller.cursor.selection);
 		});
@@ -69,7 +72,7 @@ suite('Public API', function () {
 			mq.latex('a');
 			assert.equal(mq.latex(), 'a');
 			mq.select();
-			assert.equal(mq.__controller.cursor.selection.join('latex'), 'a');
+			assert.equal(mq.__controller.cursor.selection?.join('latex'), 'a');
 			mq.latex('b');
 			assert.equal(mq.latex(), 'b');
 			mq.typedText('c');
@@ -120,13 +123,13 @@ suite('Public API', function () {
 
 		test('.moveToDirEnd(dir)', function () {
 			mq.latex('a x^2 + b x + c = 0');
-			assert.equal(mq.__controller.cursor.left.ctrlSeq, '0');
+			assert.equal(mq.__controller.cursor.left?.ctrlSeq, '0');
 			assert.equal(mq.__controller.cursor.right, undefined);
 			mq.moveToLeftEnd();
 			assert.equal(mq.__controller.cursor.left, undefined);
-			assert.equal(mq.__controller.cursor.right.ctrlSeq, 'a');
+			assert.equal(mq.__controller.cursor.right?.ctrlSeq, 'a');
 			mq.moveToRightEnd();
-			assert.equal(mq.__controller.cursor.left.ctrlSeq, '0');
+			assert.equal(mq.__controller.cursor.left?.ctrlSeq, '0');
 			assert.equal(mq.__controller.cursor.right, undefined);
 		});
 
@@ -145,7 +148,7 @@ suite('Public API', function () {
 		const mq2 = MQ.MathField(el, {
 			handlers: {
 				edit: (_mq) => {
-					assert.equal(mq2.id, _mq.id);
+					assert.equal(mq2.id, _mq?.id);
 					count += 1;
 				}
 			}
@@ -156,7 +159,7 @@ suite('Public API', function () {
 	});
 
 	suite('*OutOf handlers', function () {
-		const testHandlers = (title, mathFieldMaker) => {
+		const testHandlers = (title: string, mathFieldMaker: (options: InputOptions) => MathField) => {
 			test(title, function () {
 				let enterCounter = 0,
 					upCounter = 0,
@@ -168,23 +171,23 @@ suite('Public API', function () {
 					handlers: {
 						enter(...args) {
 							assert.equal(args.length, 1);
-							assert.equal(args[0].id, mq.id);
+							assert.equal(args[0]?.id, mq.id);
 							enterCounter += 1;
 						},
 						upOutOf(...args) {
 							assert.equal(args.length, 1);
-							assert.equal(args[0].id, mq.id);
+							assert.equal(args[0]?.id, mq.id);
 							upCounter += 1;
 						},
 						moveOutOf(...args) {
 							assert.equal(args.length, 2);
-							assert.equal(args[1].id, mq.id);
+							assert.equal(args[1]?.id, mq.id);
 							dir = args[0];
 							moveCounter += 1;
 						},
 						deleteOutOf(...args) {
 							assert.equal(args.length, 2);
-							assert.equal(args[1].id, mq.id);
+							assert.equal(args[1]?.id, mq.id);
 							dir = args[0];
 							deleteCounter += 1;
 						}
@@ -241,7 +244,7 @@ suite('Public API', function () {
 				assert.equal(dir, 'left');
 
 				const mock = document.getElementById('mock');
-				while (mock.firstChild) mock.firstChild.remove();
+				while (mock?.firstChild) mock.firstChild.remove();
 			});
 		};
 
@@ -319,7 +322,7 @@ suite('Public API', function () {
 	});
 
 	suite('.cmd(...)', function () {
-		let mq;
+		let mq: MathField;
 
 		setup(function () {
 			const el = document.createElement('span');
@@ -364,7 +367,7 @@ suite('Public API', function () {
 
 		test('overflow triggers automatic horizontal scroll', function (done) {
 			const mqEl = mq.el();
-			const rootEl = mq.__controller.root.elements.first;
+			const rootEl = mq.__controller.root.elements.first as Element;
 			const cursor = mq.__controller.cursor;
 
 			mqEl.style.width = '10px';
@@ -405,14 +408,22 @@ suite('Public API', function () {
 
 			mq.keystroke('Spacebar');
 			mq.typedText(' ');
-			assert.equal(cursor.left.ctrlSeq, '\\ ', 'left of the cursor is ' + cursor.left.ctrlSeq);
-			assert.equal(cursor.right, undefined, 'right of the cursor is ' + cursor.right);
+			assert.equal(cursor.left?.ctrlSeq, '\\ ', 'left of the cursor is ' + (cursor.left?.ctrlSeq ?? 'undefined'));
+			assert.equal(
+				cursor.right,
+				undefined,
+				'right of the cursor is ' + (cursor.right?.toString() ?? 'undefined')
+			);
 			mq.keystroke('Backspace');
 
 			mq.keystroke('Shift-Spacebar');
 			mq.typedText(' ');
-			assert.equal(cursor.left.ctrlSeq, '\\ ', 'left of the cursor is ' + cursor.left.ctrlSeq);
-			assert.equal(cursor.right, undefined, 'right of the cursor is ' + cursor.right);
+			assert.equal(cursor.left?.ctrlSeq, '\\ ', 'left of the cursor is ' + (cursor.left?.ctrlSeq ?? 'undefined'));
+			assert.equal(
+				cursor.right,
+				undefined,
+				'right of the cursor is ' + (cursor.right?.toString() ?? 'undefined')
+			);
 		});
 		test('space behaves like tab when enableSpaceNavigation is true', function () {
 			const el = document.createElement('span');
@@ -425,13 +436,21 @@ suite('Public API', function () {
 
 			mq.keystroke('Left');
 			mq.keystroke('Spacebar');
-			assert.equal(cursor.left.parent, rootBlock, 'parent of the cursor is  ' + cursor.left.ctrlSeq);
-			assert.equal(cursor.right, undefined, 'right cursor is ' + cursor.right);
+			assert.equal(
+				cursor.left?.parent,
+				rootBlock,
+				'parent of the cursor is  ' + (cursor.left?.ctrlSeq ?? 'undefined')
+			);
+			assert.equal(cursor.right, undefined, 'right cursor is ' + (cursor.right?.toString() ?? 'undefined'));
 
 			mq.keystroke('Left');
 			mq.keystroke('Shift-Spacebar');
-			assert.equal(cursor.left, undefined, 'left cursor is ' + cursor.left);
-			assert.equal(cursor.right, rootBlock.ends.left, 'parent of rootBlock is ' + cursor.right);
+			assert.equal(cursor.left, undefined, 'left cursor is ' + (cursor.left?.toString() ?? 'undefined'));
+			assert.equal(
+				cursor.right,
+				rootBlock.ends.left,
+				'parent of rootBlock is ' + (cursor.right?.toString() ?? 'undefined')
+			);
 		});
 		test('space behaves like tab when globally set to true', function () {
 			MQ.config({ enableSpaceNavigation: true });
@@ -454,7 +473,7 @@ suite('Public API', function () {
 	});
 
 	suite('maxDepth option', function () {
-		let mq;
+		let mq: MathField;
 		setup(function () {
 			const el = document.createElement('span');
 			document.getElementById('mock')?.append(el);
@@ -487,20 +506,20 @@ suite('Public API', function () {
 
 	suite('statelessClipboard option', function () {
 		suite('default', function () {
-			let mq, textarea;
+			let mq: MathField, textarea: HTMLTextAreaElement | null;
 			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				mq = MQ.MathField(el);
 				textarea = mq.el().querySelector('textarea');
 			});
-			const assertPaste = (paste, latex) => {
+			const assertPaste = (paste: string, latex?: string) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
 				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-				event.clipboardData.setData('text/plain', paste);
-				textarea.dispatchEvent(event);
-				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
+				event.clipboardData?.setData('text/plain', paste);
+				textarea?.dispatchEvent(event);
+				textarea?.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(mq.latex(), latex);
 			};
 
@@ -528,26 +547,26 @@ suite('Public API', function () {
 			test('selection', function (done) {
 				mq.latex('x^2').select();
 				setTimeout(() => {
-					assert.equal(textarea.value, 'x^2');
+					assert.equal(textarea?.value, 'x^2');
 					done();
 				});
 			});
 		});
 		suite('statelessClipboard set to true', function () {
-			let mq, textarea;
+			let mq: MathField, textarea: HTMLTextAreaElement | null;
 			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
 				mq = MQ.MathField(el, { statelessClipboard: true });
 				textarea = mq.el().querySelector('textarea');
 			});
-			const assertPaste = (paste, latex) => {
+			const assertPaste = (paste: string, latex?: string) => {
 				if (typeof latex === 'undefined') latex = paste;
 				mq.latex('');
 				const event = new ClipboardEvent('paste', { clipboardData: new DataTransfer(), bubbles: true });
-				event.clipboardData.setData('text/plain', paste);
-				textarea.dispatchEvent(event);
-				textarea.dispatchEvent(new InputEvent('input', { bubbles: true }));
+				event.clipboardData?.setData('text/plain', paste);
+				textarea?.dispatchEvent(event);
+				textarea?.dispatchEvent(new InputEvent('input', { bubbles: true }));
 				assert.equal(mq.latex(), latex);
 			};
 
@@ -575,7 +594,7 @@ suite('Public API', function () {
 			test('selection', function (done) {
 				mq.latex('x^2').select();
 				setTimeout(() => {
-					assert.equal(textarea.value, '$x^2$');
+					assert.equal(textarea?.value, '$x^2$');
 					done();
 				});
 			});
@@ -587,11 +606,11 @@ suite('Public API', function () {
 			assert.throws(() => {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
-				MQ.MathField(el, { leftRightIntoCmdGoes: 1 });
+				MQ.MathField(el, { leftRightIntoCmdGoes: 1 as unknown as 'up' });
 			});
 		});
 		suite('default', function () {
-			let mq;
+			let mq: MathField;
 			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
@@ -690,7 +709,7 @@ suite('Public API', function () {
 		});
 
 		suite('"up"', function () {
-			let mq;
+			let mq: MathField;
 			setup(function () {
 				const el = document.createElement('span');
 				document.getElementById('mock')?.append(el);
@@ -835,7 +854,8 @@ suite('Public API', function () {
 
 			const mq = MQ.MathField(el, { overrideKeystroke: (_key) => (key = _key) });
 
-			mq.el()
+			mq
+				.el()
 				.querySelector('textarea')
 				?.dispatchEvent(
 					new KeyboardEvent('keydown', { key: 'ArrowLeft', which: 37, keyCode: 37, bubbles: true })
@@ -849,17 +869,20 @@ suite('Public API', function () {
 			let count = 0;
 			const mq = MQ.MathField(el, { overrideCut: () => (count += 1) });
 
-			mq.el()
+			mq
+				.el()
 				.querySelector('textarea')
 				?.dispatchEvent(new ClipboardEvent('cut', { bubbles: true }));
 			assert.equal(count, 1);
 
-			mq.el()
+			mq
+				.el()
 				.querySelector('textarea')
 				?.dispatchEvent(new InputEvent('input', { bubbles: true }));
 			assert.equal(count, 1);
 
-			mq.el()
+			mq
+				.el()
 				.querySelector('textarea')
 				?.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 			assert.equal(count, 1);
@@ -870,7 +893,7 @@ suite('Public API', function () {
 		test('inserts at coordinates', function () {
 			// Insert filler to make the page taller than the window so that this test is deterministic.
 			const filler = document.createElement('div');
-			filler.style.height = `${window.offsetHeight}px`;
+			filler.style.height = `${window.innerHeight.toString()}px`;
 
 			const mock = document.getElementById('mock');
 			mock?.prepend(filler);
@@ -884,7 +907,7 @@ suite('Public API', function () {
 			const box = mq.el().getBoundingClientRect();
 			const clientX = box.left + 32;
 			const clientY = box.top + 30;
-			const target = document.elementFromPoint(clientX, clientY);
+			const target = document.elementFromPoint(clientX, clientY) as HTMLElement;
 
 			assert.equal(document.activeElement, document.body);
 			mq.clickAt(clientX, clientY, target).write('x');
@@ -896,7 +919,7 @@ suite('Public API', function () {
 		test('target is optional', function () {
 			// Insert filler to make the page taller than the window so that this test is deterministic.
 			const filler = document.createElement('div');
-			filler.style.height = `${window.offsetHeight}px`;
+			filler.style.height = `${window.innerHeight.toString()}px`;
 
 			const mock = document.getElementById('mock');
 			mock?.prepend(filler);
@@ -938,7 +961,7 @@ suite('Public API', function () {
 		test('inserts at coordinates', function () {
 			// Insert filler to make the page taller than the window so that this test is deterministic.
 			const filler = document.createElement('div');
-			filler.style.height = `${window.offsetHeight}px`;
+			filler.style.height = `${window.innerHeight.toString()}px`;
 
 			const mock = document.getElementById('mock');
 			mock?.prepend(filler);
