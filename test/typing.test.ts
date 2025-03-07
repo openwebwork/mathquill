@@ -65,8 +65,10 @@ suite('typing with auto-replaces', function () {
 		});
 
 		test('auto-operator names', function () {
+			mq.options.addAutoOperatorNames('ker');
 			mq.typedText('\\ker^2');
 			assertLatex('\\ker^2');
+			mq.options.removeAutoOperatorNames('ker');
 		});
 
 		test('nonexistent LaTeX command', function () {
