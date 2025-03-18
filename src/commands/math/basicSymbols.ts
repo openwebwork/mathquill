@@ -1,6 +1,6 @@
 // Symbols for Basic Mathematics
 
-import { type Direction, noop, bindMixin, LatexCmds, CharCmds } from 'src/constants';
+import { type Direction, noop, bindMixin, LatexCmds, CharCmds, BuiltInOpNames } from 'src/constants';
 import { Options } from 'src/options';
 import type { Cursor } from 'src/cursor';
 import { Parser } from 'services/parser.util';
@@ -40,10 +40,8 @@ class OperatorName extends Symbol {
 	}
 }
 
-for (const fn in new Options().autoOperatorNames) {
-	if (fn !== '_maxLength') {
-		LatexCmds[fn] = OperatorName;
-	}
+for (const fn in BuiltInOpNames) {
+	LatexCmds[fn] = OperatorName;
 }
 
 LatexCmds.operatorname = class extends MathCommand {

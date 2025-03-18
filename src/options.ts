@@ -129,39 +129,7 @@ export class Options {
 	}
 
 	// The set of operator names that MathQuill auto-unitalicizes.
-	static #autoOperatorNames: NamesWLength = (() => {
-		const ops: NamesWLength = { _maxLength: 9 };
-
-		// Standard operators
-		for (const op of [
-			'arg',
-			'det',
-			'dim',
-			'gcd',
-			'hom',
-			'ker',
-			'lg',
-			'lim',
-			'max',
-			'min',
-			'sup',
-			'limsup',
-			'liminf',
-			'injlim',
-			'projlim',
-			'Pr'
-		]) {
-			ops[op] = 1;
-		}
-
-		// compat with some of the nonstandard LaTeX exported by MathQuill
-		// before #247. None of these are real LaTeX commands so, seems safe
-		for (const op of ['gcf', 'hcf', 'lcm', 'proj', 'span']) {
-			ops[op] = 1;
-		}
-
-		return ops;
-	})();
+	static #autoOperatorNames: NamesWLength = { _maxLength: 0 };
 	#_autoOperatorNames?: NamesWLength;
 	get autoOperatorNames(): NamesWLength {
 		return this.#_autoOperatorNames ?? Options.#autoOperatorNames;
