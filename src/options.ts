@@ -333,7 +333,7 @@ export class Options {
 		else Options.#typingAsteriskWritesTimesSymbol = typingAsteriskWritesTimesSymbol;
 	}
 
-	handlers?: Handlers;
+	declare handlers?: Handlers;
 
 	substituteTextarea(tabbable?: boolean) {
 		const textarea = document.createElement('textarea');

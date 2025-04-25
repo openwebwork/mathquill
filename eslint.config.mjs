@@ -62,6 +62,7 @@ export default [
 			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 			'@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],
 			'@typescript-eslint/prefer-nullish-coalescing': 'off',
+			'@typescript-eslint/no-base-to-string': 'off',
 
 			'mocha/no-setup-in-describe': 'off',
 

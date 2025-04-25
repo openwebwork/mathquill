@@ -54,7 +54,7 @@ export class TNode {
 	upOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | TNode | boolean;
 	downOutOf?: ((dir: Direction) => void) | ((cursor: Cursor) => void) | TNode | boolean;
 
-	reflow?: () => void;
+	declare reflow?: () => void;
 
 	bubble = iterator((yield_: (node: TNode) => TNode | boolean | undefined) => {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
