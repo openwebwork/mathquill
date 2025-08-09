@@ -23,7 +23,7 @@ export class Fragment {
 		if (!el) return this;
 
 		for (; el !== this.ends.right?.right; el = el.right) {
-			if (!el) continue;
+			if (!el) throw new Error('each unable to continue right in Fragment');
 			if (yield_(el) === false) break;
 		}
 

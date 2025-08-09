@@ -14,7 +14,8 @@ module.exports = {
 		],
 		'no-descending-specificity': null,
 		'no-invalid-position-at-import-rule': null,
-		'import-notation': 'string'
+		'import-notation': 'string',
+		'declaration-property-value-no-unknown': null
 	},
 	overrides: [
 		{

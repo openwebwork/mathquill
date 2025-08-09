@@ -6,9 +6,8 @@
 		"moduleResolution": "node",
 		"baseUrl": ".",
 		"resolveJsonModule": true,
-		"sourceMap": true,
 		"strict": true,
-		"target": "es2022",
+		"target": "esnext",
 		"noErrorTruncation": true,
 		"paths": {
 			"src/*": ["src/*"],
