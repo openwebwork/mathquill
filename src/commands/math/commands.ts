@@ -305,7 +305,7 @@ const FractionChooseCreateLeftOfMixin = <TBase extends Constructor<MathCommand>>
 				while (
 					leftward &&
 					!(
-						leftward instanceof BinaryOperator ||
+						(leftward instanceof BinaryOperator && !(leftward instanceof LatexCmds.factorial)) ||
 						('text' in LatexCmds && leftward instanceof LatexCmds.text) ||
 						leftward instanceof UpperLowerLimitCommand ||
 						leftward.ctrlSeq === '\\ ' ||
