@@ -716,11 +716,13 @@ export class Fraction extends MathCommand {
 			let numBlocks = 0;
 			let haveDigits = false;
 			let numPeriods = 0;
+			let newBlock = false;
 			this.ends[dir]?.eachChild((child: TNode) => {
 				if (child instanceof Digit) haveDigits = true;
 				if (child instanceof VanillaSymbol && child.ctrlSeq === '.') ++numPeriods;
 
 				if (
+					newBlock ||
 					!(
 						child instanceof Digit ||
 						(child instanceof VanillaSymbol && child.ctrlSeq === '.' && numPeriods < 2 && !numBlocks) ||
@@ -729,6 +731,11 @@ export class Fraction extends MathCommand {
 					)
 				)
 					++numBlocks;
+
+				// These are things that terminate a block.  Anything typed after them
+				// starts a new block and increments the block count above.
+				newBlock =
+					('factorial' in LatexCmds && child instanceof LatexCmds.factorial) || child instanceof SupSub;
 
 				if (
 					(haveDigits && numBlocks) ||
@@ -838,11 +845,13 @@ export const supSubText = (prefix: string, block?: TNode) => {
 	let numBlocks = 0;
 	let haveDigits = false;
 	let numPeriods = 0;
+	let newBlock = false;
 	block?.eachChild((child: TNode) => {
 		if (child instanceof Digit) haveDigits = true;
 		if (child instanceof VanillaSymbol && child.ctrlSeq === '.') ++numPeriods;
 
 		if (
+			newBlock ||
 			!(
 				child instanceof Digit ||
 				(child instanceof VanillaSymbol && child.ctrlSeq === '.' && numPeriods < 2 && !numBlocks) ||
@@ -850,6 +859,10 @@ export const supSubText = (prefix: string, block?: TNode) => {
 			)
 		)
 			++numBlocks;
+
+		// These are things that terminate a block.  Anything typed after them
+		// starts a new block and increments the block count above.
+		newBlock = 'factorial' in LatexCmds && child instanceof LatexCmds.factorial;
 
 		if (
 			(haveDigits && numBlocks) ||
