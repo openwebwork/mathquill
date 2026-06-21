@@ -23,7 +23,6 @@ input[type='text'] {
 	padding: 4px 6px 2px;
 	border: 1px solid #ccc;
 	border-radius: 4px;
-	background-color: white;
 	font-size: 16px;
 	font-weight: normal;
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -42,7 +41,6 @@ span[id^='mq-answer'] {
 	direction: ltr;
 	padding: 4px 5px 2px;
 	border-radius: 4px !important;
-	background-color: white;
 	margin-right: 0;
 	margin-left: 0;
 }

@@ -5,6 +5,15 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+		<script>
+			if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+				document.documentElement.dataset.bsTheme = 'dark';
+			window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+					document.documentElement.dataset.bsTheme = 'dark';
+				else document.documentElement.dataset.bsTheme = 'light';
+			});
+		</script>
 		<link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 		<link rel="stylesheet" href="mathquill.css">
 		<link rel="stylesheet" href="input-test.css">

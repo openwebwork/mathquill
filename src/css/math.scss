@@ -56,7 +56,7 @@
 
 	// TODO: what's the difference between these?
 	.mq-empty {
-		background: skyblue;
+		background: light-dark(skyblue, #068);
 
 		&.mq-root-block {
 			background: transparent;
