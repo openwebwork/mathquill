@@ -63,10 +63,24 @@
 			transform: translateY(0);
 		}
 
+		// Schematic icons built from \text{ } placeholders keep the supsub tiny.
+		// But an icon whose super/subscript carries a real glyph (e.g. the ion
+		// charge \text{ }^{+}) must let that glyph show rather than be clipped to
+		// the placeholder size — so size the supsub to its content.
 		.mq-supsub {
-			height: 6px;
-			width: 6px;
+			min-width: 6px;
 			margin-left: 2px;
+		}
+
+		// Real (non-placeholder) glyphs inside an icon's super/subscript — the
+		// ion +/- charge, etc. Render them small enough to sit in the button but
+		// large enough to read.
+		.mq-sup,
+		.mq-sub {
+			& > .mq-binary-operator,
+			& > .mq-unary-operator {
+				font-size: 0.7em;
+			}
 		}
 	}
 }

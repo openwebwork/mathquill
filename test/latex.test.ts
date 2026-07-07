@@ -67,6 +67,30 @@ suite('latex', function () {
 		assertParsesLatex('x ^2', 'x^2');
 	});
 
+	test('ion charges', function () {
+		// \ion[sign]{charge} — superscript-only with a fixed sign after the block.
+		assertParsesLatex('\\ion[+]{2}');
+		assertParsesLatex('\\ion[-]{3}');
+		// Missing optional sign defaults to '+'.
+		assertParsesLatex('\\ion{2}', '\\ion[+]{2}');
+		// Empty charge block is a singly-charged ion; it round-trips sign-only (Na+).
+		assertParsesLatex('\\ion[+]{}');
+		// \positiveion / \negativeion are sign-bound shorthands; both
+		// canonicalize to \ion[sign]{...}.
+		assertParsesLatex('\\positiveion{2}', '\\ion[+]{2}');
+		assertParsesLatex('\\negativeion{3}', '\\ion[-]{3}');
+	});
+
+	test('scientific notation', function () {
+		// \sci{exp} — fixed ×10 followed by an editable superscript exponent block.
+		assertParsesLatex('\\sci{8}');
+		assertParsesLatex('\\sci{-3}');
+		// Multi-character exponent block.
+		assertParsesLatex('\\sci{23}');
+		// Empty exponent block defaults to 0.
+		assertParsesLatex('\\sci{}', '\\sci{0}');
+	});
+
 	test('inner groups', function () {
 		assertParsesLatex('a{bc}d', 'abcd');
 		assertParsesLatex('{bc}d', 'bcd');

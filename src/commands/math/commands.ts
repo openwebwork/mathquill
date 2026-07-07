@@ -248,6 +248,120 @@ LatexCmds.superscript =
 			}
 		};
 
+// `\ion[+]{2}` renders the ion charge "2+"; `\positiveion` / `\negativeion` are sign-bound.
+class Ion extends SupSub {
+	sign: '+' | '-';
+
+	constructor(sign?: string) {
+		super();
+		this.sign = sign === '-' ? '-' : '+';
+		this.supsub = 'sup';
+		this.htmlTemplate =
+			'<span class="mq-supsub mq-non-leaf mq-sup-only">' +
+			'<span class="mq-sup">' +
+			'<span>&0</span>' +
+			`<span class="mq-ion">${this.sign}</span>` +
+			'</span></span>';
+	}
+
+	latex() {
+		// An empty charge block is a singly-charged ion; render sign-only (Na+).
+		return `\\ion[${this.sign}]{${this.sup?.latex() ?? ''}}`;
+	}
+
+	text() {
+		return `^(${this.sign}${this.sup?.text() ?? ''})`;
+	}
+
+	mathspeak() {
+		const charge = (this.sup ? getCtrlSeqsFromBlock(this.sup) : '') || '1';
+		return `charge ${charge} ${this.sign === '-' ? 'negative' : 'positive'}`;
+	}
+
+	parser() {
+		return latexMathParser.optBlock
+			.then((optBlock: MathBlock) => {
+				return latexMathParser.block.map((block: MathBlock) => {
+					const ion = new Ion(optBlock.text() === '-' ? '-' : '+');
+					ion.blocks = [block];
+					block.adopt(ion);
+					return ion;
+				});
+			})
+			.or(super.parser());
+	}
+
+	finalizeTree() {
+		this.upInto = this.sup = this.ends.right;
+		if (this.sup) this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
+		super.finalizeTree();
+	}
+}
+
+LatexCmds.ion = Ion;
+
+LatexCmds.positiveion = class extends Ion {
+	constructor() {
+		super('+');
+	}
+};
+
+LatexCmds.negativeion = class extends Ion {
+	constructor() {
+		super('-');
+	}
+};
+
+// `\sci{8}` renders scientific notation as ×10⁸ with an editable exponent.
+class ScientificNotation extends MathCommand {
+	constructor() {
+		super();
+		this.ctrlSeq = '\\sci';
+		this.ariaLabel = 'scientific notation';
+		this.htmlTemplate =
+			'<span class="mq-non-leaf mq-sci">' +
+			'<span class="mq-binary-operator">&times;</span>' +
+			'<span>1</span><span>0</span>' +
+			'<span class="mq-supsub mq-non-leaf mq-sup-only">' +
+			'<span class="mq-sup">&0</span>' +
+			'</span></span>';
+	}
+
+	latex() {
+		return `\\sci{${this.ends.right?.latex() || '0'}}`;
+	}
+
+	text() {
+		return `*10^${this.ends.right?.text() || '0'}`;
+	}
+
+	mathspeak() {
+		const raw = (this.ends.right ? getCtrlSeqsFromBlock(this.ends.right) : '') || '0';
+		const intMatch = /^([+-]?)(\d+)$/.exec(raw);
+		if (intMatch) {
+			const sign = intMatch[1] === '-' ? 'negative ' : '';
+			const digits = intMatch[2];
+			let suffix = 'th';
+			if (!/^(?:11|12|13)$/.test(digits.slice(-2))) {
+				const last = digits.slice(-1);
+				if (last === '1') suffix = 'st';
+				else if (last === '2') suffix = 'nd';
+				else if (last === '3') suffix = 'rd';
+			}
+			return `times ten to the ${sign}${digits}${suffix} power`;
+		}
+		// Non-integer exponent — speak the block contents generically.
+		return `times ten to the ${this.ends.right?.mathspeak().trim() || '0'} power`;
+	}
+
+	finalizeTree() {
+		this.upInto = this.ends.right;
+		if (this.ends.right) this.ends.right.downOutOf = insLeftOfMeUnlessAtEnd;
+	}
+}
+
+LatexCmds.sci = ScientificNotation;
+
 class SummationNotation extends UpperLowerLimitCommand {
 	constructor(ch: string, html: string, ariaLabel?: string) {
 		super(
