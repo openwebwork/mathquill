@@ -296,6 +296,11 @@ class Ion extends SupSub {
 		if (this.sup) this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
 		super.finalizeTree();
 	}
+
+	html() {
+		this.blocks[0].isEmpty = () => false;
+		return super.html();
+	}
 }
 
 LatexCmds.ion = Ion;
