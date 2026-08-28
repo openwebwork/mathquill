@@ -59,6 +59,7 @@ module.exports = (_env, argv) => {
 					use: [
 						MiniCssExtractPlugin.loader,
 						'css-loader',
+						'postcss-loader',
 						{
 							loader: 'sass-loader',
 							options: { additionalData: `$omit-font-face: ${process.env.OMIT_FONT_FACE !== undefined};` }
