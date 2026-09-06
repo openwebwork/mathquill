@@ -28,7 +28,10 @@
 				const mock = document.getElementById('mock');
 				while (mock.firstChild) mock.firstChild.remove();
 			});
-
+		</script>
+		<!-- include the library with the tests inlined -->
+		<script id="mathquill" src="mathquill.test.js"></script>
+		<script>
 			if (post_xunit_to) {
 				let xunit = '';
 				Mocha.process.stdout.write = (line) => (xunit += line);
@@ -190,7 +193,5 @@
 				};
 			}
 		</script>
-		<!-- include the library with the tests inlined -->
-		<script id="mathquill" src="mathquill.test.js"></script>
 	</body>
 </html>
