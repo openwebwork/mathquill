@@ -13,14 +13,14 @@ on:
 jobs:
     eslint:
         name: Lint TypeScript and JavaScript files with eslint and style files with stylelint
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
             - name: Install Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
-                  node-version: '20'
+                  node-version: '24'
             - name: Install Dependencies and Build
               run: npm ci --ignore-scripts && npm run build
             - name: Lint files with eslint and stylelint

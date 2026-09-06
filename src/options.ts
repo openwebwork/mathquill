@@ -66,7 +66,7 @@ export class Options {
 	// Each option has a static variable for the default setting, and an instance variable for the setting of a
 	// particular math field.
 
-	// Wether mouse events are active for StaticMath blocks
+	// Whether mouse events are active for StaticMath blocks
 	static #mouseEvents = true;
 	#_mouseEvents?: boolean;
 	get mouseEvents() {
