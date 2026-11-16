@@ -153,7 +153,7 @@ LatexCmds.C =
 	LatexCmds.complexplane =
 	LatexCmds.Complexplane =
 	LatexCmds.ComplexPlane =
-		bindMixin(VanillaSymbol, '\\mathbb{C}', '&#8450;', 'comlexes');
+		bindMixin(VanillaSymbol, '\\mathbb{C}', '&#8450;', 'complexes');
 
 LatexCmds.H =
 	LatexCmds.Hamiltonian =
