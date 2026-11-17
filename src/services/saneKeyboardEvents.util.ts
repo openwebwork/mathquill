@@ -1,5 +1,5 @@
 // An abstraction layer wrapping the textarea in an object with methods to manipulate and listen to events.
-// This is an internal abstraction layer intented to handle cross-browser inconsistencies in event handlers.
+// This is an internal abstraction layer intended to handle cross-browser inconsistencies in event handlers.
 
 import type { Controller } from 'src/controller';
 

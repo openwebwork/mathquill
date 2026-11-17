@@ -109,12 +109,13 @@
 		margin: 0;
 	}
 
-	big {
+	.mq-summation,
+	.mq-integral {
 		font-size: 200%;
 	}
 
 	.mq-int {
-		> big {
+		> .mq-integral {
 			display: inline-block;
 			transform: scaleX(0.7);
 			vertical-align: -0.16em;
@@ -361,7 +362,7 @@
 		text-align: center;
 
 		.mq-from,
-		big,
+		.mq-summation,
 		.mq-to {
 			display: block;
 		}
