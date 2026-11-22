@@ -373,7 +373,7 @@ class SummationNotation extends UpperLowerLimitCommand {
 			ch,
 			'<span class="mq-large-operator mq-non-leaf">' +
 				'<span class="mq-to"><span>&1</span></span>' +
-				`<big>${html}</big>` +
+				`<span class="mq-summation">${html}</span>` +
 				'<span class="mq-from"><span>&0</span></span>' +
 				'</span>',
 			[ch.length > 1 ? ch.slice(1) : ch]
@@ -402,7 +402,7 @@ LatexCmds['\u222b'] =
 				super(
 					'\\int ',
 					'<span class="mq-int mq-non-leaf">' +
-						'<big>&int;</big>' +
+						'<span class="mq-integral">&int;</span>' +
 						'<span class="mq-supsub mq-non-leaf">' +
 						'<span class="mq-sup"><span class="mq-sup-inner">&1</span></span>' +
 						'<span class="mq-sub">&0</span>' +

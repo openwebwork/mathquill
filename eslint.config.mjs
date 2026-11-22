@@ -47,7 +47,6 @@ export default [
 			'@stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 1 }],
 			'@stylistic/no-tabs': ['error', { allowIndentationTabs: true }],
 			'@stylistic/no-trailing-spaces': ['error'],
-			'@stylistic/object-curly-spacing': ['error', 'always'],
 			'@stylistic/quotes': ['warn', 'single', { avoidEscape: true }],
 			'@stylistic/semi': ['error', 'always'],
 			'@stylistic/space-before-blocks': ['error', 'always'],
@@ -63,6 +62,7 @@ export default [
 			'@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],
 			'@typescript-eslint/prefer-nullish-coalescing': 'off',
 			'@typescript-eslint/no-base-to-string': 'off',
+			'@typescript-eslint/no-unsafe-class-instance-assignment': 'off',
 
 			'mocha/no-setup-in-describe': 'off',
 

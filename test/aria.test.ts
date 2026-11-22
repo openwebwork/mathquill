@@ -189,7 +189,7 @@ suite('aria', function () {
 		mq.latex('');
 	});
 
-	test('typing and backspacing through parenthesies', function () {
+	test('typing and backspacing through parentheses', function () {
 		mq.typedText('(');
 		assertAriaEqual('left parenthesis');
 		mq.typedText('1');

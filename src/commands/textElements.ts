@@ -13,7 +13,7 @@ import { BlockFocusBlur } from 'services/focusBlur';
 
 // Blocks of plain text, with one or two TextPiece's as children.
 // Represents flat strings of typically serif-font Roman characters, as
-// opposed to hierchical, nested, tree-structured math.
+// opposed to hierarchical, nested, tree-structured math.
 // Wraps a single HTMLSpanElement.
 export class TextBlock extends BlockFocusBlur(deleteSelectTowardsMixin(TNode)) {
 	replacedText?: string;
